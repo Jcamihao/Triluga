@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OWNER
+  RENTER
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  PENDING_VERIFICATION
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VehicleCategory {
+  ECONOMY
+  HATCH
+  SEDAN
+  SUV
+  PICKUP
+  VAN
+  LUXURY
+}
+
+enum FuelType {
+  GASOLINE
+  ETHANOL
+  FLEX
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+  CVT
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PIX
+  BOLETO
+  BANK_TRANSFER
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_APPROVED
+  BOOKING_REJECTED
+  BOOKING_CANCELLED
+  BOOKING_COMPLETED
+  PAYMENT_UPDATE
+  REVIEW_CREATED
+  CHAT_MESSAGE
+  SYSTEM_ALERT
+}
+
+model User {
+  id                   String                 @id @default(uuid())
+  email                String                 @unique
+  passwordHash         String
+  role                 Role
+  status               UserStatus             @default(ACTIVE)
+  refreshTokenHash     String?
+  lastLoginAt          DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  profile              Profile?
+  ownedVehicles        Vehicle[]              @relation("VehicleOwner")
+  ownerBookings        Booking[]              @relation("BookingOwner")
+  renterBookings       Booking[]              @relation("BookingRenter")
+  reviewsWritten       Review[]               @relation("ReviewAuthor")
+  reviewsReceived      Review[]               @relation("ReviewOwner")
+  notifications        Notification[]
+  bookingStatusChanges BookingStatusHistory[]
+  chatConversations    ChatParticipant[]
+  sentChatMessages     ChatMessage[]
+  createdChats         ChatConversation[]     @relation("ChatConversationCreator")
+  favorites            Favorite[]
+
+  @@index([role, status])
+}
+
+model Profile {
+  id                         String             @id @default(uuid())
+  userId                     String             @unique
+  fullName                   String
+  phone                      String
+  city                       String
+  state                      String
+  bio                        String?
+  avatarUrl                  String?
+  documentNumber             String?
+  driverLicenseNumber        String?
+  documentVerificationStatus VerificationStatus @default(NOT_SUBMITTED)
+  driverLicenseVerification  VerificationStatus @default(NOT_SUBMITTED)
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+  user                       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id            String                @id @default(uuid())
+  ownerId       String
+  title         String
+  brand         String
+  model         String
+  year          Int
+  plate         String                @unique
+  city          String
+  state         String
+  category      VehicleCategory
+  transmission  Transmission
+  fuelType      FuelType
+  seats         Int
+  dailyRate     Decimal               @db.Decimal(10, 2)
+  description   String
+  addressLine   String?
+  latitude      Decimal?              @db.Decimal(10, 7)
+  longitude     Decimal?              @db.Decimal(10, 7)
+  isActive      Boolean               @default(true)
+  isPublished   Boolean               @default(true)
+  ratingAverage Decimal               @default(0) @db.Decimal(3, 2)
+  reviewsCount  Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  owner         User                  @relation("VehicleOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  images        VehicleImage[]
+  availability  VehicleAvailability[]
+  blockedDates  VehicleBlockedDate[]
+  bookings      Booking[]
+  reviews       Review[]
+  chatConversations ChatConversation[]
+  favorites     Favorite[]
+
+  @@index([ownerId])
+  @@index([city, state, category, isActive, isPublished])
+  @@index([dailyRate])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  vehicleId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vehicleId])
+  @@index([userId, createdAt])
+  @@index([vehicleId])
+}
+
+model VehicleImage {
+  id        String   @id @default(uuid())
+  vehicleId String
+  url       String
+  key       String
+  alt       String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, position])
+}
+
+model VehicleAvailability {
+  id          String   @id @default(uuid())
+  vehicleId   String
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([vehicleId, dayOfWeek, startTime, endTime])
+}
+
+model VehicleBlockedDate {
+  id        String   @id @default(uuid())
+  vehicleId String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, startDate, endDate])
+}
+
+model Booking {
+  id            String                 @id @default(uuid())
+  vehicleId     String
+  ownerId       String
+  renterId      String
+  startDate     DateTime
+  endDate       DateTime
+  totalDays     Int
+  dailyRate     Decimal                @db.Decimal(10, 2)
+  subtotal      Decimal                @db.Decimal(10, 2)
+  platformFee   Decimal                @db.Decimal(10, 2)
+  totalAmount   Decimal                @db.Decimal(10, 2)
+  notes         String?
+  status        BookingStatus          @default(PENDING)
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  cancelledAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  vehicle       Vehicle                @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  owner         User                   @relation("BookingOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  renter        User                   @relation("BookingRenter", fields: [renterId], references: [id], onDelete: Cascade)
+  statusHistory BookingStatusHistory[]
+  payment       Payment?
+  review        Review?
+
+  @@index([vehicleId, startDate, endDate, status])
+  @@index([ownerId, status])
+  @@index([renterId, status])
+}
+
+model BookingStatusHistory {
+  id          String        @id @default(uuid())
+  bookingId   String
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  reason      String?
+  changedById String?
+  changedAt   DateTime      @default(now())
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  changedBy   User?         @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, changedAt])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  bookingId         String        @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  platformFee       Decimal       @db.Decimal(10, 2)
+  ownerAmount       Decimal       @db.Decimal(10, 2)
+  status            PaymentStatus @default(PENDING)
+  method            PaymentMethod
+  transactionId     String?
+  checkoutReference String?
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  vehicleId String
+  authorId  String
+  ownerId   String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  owner     User     @relation("ReviewOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, rating])
+  @@index([ownerId, rating])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model ChatConversation {
+  id             String            @id @default(uuid())
+  vehicleId      String
+  createdById    String
+  participantKey String            @unique
+  lastMessageAt  DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  vehicle        Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdBy      User              @relation("ChatConversationCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  participants   ChatParticipant[]
+  messages       ChatMessage[]
+
+  @@index([vehicleId, updatedAt])
+  @@index([createdById, updatedAt])
+}
+
+model ChatParticipant {
+  id             String           @id @default(uuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+  joinedAt       DateTime         @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, joinedAt])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+}
