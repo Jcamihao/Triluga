@@ -1,0 +1,17 @@
+{
+  "name": "carbnb",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev:infra && concurrently -n backend,frontend -c blue,orange \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run start",
+    "dev:infra": "docker compose up -d --force-recreate postgres redis minio minio-create-bucket",
+    "compose:up": "docker compose up --build",
+    "compose:down": "docker compose down -v",
+    "db:seed": "npm --prefix backend run prisma:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,183 @@
+# CarBnB
+
+Marketplace MVP de aluguel de carros entre pessoas, inspirado no fluxo mobile da OLX, com frontend Angular PWA e backend NestJS modular.
+
+## Arquitetura
+
+- Frontend: Angular 16 standalone, SCSS, mobile first, lazy loading e service worker.
+- Backend: NestJS 10 em monólito modular com módulos de domínio e serviços transversais.
+- Banco: PostgreSQL com Prisma.
+- Infra local: Docker Compose com PostgreSQL, Redis, MinIO, backend e frontend.
+- Integrações desacopladas:
+  - `StorageService` para MinIO/S3 futuro.
+  - `MockPaymentGateway` para evoluir para gateway real.
+  - `CacheQueueService` para cache Redis e filas BullMQ.
+
+## Estrutura
+
+```text
+.
+├── backend
+│   ├── prisma
+│   └── src
+│       ├── auth
+│       ├── users
+│       ├── profiles
+│       ├── vehicles
+│       ├── vehicle-images
+│       ├── availability
+│       ├── bookings
+│       ├── payments
+│       ├── reviews
+│       ├── notifications
+│       ├── admin
+│       ├── storage
+│       ├── cache-queue
+│       ├── common
+│       └── prisma
+├── frontend
+│   └── src/app
+│       ├── core
+│       ├── shared
+│       └── features
+├── docs
+└── docker-compose.yml
+```
+
+## Banco
+
+Entidades principais modeladas no Prisma:
+
+- `User`
+- `Profile`
+- `Vehicle`
+- `VehicleImage`
+- `VehicleAvailability`
+- `VehicleBlockedDate`
+- `Booking`
+- `BookingStatusHistory`
+- `Payment`
+- `Review`
+- `Notification`
+
+Regras centrais já refletidas no schema e nos serviços:
+
+- múltiplos veículos por proprietário
+- busca por cidade/período
+- prevenção de conflito com reservas aprovadas e datas bloqueadas
+- cálculo de subtotal, taxa da plataforma e total
+- histórico de status da reserva
+- avaliações pós-locação
+
+## Backend
+
+Endpoints principais implementados:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `GET /auth/me`
+- `GET /vehicles`
+- `GET /vehicles/me`
+- `GET /vehicles/:id`
+- `POST /vehicles`
+- `PATCH /vehicles/:id`
+- `DELETE /vehicles/:id`
+- `POST /vehicles/:id/images`
+- `GET /vehicles/:id/availability`
+- `PUT /vehicles/:id/availability`
+- `POST /vehicles/:id/blocked-dates`
+- `POST /bookings`
+- `GET /bookings/my`
+- `GET /bookings/owner`
+- `PATCH /bookings/:id/approve`
+- `PATCH /bookings/:id/reject`
+- `PATCH /bookings/:id/cancel`
+- `POST /payments/checkout`
+- `POST /reviews`
+- `GET /reviews/vehicle/:vehicleId`
+- `GET /notifications/my`
+- `PATCH /notifications/:id/read`
+- `GET /admin/dashboard`
+- `GET /admin/users`
+- `GET /admin/vehicles`
+- `GET /admin/bookings`
+- `PATCH /admin/users/:id/block`
+- `PATCH /admin/vehicles/:id/deactivate`
+
+Swagger fica disponível em `http://localhost:3000/api/docs`.
+
+## Frontend
+
+Fluxos disponíveis no Angular:
+
+- home com busca rápida
+- lista com filtros e carregamento progressivo
+- detalhe do veículo com galeria e reviews
+- solicitação de reserva
+- login e cadastro
+- minhas reservas
+- perfil com notificações
+- painel do proprietário
+- painel admin
+
+Componentes obrigatórios implementados:
+
+- card de veículo
+- header com busca
+- filtro modal
+- galeria de imagens
+- botão fixo mobile
+- bottom navigation
+
+## Rodando localmente
+
+### Opção 1: um comando com Docker
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Frontend: `http://localhost:4200`  
+Backend: `http://localhost:3000/api/v1`  
+Swagger: `http://localhost:3000/api/docs`  
+MinIO Console: `http://localhost:9001`
+
+Se alguma porta já estiver em uso na sua máquina, ajuste no `.env` antes de subir. Exemplo:
+
+```env
+POSTGRES_HOST_PORT=5433
+```
+
+### Opção 2: apps locais + infra em containers
+
+```bash
+cp backend/.env.example backend/.env
+npm run dev:infra
+npm --prefix backend run prisma:generate
+npm --prefix backend run start:dev
+npm --prefix frontend start
+```
+
+## Seed
+
+Depois da infraestrutura estar disponível:
+
+```bash
+npm run db:seed
+```
+
+Credenciais sugeridas:
+
+- Admin: `admin@carbnb.local` / `Admin123!`
+- Owner: `owner@carbnb.local` / `Owner123!`
+- Renter: `renter@carbnb.local` / `Renter123!`
+
+## Wireframes
+
+Os wireframes textuais mobile first estão em [docs/wireframes.md](./docs/wireframes.md).
+
+## Deploy
+
+Guia de produção para frontend no Vercel e backend no Railway em [docs/deploy-vercel-railway.md](./docs/deploy-vercel-railway.md).
