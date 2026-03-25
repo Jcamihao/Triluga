@@ -256,7 +256,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
 
       .chat-page {
         box-sizing: border-box;
-        padding: 18px 16px 132px;
+        padding: 18px 12px 132px;
       }
 
       .chat-page--conversation {
@@ -284,13 +284,13 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-sidebar,
       .chat-thread,
       .guest-card {
-        border-radius: 30px;
+        border-radius: 24px;
       }
 
       .chat-sidebar {
         display: grid;
         gap: 16px;
-        padding: 22px;
+        padding: 18px;
         background: rgba(255, 255, 255, 0.94);
         border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-soft);
@@ -440,7 +440,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         display: grid;
         gap: 16px;
         min-height: 520px;
-        padding: 22px;
+        padding: 18px;
         grid-template-rows: auto minmax(0, 1fr) auto;
         border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-strong);
@@ -450,7 +450,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-page--conversation .chat-thread {
         height: 100%;
         min-height: 0;
-        padding: 18px 18px 10px;
+        padding: 16px 16px 10px;
         border: 0;
         border-radius: 0;
         background: #fff;
@@ -488,18 +488,18 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
 
       .chat-thread__identity {
         display: grid;
-        grid-template-columns: 64px minmax(0, 1fr);
+        grid-template-columns: 56px minmax(0, 1fr);
         align-items: center;
-        gap: 14px;
+        gap: 12px;
         min-width: 0;
         color: inherit;
         text-decoration: none;
       }
 
       .chat-thread__avatar {
-        width: 64px;
-        height: 64px;
-        border-radius: 22px;
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
         object-fit: cover;
         background: var(--surface-muted);
       }
@@ -511,7 +511,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       }
 
       .chat-thread__summary h2 {
-        font-size: 19px;
+        font-size: 18px;
         line-height: 1.15;
       }
 
@@ -632,7 +632,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         position: sticky;
         bottom: 0;
         z-index: 2;
-        padding-top: 14px;
+        padding-top: 12px;
         background: linear-gradient(
           180deg,
           rgba(255, 255, 255, 0) 0%,
@@ -645,8 +645,8 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-composer textarea {
         width: 100%;
         min-width: 0;
-        min-height: 96px;
-        max-height: 96px;
+        min-height: 88px;
+        max-height: 88px;
         padding: 16px 18px;
         border: 0;
         resize: none;
@@ -684,7 +684,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .guest-card {
         display: grid;
         gap: 16px;
-        padding: 28px;
+        padding: 18px;
         border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-strong);
       }
@@ -695,72 +695,119 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         gap: 12px;
       }
 
-      @media (min-width: 980px) {
-        .chat-sidebar {
-          position: sticky;
-          top: 16px;
-        }
+      .guest-card__actions .btn,
+      .chat-composer .btn {
+        width: 100%;
       }
 
-      @media (max-width: 640px) {
+      .conversation-card {
+        align-items: flex-start;
+      }
+
+      @media (min-width: 641px) {
         .chat-page {
-          padding-left: 12px;
-          padding-right: 12px;
+          padding: 18px 16px 132px;
+        }
+
+        .chat-sidebar,
+        .chat-thread,
+        .guest-card {
+          border-radius: 30px;
+        }
+
+        .chat-sidebar,
+        .chat-thread {
+          padding: 22px;
+        }
+
+        .guest-card {
+          padding: 28px;
         }
 
         .chat-page--conversation {
           padding-bottom: calc(env(safe-area-inset-bottom, 0px));
         }
 
-        .chat-sidebar,
-        .chat-thread,
-        .guest-card {
-          padding: 18px;
-          border-radius: 24px;
-        }
-
         .chat-page--conversation .chat-thread {
-          padding: 16px 16px 10px;
-          border-radius: 0;
-        }
-
-        .chat-thread__topbar {
-          grid-template-columns: auto minmax(0, 1fr) auto;
+          padding: 18px 18px 10px;
         }
 
         .chat-thread__identity {
-          grid-template-columns: 56px minmax(0, 1fr);
-          gap: 12px;
+          grid-template-columns: 64px minmax(0, 1fr);
+          gap: 14px;
         }
 
         .chat-thread__avatar {
-          width: 56px;
-          height: 56px;
-          border-radius: 18px;
+          width: 64px;
+          height: 64px;
+          border-radius: 22px;
         }
 
         .chat-thread__summary h2 {
-          font-size: 18px;
+          font-size: 19px;
         }
 
         .guest-card__actions .btn,
         .chat-composer .btn {
-          width: 100%;
+          width: auto;
         }
 
         .conversation-card {
-          align-items: flex-start;
+          align-items: center;
         }
 
         .chat-composer {
-          padding-top: 12px;
+          padding-top: 14px;
         }
 
         .chat-composer textarea {
-          min-height: 88px;
-          max-height: 88px;
+          min-height: 96px;
+          max-height: 96px;
         }
       }
+
+      @media (min-width: 1024px) {
+        .chat-page {
+          padding: 28px 20px 148px;
+        }
+
+        .chat-shell {
+          max-width: 1120px;
+          margin: 0 auto;
+        }
+
+        .chat-sidebar {
+          position: sticky;
+          top: 24px;
+          padding: 24px;
+        }
+
+        .conversation-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .chat-page--conversation {
+          padding: 24px 24px 32px;
+          background: transparent;
+        }
+
+        .chat-page--conversation .chat-shell--conversation {
+          max-width: 1180px;
+          margin: 0 auto;
+          border: 1px solid var(--glass-border);
+          border-radius: 32px;
+          background: rgba(255, 255, 255, 0.98);
+          box-shadow: var(--shadow-strong);
+          overflow: hidden;
+        }
+
+        .chat-page--conversation .chat-thread {
+          padding: 22px 24px 14px;
+          background: transparent;
+        }
+      }
+
     `,
   ],
 })

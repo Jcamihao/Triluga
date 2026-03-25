@@ -149,3 +149,29 @@
   display: grid;
   margin-top: auto;
 }
+
+@media (min-width: 1024px) {
+  .app-shell.with-bottom-nav {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .menu-overlay {
+    display: grid;
+    justify-content: end;
+    align-items: start;
+    padding: 24px;
+  }
+
+  .menu-drawer {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: min(380px, calc(100vw - 48px));
+    max-height: calc(100vh - 48px);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    box-shadow: var(--glass-shadow-strong);
+    overflow-y: auto;
+  }
+}

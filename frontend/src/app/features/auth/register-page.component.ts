@@ -14,9 +14,9 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
   template: `
     <main class="auth-page">
       <section class="auth-card">
-        <img class="brand-logo" src="assets/icons/app-logo.svg" alt="IZZIE CAR" />
+        <img class="brand-logo" src="assets/logo_velo.png" alt="Velo" />
         <span class="eyebrow">Cadastro</span>
-        <h1>Crie sua conta na IZZIE CAR</h1>
+        <h1>Crie sua conta na Velo</h1>
         <p>Escolha se você vai anunciar carros ou alugar um agora.</p>
 
         <label>
@@ -144,9 +144,11 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
 
       .avatar-section {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
-        align-items: center;
+        justify-items: center;
+        align-items: start;
+        text-align: center;
         padding: 16px;
         border-radius: 20px;
         border: 1px solid rgba(31, 140, 255, 0.14);
@@ -156,6 +158,7 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
       .avatar-section__content {
         display: grid;
         gap: 8px;
+        justify-items: center;
       }
 
       .avatar-section__content strong,
@@ -227,23 +230,24 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
 
       .grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 96px;
+        grid-template-columns: minmax(0, 1fr);
         gap: 12px;
       }
 
-      @media (max-width: 480px) {
+      @media (min-width: 481px) {
         .grid {
-          grid-template-columns: minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr) 96px;
         }
 
         .avatar-section {
-          grid-template-columns: minmax(0, 1fr);
-          justify-items: center;
-          text-align: center;
+          grid-template-columns: auto minmax(0, 1fr);
+          justify-items: stretch;
+          align-items: center;
+          text-align: left;
         }
 
         .avatar-section__content {
-          justify-items: center;
+          justify-items: start;
         }
       }
 
@@ -264,6 +268,19 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
         text-align: center;
         color: var(--error);
         font-weight: 600;
+      }
+
+      @media (min-width: 960px) {
+        .auth-page {
+          padding: 32px 24px 48px;
+        }
+
+        .auth-card {
+          width: min(100%, 640px);
+          gap: 16px;
+          padding: 36px 32px;
+          border-radius: 34px;
+        }
       }
     `,
   ],

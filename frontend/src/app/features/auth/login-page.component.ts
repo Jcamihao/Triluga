@@ -11,9 +11,9 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <main class="auth-page">
       <section class="auth-card">
-        <img class="brand-logo" src="assets/icons/app-logo.svg" alt="IZZIE CAR" />
+        <img class="brand-logo" src="assets/logo_velo.png" alt="Velo" />
         <span class="eyebrow">Entrar</span>
-        <h1>Entre na IZZIE CAR</h1>
+        <h1>Entre na Velo</h1>
         <p>Acesse seu painel, acompanhe reservas e gerencie anúncios.</p>
 
         <label>
@@ -115,6 +115,19 @@ import { AuthService } from '../../core/services/auth.service';
         color: var(--error);
         font-weight: 600;
       }
+
+      @media (min-width: 960px) {
+        .auth-page {
+          padding: 32px 24px;
+        }
+
+        .auth-card {
+          width: min(100%, 520px);
+          gap: 16px;
+          padding: 36px 32px;
+          border-radius: 34px;
+        }
+      }
     `,
   ],
 })
@@ -122,7 +135,7 @@ export class LoginPageComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected email = 'renter@carbnb.local';
+  protected email = 'renter@velo.local';
   protected password = 'Renter123!';
   protected loading = false;
   protected feedback = '';

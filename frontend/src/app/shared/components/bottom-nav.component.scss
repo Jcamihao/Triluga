@@ -7,8 +7,8 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
-  width: 100vw;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(191, 201, 214, 0.9);
   border-radius: 0;
   background: rgba(255, 255, 255, 0.99);
@@ -19,7 +19,7 @@
     justify-items: center;
     align-content: center;
     gap: 4px;
-    min-height: 52px;
+    min-height: 50px;
     padding: 4px 0 2px;
     border-radius: 0;
     border: 0;
@@ -43,7 +43,7 @@
   border-radius: 0;
   background: transparent;
   color: currentColor;
-  font-size: 23px;
+  font-size: 22px;
 }
 
 .nav-icon-wrap {
@@ -52,7 +52,7 @@
 }
 
 .nav-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.1;
 }
@@ -80,20 +80,49 @@
   font-weight: 700;
 }
 
-@media (max-width: 480px) {
+@media (min-width: 481px) {
   .bottom-nav {
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .bottom-nav button {
-    min-height: 50px;
+    min-height: 52px;
   }
 
   .nav-icon {
-    font-size: 22px;
+    font-size: 23px;
   }
 
   .nav-label {
-    font-size: 11px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    width: min(760px, calc(100vw - 64px));
+    padding: 10px;
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: var(--glass-shadow-strong);
+    transform: translateX(-50%);
+  }
+
+  .bottom-nav button {
+    min-height: 58px;
+    padding: 8px 10px 6px;
+    border-radius: 22px;
+  }
+
+  .bottom-nav button.is-active {
+    background: var(--primary-light);
+  }
+
+  .nav-label {
+    font-size: 13px;
   }
 }
