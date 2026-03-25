@@ -63,9 +63,15 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
           </div>
 
           <strong class="detail-stage__price">
-            {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+            {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} / semana
           </strong>
         </section>
+
+        <div class="detail-stage__promotions" *ngIf="promotionHighlights.length">
+          <span class="detail-stage__promo" *ngFor="let promotion of promotionHighlights">
+            {{ promotion }}
+          </span>
+        </div>
 
         <app-image-gallery [images]="vehicle.images"></app-image-gallery>
       </section>
@@ -98,12 +104,52 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
           <p>{{ vehicle.description }}</p>
         </section>
 
+        <section class="detail-info-card" *ngIf="promotionDetails.length">
+          <span class="detail-info-card__eyebrow">Promoções ativas</span>
+          <div class="detail-promo-list">
+            <article class="detail-promo" *ngFor="let promotion of promotionDetails">
+              <strong>{{ promotion.title }}</strong>
+              <p>{{ promotion.description }}</p>
+              <span *ngIf="promotion.code">{{ promotion.code }}</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-info-card" *ngIf="pricingRuleHighlights.length">
+          <span class="detail-info-card__eyebrow">Preço dinâmico</span>
+          <div class="detail-promo-list">
+            <article class="detail-promo" *ngFor="let rule of pricingRuleHighlights">
+              <strong>{{ rule.title }}</strong>
+              <p>{{ rule.description }}</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-info-card" *ngIf="vehicle.addons.length">
+          <span class="detail-info-card__eyebrow">Itens extras</span>
+          <div class="detail-addon-list">
+            <article class="detail-addon" *ngFor="let addon of vehicle.addons">
+              <strong>{{ addon.name }}</strong>
+              <p>{{ addon.description || 'Adicional opcional para a reserva.' }}</p>
+              <span>{{ addon.price | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-info-card" *ngIf="vehicle.latitude && vehicle.longitude">
+          <span class="detail-info-card__eyebrow">Mapa</span>
+          <p>Veja o ponto aproximado de retirada no mapa antes de reservar.</p>
+          <a class="detail-map-link" [href]="mapLink" target="_blank" rel="noreferrer">
+            Abrir no mapa
+          </a>
+        </section>
+
         <section class="detail-info-card">
           <span class="detail-info-card__eyebrow">Proprietário</span>
-          <h3>{{ vehicle.owner?.fullName || 'Anfitrião IZZIE CAR' }}</h3>
+          <h3>{{ vehicle.owner?.fullName || 'Anfitrião Velo' }}</h3>
           <p>{{ vehicle.owner?.city }}, {{ vehicle.owner?.state }}</p>
           <span class="detail-info-card__meta" *ngIf="showChatAction">
-            Responde direto no chat da IZZIE CAR
+            Responde direto no chat da Velo
           </span>
         </section>
 
@@ -241,7 +287,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
 
       <app-fixed-action-button
         [helper]="footerHelper"
-        [label]="(vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0') + ' / diária'"
+        [label]="(vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0') + ' / semana'"
         [actionLabel]="ctaLabel"
         [actionIcon]="ctaIcon"
         [secondaryActionLabel]="footerChatLabel"
@@ -257,7 +303,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
       .vehicle-detail-page {
         display: grid;
         gap: 16px;
-        width: min(100%, 440px);
+        width: 100%;
         margin: 0 auto;
         padding: 20px 16px 140px;
       }
@@ -375,6 +421,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
       .detail-stage__meta {
         display: flex;
         align-items: flex-start;
+        flex-direction: column;
         justify-content: space-between;
         gap: 16px;
         position: relative;
@@ -414,11 +461,31 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
       .detail-stage__price {
         min-width: 92px;
         display: inline-flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
         color: var(--primary);
-        font-size: 30px;
+        font-size: 24px;
         font-weight: 800;
         letter-spacing: -0.04em;
+      }
+
+      .detail-stage__promotions {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .detail-stage__promo {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(255, 236, 179, 0.98);
+        color: #8a5200;
+        font-size: 12px;
+        font-weight: 700;
       }
 
       .detail-panels {
@@ -440,15 +507,15 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
       .detail-facts {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        gap: 10px;
       }
 
       .detail-fact {
         display: grid;
         gap: 8px;
         align-content: start;
-        min-height: 118px;
-        padding: 16px;
+        min-height: 108px;
+        padding: 14px 12px;
         border-radius: 16px;
         background: #fff;
         border: 1px solid var(--glass-border-soft);
@@ -472,7 +539,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
 
       .detail-fact strong {
         color: var(--text-primary);
-        font-size: 16px;
+        font-size: 14px;
         line-height: 1.25;
       }
 
@@ -502,6 +569,48 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
         border-radius: 22px;
         background: rgba(249, 244, 244, 0.7);
         border: 1px solid var(--glass-border-soft);
+      }
+
+      .detail-addon-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detail-promo-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detail-promo {
+        display: grid;
+        gap: 4px;
+        padding: 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .detail-promo span {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .detail-addon {
+        display: grid;
+        gap: 4px;
+        padding: 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .detail-addon span {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .detail-map-link {
+        color: var(--primary);
       }
 
       .detail-info-card__head {
@@ -550,7 +659,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
 
       .review-summary__grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(132px, 0.95fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 20px;
       }
 
@@ -745,42 +854,82 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
         gap: 12px;
       }
 
-      @media (max-width: 640px) {
-        .detail-stage__meta {
-          flex-direction: column;
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .detail-stage__price {
-          font-size: 24px;
-        }
-
-        .review-summary__grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      @media (max-width: 480px) {
-        .detail-stage__meta {
-          flex-direction: column;
-        }
-
-        .detail-stage__meta-strip {
-          gap: 10px;
-        }
-
+      @media (min-width: 481px) {
         .detail-facts {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
+          gap: 14px;
         }
 
         .detail-fact {
-          min-height: 108px;
-          padding: 14px 12px;
+          min-height: 118px;
+          padding: 16px;
         }
 
         .detail-fact strong {
-          font-size: 14px;
+          font-size: 16px;
+        }
+      }
+
+      @media (min-width: 641px) {
+        .detail-stage__meta {
+          flex-direction: row;
+          align-items: flex-start;
+        }
+
+        .detail-stage__price {
+          justify-content: flex-end;
+          font-size: 30px;
+        }
+
+        .review-summary__grid {
+          grid-template-columns: minmax(0, 1fr) minmax(132px, 0.95fr);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .vehicle-detail-page {
+          grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
+          align-items: start;
+          gap: 20px;
+          padding: 28px 20px 176px;
+        }
+
+        .detail-stage {
+          position: sticky;
+          top: 24px;
+          padding: 22px 20px 24px;
+          border-radius: 32px;
+        }
+
+        .detail-stage__meta {
+          align-items: center;
+        }
+
+        .detail-stage__price {
+          font-size: 36px;
+        }
+
+        .detail-panels {
+          gap: 16px;
+          padding: 22px 20px;
+          border-radius: 28px;
+        }
+
+        .detail-facts {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .review-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .detail-stage__meta-strip {
+        gap: 10px;
+      }
+
+      @media (min-width: 481px) {
+        .detail-stage__meta-strip {
+          gap: 16px;
         }
       }
     `,
@@ -833,7 +982,9 @@ export class VehicleDetailPageComponent {
       return 'Abrir admin';
     }
 
-    return 'Reservar agora';
+    return this.vehicle?.bookingApprovalMode === 'INSTANT'
+      ? 'Reservar agora'
+      : 'Solicitar reserva';
   }
 
   protected get ctaIcon() {
@@ -863,7 +1014,7 @@ export class VehicleDetailPageComponent {
       return 'Gerencie seu anúncio em tempo real';
     }
 
-    return 'Reserva protegida pela IZZIE CAR';
+    return 'Reserva protegida pela Velo';
   }
 
   protected get pickupTitle() {
@@ -889,7 +1040,7 @@ export class VehicleDetailPageComponent {
       return [];
     }
 
-    return [
+    const items = [
       {
         icon: 'category',
         label: 'Categoria',
@@ -930,7 +1081,127 @@ export class VehicleDetailPageComponent {
         label: 'Localização',
         value: `${this.vehicle.city}, ${this.vehicle.state}`,
       },
+      {
+        icon: 'bolt',
+        label: 'Reserva',
+        value:
+          this.vehicle.bookingApprovalMode === 'INSTANT'
+            ? 'Confirmação instantânea'
+            : 'Aprovação manual',
+      },
+      {
+        icon: 'policy',
+        label: 'Cancelamento',
+        value: this.cancellationPolicyLabel(this.vehicle.cancellationPolicy),
+      },
     ];
+
+    if (this.vehicle.vehicleType === 'MOTORCYCLE') {
+      if (this.vehicle.motorcycleStyle) {
+        items.push({
+          icon: 'two_wheeler',
+          label: 'Estilo',
+          value: this.motorcycleStyleLabel(this.vehicle.motorcycleStyle),
+        });
+      }
+
+      if (this.vehicle.engineCc) {
+        items.push({
+          icon: 'speed',
+          label: 'Cilindrada',
+          value: `${this.vehicle.engineCc} cc`,
+        });
+      }
+
+      items.push({
+        icon: 'verified',
+        label: 'Freio ABS',
+        value: this.vehicle.hasAbs ? 'Sim' : 'Não',
+      });
+    }
+
+    return items;
+  }
+
+  protected get promotionHighlights() {
+    if (!this.vehicle) {
+      return [];
+    }
+
+    return [
+      this.vehicle.firstBookingDiscountPercent
+        ? `Primeira reserva ${this.vehicle.firstBookingDiscountPercent}% off`
+        : '',
+      this.vehicle.weeklyDiscountPercent
+        ? `Pacote semanal ${this.vehicle.weeklyDiscountPercent}% off`
+        : '',
+      this.vehicle.couponCode && this.vehicle.couponDiscountPercent
+        ? `Cupom ${this.vehicle.couponDiscountPercent}% off`
+        : '',
+    ].filter(Boolean);
+  }
+
+  protected get promotionDetails() {
+    if (!this.vehicle) {
+      return [];
+    }
+
+    return [
+      this.vehicle.firstBookingDiscountPercent
+        ? {
+            title: 'Desconto de primeira reserva',
+            description: `Novos locatários recebem ${this.vehicle.firstBookingDiscountPercent}% de desconto no valor base da reserva.`,
+            code: null,
+          }
+        : null,
+      this.vehicle.weeklyDiscountPercent
+        ? {
+            title: 'Pacote semanal automático',
+            description: `Reservas com 7 dias ou mais recebem ${this.vehicle.weeklyDiscountPercent}% de desconto automaticamente.`,
+            code: null,
+          }
+        : null,
+      this.vehicle.couponCode && this.vehicle.couponDiscountPercent
+        ? {
+            title: 'Cupom promocional',
+            description: `Use este código para aplicar ${this.vehicle.couponDiscountPercent}% de desconto no valor base da reserva.`,
+            code: this.vehicle.couponCode,
+          }
+        : null,
+    ].filter((promotion): promotion is NonNullable<typeof promotion> => !!promotion);
+  }
+
+  protected get pricingRuleHighlights() {
+    if (!this.vehicle) {
+      return [];
+    }
+
+    return [
+      this.vehicle.weekendSurchargePercent
+        ? {
+            title: 'Fim de semana',
+            description: `${this.vehicle.weekendSurchargePercent}% de acréscimo automático nas diárias de sábado e domingo.`,
+          }
+        : null,
+      this.vehicle.holidaySurchargePercent
+        ? {
+            title: 'Feriados',
+            description: `${this.vehicle.holidaySurchargePercent}% de ajuste para datas de feriado nacional.`,
+          }
+        : null,
+      this.vehicle.highDemandSurchargePercent
+        ? {
+            title: 'Alta demanda',
+            description: `${this.vehicle.highDemandSurchargePercent}% extra quando o mês já estiver com ocupação elevada.`,
+          }
+        : null,
+      this.vehicle.advanceBookingDiscountPercent
+        ? {
+            title: 'Antecedência',
+            description: `${this.vehicle.advanceBookingDiscountPercent}% de desconto para reservas feitas com ${this.vehicle.advanceBookingDaysThreshold} dia(s) ou mais.`,
+          }
+        : null,
+    ].filter((rule): rule is NonNullable<typeof rule> => !!rule);
   }
 
   protected get visibleDetailItems() {
@@ -1074,6 +1345,37 @@ export class VehicleDetailPageComponent {
     };
 
     return labels[fuelType] || fuelType;
+  }
+
+  protected cancellationPolicyLabel(policy: VehicleDetail['cancellationPolicy']) {
+    const labels = {
+      FLEXIBLE: 'Flexível',
+      MODERATE: 'Moderada',
+      STRICT: 'Rígida',
+    } as const;
+
+    return labels[policy] || policy;
+  }
+
+  protected motorcycleStyleLabel(style: string) {
+    const labels: Record<string, string> = {
+      SCOOTER: 'Scooter',
+      STREET: 'Street',
+      SPORT: 'Sport',
+      TRAIL: 'Trail',
+      CUSTOM: 'Custom',
+      TOURING: 'Touring',
+    };
+
+    return labels[style] || style;
+  }
+
+  protected get mapLink() {
+    if (!this.vehicle?.latitude || !this.vehicle?.longitude) {
+      return 'https://www.openstreetmap.org';
+    }
+
+    return `https://www.openstreetmap.org/?mlat=${this.vehicle.latitude}&mlon=${this.vehicle.longitude}#map=15/${this.vehicle.latitude}/${this.vehicle.longitude}`;
   }
 
   protected categoryLabel(category: string) {

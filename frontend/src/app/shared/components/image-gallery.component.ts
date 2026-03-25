@@ -78,8 +78,8 @@ import { Component, Input, signal } from '@angular/core';
         z-index: 2;
         display: inline-grid;
         place-items: center;
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         border: 0;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.94);
@@ -93,11 +93,11 @@ import { Component, Input, signal } from '@angular/core';
       }
 
       .gallery__nav--prev {
-        left: 12px;
+        left: 10px;
       }
 
       .gallery__nav--next {
-        right: 12px;
+        right: 10px;
       }
 
       .gallery__thumbs {
@@ -125,18 +125,18 @@ import { Component, Input, signal } from '@angular/core';
         box-shadow: 0 14px 20px rgba(255, 59, 48, 0.16);
       }
 
-      @media (max-width: 480px) {
+      @media (min-width: 481px) {
         .gallery__nav {
-          width: 38px;
-          height: 38px;
+          width: 42px;
+          height: 42px;
         }
 
         .gallery__nav--prev {
-          left: 10px;
+          left: 12px;
         }
 
         .gallery__nav--next {
-          right: 10px;
+          right: 12px;
         }
       }
     `,

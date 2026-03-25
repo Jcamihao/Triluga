@@ -4,6 +4,10 @@ const {
   PrismaClient,
   Role,
   VehicleCategory,
+  VehicleType,
+  BookingApprovalMode,
+  CancellationPolicy,
+  MotorcycleStyle,
   FuelType,
   Transmission,
   BookingStatus,
@@ -79,16 +83,16 @@ async function createUserWithProfile({
 async function main() {
   const [admin, owner, renter] = await Promise.all([
     createUserWithProfile({
-      email: 'admin@carbnb.local',
+      email: 'admin@velo.local',
       password: 'Admin123!',
       role: Role.ADMIN,
-      fullName: 'CarBnB Admin',
+      fullName: 'Velo Admin',
       phone: '+55 11 90000-0001',
       city: 'Sao Paulo',
       state: 'SP',
     }),
     createUserWithProfile({
-      email: 'owner@carbnb.local',
+      email: 'owner@velo.local',
       password: 'Owner123!',
       role: Role.OWNER,
       fullName: 'Mariana Costa',
@@ -97,7 +101,7 @@ async function main() {
       state: 'SP',
     }),
     createUserWithProfile({
-      email: 'renter@carbnb.local',
+      email: 'renter@velo.local',
       password: 'Renter123!',
       role: Role.RENTER,
       fullName: 'Lucas Almeida',
@@ -111,6 +115,7 @@ async function main() {
   await prisma.payment.deleteMany();
   await prisma.bookingStatusHistory.deleteMany();
   await prisma.booking.deleteMany();
+  await prisma.siteVisit.deleteMany();
   await prisma.vehicleImage.deleteMany();
   await prisma.vehicleAvailability.deleteMany();
   await prisma.vehicleBlockedDate.deleteMany();
@@ -130,13 +135,34 @@ async function main() {
         plate: 'CAR2B22',
         city: 'Sao Paulo',
         state: 'SP',
+        vehicleType: VehicleType.CAR,
         category: VehicleCategory.SUV,
+        bookingApprovalMode: BookingApprovalMode.INSTANT,
+        cancellationPolicy: CancellationPolicy.MODERATE,
         transmission: Transmission.AUTOMATIC,
         fuelType: FuelType.FLEX,
         seats: 5,
         dailyRate: 289.9,
+        addons: [
+          {
+            id: 'delivery',
+            name: 'Entrega no local',
+            description: 'Receba o veículo em um ponto combinado da cidade.',
+            price: 45,
+            enabled: true,
+          },
+          {
+            id: 'baby-seat',
+            name: 'Cadeirinha',
+            description: 'Item extra para transporte infantil.',
+            price: 35,
+            enabled: true,
+          },
+        ],
         description:
           'SUV confortável para viagens curtas e uso urbano com multimídia, câmera de ré e ar digital.',
+        latitude: -23.55052,
+        longitude: -46.633308,
         images: {
           create: [
             {
@@ -159,19 +185,87 @@ async function main() {
         plate: 'CAR3B23',
         city: 'Campinas',
         state: 'SP',
+        vehicleType: VehicleType.CAR,
         category: VehicleCategory.HATCH,
+        bookingApprovalMode: BookingApprovalMode.MANUAL,
+        cancellationPolicy: CancellationPolicy.FLEXIBLE,
         transmission: Transmission.AUTOMATIC,
         fuelType: FuelType.FLEX,
         seats: 5,
         dailyRate: 179.9,
+        addons: [
+          {
+            id: 'airport-pickup',
+            name: 'Retirada no aeroporto',
+            description: 'Entrega e retirada no aeroporto de Campinas.',
+            price: 55,
+            enabled: true,
+          },
+        ],
         description:
           'Hatch econômico, ótimo para cidade, com direção elétrica, central multimídia e seguro simplificado.',
+        latitude: -22.90556,
+        longitude: -47.06083,
         images: {
           create: [
             {
               url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80',
               key: 'seed/vehicles/onix-cover.jpg',
               alt: 'Chevrolet Onix branco',
+              position: 0,
+            },
+          ],
+        },
+      },
+    }),
+    prisma.vehicle.create({
+      data: {
+        ownerId: owner.id,
+        title: 'Yamaha NMAX 160 ABS 2024',
+        brand: 'Yamaha',
+        model: 'NMAX 160',
+        year: 2024,
+        plate: 'MOT4A24',
+        city: 'Sao Paulo',
+        state: 'SP',
+        vehicleType: VehicleType.MOTORCYCLE,
+        category: VehicleCategory.ECONOMY,
+        bookingApprovalMode: BookingApprovalMode.INSTANT,
+        cancellationPolicy: CancellationPolicy.FLEXIBLE,
+        transmission: Transmission.CVT,
+        fuelType: FuelType.GASOLINE,
+        seats: 2,
+        dailyRate: 89.9,
+        addons: [
+          {
+            id: 'helmet-plus',
+            name: 'Capacete extra',
+            description: 'Capacete adicional para garupa.',
+            price: 20,
+            enabled: true,
+          },
+          {
+            id: 'top-case',
+            name: 'Baú expandido',
+            description: 'Baú traseiro com espaço extra para bagagem.',
+            price: 15,
+            enabled: true,
+          },
+        ],
+        motorcycleStyle: MotorcycleStyle.SCOOTER,
+        engineCc: 160,
+        hasAbs: true,
+        hasTopCase: true,
+        description:
+          'Scooter ágil para deslocamentos urbanos, com freios ABS, baú e excelente consumo.',
+        latitude: -23.563099,
+        longitude: -46.654387,
+        images: {
+          create: [
+            {
+              url: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80',
+              key: 'seed/vehicles/nmax-cover.jpg',
+              alt: 'Scooter Yamaha NMAX estacionada',
               position: 0,
             },
           ],
@@ -261,7 +355,39 @@ async function main() {
         userId: admin.id,
         type: NotificationType.SYSTEM_ALERT,
         title: 'Seed carregado',
-        message: 'O ambiente local do CarBnB foi populado com dados iniciais.',
+        message: 'O ambiente local da Velo foi populado com dados iniciais.',
+      },
+    ],
+  });
+
+  await prisma.siteVisit.createMany({
+    data: [
+      {
+        visitorId: 'seed-visitor-1',
+        path: '/',
+        referrer: 'https://google.com',
+        userAgent: 'seed-agent',
+        isFirstVisit: true,
+      },
+      {
+        visitorId: 'seed-visitor-1',
+        path: '/search?q=jeep',
+        referrer: 'https://google.com',
+        userAgent: 'seed-agent',
+        isFirstVisit: false,
+      },
+      {
+        visitorId: 'seed-visitor-2',
+        path: '/',
+        referrer: 'https://instagram.com',
+        userAgent: 'seed-agent',
+        isFirstVisit: true,
+      },
+      {
+        visitorId: 'seed-visitor-3',
+        path: '/vehicles/demo',
+        userAgent: 'seed-agent',
+        isFirstVisit: true,
       },
     ],
   });

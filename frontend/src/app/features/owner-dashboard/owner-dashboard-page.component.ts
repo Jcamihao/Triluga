@@ -8,19 +8,49 @@ import { AuthService } from '../../core/services/auth.service';
 import { BookingsApiService } from '../../core/services/bookings-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import {
+  BookingApprovalMode,
   Booking,
+  CancellationPolicy,
   CreateVehiclePayload,
   FuelType,
+  MotorcycleStyle,
   OwnerVehicleItem,
   TransmissionType,
+  VehicleAddon,
+  VehicleAvailabilityResponse,
   VehicleImage,
   VehicleCategory,
+  VehicleType,
 } from '../../core/models/domain.models';
 
 type SelectOption<T extends string> = {
   label: string;
   value: T;
 };
+
+type PublicationChecklistItem = {
+  title: string;
+  description: string;
+  done: boolean;
+};
+
+type CalendarDayItem = {
+  date: string;
+  dayNumber: number;
+  inCurrentMonth: boolean;
+  state: 'free' | 'booked' | 'blocked' | 'outside';
+  note: string;
+  isToday: boolean;
+};
+
+type IdlePeriodItem = {
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  label: string;
+};
+
+type OwnerViewMode = 'dashboard' | 'ads';
 
 @Component({
   selector: 'app-owner-dashboard-page',
@@ -29,18 +59,124 @@ type SelectOption<T extends string> = {
   template: `
     <main class="page owner-page">
       <section class="owner-hero">
-        <span class="eyebrow">{{ createMode ? 'Anunciar carro' : 'Meus anúncios' }}</span>
-        <h1>{{ createMode ? 'Publique um novo veículo' : 'Gerencie seus veículos anunciados' }}</h1>
-        <p>{{ vehicles.length }} veículos cadastrados • {{ bookings.length }} reservas recebidas</p>
+        <span class="eyebrow">
+          {{
+            isDashboardView
+              ? 'Dashboard do anfitrião'
+              : createMode
+                ? 'Anunciar carro'
+                : 'Meus anúncios'
+          }}
+        </span>
+        <h1>
+          {{
+            isDashboardView
+              ? 'Acompanhe faturamento, agenda e pedidos em um só lugar'
+              : createMode
+                ? 'Publique um novo veículo'
+                : 'Gerencie seus veículos anunciados'
+          }}
+        </h1>
+        <p>
+          {{
+            isDashboardView
+              ? manageableVehicles.length + ' veículos ativos • ' + bookings.length + ' reservas monitoradas'
+              : vehicles.length + ' veículos cadastrados • ' + bookings.length + ' reservas recebidas'
+          }}
+        </p>
+
+        <div class="owner-hero__actions">
+          <div class="owner-hero__switches">
+            <button
+              type="button"
+              class="btn owner-hero__switch"
+              [class.btn-primary]="isDashboardView"
+              [class.btn-secondary]="!isDashboardView"
+              (click)="goToDashboardView()"
+            >
+              Dashboard
+            </button>
+
+            <button
+              type="button"
+              class="btn owner-hero__switch"
+              [class.btn-primary]="isAdsView"
+              [class.btn-secondary]="!isAdsView"
+              (click)="goToAdsView()"
+            >
+              Meus anúncios
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-primary" (click)="goToCreateView()">
+            Novo anúncio
+          </button>
+        </div>
       </section>
 
-      <section class="stats-grid">
+      <section class="dashboard-card" *ngIf="isDashboardView && !manageableVehicles.length">
+        <div class="card-head">
+          <div>
+            <h2>Seu dashboard vai aparecer aqui</h2>
+            <p>Publique o primeiro anúncio para começar a acompanhar agenda, faturamento e pedidos.</p>
+          </div>
+          <button type="button" class="btn btn-primary" (click)="goToCreateView()">
+            Criar primeiro anúncio
+          </button>
+        </div>
+      </section>
+
+      <section class="stats-grid" *ngIf="isDashboardView">
         <article><strong>{{ pendingCount }}</strong><span>pendentes</span></article>
         <article><strong>{{ approvedCount }}</strong><span>aprovadas</span></article>
         <article><strong>{{ completedCount }}</strong><span>concluídas</span></article>
       </section>
 
-      <section class="dashboard-card dashboard-card--form" *ngIf="showVehicleEditor">
+      <section class="dashboard-card finance-card" *ngIf="isDashboardView && manageableVehicles.length">
+        <div class="card-head">
+          <div>
+            <h2>Dashboard financeiro</h2>
+            <p>Visão consolidada do mês selecionado para os seus anúncios ativos.</p>
+          </div>
+
+          <label class="month-filter">
+            <span>Mês</span>
+            <input
+              type="month"
+              [ngModel]="calendarMonth"
+              (ngModelChange)="updateCalendarMonth($event)"
+            />
+          </label>
+        </div>
+
+        <div class="finance-grid">
+          <article>
+            <span>Faturamento</span>
+            <strong>{{ financialSnapshot.revenue | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+            <small>{{ financialSnapshot.bookingCount }} reserva(s) com impacto no período</small>
+          </article>
+
+          <article>
+            <span>Taxa de ocupação</span>
+            <strong>{{ financialSnapshot.occupancyRate | number: '1.0-1' }}%</strong>
+            <small>Baseado nos dias reservados do mês</small>
+          </article>
+
+          <article>
+            <span>Ticket médio</span>
+            <strong>{{ financialSnapshot.averageTicket | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+            <small>Valor médio por reserva no mês</small>
+          </article>
+
+          <article>
+            <span>Períodos ociosos</span>
+            <strong>{{ financialSnapshot.longestIdleGapDays }} dia(s)</strong>
+            <small>Maior lacuna livre do veículo selecionado</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-card dashboard-card--form" *ngIf="isAdsView && showVehicleEditor">
         <div class="card-head">
           <div>
             <h2>{{ isEditingVehicle ? 'Editar anúncio' : 'Finalizar anúncio' }}</h2>
@@ -72,6 +208,35 @@ type SelectOption<T extends string> = {
           </article>
         </div>
 
+        <section class="publication-guide">
+          <div class="publication-guide__head">
+            <div>
+              <span class="eyebrow eyebrow--soft">Publicação guiada</span>
+              <h3>{{ publicationChecklistCompleted }}/{{ publicationChecklist.length }} itens completos</h3>
+            </div>
+
+            <strong>{{ publicationReadinessPercentage }}%</strong>
+          </div>
+
+          <div class="publication-checklist">
+            <article class="publication-item" *ngFor="let item of publicationChecklist">
+              <span class="publication-item__icon" [class.publication-item__icon--done]="item.done">
+                {{ item.done ? 'OK' : '!' }}
+              </span>
+
+              <div>
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.description }}</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="publication-suggestions" *ngIf="publicationSuggestions.length">
+            <strong>Prioridades agora</strong>
+            <p *ngFor="let suggestion of publicationSuggestions">{{ suggestion }}</p>
+          </div>
+        </section>
+
         <div class="form-grid">
           <label>
             <span>Título do anúncio</span>
@@ -101,7 +266,16 @@ type SelectOption<T extends string> = {
           </label>
         </div>
 
-        <div class="form-grid form-grid--triple">
+        <div class="form-grid">
+          <label>
+            <span>Tipo de veículo</span>
+            <select [(ngModel)]="vehicleDraft.vehicleType">
+              <option *ngFor="let option of vehicleTypeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+
           <label>
             <span>Categoria</span>
             <select [(ngModel)]="vehicleDraft.category">
@@ -119,7 +293,9 @@ type SelectOption<T extends string> = {
               </option>
             </select>
           </label>
+        </div>
 
+        <div class="form-grid">
           <label>
             <span>Combustível</span>
             <select [(ngModel)]="vehicleDraft.fuelType">
@@ -135,9 +311,11 @@ type SelectOption<T extends string> = {
             <span>Assentos</span>
             <input [(ngModel)]="vehicleDraft.seats" type="number" min="2" max="12" />
           </label>
+        </div>
 
+        <div class="form-grid">
           <label>
-            <span>Diária</span>
+            <span>Valor semanal</span>
             <input [(ngModel)]="vehicleDraft.dailyRate" type="number" min="1" step="0.01" />
           </label>
 
@@ -179,6 +357,247 @@ type SelectOption<T extends string> = {
             placeholder="Conte os diferenciais do carro, regras básicas e itens inclusos."
           ></textarea>
         </label>
+
+        <div class="form-grid">
+          <label>
+            <span>Reserva</span>
+            <select [(ngModel)]="vehicleDraft.bookingApprovalMode">
+              <option *ngFor="let option of bookingApprovalOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            <span>Cancelamento</span>
+            <select [(ngModel)]="vehicleDraft.cancellationPolicy">
+              <option *ngFor="let option of cancellationPolicyOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <section class="media-manager">
+          <div class="media-manager__head">
+            <div>
+              <h3>Promoções</h3>
+              <p>Ofertas aplicadas automaticamente no cálculo da reserva.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>Primeira reserva (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.firstBookingDiscountPercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+
+            <label>
+              <span>Pacote semanal (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.weeklyDiscountPercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>Cupom</span>
+              <input [(ngModel)]="vehicleDraft.couponCode" placeholder="PRIMEIRAVIAGEM" maxlength="32" />
+            </label>
+
+            <label>
+              <span>Desconto do cupom (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.couponDiscountPercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section class="media-manager">
+          <div class="media-manager__head">
+            <div>
+              <h3>Preço dinâmico</h3>
+              <p>Ajuste a diária por fim de semana, feriado, demanda e antecedência.</p>
+            </div>
+          </div>
+
+          <div class="form-grid form-grid--triple">
+            <label>
+              <span>Fim de semana (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.weekendSurchargePercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+
+            <label>
+              <span>Feriado (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.holidaySurchargePercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+
+            <label>
+              <span>Alta demanda (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.highDemandSurchargePercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>Desconto por antecedência (%)</span>
+              <input
+                [(ngModel)]="vehicleDraft.advanceBookingDiscountPercent"
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+              />
+            </label>
+
+            <label>
+              <span>Antecedência mínima (dias)</span>
+              <input
+                [(ngModel)]="vehicleDraft.advanceBookingDaysThreshold"
+                type="number"
+                min="0"
+                max="365"
+                step="1"
+              />
+            </label>
+          </div>
+        </section>
+
+        <div class="form-grid">
+          <label>
+            <span>Latitude</span>
+            <input [(ngModel)]="vehicleDraft.latitude" type="number" step="0.000001" placeholder="-23.550520" />
+          </label>
+
+          <label>
+            <span>Longitude</span>
+            <input [(ngModel)]="vehicleDraft.longitude" type="number" step="0.000001" placeholder="-46.633308" />
+          </label>
+        </div>
+
+        <div class="form-grid" *ngIf="vehicleDraft.vehicleType === 'MOTORCYCLE'">
+          <label>
+            <span>Estilo da moto</span>
+            <select [(ngModel)]="vehicleDraft.motorcycleStyle">
+              <option value="">Selecione</option>
+              <option *ngFor="let option of motorcycleStyleOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            <span>Cilindrada</span>
+            <input [(ngModel)]="vehicleDraft.engineCc" type="number" min="50" max="2500" step="1" />
+          </label>
+        </div>
+
+        <div class="form-grid" *ngIf="vehicleDraft.vehicleType === 'MOTORCYCLE'">
+          <label class="toggle-field">
+            <span>Freio ABS</span>
+            <button
+              type="button"
+              class="toggle-button"
+              [class.toggle-button--active]="vehicleDraft.hasAbs"
+              (click)="vehicleDraft.hasAbs = !vehicleDraft.hasAbs"
+            >
+              {{ vehicleDraft.hasAbs ? 'Incluído' : 'Não' }}
+            </button>
+          </label>
+
+          <label class="toggle-field">
+            <span>Baú</span>
+            <button
+              type="button"
+              class="toggle-button"
+              [class.toggle-button--active]="vehicleDraft.hasTopCase"
+              (click)="vehicleDraft.hasTopCase = !vehicleDraft.hasTopCase"
+            >
+              {{ vehicleDraft.hasTopCase ? 'Incluído' : 'Não' }}
+            </button>
+          </label>
+        </div>
+
+        <section class="media-manager">
+          <div class="media-manager__head">
+            <div>
+              <h3>Itens extras</h3>
+              <p>Configure adicionais opcionais para aumentar o ticket da reserva.</p>
+            </div>
+
+            <button type="button" class="btn btn-secondary" (click)="addAddon()">
+              Adicionar extra
+            </button>
+          </div>
+
+          <p class="state-message" *ngIf="!vehicleDraft.addons.length">
+            Nenhum item extra configurado ainda.
+          </p>
+
+          <div class="addon-list" *ngIf="vehicleDraft.addons.length">
+            <article class="addon-row" *ngFor="let addon of vehicleDraft.addons; let index = index">
+              <div class="form-grid">
+                <label>
+                  <span>Nome</span>
+                  <input [(ngModel)]="addon.name" placeholder="Ex.: Capacete extra" />
+                </label>
+
+                <label>
+                  <span>Preço</span>
+                  <input [(ngModel)]="addon.price" type="number" min="0" step="0.01" />
+                </label>
+              </div>
+
+              <label>
+                <span>Descrição</span>
+                <input [(ngModel)]="addon.description" placeholder="Explique rapidamente o que está incluso" />
+              </label>
+
+              <div class="addon-row__actions">
+                <button type="button" class="btn btn-secondary" (click)="toggleAddon(index)">
+                  {{ addon.enabled === false ? 'Ativar' : 'Desativar' }}
+                </button>
+                <button type="button" class="btn btn-ghost btn-ghost--danger" (click)="removeAddon(index)">
+                  Remover
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
 
         <section class="media-manager">
           <div class="media-manager__head">
@@ -253,7 +672,7 @@ type SelectOption<T extends string> = {
         <p class="feedback feedback--error" *ngIf="vehicleError">{{ vehicleError }}</p>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card" *ngIf="isAdsView">
         <div class="card-head">
           <h2>Meus veículos</h2>
         </div>
@@ -281,8 +700,13 @@ type SelectOption<T extends string> = {
             </div>
 
             <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
-            <span>{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }} / diária</span>
-            <p>{{ vehicle.images.length }} fotos • {{ categoryLabel(vehicle.category) }} • {{ transmissionLabel(vehicle.transmission) }}</p>
+            <span>{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }} / semana</span>
+            <p>
+              {{ vehicle.images.length }} fotos •
+              {{ vehicleTypeLabel(vehicle.vehicleType) }} •
+              {{ categoryLabel(vehicle.category) }} •
+              {{ transmissionLabel(vehicle.transmission) }}
+            </p>
             <div class="vehicle-row__meta">
               <span class="status status--published" *ngIf="vehicle.isPublished">Publicado</span>
               <span class="status status--draft" *ngIf="!vehicle.isPublished">Rascunho</span>
@@ -321,7 +745,7 @@ type SelectOption<T extends string> = {
         </article>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card" *ngIf="isAdsView">
         <div class="card-head">
           <div>
             <h2>Bloquear período</h2>
@@ -386,7 +810,86 @@ type SelectOption<T extends string> = {
         </p>
       </section>
 
-      <section class="dashboard-card">
+      <section class="dashboard-card" *ngIf="isDashboardView && manageableVehicles.length">
+        <div class="card-head">
+          <div>
+            <h2>Agenda visual</h2>
+            <p>Reservas, bloqueios e lacunas livres de {{ selectedVehicle?.title || 'seu veículo' }}.</p>
+          </div>
+
+          <div class="calendar-controls">
+            <button type="button" class="btn btn-secondary" (click)="changeCalendarMonth(-1)">
+              Mês anterior
+            </button>
+            <strong>{{ calendarMonthLabel }}</strong>
+            <button type="button" class="btn btn-secondary" (click)="changeCalendarMonth(1)">
+              Próximo mês
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-legend">
+          <span class="calendar-legend__item"><i class="calendar-dot calendar-dot--booked"></i>Reserva</span>
+          <span class="calendar-legend__item"><i class="calendar-dot calendar-dot--blocked"></i>Bloqueio</span>
+          <span class="calendar-legend__item"><i class="calendar-dot calendar-dot--free"></i>Livre</span>
+        </div>
+
+        <div class="calendar-grid" *ngIf="selectedAvailability; else emptyCalendar">
+          <span class="calendar-weekday" *ngFor="let weekday of calendarWeekdays">{{ weekday }}</span>
+
+          <article
+            class="calendar-day"
+            *ngFor="let day of calendarDays"
+            [class.calendar-day--outside]="!day.inCurrentMonth"
+            [class.calendar-day--booked]="day.state === 'booked'"
+            [class.calendar-day--blocked]="day.state === 'blocked'"
+            [class.calendar-day--free]="day.state === 'free'"
+            [class.calendar-day--today]="day.isToday"
+          >
+            <strong>{{ day.dayNumber }}</strong>
+            <small>{{ day.note }}</small>
+          </article>
+        </div>
+
+        <ng-template #emptyCalendar>
+          <p class="state-message">Selecione um veículo para visualizar o calendário.</p>
+        </ng-template>
+
+        <div class="calendar-summary" *ngIf="selectedAvailability">
+          <article>
+            <strong>{{ monthlyScheduleSummary.booked }}</strong>
+            <span>dias reservados</span>
+          </article>
+          <article>
+            <strong>{{ monthlyScheduleSummary.blocked }}</strong>
+            <span>dias bloqueados</span>
+          </article>
+          <article>
+            <strong>{{ monthlyScheduleSummary.free }}</strong>
+            <span>dias livres</span>
+          </article>
+        </div>
+
+        <div class="idle-periods" *ngIf="selectedAvailability">
+          <div class="idle-periods__head">
+            <h3>Lacunas livres</h3>
+            <p>Use esses períodos para promoções, destaque no anúncio ou bloqueios planejados.</p>
+          </div>
+
+          <div class="idle-period-list" *ngIf="idlePeriods.length; else noIdlePeriods">
+            <article class="idle-period-item" *ngFor="let period of idlePeriods">
+              <strong>{{ period.label }}</strong>
+              <span>{{ period.startDate | date: 'dd/MM' }} até {{ period.endDate | date: 'dd/MM' }}</span>
+            </article>
+          </div>
+
+          <ng-template #noIdlePeriods>
+            <p class="state-message">Nenhuma lacuna livre encontrada neste mês.</p>
+          </ng-template>
+        </div>
+      </section>
+
+      <section class="dashboard-card" *ngIf="isDashboardView">
         <div class="card-head">
           <h2>Solicitações recebidas</h2>
         </div>
@@ -476,7 +979,7 @@ type SelectOption<T extends string> = {
 
       .stats-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
         gap: 12px;
       }
 
@@ -484,6 +987,49 @@ type SelectOption<T extends string> = {
         display: block;
         color: var(--primary);
         font-size: 22px;
+      }
+
+      .finance-card {
+        gap: 18px;
+      }
+
+      .owner-hero__actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .owner-hero__switches {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .owner-hero__switch {
+        min-width: 0;
+      }
+
+      .finance-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .finance-grid article {
+        display: grid;
+        gap: 6px;
+        padding: 16px;
+        border-radius: 18px;
+        background: var(--surface-muted);
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .finance-grid strong {
+        color: var(--text-primary);
+        font-size: 22px;
+      }
+
+      .finance-grid small {
+        color: var(--text-secondary);
       }
 
       .dashboard-card--form {
@@ -494,12 +1040,13 @@ type SelectOption<T extends string> = {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        flex-direction: column;
         gap: 16px;
       }
 
       .announcement-steps {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 10px;
       }
 
@@ -522,14 +1069,80 @@ type SelectOption<T extends string> = {
         color: var(--primary);
       }
 
+      .publication-guide {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(248, 250, 255, 0.96), rgba(255, 255, 255, 0.98));
+        border: 1px solid rgba(37, 99, 235, 0.12);
+      }
+
+      .publication-guide__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .publication-guide__head strong {
+        font-size: 28px;
+        color: var(--primary);
+      }
+
+      .publication-checklist,
+      .publication-suggestions,
+      .idle-period-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .publication-item,
+      .idle-period-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .publication-item__icon {
+        width: 32px;
+        height: 32px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.18);
+        color: #9a5c00;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .publication-item__icon--done {
+        background: rgba(34, 197, 94, 0.16);
+        color: var(--success);
+      }
+
+      .publication-suggestions {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(37, 99, 235, 0.06);
+      }
+
+      .publication-suggestions p {
+        color: var(--text-primary);
+      }
+
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 12px;
       }
 
       .form-grid--triple {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr;
       }
 
       label {
@@ -589,6 +1202,7 @@ type SelectOption<T extends string> = {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        flex-direction: column;
         gap: 16px;
       }
 
@@ -672,6 +1286,26 @@ type SelectOption<T extends string> = {
         color: var(--text-primary);
         font: inherit;
         font-weight: 700;
+      }
+
+      .addon-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .addon-row {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .addon-row__actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .form-actions {
@@ -863,6 +1497,123 @@ type SelectOption<T extends string> = {
         border: 1px solid var(--glass-border-soft);
       }
 
+      .month-filter {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .calendar-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .calendar-legend {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .calendar-legend__item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .calendar-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+
+      .calendar-dot--booked {
+        background: rgba(37, 99, 235, 0.9);
+      }
+
+      .calendar-dot--blocked {
+        background: rgba(245, 158, 11, 0.9);
+      }
+
+      .calendar-dot--free {
+        background: rgba(34, 197, 94, 0.9);
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .calendar-weekday {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .calendar-day {
+        display: grid;
+        gap: 6px;
+        min-height: 72px;
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .calendar-day--booked {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.22);
+      }
+
+      .calendar-day--blocked {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.24);
+      }
+
+      .calendar-day--free {
+        background: rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.2);
+      }
+
+      .calendar-day--outside {
+        opacity: 0.45;
+      }
+
+      .calendar-day--today {
+        box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+
+      .calendar-summary {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .calendar-summary article,
+      .idle-periods {
+        display: grid;
+        gap: 6px;
+      }
+
+      .calendar-summary article {
+        padding: 14px;
+        border-radius: 18px;
+        background: var(--surface-muted);
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .idle-periods {
+        gap: 12px;
+      }
+
+      .idle-periods__head {
+        display: grid;
+        gap: 4px;
+      }
+
       .feedback {
         color: var(--success);
         font-weight: 600;
@@ -872,24 +1623,94 @@ type SelectOption<T extends string> = {
         color: var(--error);
       }
 
-      @media (max-width: 720px) {
-        .form-grid,
-        .form-grid--triple,
-        .stats-grid,
+      @media (min-width: 721px) {
+        .owner-hero__actions {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+        }
+
+        .form-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .form-grid--triple {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
         .announcement-steps {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .finance-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .calendar-summary {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .card-head,
-        .media-manager__head,
-        .vehicle-row,
-        .vehicle-row__top {
-          grid-template-columns: 1fr;
-          flex-direction: column;
+        .media-manager__head {
+          flex-direction: row;
         }
 
-        .vehicle-row {
-          grid-template-columns: 1fr;
+        .month-filter {
+          width: auto;
+          min-width: 180px;
+        }
+
+        .calendar-grid {
+          gap: 8px;
+        }
+
+        .calendar-day {
+          min-height: 84px;
+          padding: 12px;
+        }
+      }
+
+      @media (min-width: 1080px) {
+        .owner-page {
+          gap: 20px;
+          padding: 28px 20px 56px;
+        }
+
+        .owner-hero,
+        .dashboard-card,
+        .stats-grid article {
+          padding: 24px;
+        }
+
+        .media-grid {
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+
+        .vehicle-row__content {
+          padding: 24px;
+        }
+
+        .calendar-day {
+          min-height: 92px;
+        }
+
+        .booking-row {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 16px;
+        }
+      }
+
+      .vehicle-row__top {
+        flex-direction: column;
+      }
+
+      @media (min-width: 721px) {
+        .vehicle-row__top {
+          flex-direction: row;
         }
       }
     `,
@@ -906,6 +1727,20 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected readonly fallbackImage =
     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80';
   protected readonly today = new Date().toISOString().slice(0, 10);
+  protected readonly calendarWeekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+  protected readonly vehicleTypeOptions: SelectOption<VehicleType>[] = [
+    { label: 'Carro', value: 'CAR' },
+    { label: 'Moto', value: 'MOTORCYCLE' },
+  ];
+  protected readonly bookingApprovalOptions: SelectOption<BookingApprovalMode>[] = [
+    { label: 'Manual', value: 'MANUAL' },
+    { label: 'Instantânea', value: 'INSTANT' },
+  ];
+  protected readonly cancellationPolicyOptions: SelectOption<CancellationPolicy>[] = [
+    { label: 'Flexível', value: 'FLEXIBLE' },
+    { label: 'Moderada', value: 'MODERATE' },
+    { label: 'Rígida', value: 'STRICT' },
+  ];
   protected readonly categoryOptions: SelectOption<VehicleCategory>[] = [
     { label: 'Econômico', value: 'ECONOMY' },
     { label: 'Hatch', value: 'HATCH' },
@@ -928,6 +1763,14 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     { label: 'Elétrico', value: 'ELECTRIC' },
     { label: 'Híbrido', value: 'HYBRID' },
   ];
+  protected readonly motorcycleStyleOptions: SelectOption<MotorcycleStyle>[] = [
+    { label: 'Scooter', value: 'SCOOTER' },
+    { label: 'Street', value: 'STREET' },
+    { label: 'Sport', value: 'SPORT' },
+    { label: 'Trail', value: 'TRAIL' },
+    { label: 'Custom', value: 'CUSTOM' },
+    { label: 'Touring', value: 'TOURING' },
+  ];
   protected vehicles: OwnerVehicleItem[] = [];
   protected bookings: Booking[] = [];
   protected loading = true;
@@ -937,7 +1780,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected mediaFeedback = '';
   protected mediaError = '';
   protected availabilityLoading = false;
+  protected calendarMonth = this.formatMonthValue(new Date());
   protected selectedVehicleId = '';
+  protected selectedAvailability: VehicleAvailabilityResponse | null = null;
   protected blockedDates: Array<{ id: string; startDate: string; endDate: string; reason?: string | null }> = [];
   protected blockedDateDraft = {
     startDate: '',
@@ -954,12 +1799,15 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected imageActionId: string | null = null;
   protected editingVehicleId: string | null = null;
   protected createMode = false;
+  protected readonly viewMode: OwnerViewMode;
   protected pendingVehicleFiles: File[] = [];
   protected pendingVehiclePreviews: Array<{ name: string; url: string }> = [];
   protected vehicleDraft = this.createVehicleDraft();
 
   constructor() {
-    this.createMode = this.route.snapshot.queryParamMap.get('editor') === 'create';
+    this.viewMode = this.route.snapshot.data['view'] === 'dashboard' ? 'dashboard' : 'ads';
+    this.createMode =
+      this.isAdsView && this.route.snapshot.queryParamMap.get('editor') === 'create';
 
     if (this.createMode) {
       this.vehicleDraft = this.createVehicleDraft();
@@ -988,8 +1836,16 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     return !!this.editingVehicleId;
   }
 
+  protected get isDashboardView() {
+    return this.viewMode === 'dashboard';
+  }
+
+  protected get isAdsView() {
+    return this.viewMode === 'ads';
+  }
+
   protected get showVehicleEditor() {
-    return this.isEditingVehicle || this.createMode;
+    return this.isAdsView && (this.isEditingVehicle || this.createMode);
   }
 
   protected get vehicleSubmitLabel() {
@@ -1010,6 +1866,264 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   protected get manageableVehicles() {
     return this.vehicles.filter((vehicle) => vehicle.isActive);
+  }
+
+  protected get selectedVehicle() {
+    return this.manageableVehicles.find((vehicle) => vehicle.id === this.selectedVehicleId) ?? null;
+  }
+
+  protected get calendarMonthLabel() {
+    return new Intl.DateTimeFormat('pt-BR', {
+      month: 'long',
+      year: 'numeric',
+    }).format(this.getMonthStart(this.calendarMonth));
+  }
+
+  protected get financialSnapshot() {
+    const monthStart = this.getMonthStart(this.calendarMonth);
+    const monthEnd = this.getNextMonthStart(monthStart);
+    const relevantBookings = this.bookings.filter((booking) => {
+      if (!['APPROVED', 'IN_PROGRESS', 'COMPLETED'].includes(booking.status)) {
+        return false;
+      }
+
+      return this.countOverlapDays(booking.startDate, booking.endDate, monthStart, monthEnd) > 0;
+    });
+    const revenue = relevantBookings.reduce((total, booking) => {
+      const overlapDays = this.countOverlapDays(
+        booking.startDate,
+        booking.endDate,
+        monthStart,
+        monthEnd,
+      );
+      const bookingNetAmount = Math.max(0, booking.subtotal - booking.discountsAmount);
+      const proratedAmount =
+        booking.totalDays > 0 ? (bookingNetAmount / booking.totalDays) * overlapDays : 0;
+
+      return total + proratedAmount;
+    }, 0);
+    const daysInMonth = this.getDaysInMonth(monthStart);
+    const bookedDays = relevantBookings.reduce(
+      (total, booking) =>
+        total +
+        this.countOverlapDays(booking.startDate, booking.endDate, monthStart, monthEnd),
+      0,
+    );
+    const capacityDays = daysInMonth * Math.max(this.manageableVehicles.length, 1);
+
+    return {
+      revenue: Number(revenue.toFixed(2)),
+      bookingCount: relevantBookings.length,
+      occupancyRate: capacityDays
+        ? Number(((bookedDays / capacityDays) * 100).toFixed(1))
+        : 0,
+      averageTicket: relevantBookings.length
+        ? Number((revenue / relevantBookings.length).toFixed(2))
+        : 0,
+      longestIdleGapDays: this.idlePeriods.reduce(
+        (longest, period) => Math.max(longest, period.totalDays),
+        0,
+      ),
+    };
+  }
+
+  protected get publicationChecklist() {
+    const totalPhotos = (this.editingVehicle?.images.length ?? 0) + this.pendingVehicleFiles.length;
+    const descriptionLength = this.vehicleDraft.description.trim().length;
+    const hasPickupPoint = !!this.vehicleDraft.addressLine?.trim();
+    const hasCoordinates =
+      this.vehicleDraft.latitude !== undefined && this.vehicleDraft.longitude !== undefined;
+    const hasTitleContext =
+      this.vehicleDraft.title.trim().length >= 18 &&
+      !!this.vehicleDraft.brand.trim() &&
+      !!this.vehicleDraft.model.trim();
+    const hasConversionBoost =
+      this.vehicleDraft.bookingApprovalMode === 'INSTANT' ||
+      this.vehicleDraft.addons.some((addon) => addon.enabled !== false) ||
+      this.vehicleDraft.firstBookingDiscountPercent > 0 ||
+      this.vehicleDraft.weeklyDiscountPercent > 0 ||
+      (!!this.vehicleDraft.couponCode && this.vehicleDraft.couponDiscountPercent > 0);
+
+    const checklist: PublicationChecklistItem[] = [
+      {
+        title: 'Fotos do anúncio',
+        description:
+          totalPhotos >= 3
+            ? `${totalPhotos} fotos prontas para vender melhor.`
+            : 'Faltam fotos. Adicione pelo menos 3 imagens reais do veículo.',
+        done: totalPhotos >= 3,
+      },
+      {
+        title: 'Descrição completa',
+        description:
+          descriptionLength >= 120
+            ? 'Descrição boa o suficiente para responder as dúvidas básicas.'
+            : 'Faltou descrição. Explique regras, diferenciais e itens inclusos.',
+        done: descriptionLength >= 120,
+      },
+      {
+        title: 'Localização e retirada',
+        description:
+          hasPickupPoint && hasCoordinates
+            ? 'Ponto de retirada e mapa já estão configurados.'
+            : 'Defina endereço e coordenadas para reduzir atrito antes da reserva.',
+        done: hasPickupPoint && hasCoordinates,
+      },
+      {
+        title: 'Anúncio pode converter mais',
+        description:
+          hasConversionBoost
+            ? 'Seu anúncio já tem algum incentivo de conversão ativo.'
+            : 'Ative reserva instantânea, extras ou promoção para melhorar a conversão.',
+        done: hasConversionBoost,
+      },
+      {
+        title: this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'Ficha da moto' : 'Título específico',
+        description:
+          this.vehicleDraft.vehicleType === 'MOTORCYCLE'
+            ? this.vehicleDraft.motorcycleStyle && this.vehicleDraft.engineCc
+              ? 'Estilo e cilindrada ajudam a filtrar melhor a moto.'
+              : 'Informe estilo e cilindrada para melhorar a descoberta da moto.'
+            : hasTitleContext
+              ? 'Título claro com marca e modelo aumenta a confiança.'
+              : 'Use um título mais específico com marca, modelo e diferencial.',
+        done:
+          this.vehicleDraft.vehicleType === 'MOTORCYCLE'
+            ? !!this.vehicleDraft.motorcycleStyle && !!this.vehicleDraft.engineCc
+            : hasTitleContext,
+      },
+    ];
+
+    return checklist;
+  }
+
+  protected get publicationChecklistCompleted() {
+    return this.publicationChecklist.filter((item) => item.done).length;
+  }
+
+  protected get publicationReadinessPercentage() {
+    return Math.round(
+      (this.publicationChecklistCompleted / Math.max(this.publicationChecklist.length, 1)) * 100,
+    );
+  }
+
+  protected get publicationSuggestions() {
+    return this.publicationChecklist
+      .filter((item) => !item.done)
+      .map((item) => item.description)
+      .slice(0, 3);
+  }
+
+  protected get calendarDays(): CalendarDayItem[] {
+    if (!this.selectedAvailability) {
+      return [];
+    }
+
+    const monthStart = this.getMonthStart(this.calendarMonth);
+    const startOffset = (monthStart.getDay() + 6) % 7;
+    const gridStart = new Date(monthStart);
+    gridStart.setDate(monthStart.getDate() - startOffset);
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const day = new Date(gridStart);
+      day.setDate(gridStart.getDate() + index);
+      const date = this.formatDateKey(day);
+      const inCurrentMonth = day.getMonth() === monthStart.getMonth();
+      const isBooked =
+        this.selectedAvailability?.approvedBookings.some((booking) =>
+          this.dateKeyInsidePeriod(date, booking.startDate, booking.endDate),
+        ) ?? false;
+      const isBlocked =
+        !isBooked &&
+        (this.selectedAvailability?.blockedDates.some((period) =>
+          this.dateKeyInsidePeriod(date, period.startDate, period.endDate),
+        ) ?? false);
+      const state = !inCurrentMonth ? 'outside' : isBooked ? 'booked' : isBlocked ? 'blocked' : 'free';
+
+      return {
+        date,
+        dayNumber: day.getDate(),
+        inCurrentMonth,
+        state,
+        note:
+          state === 'booked'
+            ? 'Reserva'
+            : state === 'blocked'
+              ? 'Bloqueio'
+              : state === 'outside'
+                ? ''
+                : 'Livre',
+        isToday: date === this.today,
+      };
+    });
+  }
+
+  protected get monthlyScheduleSummary() {
+    return this.calendarDays
+      .filter((day) => day.inCurrentMonth)
+      .reduce(
+        (summary, day) => {
+          if (day.state === 'booked') {
+            summary.booked += 1;
+          } else if (day.state === 'blocked') {
+            summary.blocked += 1;
+          } else if (day.state === 'free') {
+            summary.free += 1;
+          }
+
+          return summary;
+        },
+        {
+          booked: 0,
+          blocked: 0,
+          free: 0,
+        },
+      );
+  }
+
+  protected get idlePeriods(): IdlePeriodItem[] {
+    if (!this.selectedAvailability) {
+      return [];
+    }
+
+    const periods: IdlePeriodItem[] = [];
+    let currentStart: string | null = null;
+    let currentLength = 0;
+
+    const pushPeriod = (endDate: string | null) => {
+      if (!currentStart || !endDate || currentLength <= 0) {
+        return;
+      }
+
+      periods.push({
+        startDate: currentStart,
+        endDate,
+        totalDays: currentLength,
+        label: `${this.formatShortDate(currentStart)} a ${this.formatShortDate(endDate)} • ${currentLength} dia(s) livre(s)`,
+      });
+    };
+
+    this.calendarDays
+      .filter((day) => day.inCurrentMonth)
+      .forEach((day) => {
+        if (day.state === 'free') {
+          currentStart = currentStart ?? day.date;
+          currentLength += 1;
+          return;
+        }
+
+        pushPeriod(this.getPreviousDateKey(day.date));
+        currentStart = null;
+        currentLength = 0;
+      });
+
+    pushPeriod(
+      currentStart
+        ? this.calendarDays.filter((day) => day.inCurrentMonth).at(-1)?.date ?? currentStart
+        : null,
+    );
+
+    return periods;
   }
 
   protected saveVehicle() {
@@ -1081,13 +2195,32 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       plate: vehicle.plate,
       city: vehicle.city,
       state: vehicle.state,
+      vehicleType: vehicle.vehicleType || 'CAR',
       category: vehicle.category,
+      bookingApprovalMode: vehicle.bookingApprovalMode,
+      cancellationPolicy: vehicle.cancellationPolicy,
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
       dailyRate: vehicle.dailyRate,
+      addons: this.cloneAddons(vehicle.addons),
+      firstBookingDiscountPercent: vehicle.firstBookingDiscountPercent,
+      weeklyDiscountPercent: vehicle.weeklyDiscountPercent,
+      couponCode: vehicle.couponCode || '',
+      couponDiscountPercent: vehicle.couponDiscountPercent,
+      weekendSurchargePercent: vehicle.weekendSurchargePercent,
+      holidaySurchargePercent: vehicle.holidaySurchargePercent,
+      highDemandSurchargePercent: vehicle.highDemandSurchargePercent,
+      advanceBookingDiscountPercent: vehicle.advanceBookingDiscountPercent,
+      advanceBookingDaysThreshold: vehicle.advanceBookingDaysThreshold,
+      motorcycleStyle: vehicle.motorcycleStyle || undefined,
+      engineCc: vehicle.engineCc || undefined,
+      hasAbs: !!vehicle.hasAbs,
+      hasTopCase: !!vehicle.hasTopCase,
       description: vehicle.description,
       addressLine: vehicle.addressLine || '',
+      latitude: vehicle.latitude ?? undefined,
+      longitude: vehicle.longitude ?? undefined,
       isPublished: vehicle.isPublished,
     };
     this.clearPendingVehicleFiles();
@@ -1108,6 +2241,39 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     this.mediaFeedback = '';
     this.mediaError = '';
     this.clearCreateIntent();
+  }
+
+  protected goToDashboardView() {
+    if (this.isDashboardView) {
+      return;
+    }
+
+    this.router.navigate(['/owner-dashboard']);
+  }
+
+  protected goToAdsView() {
+    if (this.isAdsView && !this.createMode) {
+      return;
+    }
+
+    this.router.navigate(['/anunciar-carro']);
+  }
+
+  protected goToCreateView() {
+    if (this.isAdsView) {
+      this.createMode = true;
+      this.editingVehicleId = null;
+      this.vehicleDraft = this.createVehicleDraft();
+      this.clearPendingVehicleFiles();
+      this.vehicleFeedback = '';
+      this.vehicleError = '';
+      this.mediaFeedback = '';
+      this.mediaError = '';
+    }
+
+    this.router.navigate(['/anunciar-carro'], {
+      queryParams: { editor: 'create' },
+    });
   }
 
   protected onVehicleFilesSelected(event: Event) {
@@ -1228,6 +2394,29 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     return this.categoryOptions.find((option) => option.value === category)?.label ?? category;
   }
 
+  protected vehicleTypeLabel(vehicleType: VehicleType) {
+    return this.vehicleTypeOptions.find((option) => option.value === vehicleType)?.label ?? vehicleType;
+  }
+
+  protected addAddon() {
+    this.vehicleDraft.addons = [...this.vehicleDraft.addons, this.createEmptyAddon()];
+  }
+
+  protected removeAddon(index: number) {
+    this.vehicleDraft.addons = this.vehicleDraft.addons.filter((_, addonIndex) => addonIndex !== index);
+  }
+
+  protected toggleAddon(index: number) {
+    this.vehicleDraft.addons = this.vehicleDraft.addons.map((addon, addonIndex) =>
+      addonIndex === index
+        ? {
+            ...addon,
+            enabled: addon.enabled === false,
+          }
+        : addon,
+    );
+  }
+
   protected transmissionLabel(transmission: TransmissionType) {
     return this.transmissionOptions.find((option) => option.value === transmission)?.label ?? transmission;
   }
@@ -1300,6 +2489,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected loadSelectedVehicleAvailability() {
     if (!this.selectedVehicleId) {
       this.blockedDates = [];
+      this.selectedAvailability = null;
       return;
     }
 
@@ -1311,14 +2501,28 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       .subscribe({
         next: (availability) => {
           this.blockedDates = availability.blockedDates;
+          this.selectedAvailability = availability;
           this.availabilityLoading = false;
         },
         error: (error) => {
           this.availabilityLoading = false;
+          this.selectedAvailability = null;
           this.blockedDateError =
             error?.error?.message || 'Não foi possível carregar o calendário do veículo.';
         },
       });
+  }
+
+  protected changeCalendarMonth(step: number) {
+    const nextMonth = this.getMonthStart(this.calendarMonth);
+    nextMonth.setMonth(nextMonth.getMonth() + step);
+    this.calendarMonth = this.formatMonthValue(nextMonth);
+  }
+
+  protected updateCalendarMonth(value: string) {
+    this.calendarMonth = /^\d{4}-\d{2}$/.test(value)
+      ? value
+      : this.formatMonthValue(new Date());
   }
 
   private uploadPendingVehicleFiles(vehicleId: string, successMessage: string) {
@@ -1385,6 +2589,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         } else {
           this.selectedVehicleId = '';
           this.blockedDates = [];
+          this.selectedAvailability = null;
         }
         this.loading = false;
       },
@@ -1420,13 +2625,32 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       plate: '',
       city: profile?.city || '',
       state: profile?.state || '',
+      vehicleType: 'CAR',
       category: 'HATCH',
+      bookingApprovalMode: 'MANUAL',
+      cancellationPolicy: 'FLEXIBLE',
       transmission: 'AUTOMATIC',
       fuelType: 'FLEX',
       seats: 5,
       dailyRate: 150,
+      addons: [],
+      firstBookingDiscountPercent: 0,
+      weeklyDiscountPercent: 0,
+      couponCode: '',
+      couponDiscountPercent: 0,
+      weekendSurchargePercent: 0,
+      holidaySurchargePercent: 0,
+      highDemandSurchargePercent: 0,
+      advanceBookingDiscountPercent: 0,
+      advanceBookingDaysThreshold: 0,
+      motorcycleStyle: undefined,
+      engineCc: undefined,
+      hasAbs: false,
+      hasTopCase: false,
       description: '',
       addressLine: '',
+      latitude: undefined,
+      longitude: undefined,
       isPublished: true,
     };
   }
@@ -1445,6 +2669,47 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
       dailyRate: Number(this.vehicleDraft.dailyRate),
+      firstBookingDiscountPercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.firstBookingDiscountPercent,
+      ),
+      weeklyDiscountPercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.weeklyDiscountPercent,
+      ),
+      couponCode: this.normalizeCouponCode(this.vehicleDraft.couponCode),
+      couponDiscountPercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.couponDiscountPercent,
+      ),
+      weekendSurchargePercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.weekendSurchargePercent,
+      ),
+      holidaySurchargePercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.holidaySurchargePercent,
+      ),
+      highDemandSurchargePercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.highDemandSurchargePercent,
+      ),
+      advanceBookingDiscountPercent: this.normalizeDiscountPercent(
+        this.vehicleDraft.advanceBookingDiscountPercent,
+      ),
+      advanceBookingDaysThreshold: Math.max(
+        0,
+        Math.min(
+          365,
+          Math.round(Number(this.vehicleDraft.advanceBookingDaysThreshold ?? 0)),
+        ),
+      ),
+      engineCc: this.parseOptionalNumber(this.vehicleDraft.engineCc),
+      latitude: this.parseOptionalNumber(this.vehicleDraft.latitude),
+      longitude: this.parseOptionalNumber(this.vehicleDraft.longitude),
+      addons: this.vehicleDraft.addons
+        .map((addon) => ({
+          ...addon,
+          name: addon.name.trim(),
+          description: addon.description?.trim() || '',
+          price: Number(addon.price),
+          enabled: addon.enabled !== false,
+        }))
+        .filter((addon) => addon.name && !Number.isNaN(addon.price)),
     };
 
     if (
@@ -1457,11 +2722,124 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       !payload.description ||
       Number.isNaN(payload.year) ||
       Number.isNaN(payload.seats) ||
-      Number.isNaN(payload.dailyRate)
+      Number.isNaN(payload.dailyRate) ||
+      (payload.engineCc !== undefined && Number.isNaN(payload.engineCc)) ||
+      (payload.latitude !== undefined && Number.isNaN(payload.latitude)) ||
+      (payload.longitude !== undefined && Number.isNaN(payload.longitude))
     ) {
       return null;
     }
 
+    if (!payload.couponCode) {
+      payload.couponDiscountPercent = 0;
+    }
+
     return payload;
+  }
+
+  private createEmptyAddon(): VehicleAddon {
+    return {
+      id: '',
+      name: '',
+      description: '',
+      price: 0,
+      enabled: true,
+    };
+  }
+
+  private cloneAddons(addons: VehicleAddon[] | undefined) {
+    return (addons ?? []).map((addon) => ({
+      id: addon.id,
+      name: addon.name,
+      description: addon.description || '',
+      price: addon.price,
+      enabled: addon.enabled !== false,
+    }));
+  }
+
+  private parseOptionalNumber(value: number | null | undefined) {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+
+  private getMonthStart(monthValue: string) {
+    const [year, month] = monthValue.split('-').map((part) => Number(part));
+    return new Date(year, (month || 1) - 1, 1);
+  }
+
+  private getNextMonthStart(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 1);
+  }
+
+  private getDaysInMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  }
+
+  private formatMonthValue(date: Date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private formatDateKey(date: Date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate(),
+    ).padStart(2, '0')}`;
+  }
+
+  private getPreviousDateKey(dateKey: string) {
+    const date = this.getDateFromKey(dateKey);
+    date.setDate(date.getDate() - 1);
+    return this.formatDateKey(date);
+  }
+
+  private formatShortDate(dateKey: string) {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+    })
+      .format(this.getDateFromKey(dateKey))
+      .replace('.', '');
+  }
+
+  private getDateFromKey(dateKey: string) {
+    const [year, month, day] = dateKey.split('-').map((part) => Number(part));
+    return new Date(year, (month || 1) - 1, day || 1);
+  }
+
+  private dateKeyInsidePeriod(dateKey: string, startDate: string, endDate: string) {
+    const periodStart = startDate.slice(0, 10);
+    const periodEnd = endDate.slice(0, 10);
+
+    return periodStart <= dateKey && periodEnd > dateKey;
+  }
+
+  private countOverlapDays(startDate: string, endDate: string, monthStart: Date, monthEnd: Date) {
+    const start = this.getDateFromKey(startDate.slice(0, 10));
+    const end = this.getDateFromKey(endDate.slice(0, 10));
+    const overlapStart = Math.max(start.getTime(), monthStart.getTime());
+    const overlapEnd = Math.min(end.getTime(), monthEnd.getTime());
+
+    if (overlapEnd <= overlapStart) {
+      return 0;
+    }
+
+    return Math.round((overlapEnd - overlapStart) / (1000 * 60 * 60 * 24));
+  }
+
+  private normalizeDiscountPercent(value: number | null | undefined) {
+    const parsed = Number(value ?? 0);
+
+    if (Number.isNaN(parsed)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(90, Math.round(parsed)));
+  }
+
+  private normalizeCouponCode(value: string | null | undefined) {
+    return (value || '').trim().toUpperCase();
   }
 }

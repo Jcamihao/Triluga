@@ -5,9 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BookingStatus, NotificationType, Prisma } from '@prisma/client';
+import {
+  BookingApprovalMode,
+  BookingStatus,
+  NotificationType,
+  Prisma,
+} from '@prisma/client';
 import { differenceInCalendarDays } from 'date-fns';
 import { NotificationsService } from '../notifications/notifications.service';
+import { VehiclePricingService } from '../pricing/vehicle-pricing.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingDecisionDto } from './dto/booking-decision.dto';
@@ -18,6 +24,7 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly notificationsService: NotificationsService,
+    private readonly vehiclePricingService: VehiclePricingService,
   ) {}
 
   async create(renterId: string, dto: CreateBookingDto) {
@@ -26,6 +33,17 @@ export class BookingsService {
       include: {
         owner: {
           include: { profile: true },
+        },
+        bookings: {
+          where: {
+            status: {
+              in: [BookingStatus.APPROVED, BookingStatus.IN_PROGRESS],
+            },
+          },
+          select: {
+            startDate: true,
+            endDate: true,
+          },
         },
       },
     });
@@ -56,10 +74,47 @@ export class BookingsService {
       'app.platformFeeRate',
       0.12,
     );
-    const dailyRate = Number(vehicle.dailyRate);
-    const subtotal = Number((dailyRate * totalDays).toFixed(2));
-    const platformFee = Number((subtotal * platformFeeRate).toFixed(2));
-    const totalAmount = Number((subtotal + platformFee).toFixed(2));
+    const selectedAddons = this.selectBookingAddons(
+      vehicle.addons,
+      dto.selectedAddonIds,
+    );
+    const addonsAmount = Number(
+      selectedAddons.reduce((total, addon) => total + addon.price, 0).toFixed(2),
+    );
+    const pricingPreview = this.vehiclePricingService.buildPreviewFromVehicle(
+      vehicle,
+      startDate,
+      endDate,
+    );
+    const dailyRate = pricingPreview.averageDailyRate;
+    const rentalAmount = pricingPreview.adjustedRentalAmount;
+    const { appliedPromotions, couponCode } =
+      await this.resolveAppliedPromotions({
+        renterId,
+        vehicle,
+        totalDays,
+        rentalAmount,
+        couponCode: dto.couponCode,
+      });
+    const discountsAmount = Number(
+      appliedPromotions
+        .reduce((total, promotion) => total + promotion.amount, 0)
+        .toFixed(2),
+    );
+    const bookingStatus =
+      vehicle.bookingApprovalMode === BookingApprovalMode.INSTANT
+        ? BookingStatus.APPROVED
+        : BookingStatus.PENDING;
+    const subtotal = Number((rentalAmount + addonsAmount).toFixed(2));
+    const discountedSubtotal = Number(
+      Math.max(0, subtotal - discountsAmount).toFixed(2),
+    );
+    const platformFee = Number(
+      (discountedSubtotal * platformFeeRate).toFixed(2),
+    );
+    const totalAmount = Number((discountedSubtotal + platformFee).toFixed(2));
+    const approvedAt =
+      bookingStatus === BookingStatus.APPROVED ? new Date() : undefined;
 
     const booking = await this.prisma.booking.create({
       data: {
@@ -73,25 +128,64 @@ export class BookingsService {
         subtotal,
         platformFee,
         totalAmount,
+        addonsAmount,
+        discountsAmount,
+        selectedAddons,
+        appliedPromotions,
+        couponCode,
         notes: dto.notes,
-        status: BookingStatus.PENDING,
+        status: bookingStatus,
+        approvedAt,
         statusHistory: {
-          create: {
-            toStatus: BookingStatus.PENDING,
-            changedById: renterId,
-          },
+          create:
+            bookingStatus === BookingStatus.APPROVED
+              ? [
+                  {
+                    toStatus: BookingStatus.PENDING,
+                    changedById: renterId,
+                  },
+                  {
+                    fromStatus: BookingStatus.PENDING,
+                    toStatus: BookingStatus.APPROVED,
+                    changedById: vehicle.ownerId,
+                    reason: 'Reserva instantânea',
+                  },
+                ]
+              : {
+                  toStatus: BookingStatus.PENDING,
+                  changedById: renterId,
+                },
         },
       },
       include: this.bookingInclude,
     });
 
-    await this.notificationsService.create({
-      userId: vehicle.ownerId,
-      type: NotificationType.BOOKING_REQUEST,
-      title: 'Nova solicitação de reserva',
-      message: `Você recebeu um pedido para ${vehicle.title} entre ${dto.startDate} e ${dto.endDate}.`,
-      metadata: { bookingId: booking.id, vehicleId: vehicle.id },
-    });
+    if (bookingStatus === BookingStatus.APPROVED) {
+      await Promise.all([
+        this.notificationsService.create({
+          userId: vehicle.ownerId,
+          type: NotificationType.BOOKING_APPROVED,
+          title: 'Reserva instantânea confirmada',
+          message: `${vehicle.title} foi reservado instantaneamente para ${dto.startDate} até ${dto.endDate}.`,
+          metadata: { bookingId: booking.id, vehicleId: vehicle.id },
+        }),
+        this.notificationsService.create({
+          userId: renterId,
+          type: NotificationType.BOOKING_APPROVED,
+          title: 'Reserva confirmada',
+          message: `Sua reserva para ${vehicle.title} foi confirmada instantaneamente.`,
+          metadata: { bookingId: booking.id, vehicleId: vehicle.id },
+        }),
+      ]);
+    } else {
+      await this.notificationsService.create({
+        userId: vehicle.ownerId,
+        type: NotificationType.BOOKING_REQUEST,
+        title: 'Nova solicitação de reserva',
+        message: `Você recebeu um pedido para ${vehicle.title} entre ${dto.startDate} e ${dto.endDate}.`,
+        metadata: { bookingId: booking.id, vehicleId: vehicle.id },
+      });
+    }
 
     return this.mapBooking(booking);
   }
@@ -489,6 +583,15 @@ export class BookingsService {
       subtotal: Number(booking.subtotal),
       platformFee: Number(booking.platformFee),
       totalAmount: Number(booking.totalAmount),
+      addonsAmount: Number(booking.addonsAmount ?? 0),
+      discountsAmount: Number(booking.discountsAmount ?? 0),
+      couponCode: booking.couponCode ?? null,
+      selectedAddons: Array.isArray(booking.selectedAddons)
+        ? booking.selectedAddons
+        : [],
+      appliedPromotions: Array.isArray(booking.appliedPromotions)
+        ? booking.appliedPromotions
+        : [],
       notes: booking.notes,
       approvedAt: booking.approvedAt,
       rejectedAt: booking.rejectedAt,
@@ -527,6 +630,137 @@ export class BookingsService {
       statusHistory: booking.statusHistory,
       review: booking.review,
     };
+  }
+
+  private selectBookingAddons(
+    addons: unknown,
+    selectedAddonIds?: string[],
+  ) {
+    if (!Array.isArray(addons) || !selectedAddonIds?.length) {
+      return [];
+    }
+
+    const selectedIds = new Set(selectedAddonIds);
+
+    return addons
+      .map((addon) => addon as Record<string, unknown>)
+      .filter((addon) => addon.enabled !== false && selectedIds.has(String(addon.id ?? '')))
+      .map((addon) => ({
+        id: String(addon.id ?? ''),
+        name: String(addon.name ?? ''),
+        description: String(addon.description ?? ''),
+        price: Number(Number(addon.price ?? 0).toFixed(2)),
+      }))
+      .filter((addon) => addon.id && addon.name && !Number.isNaN(addon.price));
+  }
+
+  private async resolveAppliedPromotions(params: {
+    renterId: string;
+    vehicle: {
+      firstBookingDiscountPercent?: number | null;
+      weeklyDiscountPercent?: number | null;
+      couponCode?: string | null;
+      couponDiscountPercent?: number | null;
+    };
+    totalDays: number;
+    rentalAmount: number;
+    couponCode?: string;
+  }) {
+    const appliedPromotions: Array<{
+      code: 'FIRST_BOOKING' | 'WEEKLY_PACKAGE' | 'COUPON';
+      label: string;
+      amount: number;
+    }> = [];
+    const baseAmount = params.rentalAmount;
+
+    const addPromotion = (
+      code: 'FIRST_BOOKING' | 'WEEKLY_PACKAGE' | 'COUPON',
+      label: string,
+      percent: number | null | undefined,
+    ) => {
+      const normalizedPercent = Number(percent ?? 0);
+
+      if (normalizedPercent <= 0 || baseAmount <= 0) {
+        return;
+      }
+
+      const usedAmount = appliedPromotions.reduce(
+        (total, promotion) => total + promotion.amount,
+        0,
+      );
+      const remainingAmount = Math.max(0, baseAmount - usedAmount);
+      const discountAmount = Number(
+        Math.min(baseAmount * (normalizedPercent / 100), remainingAmount).toFixed(2),
+      );
+
+      if (discountAmount <= 0) {
+        return;
+      }
+
+      appliedPromotions.push({
+        code,
+        label,
+        amount: discountAmount,
+      });
+    };
+
+    const normalizedCouponCode = this.normalizeCouponCode(params.couponCode);
+
+    if ((params.vehicle.firstBookingDiscountPercent ?? 0) > 0) {
+      const existingBookingCount = await this.prisma.booking.count({
+        where: {
+          renterId: params.renterId,
+          status: {
+            in: [
+              BookingStatus.PENDING,
+              BookingStatus.APPROVED,
+              BookingStatus.IN_PROGRESS,
+              BookingStatus.COMPLETED,
+            ],
+          },
+        },
+      });
+
+      if (existingBookingCount === 0) {
+        addPromotion(
+          'FIRST_BOOKING',
+          'Desconto de primeira reserva',
+          params.vehicle.firstBookingDiscountPercent,
+        );
+      }
+    }
+
+    if (params.totalDays >= 7) {
+      addPromotion(
+        'WEEKLY_PACKAGE',
+        'Pacote semanal',
+        params.vehicle.weeklyDiscountPercent,
+      );
+    }
+
+    if (normalizedCouponCode) {
+      const vehicleCouponCode = this.normalizeCouponCode(params.vehicle.couponCode);
+
+      if (!vehicleCouponCode || vehicleCouponCode !== normalizedCouponCode) {
+        throw new BadRequestException('Cupom inválido para este anúncio.');
+      }
+
+      addPromotion(
+        'COUPON',
+        `Cupom ${normalizedCouponCode}`,
+        params.vehicle.couponDiscountPercent,
+      );
+    }
+
+    return {
+      appliedPromotions,
+      couponCode: normalizedCouponCode,
+    };
+  }
+
+  private normalizeCouponCode(value: unknown) {
+    const couponCode = String(value ?? '').trim().toUpperCase();
+    return couponCode || null;
   }
 
   private readonly bookingInclude = {

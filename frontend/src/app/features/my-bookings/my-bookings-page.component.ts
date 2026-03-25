@@ -1,15 +1,13 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BookingsApiService } from '../../core/services/bookings-api.service';
-import { PaymentsApiService } from '../../core/services/payments-api.service';
 import { Booking, PaymentMethod } from '../../core/models/domain.models';
 
 @Component({
   selector: 'app-my-bookings-page',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, FormsModule, RouterLink],
+  imports: [CommonModule, CurrencyPipe, DatePipe, RouterLink],
   template: `
     <main class="page reservations-page">
       <section class="section-head">
@@ -58,29 +56,6 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
               </span>
             </div>
 
-            <div
-              class="checkout-box"
-              *ngIf="canCheckout(booking)"
-            >
-              <label>
-                <span>Pagamento</span>
-                <select [(ngModel)]="checkoutMethods[booking.id]">
-                  <option *ngFor="let method of paymentMethods" [value]="method">
-                    {{ paymentMethodLabel(method) }}
-                  </option>
-                </select>
-              </label>
-
-              <button
-                type="button"
-                class="btn btn-primary"
-                [disabled]="checkoutBookingId === booking.id"
-                (click)="checkout(booking.id)"
-              >
-                {{ checkoutBookingId === booking.id ? 'Processando...' : 'Pagar reserva' }}
-              </button>
-            </div>
-
             <button
               *ngIf="booking.status === 'PENDING' || booking.status === 'APPROVED'"
               type="button"
@@ -100,7 +75,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
       .reservations-page {
         display: grid;
         gap: 18px;
-        padding: 20px 16px 32px;
+        padding: 20px 16px 40px;
       }
 
       .section-head span {
@@ -118,6 +93,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
 
       .booking-list {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
       }
 
@@ -133,7 +109,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
 
       .booking-card {
         display: grid;
-        grid-template-columns: 112px 1fr;
+        grid-template-columns: 1fr;
         gap: 14px;
         padding: 12px;
         border-radius: 22px;
@@ -144,7 +120,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
 
       img {
         width: 100%;
-        height: 100%;
+        height: 196px;
         object-fit: cover;
         border-radius: 18px;
       }
@@ -165,34 +141,6 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
         display: flex;
         justify-content: space-between;
         gap: 10px;
-      }
-
-      .checkout-box {
-        display: grid;
-        gap: 10px;
-        padding: 12px;
-        border-radius: 18px;
-        background: var(--surface-muted);
-        border: 1px solid var(--glass-border-soft);
-      }
-
-      label {
-        display: grid;
-        gap: 8px;
-        color: var(--text-secondary);
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      select {
-        width: 100%;
-        min-width: 0;
-        height: 46px;
-        border-radius: 16px;
-        border: 1px solid var(--glass-border-soft);
-        padding: 0 12px;
-        font: inherit;
-        background: #fff;
       }
 
       .status {
@@ -228,22 +176,44 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
       .feedback--error {
         color: var(--error);
       }
+
+      @media (min-width: 641px) {
+        .booking-list {
+          grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        }
+
+        .booking-card {
+          grid-template-columns: 112px 1fr;
+        }
+
+        img {
+          height: 100%;
+        }
+      }
+
+      @media (min-width: 1080px) {
+        .reservations-page {
+          gap: 20px;
+          padding: 28px 20px 56px;
+        }
+
+        .booking-card {
+          grid-template-columns: 128px 1fr;
+          padding: 16px;
+        }
+      }
     `,
   ],
 })
 export class MyBookingsPageComponent {
   private readonly bookingsApiService = inject(BookingsApiService);
-  private readonly paymentsApiService = inject(PaymentsApiService);
   protected readonly fallbackImage =
     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80';
-  protected readonly paymentMethods: PaymentMethod[] = ['PIX', 'CREDIT_CARD', 'BOLETO'];
   protected bookings: Booking[] = [];
-  protected checkoutMethods: Record<string, PaymentMethod> = {};
   protected loading = true;
   protected feedback = '';
   protected errorMessage = '';
   protected cancellingBookingId: string | null = null;
-  protected checkoutBookingId: string | null = null;
 
   constructor() {
     this.loadBookings();
@@ -268,39 +238,6 @@ export class MyBookingsPageComponent {
     });
   }
 
-  protected canCheckout(booking: Booking) {
-    return (
-      (booking.status === 'APPROVED' ||
-        booking.status === 'IN_PROGRESS' ||
-        booking.status === 'COMPLETED') &&
-      booking.payment?.status !== 'PAID'
-    );
-  }
-
-  protected checkout(bookingId: string) {
-    this.checkoutBookingId = bookingId;
-    this.feedback = '';
-    this.errorMessage = '';
-
-    this.paymentsApiService
-      .checkout({
-        bookingId,
-        method: this.checkoutMethods[bookingId] || 'PIX',
-      })
-      .subscribe({
-        next: () => {
-          this.feedback = 'Pagamento mockado confirmado com sucesso.';
-          this.checkoutBookingId = null;
-          this.loadBookings();
-        },
-        error: (error) => {
-          this.errorMessage =
-            error?.error?.message || 'Não foi possível processar o pagamento.';
-          this.checkoutBookingId = null;
-        },
-      });
-  }
-
   protected paymentMethodLabel(method?: PaymentMethod | null) {
     const labels: Record<PaymentMethod, string> = {
       PIX: 'PIX',
@@ -321,10 +258,6 @@ export class MyBookingsPageComponent {
       .subscribe({
         next: (bookings) => {
           this.bookings = bookings;
-          this.checkoutMethods = bookings.reduce<Record<string, PaymentMethod>>((acc, booking) => {
-            acc[booking.id] = booking.payment?.method || 'PIX';
-            return acc;
-          }, {});
           this.errorMessage = '';
           this.loading = false;
         },

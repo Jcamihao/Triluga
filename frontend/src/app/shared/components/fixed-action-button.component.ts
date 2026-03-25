@@ -46,11 +46,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         position: fixed;
         left: 16px;
         right: 16px;
-        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
         z-index: 22;
         display: flex;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-between;
+        flex-direction: column;
         gap: 16px;
         padding: 14px;
         border-radius: 22px;
@@ -74,6 +75,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         justify-content: flex-end;
         gap: 12px;
         flex: 1;
+        width: 100%;
       }
 
       small {
@@ -88,14 +90,15 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       }
 
       .btn {
-        min-width: 152px;
+        min-width: 0;
         border-radius: 16px;
         animation: fixed-action-control-enter 480ms
           cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
       }
 
       .fixed-action__primary {
-        min-width: 184px;
+        min-width: 0;
+        width: 100%;
         box-shadow: 0 16px 26px rgba(255, 59, 48, 0.24);
       }
 
@@ -179,20 +182,41 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         }
       }
 
-      @media (max-width: 480px) {
+      @media (min-width: 481px) {
         .fixed-action {
-          align-items: stretch;
-          flex-direction: column;
-          bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+          align-items: center;
+          justify-content: space-between;
+          flex-direction: row;
+          bottom: calc(70px + env(safe-area-inset-bottom, 0px));
         }
 
         .fixed-action__actions {
-          width: 100%;
+          width: auto;
         }
 
         .fixed-action__primary {
-          min-width: 0;
-          width: 100%;
+          min-width: 184px;
+          width: auto;
+        }
+
+        .btn {
+          min-width: 152px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .fixed-action {
+          left: 0;
+          right: 0;
+          bottom: 28px;
+          width: min(760px, calc(100vw - 72px));
+          margin: 0 auto;
+          padding: 16px 18px;
+          border-radius: 28px;
+        }
+
+        .fixed-action__primary {
+          min-width: 212px;
         }
       }
     `,

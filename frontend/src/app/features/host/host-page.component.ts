@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
       <section class="hero-card">
         <span class="eyebrow">Anunciar</span>
         <h1>Transforme seu carro em renda</h1>
-        <p>Publique fotos, ajuste a diária e gerencie pedidos em um fluxo simples, com cara de app.</p>
+        <p>Publique fotos, ajuste o valor semanal e gerencie pedidos em um fluxo simples, com cara de app.</p>
 
         <div class="actions" *ngIf="!user">
           <button type="button" class="btn btn-primary" (click)="router.navigate(['/auth/register'])">
@@ -46,7 +46,7 @@ import { AuthService } from '../../core/services/auth.service';
         <article>
           <strong>1</strong>
           <h2>Cadastre o veículo</h2>
-          <p>Preencha os dados, valor da diária e regras básicas do anúncio.</p>
+          <p>Preencha os dados, valor semanal e regras básicas do anúncio.</p>
         </article>
         <article>
           <strong>2</strong>
@@ -102,9 +102,14 @@ import { AuthService } from '../../core/services/auth.service';
       }
 
       .actions {
-        display: flex;
+        display: grid;
         gap: 10px;
-        flex-wrap: wrap;
+      }
+
+      .actions .btn,
+      .actions a {
+        width: 100%;
+        justify-content: center;
       }
 
       .actions a {
@@ -129,6 +134,36 @@ import { AuthService } from '../../core/services/auth.service';
         border-radius: 999px;
         background: var(--primary-light);
         color: var(--primary);
+      }
+
+      @media (min-width: 960px) {
+        .host-page {
+          gap: 20px;
+          padding: 28px 20px 56px;
+        }
+
+        .hero-card {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: end;
+          gap: 18px;
+        }
+
+        .actions {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: flex-start;
+        }
+
+        .actions .btn,
+        .actions a {
+          width: auto;
+        }
+
+        .info-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+        }
       }
     `,
   ],

@@ -12,6 +12,8 @@ export class BookingsApiService {
     startDate: string;
     endDate: string;
     notes?: string;
+    selectedAddonIds?: string[];
+    couponCode?: string;
   }) {
     return this.http.post<Booking>(
       `${environment.apiBaseUrl}/bookings`,
