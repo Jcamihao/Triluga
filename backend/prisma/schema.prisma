@@ -36,6 +36,31 @@ enum VehicleCategory {
   LUXURY
 }
 
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+}
+
+enum BookingApprovalMode {
+  MANUAL
+  INSTANT
+}
+
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+}
+
+enum MotorcycleStyle {
+  SCOOTER
+  STREET
+  SPORT
+  TRAIL
+  CUSTOM
+  TOURING
+}
+
 enum FuelType {
   GASOLINE
   ETHANOL
@@ -88,6 +113,24 @@ enum NotificationType {
   SYSTEM_ALERT
 }
 
+enum SupportMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum SupportMessageScope {
+  SUPPORTED
+  NOT_AVAILABLE
+  OUT_OF_SCOPE
+  HANDOFF
+}
+
+enum SupportMessageConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id                   String                 @id @default(uuid())
   email                String                 @unique
@@ -110,6 +153,8 @@ model User {
   sentChatMessages     ChatMessage[]
   createdChats         ChatConversation[]     @relation("ChatConversationCreator")
   favorites            Favorite[]
+  searchAlerts         SearchAlert[]
+  supportConversations SupportConversation[]
 
   @@index([role, status])
 }
@@ -125,6 +170,8 @@ model Profile {
   avatarUrl                  String?
   documentNumber             String?
   driverLicenseNumber        String?
+  documentImageUrl           String?
+  driverLicenseImageUrl      String?
   documentVerificationStatus VerificationStatus @default(NOT_SUBMITTED)
   driverLicenseVerification  VerificationStatus @default(NOT_SUBMITTED)
   createdAt                  DateTime           @default(now())
@@ -142,11 +189,28 @@ model Vehicle {
   plate         String                @unique
   city          String
   state         String
+  vehicleType   VehicleType           @default(CAR)
   category      VehicleCategory
+  bookingApprovalMode BookingApprovalMode @default(MANUAL)
+  cancellationPolicy  CancellationPolicy  @default(FLEXIBLE)
   transmission  Transmission
   fuelType      FuelType
   seats         Int
   dailyRate     Decimal               @db.Decimal(10, 2)
+  addons        Json                  @default("[]")
+  firstBookingDiscountPercent Int     @default(0)
+  weeklyDiscountPercent       Int     @default(0)
+  couponCode                  String?
+  couponDiscountPercent       Int     @default(0)
+  weekendSurchargePercent     Int     @default(0)
+  holidaySurchargePercent     Int     @default(0)
+  highDemandSurchargePercent  Int     @default(0)
+  advanceBookingDiscountPercent Int   @default(0)
+  advanceBookingDaysThreshold Int     @default(0)
+  motorcycleStyle MotorcycleStyle?
+  engineCc      Int?
+  hasAbs        Boolean?
+  hasTopCase    Boolean?
   description   String
   addressLine   String?
   latitude      Decimal?              @db.Decimal(10, 7)
@@ -165,10 +229,39 @@ model Vehicle {
   reviews       Review[]
   chatConversations ChatConversation[]
   favorites     Favorite[]
+  searchAlertMatches SearchAlertMatch[]
 
   @@index([ownerId])
-  @@index([city, state, category, isActive, isPublished])
+  @@index([city, state, vehicleType, category, isActive, isPublished])
   @@index([dailyRate])
+}
+
+model SearchAlert {
+  id        String             @id @default(uuid())
+  userId    String
+  title     String?
+  filters   Json
+  queryHash String
+  isActive  Boolean            @default(true)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches   SearchAlertMatch[]
+
+  @@unique([userId, queryHash])
+  @@index([userId, isActive])
+}
+
+model SearchAlertMatch {
+  id            String      @id @default(uuid())
+  searchAlertId String
+  vehicleId     String
+  notifiedAt    DateTime    @default(now())
+  searchAlert   SearchAlert @relation(fields: [searchAlertId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle     @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([searchAlertId, vehicleId])
+  @@index([vehicleId, notifiedAt])
 }
 
 model Favorite {
@@ -236,12 +329,17 @@ model Booking {
   subtotal      Decimal                @db.Decimal(10, 2)
   platformFee   Decimal                @db.Decimal(10, 2)
   totalAmount   Decimal                @db.Decimal(10, 2)
+  discountsAmount Decimal              @default(0) @db.Decimal(10, 2)
   notes         String?
   status        BookingStatus          @default(PENDING)
   approvedAt    DateTime?
   rejectedAt    DateTime?
   cancelledAt   DateTime?
   completedAt   DateTime?
+  addonsAmount  Decimal                @default(0) @db.Decimal(10, 2)
+  selectedAddons Json                  @default("[]")
+  appliedPromotions Json               @default("[]")
+  couponCode    String?
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
   vehicle       Vehicle                @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -363,4 +461,49 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
+}
+
+model SupportConversation {
+  id            String           @id @default(uuid())
+  userId        String
+  title         String
+  lastMessageAt DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      SupportMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([userId, lastMessageAt])
+}
+
+model SupportMessage {
+  id               String                   @id @default(uuid())
+  conversationId   String
+  role             SupportMessageRole
+  content          String
+  relatedArea      String?
+  scope            SupportMessageScope?
+  confidence       SupportMessageConfidence?
+  suggestedActions String[]
+  disclaimer       String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  conversation     SupportConversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model SiteVisit {
+  id           String   @id @default(uuid())
+  visitorId    String
+  path         String
+  referrer     String?
+  userAgent    String?
+  isFirstVisit Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([visitorId, createdAt])
+  @@index([createdAt])
+  @@index([isFirstVisit, createdAt])
 }

@@ -15,6 +15,16 @@ export type VehicleCategory =
   | 'PICKUP'
   | 'VAN'
   | 'LUXURY';
+export type VehicleType = 'CAR' | 'MOTORCYCLE';
+export type BookingApprovalMode = 'MANUAL' | 'INSTANT';
+export type CancellationPolicy = 'FLEXIBLE' | 'MODERATE' | 'STRICT';
+export type MotorcycleStyle =
+  | 'SCOOTER'
+  | 'STREET'
+  | 'SPORT'
+  | 'TRAIL'
+  | 'CUSTOM'
+  | 'TOURING';
 export type FuelType =
   | 'GASOLINE'
   | 'ETHANOL'
@@ -46,6 +56,57 @@ export interface Profile {
   avatarUrl?: string | null;
   documentNumber?: string | null;
   driverLicenseNumber?: string | null;
+  documentImageUrl?: string | null;
+  driverLicenseImageUrl?: string | null;
+  documentVerificationStatus?: VerificationStatus;
+  driverLicenseVerification?: VerificationStatus;
+}
+
+export interface VehicleAddon {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  enabled?: boolean;
+}
+
+export interface AppliedPromotion {
+  code: 'FIRST_BOOKING' | 'WEEKLY_PACKAGE' | 'COUPON';
+  label: string;
+  amount: number;
+}
+
+export interface VehiclePricingPreview {
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  baseDailyRate: number;
+  averageDailyRate: number;
+  baseRentalAmount: number;
+  adjustedRentalAmount: number;
+  dynamicPricingAmount: number;
+  adjustments: Array<{
+    code: 'WEEKEND' | 'HOLIDAY' | 'HIGH_DEMAND' | 'ADVANCE';
+    label: string;
+    amount: number;
+  }>;
+  ruleSummary: {
+    weekendSurchargePercent: number;
+    holidaySurchargePercent: number;
+    highDemandSurchargePercent: number;
+    advanceBookingDiscountPercent: number;
+    advanceBookingDaysThreshold: number;
+  };
+}
+
+export interface SearchAlert {
+  id: string;
+  title?: string | null;
+  filters: Record<string, unknown>;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface User {
@@ -90,11 +151,30 @@ export interface VehicleCardItem {
   year: number;
   city: string;
   state: string;
+  vehicleType: VehicleType;
   category: string;
+  bookingApprovalMode: BookingApprovalMode;
+  cancellationPolicy: CancellationPolicy;
   seats: number;
   transmission: string;
   fuelType: string;
   dailyRate: number;
+  addons: VehicleAddon[];
+  firstBookingDiscountPercent: number;
+  weeklyDiscountPercent: number;
+  couponCode?: string | null;
+  couponDiscountPercent: number;
+  weekendSurchargePercent: number;
+  holidaySurchargePercent: number;
+  highDemandSurchargePercent: number;
+  advanceBookingDiscountPercent: number;
+  advanceBookingDaysThreshold: number;
+  motorcycleStyle?: MotorcycleStyle | null;
+  engineCc?: number | null;
+  hasAbs?: boolean | null;
+  hasTopCase?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
   ratingAverage: number;
   reviewsCount: number;
   coverImage: string | null;
@@ -115,11 +195,30 @@ export interface OwnerVehicleItem {
   plate: string;
   city: string;
   state: string;
+  vehicleType: VehicleType;
   category: VehicleCategory;
+  bookingApprovalMode: BookingApprovalMode;
+  cancellationPolicy: CancellationPolicy;
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
   dailyRate: number;
+  addons: VehicleAddon[];
+  firstBookingDiscountPercent: number;
+  weeklyDiscountPercent: number;
+  couponCode?: string | null;
+  couponDiscountPercent: number;
+  weekendSurchargePercent: number;
+  holidaySurchargePercent: number;
+  highDemandSurchargePercent: number;
+  advanceBookingDiscountPercent: number;
+  advanceBookingDaysThreshold: number;
+  motorcycleStyle?: MotorcycleStyle | null;
+  engineCc?: number | null;
+  hasAbs?: boolean | null;
+  hasTopCase?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
   description: string;
   addressLine?: string | null;
   isActive: boolean;
@@ -167,13 +266,32 @@ export interface CreateVehiclePayload {
   plate: string;
   city: string;
   state: string;
+  vehicleType: VehicleType;
   category: VehicleCategory;
+  bookingApprovalMode: BookingApprovalMode;
+  cancellationPolicy: CancellationPolicy;
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
   dailyRate: number;
+  addons: VehicleAddon[];
+  firstBookingDiscountPercent: number;
+  weeklyDiscountPercent: number;
+  couponCode?: string | null;
+  couponDiscountPercent: number;
+  weekendSurchargePercent: number;
+  holidaySurchargePercent: number;
+  highDemandSurchargePercent: number;
+  advanceBookingDiscountPercent: number;
+  advanceBookingDaysThreshold: number;
+  motorcycleStyle?: MotorcycleStyle | null;
+  engineCc?: number | null;
+  hasAbs?: boolean;
+  hasTopCase?: boolean;
   description: string;
   addressLine?: string;
+  latitude?: number;
+  longitude?: number;
   isPublished?: boolean;
 }
 
@@ -189,6 +307,11 @@ export interface Booking {
   subtotal: number;
   platformFee: number;
   totalAmount: number;
+  addonsAmount: number;
+  discountsAmount: number;
+  couponCode?: string | null;
+  selectedAddons: VehicleAddon[];
+  appliedPromotions: AppliedPromotion[];
   notes?: string | null;
   approvedAt?: string | null;
   rejectedAt?: string | null;

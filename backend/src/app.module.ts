@@ -15,7 +15,6 @@ import { authConfig } from './config/auth.config';
 import { cacheConfig } from './config/cache.config';
 import { storageConfig } from './config/storage.config';
 import { NotificationsModule } from './notifications/notifications.module';
-import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -26,6 +25,8 @@ import { VehicleImagesModule } from './vehicle-images/vehicle-images.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { AdminModule } from './admin/admin.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { SearchAlertsModule } from './search-alerts/search-alerts.module';
 
 @Module({
   imports: [
@@ -48,9 +49,10 @@ import { FavoritesModule } from './favorites/favorites.module';
     VehicleImagesModule,
     VehiclesModule,
     FavoritesModule,
+    AnalyticsModule,
+    SearchAlertsModule,
     NotificationsModule,
     BookingsModule,
-    PaymentsModule,
     ReviewsModule,
     AdminModule,
   ],
