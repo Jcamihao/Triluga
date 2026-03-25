@@ -33,9 +33,9 @@ export class AuthService {
   private readonly logger = inject(AppLoggerService);
   private readonly storage = globalThis.localStorage;
 
-  private readonly accessTokenKey = 'carbnb.accessToken';
-  private readonly refreshTokenKey = 'carbnb.refreshToken';
-  private readonly userKey = 'carbnb.user';
+  private readonly accessTokenKey = 'velo.accessToken';
+  private readonly refreshTokenKey = 'velo.refreshToken';
+  private readonly userKey = 'velo.user';
 
   private readonly accessTokenSignal = signal<string | null>(
     this.readStoredValue(this.accessTokenKey),

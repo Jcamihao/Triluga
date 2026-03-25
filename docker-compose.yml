@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-carbnb}
-      POSTGRES_USER: ${POSTGRES_USER:-carbnb}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carbnb}
+      POSTGRES_DB: ${POSTGRES_DB:-velo}
+      POSTGRES_USER: ${POSTGRES_USER:-velo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-velo}
     ports:
       - '${POSTGRES_HOST_PORT:-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-carbnb} -d ${POSTGRES_DB:-carbnb}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-velo} -d ${POSTGRES_DB:-velo}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,8 +44,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       until /usr/bin/mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin}; do sleep 1; done &&
-      /usr/bin/mc mb --ignore-existing local/${MINIO_BUCKET:-carbnb} &&
-      /usr/bin/mc anonymous set download local/${MINIO_BUCKET:-carbnb}
+      /usr/bin/mc mb --ignore-existing local/${MINIO_BUCKET:-velo} &&
+      /usr/bin/mc anonymous set download local/${MINIO_BUCKET:-velo}
       "
 
   backend:
@@ -61,10 +61,10 @@ services:
     environment:
       PORT: ${PORT:-3000}
       APP_URL: ${APP_URL:-http://localhost:3000}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://carbnb:carbnb@postgres:5432/carbnb?schema=public}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-carbnb_access_secret}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://velo:velo@postgres:5432/velo?schema=public}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-velo_access_secret}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-carbnb_refresh_secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-velo_refresh_secret}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-0.12}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
@@ -74,8 +74,8 @@ services:
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET: ${MINIO_BUCKET:-carbnb}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000/carbnb}
+      MINIO_BUCKET: ${MINIO_BUCKET:-velo}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000/velo}
     ports:
       - '${BACKEND_HOST_PORT:-3000}:3000'
 

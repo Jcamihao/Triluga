@@ -18,7 +18,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (configService: ConfigService) => ({
         secret:
           configService.get<string>('auth.accessSecret') ??
-          'carbnb_access_secret',
+          'velo_access_secret',
       }),
     }),
   ],

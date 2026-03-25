@@ -12,10 +12,10 @@ export class StorageService {
   private readonly client: MinioClient;
 
   constructor(private readonly configService: ConfigService) {
-    this.bucket = this.configService.get<string>('storage.bucket', 'carbnb');
+    this.bucket = this.configService.get<string>('storage.bucket', 'velo');
     this.publicUrl = this.configService.get<string>(
       'storage.publicUrl',
-      'http://localhost:9000/carbnb',
+      'http://localhost:9000/velo',
     );
     this.client = new MinioClient({
       endPoint: this.configService.get<string>('storage.endpoint', 'localhost'),

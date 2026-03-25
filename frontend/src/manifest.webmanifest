@@ -1,6 +1,6 @@
 {
-  "name": "IZZIE CAR",
-  "short_name": "IZZIE CAR",
+  "name": "Velo",
+  "short_name": "Velo",
   "theme_color": "#2563EB",
   "background_color": "#F9FAFB",
   "display": "standalone",
@@ -9,10 +9,10 @@
   "description": "Marketplace de aluguel de carros entre pessoas.",
   "icons": [
     {
-      "src": "assets/icons/app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "assets/logo_velo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

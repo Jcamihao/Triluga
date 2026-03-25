@@ -6,7 +6,7 @@ export const storageConfig = registerAs('storage', () => ({
   useSSL: process.env.MINIO_USE_SSL === 'true',
   accessKey: process.env.MINIO_ACCESS_KEY ?? 'minioadmin',
   secretKey: process.env.MINIO_SECRET_KEY ?? 'minioadmin',
-  bucket: process.env.MINIO_BUCKET ?? 'carbnb',
+  bucket: process.env.MINIO_BUCKET ?? 'velo',
   publicUrl:
-    process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000/carbnb',
+    process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000/velo',
 }));

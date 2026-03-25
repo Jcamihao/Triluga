@@ -80,7 +80,7 @@ export class AuthService {
   async refresh(dto: RefreshDto) {
     const refreshSecret =
       this.configService.get<string>('auth.refreshSecret') ??
-      'carbnb_refresh_secret';
+      'velo_refresh_secret';
     let payload: JwtPayload;
 
     try {
@@ -133,10 +133,10 @@ export class AuthService {
 
     const accessSecret =
       this.configService.get<string>('auth.accessSecret') ??
-      'carbnb_access_secret';
+      'velo_access_secret';
     const refreshSecret =
       this.configService.get<string>('auth.refreshSecret') ??
-      'carbnb_refresh_secret';
+      'velo_refresh_secret';
 
     const accessExpiresIn =
       this.configService.get<string>('auth.accessExpiresIn') ?? '15m';

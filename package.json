@@ -1,5 +1,5 @@
 {
-  "name": "carbnb",
+  "name": "velo",
   "private": true,
   "scripts": {
     "dev": "npm run dev:infra && concurrently -n backend,frontend -c blue,orange \"npm run dev:backend\" \"npm run dev:frontend\"",

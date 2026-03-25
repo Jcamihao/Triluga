@@ -1,4 +1,4 @@
-# CarBnB
+# Velo
 
 Marketplace MVP de aluguel de carros entre pessoas, inspirado no fluxo mobile da OLX, com frontend Angular PWA e backend NestJS modular.
 
@@ -170,9 +170,9 @@ npm run db:seed
 
 Credenciais sugeridas:
 
-- Admin: `admin@carbnb.local` / `Admin123!`
-- Owner: `owner@carbnb.local` / `Owner123!`
-- Renter: `renter@carbnb.local` / `Renter123!`
+- Admin: `admin@velo.local` / `Admin123!`
+- Owner: `owner@velo.local` / `Owner123!`
+- Renter: `renter@velo.local` / `Renter123!`
 
 ## Wireframes
 
