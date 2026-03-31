@@ -1,24 +1,48 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
+const workspaceRoot = path.resolve(projectRoot, '..');
 const outputPath = path.join(projectRoot, 'src', 'assets', 'app-config.js');
 
+const envFilePaths = [
+  path.join(workspaceRoot, '.env'),
+  path.join(projectRoot, '.env'),
+];
+
+const envFromFiles = Object.assign(
+  {},
+  ...(await Promise.all(envFilePaths.map(loadEnvFile))).filter(Boolean),
+);
+const resolvedEnv = {
+  ...envFromFiles,
+  ...process.env,
+};
+
 const apiBaseUrl =
-  process.env.FRONTEND_API_BASE_URL ??
-  process.env.API_BASE_URL ??
-  'http://localhost:3002/api/v1';
+  pickEnvValue(resolvedEnv, [
+    'FRONTEND_API_BASE_URL',
+    'API_BASE_URL',
+    'FRONTEND_APP_API_BASE_URL',
+    'APP_API_BASE_URL',
+  ]) ?? 'http://localhost:3002/api/v1';
 const wsBaseUrl =
-  process.env.FRONTEND_WS_BASE_URL ??
-  process.env.WS_BASE_URL ??
-  'http://localhost:3002';
+  pickEnvValue(resolvedEnv, [
+    'FRONTEND_WS_BASE_URL',
+    'WS_BASE_URL',
+    'FRONTEND_APP_WS_BASE_URL',
+    'APP_WS_BASE_URL',
+  ]) ?? 'http://localhost:3002';
 const clientLoggingEnabled =
-  (process.env.FRONTEND_CLIENT_LOGGING_ENABLED ??
-    process.env.CLIENT_LOGGING_ENABLED ??
-    'true') === 'true';
+  (pickEnvValue(resolvedEnv, [
+    'FRONTEND_CLIENT_LOGGING_ENABLED',
+    'CLIENT_LOGGING_ENABLED',
+    'FRONTEND_APP_CLIENT_LOGGING_ENABLED',
+    'APP_CLIENT_LOGGING_ENABLED',
+  ]) ?? 'true') === 'true';
 
 const contents = `window.__APP_CONFIG__ = ${JSON.stringify(
   {
@@ -34,3 +58,65 @@ await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, contents, 'utf8');
 
 console.log(`Runtime config generated at ${outputPath}`);
+
+async function loadEnvFile(filePath) {
+  try {
+    const contents = await readFile(filePath, 'utf8');
+    return parseEnvFile(contents);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function parseEnvFile(contents) {
+  return contents.split(/\r?\n/).reduce((accumulator, rawLine) => {
+    const line = rawLine.trim();
+
+    if (!line || line.startsWith('#')) {
+      return accumulator;
+    }
+
+    const separatorIndex = line.indexOf('=');
+
+    if (separatorIndex === -1) {
+      return accumulator;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim();
+
+    if (!key) {
+      return accumulator;
+    }
+
+    accumulator[key] = stripWrappingQuotes(value);
+    return accumulator;
+  }, {});
+}
+
+function stripWrappingQuotes(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+
+  return value;
+}
+
+function pickEnvValue(source, keys) {
+  for (const key of keys) {
+    const value = source[key];
+
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value).trim();
+    }
+  }
+
+  return null;
+}

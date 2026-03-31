@@ -305,7 +305,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
         gap: 16px;
         width: 100%;
         margin: 0 auto;
-        padding: 20px 16px 140px;
+        padding: 18px 12px 220px;
       }
 
       .detail-stage {
@@ -354,6 +354,11 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
         color: #fff;
         font-size: 14px;
         font-weight: 700;
+      }
+
+      .detail-stage__toolbar > span {
+        min-width: 0;
+        line-height: 1.3;
       }
 
       .icon-chip {
@@ -506,7 +511,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
 
       .detail-facts {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         gap: 10px;
       }
 
@@ -818,6 +823,7 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
       .review__stars {
@@ -855,6 +861,14 @@ import { ImageGalleryComponent } from '../../shared/components/image-gallery.com
       }
 
       @media (min-width: 481px) {
+        .vehicle-detail-page {
+          padding: 20px 16px 220px;
+        }
+
+        .detail-facts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .detail-facts {
           gap: 14px;
         }

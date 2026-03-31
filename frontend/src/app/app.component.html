@@ -1,4 +1,9 @@
-<div class="app-shell" [class.with-bottom-nav]="showBottomNav()">
+<div
+  class="app-shell"
+  [class.with-bottom-nav]="showBottomNav()"
+  [class.with-floating-banner]="shouldOffsetShellForBanners"
+  [class.with-stacked-banner]="shouldUseStackedBannerOffset"
+>
   <router-outlet></router-outlet>
 </div>
 
@@ -110,7 +115,7 @@
 
 <app-bottom-nav *ngIf="showBottomNav()" [menuOpen]="menuOpen" (menuToggle)="toggleMenu()"></app-bottom-nav>
 
-<section class="privacy-banner" *ngIf="!privacyPreferencesService.hasAnsweredAnalyticsChoice()">
+<section class="privacy-banner" *ngIf="showPrivacyBanner" [class.privacy-banner--docked]="showBottomNav()">
   <div>
     <strong>Preferências de privacidade</strong>
     <p>
@@ -130,8 +135,9 @@
 
 <section
   class="install-banner"
-  *ngIf="pwaInstallService.canShowBanner()"
-  [class.install-banner--stacked]="!privacyPreferencesService.hasAnsweredAnalyticsChoice()"
+  *ngIf="showInstallBanner"
+  [class.install-banner--docked]="showBottomNav()"
+  [class.install-banner--stacked]="showBottomNav() && showPrivacyBanner"
 >
   <div>
     <strong>Instale a Velo no celular</strong>

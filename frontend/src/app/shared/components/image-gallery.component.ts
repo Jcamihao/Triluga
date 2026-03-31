@@ -50,13 +50,13 @@ import { Component, Input, signal } from '@angular/core';
     `
       .gallery {
         display: grid;
-        gap: 14px;
+        gap: 12px;
       }
 
       .gallery__hero {
         position: relative;
-        min-height: 274px;
-        border-radius: 28px;
+        min-height: 220px;
+        border-radius: 24px;
         overflow: hidden;
         background: linear-gradient(180deg, #ffffff 0%, #f6f0f0 100%);
         border: 1px solid var(--glass-border-soft);
@@ -78,8 +78,8 @@ import { Component, Input, signal } from '@angular/core';
         z-index: 2;
         display: inline-grid;
         place-items: center;
-        width: 38px;
-        height: 38px;
+        width: 34px;
+        height: 34px;
         border: 0;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.94);
@@ -103,13 +103,13 @@ import { Component, Input, signal } from '@angular/core';
       .gallery__thumbs {
         display: grid;
         grid-auto-flow: column;
-        grid-auto-columns: 72px;
-        gap: 12px;
+        grid-auto-columns: 62px;
+        gap: 10px;
         overflow-x: auto;
       }
 
       .gallery__thumbs button {
-        min-height: 64px;
+        min-height: 56px;
         border: 1px solid var(--glass-border-soft);
         border-radius: 16px;
         background-size: cover;
@@ -126,6 +126,11 @@ import { Component, Input, signal } from '@angular/core';
       }
 
       @media (min-width: 481px) {
+        .gallery__hero {
+          min-height: 274px;
+          border-radius: 28px;
+        }
+
         .gallery__nav {
           width: 42px;
           height: 42px;
@@ -137,6 +142,15 @@ import { Component, Input, signal } from '@angular/core';
 
         .gallery__nav--next {
           right: 12px;
+        }
+
+        .gallery__thumbs {
+          grid-auto-columns: 72px;
+          gap: 12px;
+        }
+
+        .gallery__thumbs button {
+          min-height: 64px;
         }
       }
     `,

@@ -133,7 +133,7 @@ import { Profile } from '../../core/models/domain.models';
       .profile-page {
         display: grid;
         gap: 18px;
-        padding: 16px 12px 24px;
+        padding: 16px 12px 132px;
       }
 
       .profile-card,
@@ -215,6 +215,7 @@ import { Profile } from '../../core/models/domain.models';
         align-items: center;
         justify-content: center;
         gap: 8px;
+        width: 100%;
         min-height: 46px;
         padding: 0 16px;
         border-radius: 16px;
@@ -300,14 +301,20 @@ import { Profile } from '../../core/models/domain.models';
       }
 
       .privacy-link {
+        display: block;
         color: var(--primary);
         font-weight: 700;
         text-decoration: none;
+        line-height: 1.45;
+      }
+
+      .verification-card__head .upload-trigger {
+        width: 100%;
       }
 
       @media (min-width: 481px) {
         .profile-page {
-          padding: 20px 16px 32px;
+          padding: 20px 16px 132px;
         }
 
         .profile-card,
@@ -320,6 +327,11 @@ import { Profile } from '../../core/models/domain.models';
         .profile-card__hero,
         .avatar-section {
           align-items: center;
+        }
+
+        .upload-trigger,
+        .verification-card__head .upload-trigger {
+          width: auto;
         }
       }
 

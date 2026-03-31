@@ -256,7 +256,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
 
       .chat-page {
         box-sizing: border-box;
-        padding: 18px 12px 132px;
+        padding: 16px 12px 132px;
       }
 
       .chat-page--conversation {
@@ -264,7 +264,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         width: 100%;
         max-width: none;
         margin: 0;
-        padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
+        padding: env(safe-area-inset-top, 0px) 0 calc(env(safe-area-inset-bottom, 0px));
         background: #fff;
         overflow: hidden;
       }
@@ -450,7 +450,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-page--conversation .chat-thread {
         height: 100%;
         min-height: 0;
-        padding: 16px 16px 10px;
+        padding: 12px 14px 10px;
         border: 0;
         border-radius: 0;
         background: #fff;
@@ -483,23 +483,23 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
       }
 
       .chat-thread__identity {
         display: grid;
-        grid-template-columns: 56px minmax(0, 1fr);
+        grid-template-columns: 46px minmax(0, 1fr);
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         min-width: 0;
         color: inherit;
         text-decoration: none;
       }
 
       .chat-thread__avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
         object-fit: cover;
         background: var(--surface-muted);
       }
@@ -511,7 +511,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       }
 
       .chat-thread__summary h2 {
-        font-size: 18px;
+        font-size: 16px;
         line-height: 1.15;
       }
 
@@ -531,8 +531,8 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-thread__action {
         display: inline-grid;
         place-items: center;
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         padding: 0;
         border: 0;
         border-radius: 14px;
@@ -600,7 +600,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .message__bubble {
         display: grid;
         gap: 6px;
-        max-width: min(82%, 420px);
+        max-width: min(88%, 420px);
         padding: 14px 16px;
         border-radius: 22px 22px 22px 8px;
         background: var(--surface-muted);
@@ -632,7 +632,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
         position: sticky;
         bottom: 0;
         z-index: 2;
-        padding-top: 12px;
+        padding: 12px 0 calc(6px + env(safe-area-inset-bottom, 0px));
         background: linear-gradient(
           180deg,
           rgba(255, 255, 255, 0) 0%,
@@ -645,8 +645,8 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
       .chat-composer textarea {
         width: 100%;
         min-width: 0;
-        min-height: 88px;
-        max-height: 88px;
+        min-height: 80px;
+        max-height: 80px;
         padding: 16px 18px;
         border: 0;
         resize: none;
@@ -745,6 +745,11 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
 
         .chat-thread__summary h2 {
           font-size: 19px;
+        }
+
+        .chat-thread__action {
+          width: 40px;
+          height: 40px;
         }
 
         .guest-card__actions .btn,

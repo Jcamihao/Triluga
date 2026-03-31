@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Velo</string>
+	<string>Velo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,6 +29,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>A Velo usa a camera para enviar fotos de perfil, veiculos e documentos.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>A Velo precisa acessar a rede local para conversar com o backend em desenvolvimento no seu computador.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>A Velo acessa sua biblioteca para selecionar fotos de perfil, veiculos e documentos.</string>
 	<key>UILaunchStoryboardName</key>

@@ -175,6 +175,22 @@ export class AppComponent {
     this.pwaInstallService.dismissBanner();
   }
 
+  protected get showPrivacyBanner() {
+    return !this.privacyPreferencesService.hasAnsweredAnalyticsChoice();
+  }
+
+  protected get showInstallBanner() {
+    return this.pwaInstallService.canShowBanner();
+  }
+
+  protected get shouldOffsetShellForBanners() {
+    return this.showBottomNav() && (this.showPrivacyBanner || this.showInstallBanner);
+  }
+
+  protected get shouldUseStackedBannerOffset() {
+    return this.showBottomNav() && this.showPrivacyBanner && this.showInstallBanner;
+  }
+
   readonly showBottomNav = () => {
     const url = this.currentUrl();
 

@@ -236,7 +236,7 @@ type SearchQuery = {
         gap: 16px;
         width: 100%;
         margin: 0 auto;
-        padding: 20px 16px 40px;
+        padding: 18px 12px 132px;
       }
 
       .search-page__section-head h2,
@@ -285,6 +285,7 @@ type SearchQuery = {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
       .search-page__section-head h2 {
@@ -365,9 +366,7 @@ type SearchQuery = {
       }
 
       .search-page__budget-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        display: grid;
         gap: 10px;
       }
 
@@ -380,6 +379,10 @@ type SearchQuery = {
         font-size: 15px;
         line-height: 1.2;
         color: var(--text-primary);
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
 
       .search-page__budget-top strong {
@@ -430,6 +433,10 @@ type SearchQuery = {
       .search-page__budget-copy p {
         color: var(--text-secondary);
         font-size: 12px;
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
 
       .search-page__alert-list {
@@ -442,6 +449,7 @@ type SearchQuery = {
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
         padding: 14px;
         border-radius: 18px;
         background: var(--surface-muted);
@@ -473,6 +481,15 @@ type SearchQuery = {
       }
 
       @media (min-width: 421px) {
+        .search-page {
+          padding: 20px 16px 132px;
+        }
+
+        .search-page__budget-top {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: start;
+        }
+
         .search-page__budget-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }

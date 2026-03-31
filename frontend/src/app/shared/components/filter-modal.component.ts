@@ -140,7 +140,7 @@ type FilterDraft = {
         gap: 18px;
         max-height: min(100dvh, 760px);
         overflow-y: auto;
-        padding: 24px 20px 28px;
+        padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
         border-radius: 32px 32px 0 0;
         background: rgba(255, 255, 255, 0.99);
         border: 1px solid var(--glass-border);
@@ -153,6 +153,7 @@ type FilterDraft = {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
       h2,
@@ -203,6 +204,11 @@ type FilterDraft = {
       footer {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
+        position: sticky;
+        bottom: calc(-20px - env(safe-area-inset-bottom, 0px));
+        padding-top: 4px;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.98) 32%);
       }
 
       @media (min-width: 481px) {

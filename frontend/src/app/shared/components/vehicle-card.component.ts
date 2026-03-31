@@ -167,9 +167,7 @@ import { FavoritesService } from '../../core/services/favorites.service';
       }
 
       .vehicle-card__top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        display: grid;
         gap: 10px;
       }
 
@@ -237,16 +235,18 @@ import { FavoritesService } from '../../core/services/favorites.service';
       p {
         color: var(--text-secondary);
         font-size: 12px;
-        white-space: nowrap;
+        white-space: normal;
         overflow: hidden;
-        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
 
       .vehicle-card__cta {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: fit-content;
+        width: 100%;
         min-height: 38px;
         padding: 0 14px;
         border-radius: 999px;
@@ -256,6 +256,19 @@ import { FavoritesService } from '../../core/services/favorites.service';
         font-weight: 700;
         letter-spacing: 0.03em;
         text-transform: uppercase;
+      }
+
+      @media (min-width: 390px) {
+        .vehicle-card__top {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: start;
+        }
+      }
+
+      @media (min-width: 481px) {
+        .vehicle-card__cta {
+          width: fit-content;
+        }
       }
 
       @media (min-width: 421px) {

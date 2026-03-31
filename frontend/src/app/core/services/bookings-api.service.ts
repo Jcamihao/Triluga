@@ -1,7 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Booking } from '../models/domain.models';
+import { normalizeApiPayloadUrls } from '../utils/network-url.util';
 
 @Injectable({ providedIn: 'root' })
 export class BookingsApiService {
@@ -15,38 +17,42 @@ export class BookingsApiService {
     selectedAddonIds?: string[];
     couponCode?: string;
   }) {
-    return this.http.post<Booking>(
-      `${environment.apiBaseUrl}/bookings`,
-      payload,
-    );
+    return this.http
+      .post<Booking>(`${environment.apiBaseUrl}/bookings`, payload)
+      .pipe(map((booking) => normalizeApiPayloadUrls(booking)));
   }
 
   getMine() {
-    return this.http.get<Booking[]>(`${environment.apiBaseUrl}/bookings/my`);
+    return this.http
+      .get<Booking[]>(`${environment.apiBaseUrl}/bookings/my`)
+      .pipe(map((bookings) => normalizeApiPayloadUrls(bookings)));
   }
 
   getOwnerBookings() {
-    return this.http.get<Booking[]>(`${environment.apiBaseUrl}/bookings/owner`);
+    return this.http
+      .get<Booking[]>(`${environment.apiBaseUrl}/bookings/owner`)
+      .pipe(map((bookings) => normalizeApiPayloadUrls(bookings)));
   }
 
   approve(bookingId: string, reason?: string) {
-    return this.http.patch<Booking>(
-      `${environment.apiBaseUrl}/bookings/${bookingId}/approve`,
-      { reason },
-    );
+    return this.http
+      .patch<Booking>(`${environment.apiBaseUrl}/bookings/${bookingId}/approve`, {
+        reason,
+      })
+      .pipe(map((booking) => normalizeApiPayloadUrls(booking)));
   }
 
   reject(bookingId: string, reason?: string) {
-    return this.http.patch<Booking>(
-      `${environment.apiBaseUrl}/bookings/${bookingId}/reject`,
-      { reason },
-    );
+    return this.http
+      .patch<Booking>(`${environment.apiBaseUrl}/bookings/${bookingId}/reject`, {
+        reason,
+      })
+      .pipe(map((booking) => normalizeApiPayloadUrls(booking)));
   }
 
   cancel(bookingId: string) {
-    return this.http.patch<Booking>(
-      `${environment.apiBaseUrl}/bookings/${bookingId}/cancel`,
-      {},
-    );
+    return this.http
+      .patch<Booking>(`${environment.apiBaseUrl}/bookings/${bookingId}/cancel`, {})
+      .pipe(map((booking) => normalizeApiPayloadUrls(booking)));
   }
 }

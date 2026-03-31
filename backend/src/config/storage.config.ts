@@ -1,5 +1,35 @@
 import { registerAs } from '@nestjs/config';
 
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+
+function isLocalHost(hostname: string) {
+  return LOCAL_HOSTS.has(hostname.toLowerCase());
+}
+
+function resolvePublicStorageUrl() {
+  const fallbackPublicUrl =
+    process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000/velo-public';
+  const frontendApiBaseUrl = process.env.FRONTEND_APP_API_BASE_URL;
+
+  if (!frontendApiBaseUrl) {
+    return fallbackPublicUrl;
+  }
+
+  try {
+    const publicUrl = new URL(fallbackPublicUrl);
+    const apiBaseUrl = new URL(frontendApiBaseUrl);
+
+    if (!isLocalHost(publicUrl.hostname) || isLocalHost(apiBaseUrl.hostname)) {
+      return fallbackPublicUrl;
+    }
+
+    publicUrl.hostname = apiBaseUrl.hostname;
+    return publicUrl.toString();
+  } catch {
+    return fallbackPublicUrl;
+  }
+}
+
 export const storageConfig = registerAs('storage', () => ({
   endpoint: process.env.MINIO_ENDPOINT ?? 'localhost',
   port: parseInt(process.env.MINIO_PORT ?? '9000', 10),
@@ -12,6 +42,5 @@ export const storageConfig = registerAs('storage', () => ({
     process.env.MINIO_PRIVATE_URL_EXPIRES_IN_SECONDS ?? '600',
     10,
   ),
-  publicUrl:
-    process.env.MINIO_PUBLIC_URL ?? 'http://localhost:9000/velo-public',
+  publicUrl: resolvePublicStorageUrl(),
 }));

@@ -208,6 +208,7 @@ import { VehicleCardComponent } from '../../shared/components/vehicle-card.compo
         align-items: flex-start;
         justify-content: space-between;
         gap: 14px;
+        flex-wrap: wrap;
       }
 
       .user-profile-hero__top {

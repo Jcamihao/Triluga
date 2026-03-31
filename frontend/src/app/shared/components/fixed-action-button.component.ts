@@ -44,9 +44,9 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     `
       .fixed-action {
         position: fixed;
-        left: 16px;
-        right: 16px;
-        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+        left: 12px;
+        right: 12px;
+        bottom: calc(102px + env(safe-area-inset-bottom, 0px));
         z-index: 22;
         display: flex;
         align-items: stretch;
@@ -73,6 +73,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         display: flex;
         align-items: center;
         justify-content: flex-end;
+        min-width: 0;
         gap: 12px;
         flex: 1;
         width: 100%;
@@ -82,11 +83,14 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         display: block;
         color: var(--text-secondary);
         margin-bottom: 4px;
+        line-height: 1.35;
       }
 
       strong {
         font-size: 16px;
         color: var(--primary);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
       }
 
       .btn {
@@ -187,7 +191,9 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           align-items: center;
           justify-content: space-between;
           flex-direction: row;
-          bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+          left: 16px;
+          right: 16px;
+          bottom: calc(96px + env(safe-area-inset-bottom, 0px));
         }
 
         .fixed-action__actions {
@@ -201,6 +207,22 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
         .btn {
           min-width: 152px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .fixed-action {
+          gap: 12px;
+          padding: 12px;
+        }
+
+        .fixed-action__actions {
+          gap: 10px;
+        }
+
+        .fixed-action__chat {
+          width: 50px;
+          height: 50px;
         }
       }
 

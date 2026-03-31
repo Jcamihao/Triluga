@@ -75,7 +75,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
       .reservations-page {
         display: grid;
         gap: 18px;
-        padding: 20px 16px 40px;
+        padding: 18px 12px 132px;
       }
 
       .section-head span {
@@ -141,6 +141,7 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
         display: flex;
         justify-content: space-between;
         gap: 10px;
+        flex-wrap: wrap;
       }
 
       .status {
@@ -178,6 +179,10 @@ import { Booking, PaymentMethod } from '../../core/models/domain.models';
       }
 
       @media (min-width: 641px) {
+        .reservations-page {
+          padding: 20px 16px 132px;
+        }
+
         .booking-list {
           grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
         }

@@ -34,6 +34,7 @@ import { SearchAlertsModule } from './search-alerts/search-alerts.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
+        resolve(__dirname, '../../.env'),
         resolve(__dirname, '../.env'),
         resolve(__dirname, '../.env.example'),
       ],

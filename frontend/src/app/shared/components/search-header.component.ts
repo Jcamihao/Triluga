@@ -146,7 +146,7 @@ import { AuthService } from '../../core/services/auth.service';
         display: grid;
         gap: 16px;
         width: 100%;
-        padding: 16px 14px 20px;
+        padding: calc(14px + env(safe-area-inset-top, 0px)) 12px 18px;
         border-radius: 24px;
         background: linear-gradient(180deg, #473d3e 0%, #362e2f 100%);
         box-shadow: 0 26px 48px rgba(20, 11, 11, 0.24);
@@ -180,7 +180,7 @@ import { AuthService } from '../../core/services/auth.service';
 
       .search-header__nav {
         display: grid;
-        grid-template-columns: 54px minmax(0, 1fr) 54px;
+        grid-template-columns: 48px minmax(0, 1fr) 48px;
         align-items: center;
         gap: 8px;
         width: 100%;
@@ -193,16 +193,16 @@ import { AuthService } from '../../core/services/auth.service';
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 54px;
-        height: 54px;
+        width: 48px;
+        height: 48px;
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.98);
         box-shadow: 0 16px 28px rgba(28, 17, 18, 0.14);
       }
 
       .search-header__brand img {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
         object-fit: contain;
       }
 
@@ -212,8 +212,8 @@ import { AuthService } from '../../core/services/auth.service';
         align-items: center;
         gap: 8px;
         min-width: 0;
-        min-height: 54px;
-        padding: 0 12px;
+        min-height: 48px;
+        padding: 0 11px;
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.98);
         border: 1px solid var(--glass-border);
@@ -237,7 +237,7 @@ import { AuthService } from '../../core/services/auth.service';
         background: transparent;
         box-shadow: none;
         font: inherit;
-        font-size: 15px;
+        font-size: 14px;
         color: var(--text-primary);
       }
 
@@ -249,8 +249,8 @@ import { AuthService } from '../../core/services/auth.service';
         position: relative;
         display: inline-grid;
         place-items: center;
-        width: 54px;
-        height: 54px;
+        width: 48px;
+        height: 48px;
         border: 0;
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.98);
@@ -284,6 +284,7 @@ import { AuthService } from '../../core/services/auth.service';
         position: relative;
         z-index: 1;
         padding: 2px 2px 0;
+        min-width: 0;
       }
 
       .search-header__eyebrow {
@@ -302,10 +303,11 @@ import { AuthService } from '../../core/services/auth.service';
 
       h1 {
         margin: 0;
-        max-width: 13ch;
-        font-size: 29px;
+        max-width: 12ch;
+        font-size: 26px;
         line-height: 0.98;
         color: #fff;
+        overflow-wrap: anywhere;
       }
 
       p {
@@ -339,7 +341,7 @@ import { AuthService } from '../../core/services/auth.service';
         display: grid;
         grid-template-rows: auto auto 1fr;
         gap: 16px;
-        padding: 22px 16px 28px;
+        padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px));
         background: rgba(255, 255, 255, 0.99);
         border-left: 1px solid var(--glass-border);
         box-shadow: -20px 0 40px rgba(90, 115, 145, 0.12);
@@ -402,6 +404,7 @@ import { AuthService } from '../../core/services/auth.service';
         gap: 12px;
         overflow-y: auto;
         padding-right: 4px;
+        padding-bottom: 6px;
       }
 
       .notifications-drawer__item {

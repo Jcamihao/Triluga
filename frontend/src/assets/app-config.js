@@ -1,5 +1,5 @@
 window.__APP_CONFIG__ = {
-  "apiBaseUrl": "http://localhost:3002/api/v1",
-  "wsBaseUrl": "http://localhost:3002",
+  "apiBaseUrl": "http://192.168.0.8:3000/api/v1",
+  "wsBaseUrl": "http://192.168.0.8:3000",
   "clientLoggingEnabled": true
 };

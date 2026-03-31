@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, finalize, map, Observable, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, Profile, User, UserRole } from '../models/domain.models';
+import { normalizeApiPayloadUrls, normalizeNetworkUrl } from '../utils/network-url.util';
 import { AppLoggerService } from './app-logger.service';
 import { PrivacyPreferencesService } from './privacy-preferences.service';
 
@@ -311,7 +312,7 @@ export class AuthService {
 
   private readStoredUser() {
     const raw = this.storage.getItem(this.userKey);
-    return raw ? (JSON.parse(raw) as User) : null;
+    return raw ? normalizeApiPayloadUrls(JSON.parse(raw) as User) : null;
   }
 
   private readStoredValue(key: string) {
@@ -396,7 +397,7 @@ export class AuthService {
             city: user.profile.city,
             state: user.profile.state,
             bio: null,
-            avatarUrl: user.profile.avatarUrl ?? null,
+            avatarUrl: normalizeNetworkUrl(user.profile.avatarUrl ?? null),
             documentNumber: null,
             driverLicenseNumber: null,
             documentImageUrl: null,

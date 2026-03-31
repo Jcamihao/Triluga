@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CreateVehiclePayload,
@@ -10,6 +11,7 @@ import {
   VehiclePricingPreview,
   VehicleSearchResponse,
 } from '../models/domain.models';
+import { normalizeApiPayloadUrls } from '../utils/network-url.util';
 
 @Injectable({ providedIn: 'root' })
 export class VehiclesApiService {
@@ -24,16 +26,17 @@ export class VehiclesApiService {
       }
     });
 
-    return this.http.get<VehicleSearchResponse>(
-      `${environment.apiBaseUrl}/vehicles`,
-      { params: httpParams },
-    );
+    return this.http
+      .get<VehicleSearchResponse>(`${environment.apiBaseUrl}/vehicles`, {
+        params: httpParams,
+      })
+      .pipe(map((response) => normalizeApiPayloadUrls(response)));
   }
 
   getById(vehicleId: string) {
-    return this.http.get<VehicleDetail>(
-      `${environment.apiBaseUrl}/vehicles/${vehicleId}`,
-    );
+    return this.http
+      .get<VehicleDetail>(`${environment.apiBaseUrl}/vehicles/${vehicleId}`)
+      .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
 
   getPricingPreview(vehicleId: string, startDate: string, endDate: string) {
@@ -49,21 +52,21 @@ export class VehiclesApiService {
   }
 
   getMine() {
-    return this.http.get<OwnerVehicleItem[]>(`${environment.apiBaseUrl}/vehicles/me`);
+    return this.http
+      .get<OwnerVehicleItem[]>(`${environment.apiBaseUrl}/vehicles/me`)
+      .pipe(map((vehicles) => normalizeApiPayloadUrls(vehicles)));
   }
 
   create(payload: CreateVehiclePayload) {
-    return this.http.post<VehicleDetail>(
-      `${environment.apiBaseUrl}/vehicles`,
-      payload,
-    );
+    return this.http
+      .post<VehicleDetail>(`${environment.apiBaseUrl}/vehicles`, payload)
+      .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
 
   update(vehicleId: string, payload: UpdateVehiclePayload) {
-    return this.http.patch<VehicleDetail>(
-      `${environment.apiBaseUrl}/vehicles/${vehicleId}`,
-      payload,
-    );
+    return this.http
+      .patch<VehicleDetail>(`${environment.apiBaseUrl}/vehicles/${vehicleId}`, payload)
+      .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
 
   remove(vehicleId: string) {
@@ -79,10 +82,12 @@ export class VehiclesApiService {
       formData.append('files', file);
     });
 
-    return this.http.post<VehicleImage[]>(
-      `${environment.apiBaseUrl}/vehicles/${vehicleId}/images`,
-      formData,
-    );
+    return this.http
+      .post<VehicleImage[]>(
+        `${environment.apiBaseUrl}/vehicles/${vehicleId}/images`,
+        formData,
+      )
+      .pipe(map((images) => normalizeApiPayloadUrls(images)));
   }
 
   removeImage(vehicleId: string, imageId: string) {

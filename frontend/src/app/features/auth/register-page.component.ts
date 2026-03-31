@@ -104,7 +104,7 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 24px 16px 40px;
+        padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(40px + env(safe-area-inset-bottom, 0px));
       }
 
       .auth-card {
@@ -203,6 +203,7 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
         align-items: center;
         justify-content: center;
         gap: 8px;
+        width: 100%;
         min-height: 44px;
         padding: 0 16px;
         border-radius: 16px;
@@ -259,6 +260,8 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
         display: flex;
         justify-content: center;
         gap: 8px;
+        flex-wrap: wrap;
+        text-align: center;
         color: var(--text-secondary);
       }
 
@@ -276,6 +279,12 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
         text-align: center;
         color: var(--error);
         font-weight: 600;
+      }
+
+      @media (min-width: 481px) {
+        .upload-trigger {
+          width: auto;
+        }
       }
 
       @media (min-width: 960px) {

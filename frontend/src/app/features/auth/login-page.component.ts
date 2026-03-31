@@ -49,7 +49,7 @@ import { AuthService } from '../../core/services/auth.service';
         min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 24px 16px;
+        padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
       }
 
       .auth-card {
@@ -105,6 +105,8 @@ import { AuthService } from '../../core/services/auth.service';
         align-items: center;
         justify-content: center;
         gap: 8px;
+        flex-wrap: wrap;
+        text-align: center;
         color: var(--text-secondary);
       }
 

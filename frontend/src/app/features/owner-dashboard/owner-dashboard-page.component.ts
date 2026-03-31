@@ -942,7 +942,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
       .owner-page {
         display: grid;
         gap: 18px;
-        padding: 20px 16px 32px;
+        padding: 18px 12px 132px;
       }
 
       .owner-hero,

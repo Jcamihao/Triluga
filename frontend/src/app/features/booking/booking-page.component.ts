@@ -206,7 +206,7 @@ import {
       .booking-page {
         display: grid;
         gap: 18px;
-        padding: 20px 16px 40px;
+        padding: 18px 12px 132px;
       }
 
       .booking-card {
@@ -228,7 +228,7 @@ import {
       .availability-card {
         display: grid;
         gap: 14px;
-        padding: 20px;
+        padding: 18px 16px;
         border-radius: 26px;
         background: rgba(255, 255, 255, 0.98);
         border: 1px solid var(--glass-border);
@@ -337,8 +337,8 @@ import {
 
       .addon-option {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
         gap: 12px;
         padding: 12px;
         border-radius: 14px;
@@ -353,6 +353,8 @@ import {
       }
 
       .addon-option span:last-child {
+        grid-column: 2;
+        justify-self: start;
         color: var(--primary);
         font-weight: 700;
       }
@@ -384,6 +386,7 @@ import {
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
       .availability-status {
@@ -438,6 +441,10 @@ import {
       }
 
       @media (min-width: 641px) {
+        .booking-page {
+          padding: 20px 16px 132px;
+        }
+
         .booking-card {
           flex-direction: row;
           align-items: center;
@@ -446,6 +453,16 @@ import {
         .booking-card__image {
           width: min(44%, 220px);
           max-height: none;
+        }
+
+        .addon-option {
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          align-items: center;
+        }
+
+        .addon-option span:last-child {
+          grid-column: auto;
+          justify-self: end;
         }
       }
 
