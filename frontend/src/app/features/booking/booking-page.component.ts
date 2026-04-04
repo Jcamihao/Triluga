@@ -26,7 +26,7 @@ import {
           <span class="eyebrow">Reserva</span>
           <h1>{{ vehicle.title }}</h1>
           <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
-          <strong>{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} / semana</strong>
+          <strong class="price-text">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} / semana</strong>
           <span class="booking-chip">
             {{ vehicle.bookingApprovalMode === 'INSTANT' ? 'Confirmação instantânea' : 'Aprovação manual' }}
           </span>
@@ -71,7 +71,7 @@ import {
               <strong>{{ addon.name }}</strong>
               <p>{{ addon.description || 'Item adicional para sua reserva.' }}</p>
             </div>
-            <span>{{ addon.price | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
+            <span class="price-text">{{ addon.price | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
           </label>
         </section>
 
@@ -145,7 +145,7 @@ import {
         <div><span>Diárias</span><strong>{{ totalDays }}</strong></div>
         <div>
           <span>Locação base</span>
-          <strong>{{ staticRentalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">{{ staticRentalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div
           *ngFor="let adjustment of pricingAdjustments"
@@ -153,33 +153,33 @@ import {
           [class.booking-summary__adjustment--discount]="adjustment.amount < 0"
         >
           <span>{{ adjustment.label }}</span>
-          <strong>
+          <strong class="price-text">
             {{ adjustment.amount > 0 ? '+' : '' }}{{ adjustment.amount | currency: 'BRL' : 'symbol' : '1.2-2' }}
           </strong>
         </div>
         <div *ngIf="selectedAddons.length">
           <span>Extras</span>
-          <strong>{{ addonsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">{{ addonsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div>
           <span>Subtotal</span>
-          <strong>{{ subtotal | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">{{ subtotal | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div *ngFor="let promotion of appliedPromotionPreview" class="booking-summary__discount">
           <span>{{ promotion.label }}</span>
-          <strong>-{{ promotion.amount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">-{{ promotion.amount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div *ngIf="discountsAmount">
           <span>Descontos</span>
-          <strong>-{{ discountsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">-{{ discountsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div>
           <span>Taxa da plataforma</span>
-          <strong>{{ platformFee | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text">{{ platformFee | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <div class="booking-summary__total">
           <span>Total</span>
-          <strong>{{ totalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+          <strong class="price-text price-text--total">{{ totalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
         </div>
         <p class="hint">
           Cancelamento {{ cancellationPolicyLabel(vehicle.cancellationPolicy).toLowerCase() }}.
@@ -245,7 +245,7 @@ import {
         width: fit-content;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(31, 140, 255, 0.1);
+        background: rgba(88, 181, 158, 0.1);
         color: var(--primary);
         font-size: 12px;
         font-weight: 700;

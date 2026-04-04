@@ -12,9 +12,9 @@ const doc = new PDFDocument({
   size: 'A4',
   margins: { top: 54, bottom: 54, left: 54, right: 54 },
   info: {
-    Title: 'Playbook de QA do Velo',
+    Title: 'Playbook de QA do Triluga',
     Author: 'Codex',
-    Subject: 'Guia de QA do Velo',
+    Subject: 'Guia de QA do Triluga',
   },
 });
 

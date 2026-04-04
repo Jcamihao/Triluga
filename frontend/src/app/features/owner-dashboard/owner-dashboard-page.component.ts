@@ -7,6 +7,7 @@ import { AvailabilityApiService } from '../../core/services/availability-api.ser
 import { AuthService } from '../../core/services/auth.service';
 import { BookingsApiService } from '../../core/services/bookings-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
+import { BookingChecklistCardComponent } from '../../shared/components/booking-checklist-card.component';
 import {
   BookingApprovalMode,
   Booking,
@@ -69,14 +70,20 @@ type OwnerViewMode = 'dashboard' | 'ads';
 @Component({
   selector: 'app-owner-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CurrencyPipe,
+    DatePipe,
+    BookingChecklistCardComponent,
+  ],
   template: `
     <main class="page owner-page">
       <section class="owner-hero">
         <span class="eyebrow">
           {{
             isDashboardView
-              ? 'Dashboard do anfitrião'
+              ? 'Dashboard de anúncios'
               : createMode
                 ? 'Anunciar carro'
                 : 'Meus anúncios'
@@ -166,7 +173,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         <div class="finance-grid">
           <article>
             <span>Faturamento</span>
-            <strong>{{ financialSnapshot.revenue | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+            <strong class="price-text">{{ financialSnapshot.revenue | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
             <small>{{ financialSnapshot.bookingCount }} reserva(s) com impacto no período</small>
           </article>
 
@@ -178,7 +185,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
 
           <article>
             <span>Ticket médio</span>
-            <strong>{{ financialSnapshot.averageTicket | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+            <strong class="price-text">{{ financialSnapshot.averageTicket | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
             <small>Valor médio por reserva no mês</small>
           </article>
 
@@ -730,7 +737,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
             </div>
 
             <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
-            <span>{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }} / semana</span>
+            <span class="price-text">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }} / semana</span>
             <p>
               {{ vehicle.images.length }} fotos •
               {{ vehicleTypeLabel(vehicle.vehicleType) }} •
@@ -832,7 +839,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         <div class="blocked-date-list" *ngIf="!availabilityLoading && blockedDates.length">
           <article class="blocked-date-item" *ngFor="let period of blockedDates; trackBy: trackByBlockedDate">
             <strong>{{ period.startDate | date: 'dd/MM/yyyy' }} até {{ period.endDate | date: 'dd/MM/yyyy' }}</strong>
-            <span>{{ period.reason || 'Bloqueio manual do proprietário' }}</span>
+            <span>{{ period.reason || 'Bloqueio manual do anúncio' }}</span>
           </article>
         </div>
         <p class="state-message" *ngIf="manageableVehicles.length && !availabilityLoading && !blockedDates.length">
@@ -926,12 +933,12 @@ type OwnerViewMode = 'dashboard' | 'ads';
 
         <p class="state-message" *ngIf="loading">Carregando reservas recebidas...</p>
         <p class="state-message" *ngIf="!loading && !bookings.length">
-          Assim que um locatário solicitar um período, ele vai aparecer aqui.
+          Assim que alguém solicitar um período, ele vai aparecer aqui.
         </p>
         <p class="feedback feedback--error" *ngIf="loadError">{{ loadError }}</p>
 
         <article class="booking-row" *ngFor="let booking of bookings; trackBy: trackById">
-          <div>
+          <div class="booking-row__summary">
             <strong>{{ booking.vehicle.title }}</strong>
             <p>{{ booking.renter.fullName || booking.renter.email }}</p>
             <p>
@@ -963,6 +970,13 @@ type OwnerViewMode = 'dashboard' | 'ads';
               Recusar
             </button>
           </div>
+
+          <app-booking-checklist-card
+            class="booking-row__checklists"
+            [booking]="booking"
+            viewerRole="OWNER"
+            (bookingChange)="applyBookingUpdate($event)"
+          />
         </article>
       </section>
     </main>
@@ -982,7 +996,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 16px;
         padding: 20px;
         border-radius: 24px;
-        background: rgba(255, 255, 255, 0.98);
+        background: var(--glass-surface-strong);
         border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-soft);
       }
@@ -1095,7 +1109,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         display: inline-grid;
         place-items: center;
         border-radius: 999px;
-        background: rgba(37, 99, 235, 0.12);
+        background: rgba(88, 181, 158, 0.12);
         color: var(--primary);
       }
 
@@ -1104,8 +1118,8 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 14px;
         padding: 18px;
         border-radius: 22px;
-        background: linear-gradient(180deg, rgba(248, 250, 255, 0.96), rgba(255, 255, 255, 0.98));
-        border: 1px solid rgba(37, 99, 235, 0.12);
+        background: linear-gradient(180deg, rgba(251, 253, 252, 0.98), rgba(237, 245, 242, 0.98));
+        border: 1px solid rgba(103, 203, 176, 0.14);
       }
 
       .publication-guide__head {
@@ -1134,7 +1148,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 12px;
         padding: 14px;
         border-radius: 18px;
-        background: #fff;
+        background: var(--surface-dark-elevated);
         border: 1px solid var(--glass-border-soft);
       }
 
@@ -1158,7 +1172,8 @@ type OwnerViewMode = 'dashboard' | 'ads';
       .publication-suggestions {
         padding: 14px;
         border-radius: 18px;
-        background: rgba(37, 99, 235, 0.06);
+        background: rgba(103, 203, 176, 0.08);
+        border: 1px solid rgba(103, 203, 176, 0.12);
       }
 
       .publication-suggestions p {
@@ -1250,11 +1265,11 @@ type OwnerViewMode = 'dashboard' | 'ads';
         min-height: 44px;
         padding: 0 16px;
         border-radius: 999px;
-        background: linear-gradient(180deg, #2495ff 0%, #1a81f7 100%);
-        color: #fff;
+        background: linear-gradient(180deg, #8ad8c7 0%, #58b59e 100%);
+        color: #123128;
         cursor: pointer;
         overflow: hidden;
-        box-shadow: 0 14px 24px rgba(31, 140, 255, 0.24);
+        box-shadow: 0 14px 24px rgba(88, 181, 158, 0.2);
       }
 
       .upload-trigger input {
@@ -1276,7 +1291,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 10px;
         padding: 10px;
         border-radius: 18px;
-        background: #fff;
+        background: var(--surface-dark-elevated);
         border: 1px solid var(--glass-border-soft);
       }
 
@@ -1297,8 +1312,8 @@ type OwnerViewMode = 'dashboard' | 'ads';
         left: 18px;
         padding: 4px 10px;
         border-radius: 999px;
-        background: rgba(31, 140, 255, 0.94);
-        color: #fff;
+        background: rgba(88, 181, 158, 0.94);
+        color: #123128;
         font-size: 11px;
         font-weight: 700;
       }
@@ -1328,7 +1343,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 12px;
         padding: 14px;
         border-radius: 18px;
-        background: #fff;
+        background: var(--surface-dark-elevated);
         border: 1px solid var(--glass-border-soft);
       }
 
@@ -1355,7 +1370,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
 
       .toggle-button--active {
         background: var(--primary-light);
-        border-color: rgba(37, 99, 235, 0.24);
+        border-color: rgba(88, 181, 158, 0.24);
         color: var(--primary);
       }
 
@@ -1367,7 +1382,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
         margin-top: 14px;
         border-radius: 26px;
         overflow: hidden;
-        background: #fff;
+        background: var(--surface-dark-elevated);
         box-shadow: var(--shadow-soft);
       }
 
@@ -1377,6 +1392,15 @@ type OwnerViewMode = 'dashboard' | 'ads';
         gap: 14px;
         padding: 12px 0;
         border-top: 1px solid var(--border);
+      }
+
+      .booking-row__summary {
+        display: grid;
+        gap: 4px;
+      }
+
+      .booking-row__checklists {
+        grid-column: 1 / -1;
       }
 
       .vehicle-row:first-of-type {
@@ -1450,19 +1474,17 @@ type OwnerViewMode = 'dashboard' | 'ads';
       }
 
       .vehicle-row--editing {
-        outline: 2px solid rgba(37, 99, 235, 0.42);
+        outline: 2px solid rgba(88, 181, 158, 0.34);
         outline-offset: -2px;
       }
 
       .vehicle-row .btn-secondary,
       .vehicle-row .btn-ghost {
         min-height: 42px;
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(68, 82, 76, 0.92);
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(208, 226, 216, 0.16);
         box-shadow: none;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
       }
 
       .vehicle-row .btn-ghost--danger {
@@ -1503,7 +1525,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
       }
 
       .status--editing {
-        background: rgba(37, 99, 235, 0.12);
+        background: rgba(88, 181, 158, 0.12);
         color: var(--primary);
       }
 
@@ -1559,7 +1581,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
       }
 
       .calendar-dot--booked {
-        background: rgba(37, 99, 235, 0.9);
+        background: rgba(88, 181, 158, 0.9);
       }
 
       .calendar-dot--blocked {
@@ -1589,13 +1611,13 @@ type OwnerViewMode = 'dashboard' | 'ads';
         min-height: 72px;
         padding: 10px;
         border-radius: 16px;
-        background: #fff;
+        background: var(--surface-dark-elevated);
         border: 1px solid var(--glass-border-soft);
       }
 
       .calendar-day--booked {
-        background: rgba(37, 99, 235, 0.08);
-        border-color: rgba(37, 99, 235, 0.22);
+        background: rgba(88, 181, 158, 0.08);
+        border-color: rgba(88, 181, 158, 0.22);
       }
 
       .calendar-day--blocked {
@@ -1613,7 +1635,7 @@ type OwnerViewMode = 'dashboard' | 'ads';
       }
 
       .calendar-day--today {
-        box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.2);
+        box-shadow: inset 0 0 0 2px rgba(88, 181, 158, 0.2);
       }
 
       .calendar-summary {
@@ -2603,6 +2625,12 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   protected trackById(_index: number, item: { id: string }) {
     return item.id;
+  }
+
+  protected applyBookingUpdate(updatedBooking: Booking) {
+    this.bookings = this.bookings.map((booking) =>
+      booking.id === updatedBooking.id ? updatedBooking : booking,
+    );
   }
 
   protected trackByString(_index: number, value: string) {

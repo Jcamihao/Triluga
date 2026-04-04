@@ -1,12 +1,21 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Roles } from '../common/decorators/roles.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { BookingsService } from './bookings.service';
 import { BookingDecisionDto } from './dto/booking-decision.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingChecklistDto } from './dto/update-booking-checklist.dto';
 
 @ApiTags('bookings')
 @ApiBearerAuth()
@@ -15,7 +24,6 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  @Roles(Role.RENTER, Role.OWNER)
   @ApiOperation({ summary: 'Cria uma solicitação de reserva' })
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -25,21 +33,18 @@ export class BookingsController {
   }
 
   @Get('my')
-  @Roles(Role.RENTER, Role.OWNER)
   @ApiOperation({ summary: 'Lista reservas feitas pelo usuário autenticado' })
   getMyBookings(@CurrentUser() user: AuthenticatedUser) {
     return this.bookingsService.getMyBookings(user.sub);
   }
 
   @Get('owner')
-  @Roles(Role.OWNER)
-  @ApiOperation({ summary: 'Lista reservas recebidas pelo proprietário' })
+  @ApiOperation({ summary: 'Lista reservas recebidas nos anúncios do usuário autenticado' })
   getOwnerBookings(@CurrentUser() user: AuthenticatedUser) {
     return this.bookingsService.getOwnerBookings(user.sub);
   }
 
   @Patch(':id/approve')
-  @Roles(Role.OWNER)
   @ApiOperation({ summary: 'Aprova uma reserva pendente' })
   approve(
     @CurrentUser() user: AuthenticatedUser,
@@ -50,7 +55,6 @@ export class BookingsController {
   }
 
   @Patch(':id/reject')
-  @Roles(Role.OWNER)
   @ApiOperation({ summary: 'Recusa uma reserva pendente' })
   reject(
     @CurrentUser() user: AuthenticatedUser,
@@ -67,5 +71,24 @@ export class BookingsController {
     @Param('id') bookingId: string,
   ) {
     return this.bookingsService.cancel(user.sub, bookingId);
+  }
+
+  @Patch(':id/checklists/:type')
+  @UseInterceptors(FilesInterceptor('files', 6))
+  @ApiOperation({ summary: 'Atualiza o checklist de retirada ou devolução com fotos' })
+  updateChecklist(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') bookingId: string,
+    @Param('type') type: string,
+    @Body() dto: UpdateBookingChecklistDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.bookingsService.updateChecklist(
+      user.sub,
+      bookingId,
+      type,
+      dto,
+      files ?? [],
+    );
   }
 }

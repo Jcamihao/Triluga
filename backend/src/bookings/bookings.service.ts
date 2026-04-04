@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import {
   BookingApprovalMode,
+  BookingChecklistType,
   BookingStatus,
   NotificationType,
   Prisma,
@@ -15,14 +16,17 @@ import { differenceInCalendarDays } from 'date-fns';
 import { NotificationsService } from '../notifications/notifications.service';
 import { VehiclePricingService } from '../pricing/vehicle-pricing.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingDecisionDto } from './dto/booking-decision.dto';
+import { UpdateBookingChecklistDto } from './dto/update-booking-checklist.dto';
 
 @Injectable()
 export class BookingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
     private readonly vehiclePricingService: VehiclePricingService,
   ) {}
@@ -79,7 +83,9 @@ export class BookingsService {
       dto.selectedAddonIds,
     );
     const addonsAmount = Number(
-      selectedAddons.reduce((total, addon) => total + addon.price, 0).toFixed(2),
+      selectedAddons
+        .reduce((total, addon) => total + addon.price, 0)
+        .toFixed(2),
     );
     const pricingPreview = this.vehiclePricingService.buildPreviewFromVehicle(
       vehicle,
@@ -334,7 +340,8 @@ export class BookingsService {
       include: this.bookingInclude,
     });
 
-    const recipientUserId = booking.ownerId === userId ? booking.renterId : booking.ownerId;
+    const recipientUserId =
+      booking.ownerId === userId ? booking.renterId : booking.ownerId;
 
     await this.notificationsService.create({
       userId: recipientUserId,
@@ -343,6 +350,96 @@ export class BookingsService {
       message: `A reserva ${booking.id} foi cancelada.`,
       metadata: { bookingId: booking.id, vehicleId: booking.vehicleId },
     });
+
+    return this.mapBooking(updatedBooking);
+  }
+
+  async updateChecklist(
+    userId: string,
+    bookingId: string,
+    type: string,
+    dto: UpdateBookingChecklistDto,
+    files: Express.Multer.File[],
+  ) {
+    const checklistType = this.parseChecklistType(type);
+    const booking = await this.getParticipantBookingOrFail(userId, bookingId);
+
+    this.ensureChecklistStatusAllowed(booking.status, checklistType);
+
+    const currentChecklist = booking.checklists.find(
+      (item) => item.type === checklistType,
+    );
+    const currentItems = this.normalizeChecklistItems(currentChecklist?.items);
+    const currentPhotos = this.normalizeChecklistPhotos(currentChecklist?.photos);
+    const nextItems =
+      dto.items === undefined
+        ? currentItems
+        : this.parseChecklistItems(dto.items);
+    const nextNotes =
+      dto.notes === undefined
+        ? currentChecklist?.notes ?? null
+        : dto.notes?.trim() || null;
+    const markComplete = this.parseChecklistBoolean(dto.markComplete);
+
+    for (const file of files) {
+      if (!file.mimetype?.startsWith('image/')) {
+        throw new BadRequestException(
+          'Envie apenas imagens no checklist da reserva.',
+        );
+      }
+    }
+
+    const uploadedPhotos = await Promise.all(
+      (files ?? []).map((file) => this.storageService.uploadPublicFile(file, 'bookings')),
+    );
+
+    await this.prisma.bookingChecklist.upsert({
+      where: {
+        bookingId_type: {
+          bookingId,
+          type: checklistType,
+        },
+      },
+      update: {
+        items: nextItems,
+        notes: nextNotes,
+        photos: [
+          ...currentPhotos,
+          ...uploadedPhotos.map((photo) => ({
+            url: photo.url,
+            key: photo.key,
+          })),
+        ],
+        completedAt:
+          markComplete === null
+            ? currentChecklist?.completedAt ?? null
+            : markComplete
+              ? currentChecklist?.completedAt ?? new Date()
+              : null,
+        updatedById: userId,
+      },
+      create: {
+        bookingId,
+        type: checklistType,
+        items: nextItems,
+        notes: nextNotes,
+        photos: uploadedPhotos.map((photo) => ({
+          url: photo.url,
+          key: photo.key,
+        })),
+        completedAt: markComplete ? new Date() : null,
+        updatedById: userId,
+      },
+    });
+
+    const updatedBooking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: this.bookingInclude,
+    });
+
+    if (!updatedBooking) {
+      throw new NotFoundException('Reserva não encontrada.');
+    }
 
     return this.mapBooking(updatedBooking);
   }
@@ -572,6 +669,25 @@ export class BookingsService {
     return booking;
   }
 
+  private async getParticipantBookingOrFail(userId: string, bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: this.bookingInclude,
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Reserva não encontrada.');
+    }
+
+    if (booking.ownerId !== userId && booking.renterId !== userId) {
+      throw new ForbiddenException(
+        'Você não pode editar o checklist desta reserva.',
+      );
+    }
+
+    return booking;
+  }
+
   private mapBooking(booking: any) {
     return {
       id: booking.id,
@@ -629,13 +745,31 @@ export class BookingsService {
         : null,
       statusHistory: booking.statusHistory,
       review: booking.review,
+      userReview: booking.userReview
+        ? {
+            id: booking.userReview.id,
+            rating: booking.userReview.rating,
+            comment: booking.userReview.comment ?? null,
+            createdAt: booking.userReview.createdAt,
+            targetUserId: booking.userReview.targetUserId,
+          }
+        : null,
+      checklists: Array.isArray(booking.checklists)
+        ? booking.checklists.map((checklist: any) => ({
+            id: checklist.id,
+            type: checklist.type,
+            items: this.normalizeChecklistItems(checklist.items),
+            notes: checklist.notes ?? null,
+            completedAt: checklist.completedAt ?? null,
+            updatedAt: checklist.updatedAt,
+            updatedById: checklist.updatedById ?? null,
+            photos: this.normalizeChecklistPhotos(checklist.photos),
+          }))
+        : [],
     };
   }
 
-  private selectBookingAddons(
-    addons: unknown,
-    selectedAddonIds?: string[],
-  ) {
+  private selectBookingAddons(addons: unknown, selectedAddonIds?: string[]) {
     if (!Array.isArray(addons) || !selectedAddonIds?.length) {
       return [];
     }
@@ -644,7 +778,10 @@ export class BookingsService {
 
     return addons
       .map((addon) => addon as Record<string, unknown>)
-      .filter((addon) => addon.enabled !== false && selectedIds.has(String(addon.id ?? '')))
+      .filter(
+        (addon) =>
+          addon.enabled !== false && selectedIds.has(String(addon.id ?? '')),
+      )
       .map((addon) => ({
         id: String(addon.id ?? ''),
         name: String(addon.name ?? ''),
@@ -690,7 +827,10 @@ export class BookingsService {
       );
       const remainingAmount = Math.max(0, baseAmount - usedAmount);
       const discountAmount = Number(
-        Math.min(baseAmount * (normalizedPercent / 100), remainingAmount).toFixed(2),
+        Math.min(
+          baseAmount * (normalizedPercent / 100),
+          remainingAmount,
+        ).toFixed(2),
       );
 
       if (discountAmount <= 0) {
@@ -739,7 +879,9 @@ export class BookingsService {
     }
 
     if (normalizedCouponCode) {
-      const vehicleCouponCode = this.normalizeCouponCode(params.vehicle.couponCode);
+      const vehicleCouponCode = this.normalizeCouponCode(
+        params.vehicle.couponCode,
+      );
 
       if (!vehicleCouponCode || vehicleCouponCode !== normalizedCouponCode) {
         throw new BadRequestException('Cupom inválido para este anúncio.');
@@ -759,8 +901,113 @@ export class BookingsService {
   }
 
   private normalizeCouponCode(value: unknown) {
-    const couponCode = String(value ?? '').trim().toUpperCase();
+    const couponCode = String(value ?? '')
+      .trim()
+      .toUpperCase();
     return couponCode || null;
+  }
+
+  private parseChecklistType(type: string) {
+    const normalizedType = String(type ?? '').trim().toUpperCase();
+
+    if (normalizedType === BookingChecklistType.PICKUP) {
+      return BookingChecklistType.PICKUP;
+    }
+
+    if (normalizedType === BookingChecklistType.RETURN) {
+      return BookingChecklistType.RETURN;
+    }
+
+    throw new BadRequestException('Tipo de checklist inválido.');
+  }
+
+  private ensureChecklistStatusAllowed(
+    status: BookingStatus,
+    type: BookingChecklistType,
+  ) {
+    const pickupAllowedStatuses: BookingStatus[] = [
+      BookingStatus.APPROVED,
+      BookingStatus.IN_PROGRESS,
+      BookingStatus.COMPLETED,
+    ];
+    const returnAllowedStatuses: BookingStatus[] = [
+      BookingStatus.IN_PROGRESS,
+      BookingStatus.COMPLETED,
+    ];
+    const allowedStatuses =
+      type === BookingChecklistType.PICKUP
+        ? pickupAllowedStatuses
+        : returnAllowedStatuses;
+
+    if (!allowedStatuses.includes(status)) {
+      throw new BadRequestException(
+        type === BookingChecklistType.PICKUP
+          ? 'O checklist de retirada só fica disponível após a aprovação da reserva.'
+          : 'O checklist de devolução fica disponível quando a locação estiver em andamento.',
+      );
+    }
+  }
+
+  private parseChecklistItems(value: unknown) {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => String(item ?? '').trim())
+        .filter(Boolean);
+    }
+
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return this.parseChecklistItems(parsed);
+      } catch {
+        return value
+          .split('\n')
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    }
+
+    return [];
+  }
+
+  private normalizeChecklistItems(value: unknown) {
+    return this.parseChecklistItems(Array.isArray(value) ? value : '[]');
+  }
+
+  private normalizeChecklistPhotos(value: unknown) {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .map((photo) => photo as Record<string, unknown>)
+      .map((photo) => ({
+        url: String(photo.url ?? '').trim(),
+        key: String(photo.key ?? '').trim() || null,
+      }))
+      .filter((photo) => photo.url);
+  }
+
+  private parseChecklistBoolean(value: unknown) {
+    if (value === undefined || value === null || value === '') {
+      return null;
+    }
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    const normalizedValue = String(value).trim().toLowerCase();
+
+    if (['true', '1', 'yes', 'sim'].includes(normalizedValue)) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'nao', 'não'].includes(normalizedValue)) {
+      return false;
+    }
+
+    return null;
   }
 
   private readonly bookingInclude = {
@@ -785,6 +1032,12 @@ export class BookingsService {
     },
     payment: true,
     review: true,
+    userReview: true,
+    checklists: {
+      orderBy: {
+        type: 'asc' as const,
+      },
+    },
     statusHistory: {
       orderBy: {
         changedAt: 'asc' as const,

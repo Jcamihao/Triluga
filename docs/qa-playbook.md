@@ -1,8 +1,8 @@
-# Playbook de QA do Velo
+# Playbook de QA do Triluga
 
 ## Objetivo
 
-Este documento ajuda um QA a entender rapidamente o produto Velo, preparar o ambiente local, navegar pelos perfis da aplicacao e executar testes com contexto de negocio.
+Este documento ajuda um QA a entender rapidamente o produto Triluga, preparar o ambiente local, navegar pelos perfis da aplicacao e executar testes com contexto de negocio.
 
 O foco aqui e:
 
@@ -11,9 +11,9 @@ O foco aqui e:
 - reconhecer limites conhecidos para evitar falso positivo
 - executar smoke tests e regressao com criterio
 
-## O que e o Velo
+## O que e o Triluga
 
-Velo e um marketplace P2P de aluguel de veiculos. O fluxo principal conecta um locatario a um proprietario, com busca, detalhe do anuncio, reserva, acompanhamento de status, favoritos, chat e paines de gestao.
+Triluga e um marketplace P2P de aluguel de veiculos. O fluxo principal conecta um locatario a um proprietario, com busca, detalhe do anuncio, reserva, acompanhamento de status, favoritos, chat e paines de gestao.
 
 O projeto esta dividido assim:
 
@@ -32,7 +32,7 @@ Existem 3 papeis principais:
 
 ## Estado atual do produto
 
-Hoje, o Velo cobre estes fluxos:
+Hoje, o Triluga cobre estes fluxos:
 
 - autenticacao e sessao
 - busca de veiculos com filtros
@@ -58,8 +58,8 @@ Limites importantes para QA:
 O seed cria:
 
 - 1 admin
-- 1 owner
-- 1 renter
+- 1 usuária anunciante
+- 1 usuário locatário
 - 3 veiculos
 - 1 reserva concluida
 - 1 pagamento mockado como `PAID`
@@ -68,16 +68,16 @@ O seed cria:
 
 Credenciais padrao:
 
-- `admin@velo.local` / `Admin123!`
-- `owner@velo.local` / `Owner123!`
-- `renter@velo.local` / `Renter123!`
+- `admin@triluga.local` / `Admin123!`
+- `mariana@triluga.local` / `User123!`
+- `lucas@triluga.local` / `User123!`
 
 ## Setup local recomendado
 
 ### Opcao A: infra em Docker + apps locais
 
 ```bash
-cd /home/caminhao/freela/codeStage/Velo
+cd /Users/caminhao/Documents/codeStage/Triluga
 cp backend/.env.example backend/.env
 npm run dev:infra
 npm --prefix backend run prisma:deploy
@@ -91,12 +91,12 @@ npm --prefix frontend start
 Os exemplos de `.env` ainda nao trazem todas as chaves do pacote de privacidade/storage privado. Adicione estas entradas em `backend/.env` e, se usar `docker compose up`, tambem no `.env` da raiz:
 
 ```env
-JWT_REFRESH_COOKIE_NAME=velo_refresh_token
+JWT_REFRESH_COOKIE_NAME=triluga_refresh_token
 JWT_REFRESH_COOKIE_SECURE=false
 JWT_REFRESH_COOKIE_SAME_SITE=lax
-MINIO_PRIVATE_BUCKET=velo-private
+MINIO_PRIVATE_BUCKET=triluga-private
 MINIO_PRIVATE_URL_EXPIRES_IN_SECONDS=600
-PRIVACY_CONTACT_EMAIL=privacidade@velo.local
+PRIVACY_CONTACT_EMAIL=privacidade@triluga.local
 PRIVACY_POLICY_VERSION=2026-03-27
 ```
 
@@ -115,7 +115,7 @@ PRIVACY_POLICY_VERSION=2026-03-27
 - Prisma Studio para olhar banco:
 
 ```bash
-cd /home/caminhao/freela/codeStage/Velo/backend
+cd /Users/caminhao/Documents/codeStage/Triluga/backend
 npx prisma studio
 ```
 
@@ -318,14 +318,14 @@ Execute este roteiro sempre que houver build nova:
 
 Ao testar login/sessao:
 
-- `sessionStorage` deve conter `velo.accessToken` e `velo.user`
+- `sessionStorage` deve conter `triluga.accessToken` e `triluga.user`
 - refresh token nao deve aparecer em `localStorage`
-- cookie `velo_refresh_token` deve existir
+- cookie `triluga_refresh_token` deve existir
 - apos logout, sessao e cookie devem ser invalidados
 
 Ao testar privacidade:
 
-- `localStorage` deve refletir `velo.privacy.analyticsConsent`
+- `localStorage` deve refletir `triluga.privacy.analyticsConsent`
 - se o consentimento estiver negado, a chamada de analytics nao deve sair
 
 Ao testar documentos:
@@ -403,7 +403,7 @@ Antes de encerrar a rodada, confirme:
 
 ## Resumo rapido para um QA novo
 
-Se voce tiver 15 minutos para conhecer o Velo, faca isto:
+Se voce tiver 15 minutos para conhecer o Triluga, faca isto:
 
 1. Rode o ambiente local e o seed.
 2. Entre como `RENTER`, navegue da home ate uma reserva.

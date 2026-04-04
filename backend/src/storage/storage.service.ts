@@ -16,15 +16,15 @@ export class StorageService {
   constructor(private readonly configService: ConfigService) {
     this.publicBucket = this.configService.get<string>(
       'storage.bucket',
-      'velo-public',
+      'triluga-public',
     );
     this.privateBucket = this.configService.get<string>(
       'storage.privateBucket',
-      'velo-private',
+      'triluga-private',
     );
     this.publicUrl = this.configService.get<string>(
       'storage.publicUrl',
-      'http://localhost:9000/velo-public',
+      'http://localhost:9000/triluga-public',
     );
     this.privateFileUrlExpiresInSeconds = this.configService.get<number>(
       'storage.privateFileUrlExpiresInSeconds',
@@ -59,7 +59,7 @@ export class StorageService {
 
   async uploadPublicFile(
     file: Express.Multer.File,
-    folder: 'vehicles' | 'users' | 'documents',
+    folder: 'vehicles' | 'users' | 'documents' | 'bookings',
   ) {
     const extension = extname(file.originalname || '');
     const objectKey = `${folder}/${uuidv4()}${extension}`;
