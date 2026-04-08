@@ -393,7 +393,7 @@ export class RegisterPageComponent implements OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
 
   protected fullName = 'Novo Usuário';
-  protected phone = '+55 (11) 99999-0000';
+  protected phone = '';
   protected zipCode = '';
   protected addressLine = '';
   protected addressComplement = '';
@@ -484,10 +484,12 @@ export class RegisterPageComponent implements OnDestroy {
 
   protected formatPhone(value: string) {
     const digits = value.replace(/\D/g, '');
-    const normalized =
-      digits.length > 11 && digits.startsWith('55')
-        ? digits.slice(2, 13)
-        : digits.slice(0, 11);
+    const hasCountryCodePrefix = value.trim().startsWith('+55');
+    const normalized = (
+      hasCountryCodePrefix || (digits.length > 11 && digits.startsWith('55'))
+        ? digits.slice(2)
+        : digits
+    ).slice(0, 11);
 
     if (!normalized) {
       return '';
