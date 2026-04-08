@@ -11,6 +11,7 @@ export class StorageService {
   private readonly privateBucket: string;
   private readonly publicUrl: string;
   private readonly privateFileUrlExpiresInSeconds: number;
+  private readonly endpoint: string;
   private readonly client: MinioClient;
 
   constructor(private readonly configService: ConfigService) {
@@ -30,8 +31,9 @@ export class StorageService {
       'storage.privateFileUrlExpiresInSeconds',
       600,
     );
+    this.endpoint = this.configService.get<string>('storage.endpoint', 'localhost');
     this.client = new MinioClient({
-      endPoint: this.configService.get<string>('storage.endpoint', 'localhost'),
+      endPoint: this.endpoint,
       port: this.configService.get<number>('storage.port', 9000),
       useSSL: this.configService.get<boolean>('storage.useSSL', false),
       accessKey: this.configService.get<string>(
@@ -49,10 +51,23 @@ export class StorageService {
     try {
       await this.ensureBucket(this.publicBucket);
       await this.ensureBucket(this.privateBucket);
+
+      if (this.isCloudflareR2()) {
+        this.logger.log(
+          `Storage conectado via Cloudflare R2. Buckets validados: ${this.publicBucket}, ${this.privateBucket}.`,
+        );
+        return;
+      }
+
       await this.ensureBucketIsPublic(this.publicBucket);
+      this.logger.log(
+        `Storage conectado. Buckets validados: ${this.publicBucket}, ${this.privateBucket}.`,
+      );
     } catch (error) {
       this.logger.warn(
-        'Não foi possível validar/criar os buckets do MinIO. Uploads podem falhar até o serviço ficar disponível.',
+        `Não foi possível validar/criar os buckets do storage. Uploads podem falhar até o serviço ficar disponível. ${
+          error instanceof Error ? error.message : 'Erro desconhecido'
+        }`,
       );
     }
   }
@@ -174,6 +189,10 @@ export class StorageService {
       bucket,
       JSON.stringify(publicReadPolicy),
     );
+  }
+
+  private isCloudflareR2() {
+    return this.endpoint.endsWith('.r2.cloudflarestorage.com');
   }
 
   private async putObject(
