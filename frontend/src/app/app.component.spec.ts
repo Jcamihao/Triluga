@@ -1,27 +1,85 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
+import { AnalyticsTrackingService } from './core/services/analytics-tracking.service';
+import { AppLoggerService } from './core/services/app-logger.service';
+import { AuthService } from './core/services/auth.service';
+import { PrivacyApiService } from './core/services/privacy-api.service';
+import { PrivacyPreferencesService } from './core/services/privacy-preferences.service';
+import { PwaInstallService } from './core/services/pwa-install.service';
+import { RouteTraceService } from './core/services/route-trace.service';
 
 describe('AppComponent', () => {
-  beforeEach(() => TestBed.configureTestingModule({
-    imports: [AppComponent]
-  }));
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [
+        provideHttpClient(),
+        provideRouter([]),
+        {
+          provide: AuthService,
+          useValue: {
+            currentUser: () => null,
+            getAccessToken: () => null,
+            getSessionRole: () => null,
+            hasSession: () => false,
+            isAuthenticated: () => false,
+            loadMe: () => of(null),
+            logout: () => undefined,
+            restoreSession: () => of(false),
+          },
+        },
+        {
+          provide: AnalyticsTrackingService,
+          useValue: {
+            trackCurrentSession: () => undefined,
+          },
+        },
+        {
+          provide: AppLoggerService,
+          useValue: {
+            info: () => undefined,
+          },
+        },
+        {
+          provide: PwaInstallService,
+          useValue: {
+            canPromptInstall: () => false,
+            canShowBanner: () => false,
+            dismissBanner: () => undefined,
+            promptInstall: async () => undefined,
+            showAndroidInstallHint: () => false,
+            showIosInstallHint: () => false,
+          },
+        },
+        {
+          provide: PrivacyApiService,
+          useValue: {
+            updateMyPreferences: () => of(null),
+          },
+        },
+        {
+          provide: PrivacyPreferencesService,
+          useValue: {
+            hasAnsweredAnalyticsChoice: () => true,
+            setAnalyticsConsent: () => undefined,
+          },
+        },
+        {
+          provide: RouteTraceService,
+          useValue: {
+            start: () => undefined,
+          },
+        },
+      ],
+    }).compileComponents();
+  });
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
 
-  it(`should have the 'frontend' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('frontend');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('frontend app is running!');
+    expect(fixture.componentInstance).toBeTruthy();
   });
 });

@@ -21,6 +21,7 @@ const resolvedEnv = {
   ...envFromFiles,
   ...process.env,
 };
+const derivedBackendOrigin = resolveBackendOrigin(resolvedEnv);
 
 const apiBaseUrl =
   pickEnvValue(resolvedEnv, [
@@ -28,14 +29,14 @@ const apiBaseUrl =
     'API_BASE_URL',
     'FRONTEND_APP_API_BASE_URL',
     'APP_API_BASE_URL',
-  ]) ?? 'http://localhost:3002/api/v1';
+  ]) ?? buildApiBaseUrl(derivedBackendOrigin) ?? 'http://localhost:3002/api/v1';
 const wsBaseUrl =
   pickEnvValue(resolvedEnv, [
     'FRONTEND_WS_BASE_URL',
     'WS_BASE_URL',
     'FRONTEND_APP_WS_BASE_URL',
     'APP_WS_BASE_URL',
-  ]) ?? 'http://localhost:3002';
+  ]) ?? derivedBackendOrigin ?? 'http://localhost:3002';
 const clientLoggingEnabled =
   (pickEnvValue(resolvedEnv, [
     'FRONTEND_CLIENT_LOGGING_ENABLED',
@@ -119,4 +120,51 @@ function pickEnvValue(source, keys) {
   }
 
   return null;
+}
+
+function resolveBackendOrigin(source) {
+  const backendUrl =
+    pickEnvValue(source, [
+      'BACKEND_EXTERNAL_URL',
+      'BACKEND_URL',
+      'RENDER_BACKEND_EXTERNAL_URL',
+    ]) ??
+    pickEnvValue(source, [
+      'BACKEND_EXTERNAL_HOSTNAME',
+      'BACKEND_HOSTNAME',
+      'RENDER_BACKEND_EXTERNAL_HOSTNAME',
+    ]);
+
+  if (!backendUrl) {
+    return null;
+  }
+
+  return normalizeOrigin(backendUrl);
+}
+
+function normalizeOrigin(value) {
+  const trimmedValue = String(value).trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const normalizedValue =
+    trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://')
+      ? trimmedValue
+      : `https://${trimmedValue}`;
+
+  try {
+    return new URL(normalizedValue).origin;
+  } catch {
+    return null;
+  }
+}
+
+function buildApiBaseUrl(origin) {
+  if (!origin) {
+    return null;
+  }
+
+  return `${origin.replace(/\/+$/, '')}/api/v1`;
 }
