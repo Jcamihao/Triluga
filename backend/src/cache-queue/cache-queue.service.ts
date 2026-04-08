@@ -7,6 +7,7 @@ import Redis from 'ioredis';
 export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CacheQueueService.name);
   private readonly ttlSeconds: number;
+  private hasLoggedRedisError = false;
   private cacheClient: Redis | null = null;
   private queueClient: Redis | null = null;
   private notificationsQueue: Queue | null = null;
@@ -27,8 +28,14 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const redisUrl =
-      this.configService.get<string>('cache.redisUrl') ?? 'redis://localhost:6379';
+    const redisUrl = this.configService.get<string | null>('cache.redisUrl');
+
+    if (!redisUrl) {
+      this.logger.log(
+        'REDIS_URL não configurado. Cache e fila seguirão em modo degradado.',
+      );
+      return;
+    }
 
     try {
       const parsedRedisUrl = new URL(redisUrl);
@@ -45,11 +52,18 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
       this.cacheClient = new Redis(redisUrl, {
         maxRetriesPerRequest: null,
         lazyConnect: true,
+        retryStrategy: () => null,
+        enableOfflineQueue: false,
       });
       this.queueClient = new Redis(redisUrl, {
         maxRetriesPerRequest: null,
         lazyConnect: true,
+        retryStrategy: () => null,
+        enableOfflineQueue: false,
       });
+
+      this.attachRedisErrorHandler(this.cacheClient, 'cache');
+      this.attachRedisErrorHandler(this.queueClient, 'queue');
 
       await Promise.all([this.cacheClient.connect(), this.queueClient.connect()]);
 
@@ -74,6 +88,7 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn(
         'Redis não disponível. Cache e fila seguirão em modo degradado.',
       );
+      await this.closeRedisClients();
     }
   }
 
@@ -81,8 +96,7 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
     await Promise.all([
       this.notificationsWorker?.close(),
       this.notificationsQueue?.close(),
-      this.cacheClient?.quit(),
-      this.queueClient?.quit(),
+      this.closeRedisClients(),
     ]);
   }
 
@@ -144,5 +158,31 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
     }
 
     await this.notificationsQueue.add(name, payload);
+  }
+
+  private attachRedisErrorHandler(client: Redis, clientName: string) {
+    client.on('error', (error) => {
+      if (this.hasLoggedRedisError) {
+        return;
+      }
+
+      this.hasLoggedRedisError = true;
+      this.logger.warn(
+        `Redis ${clientName} indisponível (${error.message}). Cache e fila seguirão em modo degradado.`,
+      );
+    });
+  }
+
+  private async closeRedisClients() {
+    const cacheClient = this.cacheClient;
+    const queueClient = this.queueClient;
+
+    this.cacheClient = null;
+    this.queueClient = null;
+
+    await Promise.all([
+      cacheClient?.disconnect(),
+      queueClient?.disconnect(),
+    ]);
   }
 }
