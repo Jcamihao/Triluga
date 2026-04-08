@@ -179,9 +179,15 @@ POSTGRES_HOST_PORT=5436
 ```bash
 cp backend/.env.example backend/.env
 npm run dev:infra
-npm --prefix backend run prisma:generate
-npm --prefix backend run start:dev
+npm run dev:backend
 npm --prefix frontend start
+```
+
+Se quiser preparar e verificar o backend manualmente antes de subir:
+
+```bash
+npm run backend:prepare
+npm run backend:verify
 ```
 
 ## Seed
