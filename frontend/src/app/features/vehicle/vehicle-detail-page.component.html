@@ -1,0 +1,349 @@
+<main class="page vehicle-detail-page" *ngIf="vehicle">
+      <section class="detail-stage">
+        <div class="detail-stage__toolbar">
+          <button
+            class="icon-chip"
+            type="button"
+            (click)="router.navigate(['/search'])"
+            aria-label="Voltar para busca"
+          >
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+          </button>
+          <span>{{ vehicle.title }}</span>
+          <button
+            class="icon-chip icon-chip--ghost"
+            type="button"
+            [class.icon-chip--active]="isCompared"
+            [disabled]="compareDisabled"
+            [attr.aria-label]="
+              isCompared ? 'Remover da comparação' : 'Adicionar à comparação'
+            "
+            (click)="toggleCompare()"
+          >
+            <span class="material-icons" aria-hidden="true">compare_arrows</span>
+          </button>
+          <button
+            class="icon-chip icon-chip--ghost"
+            type="button"
+            [class.icon-chip--active]="isFavorite"
+            [disabled]="isFavoritePending"
+            [attr.aria-label]="
+              isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'
+            "
+            (click)="toggleFavorite()"
+          >
+            <span class="material-icons" aria-hidden="true">{{
+              isFavorite ? 'favorite' : 'favorite_border'
+            }}</span>
+          </button>
+        </div>
+
+        <section class="detail-stage__pickup-card">
+          <span class="material-icons" aria-hidden="true">location_on</span>
+          <div>
+            <strong>{{ pickupTitle }}</strong>
+            <p>{{ pickupSubtitle }}</p>
+          </div>
+          <span
+            class="material-icons detail-stage__pickup-close"
+            aria-hidden="true"
+            >close</span
+          >
+        </section>
+
+        <section class="detail-stage__meta">
+          <div class="detail-stage__meta-strip">
+            <span>
+              <span class="material-icons" aria-hidden="true">tune</span>
+              {{ transmissionLabel(vehicle.transmission) }}
+            </span>
+            <span>
+              <span class="material-icons" aria-hidden="true"
+                >local_gas_station</span
+              >
+              {{ fuelTypeLabel(vehicle.fuelType) }}
+            </span>
+            <span>
+              <span class="material-icons" aria-hidden="true">event_seat</span>
+              {{ vehicle.seats }} lugares
+            </span>
+          </div>
+
+          <strong class="detail-stage__price price-text">
+            {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} /
+            semana
+          </strong>
+        </section>
+
+        <app-image-gallery [images]="vehicle.images"></app-image-gallery>
+      </section>
+
+      <section class="detail-panels">
+        <header class="detail-panels__header">
+          <h2>O que voce precisa saber</h2>
+        </header>
+
+        <div class="detail-facts">
+          <article
+            class="detail-fact"
+            *ngFor="
+              let detail of visibleDetailItems;
+              trackBy: trackByDetailLabel
+            "
+          >
+            <span class="material-icons" aria-hidden="true">{{
+              detail.icon
+            }}</span>
+            <small>{{ detail.label }}</small>
+            <strong>{{ detail.value }}</strong>
+          </article>
+        </div>
+
+        <button
+          type="button"
+          class="detail-facts__toggle"
+          *ngIf="detailItems.length > collapsedDetailCount"
+          (click)="toggleDetails()"
+        >
+          <span class="material-icons" aria-hidden="true">list</span>
+          {{
+            showAllDetails
+              ? 'Exibir menos'
+              : 'Exibir todos (' + detailItems.length + ')'
+          }}
+        </button>
+
+        <section class="detail-info-card">
+          <span class="detail-info-card__eyebrow">Descrição</span>
+          <p>{{ vehicle.description }}</p>
+        </section>
+
+        <section
+          class="detail-info-card"
+          *ngIf="vehicle.latitude && vehicle.longitude"
+        >
+          <span class="detail-info-card__eyebrow">Mapa</span>
+          <p>Confira o ponto aproximado de retirada antes de falar com o anunciante.</p>
+          <a
+            class="detail-map-link"
+            [href]="mapLink"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Abrir no mapa
+          </a>
+        </section>
+
+        <section class="detail-info-card">
+          <span class="detail-info-card__eyebrow">Proprietário</span>
+          <div class="detail-owner-profile">
+            <img
+              class="detail-owner-profile__avatar"
+              [src]="vehicle.owner?.avatarUrl || fallbackAvatarImage"
+              [alt]="vehicle.owner?.fullName || 'Anunciante Triluga'"
+            />
+
+            <div class="detail-owner-profile__copy">
+              <h3 class="profile-name-text">{{ vehicle.owner?.fullName || 'Anunciante Triluga' }}</h3>
+              <p>{{ ownerRatingLabel }}</p>
+            </div>
+          </div>
+          <a
+            *ngIf="vehicle.owner?.id"
+            class="detail-owner-link"
+            [routerLink]="['/users', vehicle.owner?.id]"
+          >
+            Ver perfil público
+          </a>
+          <span class="detail-info-card__meta" *ngIf="showChatAction">
+            Responde direto no chat da Triluga
+          </span>
+        </section>
+
+        <section
+          class="detail-info-card detail-info-card--reviews"
+          *ngIf="totalReviewCount; else emptyReviews"
+        >
+          <div class="review-summary">
+            <h3>Opiniões do carro</h3>
+
+            <div class="review-summary__grid">
+              <div class="review-summary__score-block">
+                <strong class="review-summary__score">{{
+                  displayRating | number: '1.1-1'
+                }}</strong>
+
+                <div
+                  class="review-summary__stars"
+                  aria-label="Nota média do carro"
+                >
+                  <span
+                    class="material-icons"
+                    *ngFor="
+                      let star of averageRatingStars;
+                      trackBy: trackByIndex
+                    "
+                    aria-hidden="true"
+                  >
+                    {{ star }}
+                  </span>
+                </div>
+
+                <p>{{ totalReviewCount }} avaliações</p>
+
+                <button
+                  type="button"
+                  class="review-summary__recommendation"
+                  *ngIf="totalReviewCount"
+                >
+                  Recomendado por {{ recommendationPercentage }}%
+                  <span class="material-icons" aria-hidden="true"
+                    >expand_more</span
+                  >
+                </button>
+              </div>
+
+              <div class="review-summary__distribution">
+                <div
+                  class="review-summary__bar-row"
+                  *ngFor="let item of ratingDistribution; trackBy: trackByStars"
+                >
+                  <div class="review-summary__bar-track">
+                    <span
+                      class="review-summary__bar-fill"
+                      [style.width.%]="item.percentage"
+                    ></span>
+                  </div>
+                  <span class="review-summary__bar-label">{{
+                    item.stars
+                  }}</span>
+                  <span class="material-icons" aria-hidden="true">star</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="review-highlight">
+            <div class="review-highlight__head">
+              <div>
+                <h4>Opiniões em destaque</h4>
+                <small>{{ totalReviewCount }} comentários</small>
+              </div>
+            </div>
+
+            <p class="review-highlight__summary">
+              {{ reviewHighlightSummary }}
+            </p>
+
+            <div class="review-highlight__meta">
+              <span class="material-icons" aria-hidden="true"
+                >auto_awesome</span
+              >
+              <span>Resumo baseado nas avaliações enviadas</span>
+            </div>
+          </section>
+
+          <div class="review-list" *ngIf="highlightedReviews.length">
+            <article
+              class="review review--snippet"
+              *ngFor="let review of highlightedReviews; trackBy: trackById"
+            >
+              <div class="review__rating-row">
+                <div class="review__stars">
+                  <span
+                    class="material-icons"
+                    *ngFor="
+                      let star of reviewStars(review.rating);
+                      trackBy: trackByIndex
+                    "
+                    aria-hidden="true"
+                  >
+                    {{ star }}
+                  </span>
+                </div>
+                <span class="review__date">{{
+                  review.createdAt | date: 'dd MMM, y'
+                }}</span>
+              </div>
+
+              <p>{{ excerptReview(review.comment) }}</p>
+              <strong class="review__author">{{
+                review.author.fullName || 'Usuário'
+              }}</strong>
+            </article>
+          </div>
+        </section>
+
+        <ng-template #emptyReviews>
+          <section class="detail-info-card detail-info-card--reviews">
+            <div class="review-summary">
+              <h3>Opiniões do carro</h3>
+
+              <div class="review-summary__grid">
+                <div class="review-summary__score-block">
+                  <strong class="review-summary__score">0.0</strong>
+
+                  <div
+                    class="review-summary__stars"
+                    aria-label="Sem avaliações"
+                  >
+                    <span
+                      class="material-icons"
+                      *ngFor="
+                        let star of emptyRatingStars;
+                        trackBy: trackByIndex
+                      "
+                      aria-hidden="true"
+                    >
+                      {{ star }}
+                    </span>
+                  </div>
+
+                  <p>Ainda sem avaliações</p>
+                </div>
+
+                <div class="review-summary__distribution">
+                  <div
+                    class="review-summary__bar-row"
+                    *ngFor="
+                      let item of emptyRatingDistribution;
+                      trackBy: trackByStars
+                    "
+                  >
+                    <div class="review-summary__bar-track"></div>
+                    <span class="review-summary__bar-label">{{
+                      item.stars
+                    }}</span>
+                    <span class="material-icons" aria-hidden="true">star</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </ng-template>
+
+        <section class="detail-info-card detail-info-card--trust">
+          <div class="detail-info-card__head">
+            <span class="detail-info-card__eyebrow">Como funciona</span>
+            <span class="material-icons" aria-hidden="true">chat</span>
+          </div>
+          <p>Veja o anúncio, chame no chat e alinhe retirada, documentos e disponibilidade direto com quem publicou.</p>
+          <span class="detail-info-card__meta">Fluxo simples, direto e com menos atrito.</span>
+        </section>
+      </section>
+
+      <app-fixed-action-button
+        [helper]="footerHelper"
+        [label]="
+          (vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0') +
+          ' / semana'
+        "
+        [actionLabel]="ctaLabel"
+        [actionIcon]="ctaIcon"
+        [secondaryActionLabel]="footerChatLabel"
+        [secondaryActionIcon]="'chat_bubble'"
+        [secondaryBadgeCount]="footerChatUnreadCount"
+        (action)="goToBooking()"
+        (secondaryAction)="openChat()"
+      />
+    </main>

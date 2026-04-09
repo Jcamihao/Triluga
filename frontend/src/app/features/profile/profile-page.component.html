@@ -1,0 +1,192 @@
+<main class="page profile-page">
+      <section class="profile-card">
+        <div class="profile-card__hero">
+          <div
+            class="avatar-preview avatar-preview--large"
+            [class.avatar-preview--filled]="resolvedAvatarUrl"
+          >
+            <img
+              *ngIf="resolvedAvatarUrl; else profileInitialsAvatar"
+              [src]="resolvedAvatarUrl"
+              alt="Foto de perfil"
+            />
+
+            <ng-template #profileInitialsAvatar>
+              <span>{{ avatarInitials }}</span>
+            </ng-template>
+          </div>
+
+          <div>
+            <span class="eyebrow">Perfil</span>
+            <h1 class="profile-name-text">
+              {{ authService.currentUser()?.profile?.fullName || 'Meu perfil' }}
+            </h1>
+            <p>{{ authService.currentUser()?.email }}</p>
+            <a
+              class="profile-public-link"
+              *ngIf="authService.currentUser()?.id"
+              [routerLink]="['/users', authService.currentUser()?.id]"
+            >
+              Ver meu perfil público
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="loading-card" *ngIf="loading">
+        <strong>Carregando seu perfil...</strong>
+        <p>Estamos buscando seus dados da conta.</p>
+      </section>
+
+      <section class="profile-form" *ngIf="!loading">
+        <div class="avatar-section">
+          <div>
+            <strong>Foto de perfil</strong>
+            <p>
+              Ela aparece no chat e ajuda a deixar sua conta mais confiável.
+            </p>
+          </div>
+
+          <label class="upload-trigger">
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onAvatarSelected($event)"
+            />
+            <span class="material-icons" aria-hidden="true">photo_camera</span>
+            <span>{{
+              pendingAvatarFile ? 'Trocar foto' : 'Adicionar foto'
+            }}</span>
+          </label>
+        </div>
+
+        <p class="file-hint" *ngIf="pendingAvatarFile">
+          Nova foto selecionada: {{ pendingAvatarFile.name }}
+        </p>
+
+        <label
+          ><span>Nome completo</span><input [(ngModel)]="profile.fullName"
+        /></label>
+        <label
+          ><span>Telefone</span><input [(ngModel)]="profile.phone"
+        /></label>
+        <div class="profile-grid">
+          <label><span>Cidade</span><input [(ngModel)]="profile.city" /></label>
+          <label>
+            <span>UF</span>
+            <input
+              [ngModel]="profile.state"
+              (ngModelChange)="profile.state = formatState($event)"
+              maxlength="2"
+              placeholder="SP"
+            />
+          </label>
+        </div>
+        <label
+          ><span>Número do documento</span
+          ><input [(ngModel)]="profile.documentNumber"
+        /></label>
+        <label
+          ><span>Número da CNH</span
+          ><input [(ngModel)]="profile.driverLicenseNumber"
+        /></label>
+        <label
+          ><span>Bio</span
+          ><textarea [(ngModel)]="profile.bio" rows="4"></textarea>
+        </label>
+
+        <a class="privacy-link" routerLink="/privacy-center">
+          Gerenciar preferências, exportação e solicitações na central de
+          privacidade
+        </a>
+
+        <div class="verification-grid">
+          <article class="verification-card">
+            <div class="verification-card__head">
+              <div>
+                <strong>Documento</strong>
+                <p>
+                  {{
+                    verificationStatusLabel(profile.documentVerificationStatus)
+                  }}
+                </p>
+              </div>
+
+              <label class="upload-trigger">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onDocumentSelected($event)"
+                />
+                <span>{{
+                  pendingDocumentFile ? 'Trocar arquivo' : 'Enviar'
+                }}</span>
+              </label>
+            </div>
+
+            <p class="file-hint" *ngIf="pendingDocumentFile">
+              Novo arquivo: {{ pendingDocumentFile.name }}
+            </p>
+            <button
+              *ngIf="profile.hasDocumentImage"
+              type="button"
+              class="doc-link"
+              [disabled]="openingDocument"
+              (click)="openVerificationFile('document')"
+            >
+              {{ openingDocument ? 'Abrindo...' : 'Ver documento enviado' }}
+            </button>
+          </article>
+
+          <article class="verification-card">
+            <div class="verification-card__head">
+              <div>
+                <strong>CNH</strong>
+                <p>
+                  {{
+                    verificationStatusLabel(profile.driverLicenseVerification)
+                  }}
+                </p>
+              </div>
+
+              <label class="upload-trigger">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onDriverLicenseSelected($event)"
+                />
+                <span>{{
+                  pendingDriverLicenseFile ? 'Trocar arquivo' : 'Enviar'
+                }}</span>
+              </label>
+            </div>
+
+            <p class="file-hint" *ngIf="pendingDriverLicenseFile">
+              Novo arquivo: {{ pendingDriverLicenseFile.name }}
+            </p>
+            <button
+              *ngIf="profile.hasDriverLicenseImage"
+              type="button"
+              class="doc-link"
+              [disabled]="openingDriverLicense"
+              (click)="openVerificationFile('driverLicense')"
+            >
+              {{ openingDriverLicense ? 'Abrindo...' : 'Ver CNH enviada' }}
+            </button>
+          </article>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="save()"
+          [disabled]="saving"
+        >
+          {{ saving ? 'Salvando...' : 'Salvar perfil' }}
+        </button>
+        <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
+        <p class="feedback feedback--error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </p>
+      </section>
+    </main>

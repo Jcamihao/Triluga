@@ -1,8 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, of, tap, catchError, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppLoggerService } from './app-logger.service';
 import { PrivacyPreferencesService } from './privacy-preferences.service';
+
+interface PopularVehicle {
+  vehicleId: string;
+  visitCount: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AnalyticsTrackingService {
@@ -14,6 +20,8 @@ export class AnalyticsTrackingService {
 
   private readonly visitorIdKey = 'triluga.analytics.visitorId';
   private readonly sessionTrackedKey = 'triluga.analytics.sessionTracked';
+
+  readonly popularVehicleIds = signal<string[]>([]);
 
   trackCurrentSession(path: string) {
     if (!this.privacyPreferencesService.analyticsConsentGranted()) {
@@ -45,6 +53,43 @@ export class AnalyticsTrackingService {
           });
         },
       });
+  }
+
+  trackVehicleView(vehicleId: string) {
+    if (!this.privacyPreferencesService.analyticsConsentGranted()) {
+      return;
+    }
+
+    const visitorId = this.getOrCreateVisitorId();
+
+    this.http
+      .post(`${environment.apiBaseUrl}/analytics/vehicle-views`, {
+        visitorId,
+        vehicleId,
+      })
+      .subscribe({
+        next: () =>
+          this.logger.debug('analytics', 'vehicle_view_tracked', { vehicleId }),
+        error: () => undefined,
+      });
+  }
+
+  loadPopularVehicleIds(limit = 6): Observable<string[]> {
+    return this.http
+      .get<PopularVehicle[]>(
+        `${environment.apiBaseUrl}/analytics/popular-vehicles`,
+        { params: { limit: String(limit) } },
+      )
+      .pipe(
+        map((items) => items.map((item) => item.vehicleId)),
+        tap((ids) => this.popularVehicleIds.set(ids)),
+        catchError((error) => {
+          this.logger.warn('analytics', 'popular_vehicles_load_failed', {
+            message: error?.message ?? 'Erro desconhecido',
+          });
+          return of([]);
+        }),
+      );
   }
 
   private getOrCreateVisitorId() {

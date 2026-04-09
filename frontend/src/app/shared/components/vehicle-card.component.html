@@ -1,0 +1,101 @@
+<article
+  class="vehicle-card"
+  [class.vehicle-card--featured]="cardVariant === 'featured'"
+  [routerLink]="['/vehicles', vehicle.id]"
+  tabindex="0"
+  role="link"
+>
+  <div class="vehicle-card__media">
+    <div class="vehicle-card__media-top">
+      <span class="vehicle-card__badge">{{ badgeLabel() }}</span>
+      <button
+        type="button"
+        class="vehicle-card__favorite"
+        [class.vehicle-card__favorite--active]="isFavorite"
+        [disabled]="isFavoritePending"
+        [attr.aria-label]="
+          isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'
+        "
+        (click)="toggleFavorite($event)"
+      >
+        <span class="material-icons" aria-hidden="true">{{
+          isFavorite ? 'favorite' : 'favorite_border'
+        }}</span>
+      </button>
+    </div>
+    <img
+      class="vehicle-card__image"
+      [src]="vehicle.coverImage || fallbackImage"
+      [alt]="vehicle.title"
+      loading="lazy"
+    />
+    <div class="vehicle-card__media-bottom">
+      <span class="vehicle-card__location">
+        <span class="material-icons" aria-hidden="true">place</span>
+        {{ vehicle.city }}, {{ vehicle.state }}
+      </span>
+      <strong class="vehicle-card__price price-text">
+        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+        <small>/ semana</small>
+      </strong>
+    </div>
+  </div>
+
+  <div class="vehicle-card__copy">
+    <div class="vehicle-card__top">
+      <h3>{{ vehicle.title }}</h3>
+      <div class="vehicle-card__meta">
+        <span>
+          <span class="material-icons" aria-hidden="true">tune</span>
+          {{ transmissionLabel(vehicle.transmission) }}
+        </span>
+        <span>
+          <span class="material-icons" aria-hidden="true">event_seat</span>
+          {{ vehicle.seats }} lugares
+        </span>
+      </div>
+    </div>
+
+    <button
+      *ngIf="vehicle.owner?.id"
+      type="button"
+      class="vehicle-card__owner"
+      (click)="openOwnerProfile($event)"
+      [attr.aria-label]="'Abrir perfil de ' + ownerDisplayName"
+    >
+      <img
+        class="vehicle-card__owner-avatar"
+        [src]="vehicle.owner?.avatarUrl || fallbackAvatarImage"
+        [alt]="ownerDisplayName"
+      />
+
+      <span class="vehicle-card__owner-copy">
+        <strong class="profile-name-text">{{ ownerDisplayName }}</strong>
+        <small class="vehicle-card__owner-rating">
+          <span class="material-icons" aria-hidden="true">star</span>
+          {{ ownerRatingLabel }}
+        </small>
+      </span>
+    </button>
+
+    <div class="vehicle-card__footer">
+      <button
+        type="button"
+        class="vehicle-card__compare"
+        [class.vehicle-card__compare--active]="isCompared"
+        [disabled]="compareDisabled"
+        (click)="toggleCompare($event)"
+      >
+        {{
+          isCompared
+            ? 'Na comparação'
+            : compareDisabled
+              ? 'Lista cheia'
+              : 'Comparar'
+        }}
+      </button>
+
+      <span class="vehicle-card__cta">Ver anúncio</span>
+    </div>
+  </div>
+</article>

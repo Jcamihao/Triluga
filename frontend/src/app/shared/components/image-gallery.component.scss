@@ -1,0 +1,105 @@
+.gallery {
+        display: grid;
+        gap: 12px;
+      }
+
+      .gallery__hero {
+        position: relative;
+        min-height: 220px;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f0f0 100%);
+        border: 1px solid var(--glass-border-soft);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .gallery__hero-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+      }
+
+      .gallery__nav {
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--text-primary);
+        box-shadow: 0 12px 22px rgba(34, 23, 24, 0.16);
+        transform: translateY(-50%);
+      }
+
+      .gallery__nav .material-icons {
+        font-size: 24px;
+      }
+
+      .gallery__nav--prev {
+        left: 10px;
+      }
+
+      .gallery__nav--next {
+        right: 10px;
+      }
+
+      .gallery__thumbs {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 62px;
+        gap: 10px;
+        overflow-x: auto;
+      }
+
+      .gallery__thumbs button {
+        min-height: 56px;
+        border: 1px solid var(--glass-border-soft);
+        border-radius: var(--radius-md);
+        background-size: cover;
+        background-position: center;
+        background-color: #fff;
+        box-shadow: 0 10px 18px rgba(34, 23, 24, 0.08);
+        opacity: 0.7;
+      }
+
+      .gallery__thumbs button.is-active {
+        opacity: 1;
+        outline: 2px solid var(--primary);
+        box-shadow: 0 14px 20px rgba(255, 59, 48, 0.16);
+      }
+
+      @media (min-width: 481px) {
+        .gallery__hero {
+          min-height: 274px;
+          border-radius: 28px;
+        }
+
+        .gallery__nav {
+          width: 42px;
+          height: 42px;
+        }
+
+        .gallery__nav--prev {
+          left: 12px;
+        }
+
+        .gallery__nav--next {
+          right: 12px;
+        }
+
+        .gallery__thumbs {
+          grid-auto-columns: 72px;
+          gap: 12px;
+        }
+
+        .gallery__thumbs button {
+          min-height: 64px;
+        }
+      }

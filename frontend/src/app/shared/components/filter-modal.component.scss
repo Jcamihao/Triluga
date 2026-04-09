@@ -1,0 +1,97 @@
+.filter-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+}
+
+.filter-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 22, 19, 0.4);
+  animation: fade-in var(--duration-base) ease;
+}
+
+.filter-modal__sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  gap: var(--space-4);
+  max-height: min(100dvh, 760px);
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-strong);
+  animation: slide-up var(--duration-base) var(--easing-standard);
+}
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  h2 { margin: 0; }
+}
+
+.filter-modal__close {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 18px;
+
+  &:hover { background: var(--surface-soft); }
+}
+
+label {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+select,
+input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  padding: 0 var(--space-4);
+  font: inherit;
+  background: var(--white);
+  box-shadow: var(--shadow-xs);
+}
+
+.filter-modal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  position: sticky;
+  bottom: calc(-20px - env(safe-area-inset-bottom, 0px));
+  padding-top: var(--space-2);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, transparent, var(--white) 32%);
+}
+
+@media (min-width: 481px) {
+  .filter-modal__grid,
+  footer {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,39 @@
+<section class="gallery">
+      <div class="gallery__hero">
+        <button
+          type="button"
+          class="gallery__nav gallery__nav--prev"
+          *ngIf="images.length > 1"
+          (click)="goToPreviousImage()"
+          aria-label="Ver foto anterior"
+        >
+          <span class="material-icons" aria-hidden="true">chevron_left</span>
+        </button>
+
+        <img
+          class="gallery__hero-image"
+          [src]="(activeImage() && activeImage()!.url) || fallbackImage"
+          alt="Imagem do veículo"
+        />
+
+        <button
+          type="button"
+          class="gallery__nav gallery__nav--next"
+          *ngIf="images.length > 1"
+          (click)="goToNextImage()"
+          aria-label="Ver próxima foto"
+        >
+          <span class="material-icons" aria-hidden="true">chevron_right</span>
+        </button>
+      </div>
+
+      <div class="gallery__thumbs">
+        <button
+          type="button"
+          *ngFor="let image of images; let index = index"
+          [class.is-active]="activeIndex() === index"
+          [style.backgroundImage]="'url(' + image.url + ')'"
+          (click)="activeIndex.set(index)"
+        ></button>
+      </div>
+    </section>

@@ -1,0 +1,143 @@
+<main class="auth-page">
+      <section class="auth-card">
+        <a class="auth-card__back" routerLink="/">Voltar ao inicio</a>
+
+        <img class="brand-logo" src="assets/branding/triluga-logo.png" alt="Triluga" />
+        <span class="eyebrow">Cadastro</span>
+        <h1>Crie sua conta na Triluga</h1>
+        <p>Sua conta já nasce pronta para anunciar, alugar, conversar e usar todas as features da Triluga.</p>
+
+        <label>
+          <span>Nome completo</span>
+          <input [(ngModel)]="fullName" placeholder="Ex.: Maria Oliveira" />
+        </label>
+
+        <section class="avatar-section">
+          <div class="avatar-preview" [class.avatar-preview--filled]="resolvedAvatarUrl">
+            <img *ngIf="resolvedAvatarUrl; else registerAvatarInitials" [src]="resolvedAvatarUrl" alt="Prévia da foto de perfil" />
+
+            <ng-template #registerAvatarInitials>
+              <span>{{ avatarInitials }}</span>
+            </ng-template>
+          </div>
+
+          <div class="avatar-section__content">
+            <strong>Foto de perfil</strong>
+            <p>Opcional, mas recomendada para deixar seu perfil mais confiável.</p>
+
+            <label class="upload-trigger">
+              <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
+              <span class="material-icons" aria-hidden="true">add_a_photo</span>
+              <span>{{ pendingAvatarFile ? 'Trocar foto' : 'Adicionar foto' }}</span>
+            </label>
+
+            <small *ngIf="pendingAvatarFile">{{ pendingAvatarFile.name }}</small>
+          </div>
+        </section>
+
+        <label>
+          <span>Telefone</span>
+          <input
+            [ngModel]="phone"
+            (ngModelChange)="phone = formatPhone($event)"
+            inputmode="tel"
+            maxlength="19"
+            placeholder="+55 (11) 99999-9999"
+          />
+        </label>
+
+        <label>
+          <span>CEP</span>
+          <input
+            [ngModel]="zipCode"
+            (ngModelChange)="onZipCodeChange($event)"
+            inputmode="numeric"
+            maxlength="9"
+            placeholder="13010-111"
+          />
+        </label>
+
+        <p class="field-hint" *ngIf="zipCodeHint && !zipCodeError">{{ zipCodeHint }}</p>
+        <p class="field-hint field-hint--error" *ngIf="zipCodeError">{{ zipCodeError }}</p>
+
+        <label>
+          <span>Endereço</span>
+          <input [(ngModel)]="addressLine" placeholder="Rua, avenida ou praça" />
+        </label>
+
+        <label>
+          <span>Complemento</span>
+          <input [(ngModel)]="addressComplement" placeholder="Apto, bloco, casa, referência" />
+        </label>
+
+        <div class="grid">
+          <label>
+            <span>Cidade</span>
+            <input [(ngModel)]="city" />
+          </label>
+          <label>
+            <span>UF</span>
+            <input
+              [ngModel]="state"
+              (ngModelChange)="state = formatState($event)"
+              maxlength="2"
+              placeholder="SP"
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>E-mail</span>
+          <input [(ngModel)]="email" type="email" placeholder="voce@email.com" />
+        </label>
+
+        <div class="password-grid">
+          <label>
+            <span>Senha</span>
+            <div class="password-field">
+              <input
+                [(ngModel)]="password"
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="Crie uma senha forte"
+              />
+              <button type="button" class="password-field__toggle" (click)="showPassword = !showPassword">
+                {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+              </button>
+            </div>
+          </label>
+
+          <label>
+            <span>Confirmar senha</span>
+            <div class="password-field">
+              <input
+                [(ngModel)]="confirmPassword"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                placeholder="Repita a senha"
+              />
+              <button
+                type="button"
+                class="password-field__toggle"
+                (click)="showConfirmPassword = !showConfirmPassword"
+              >
+                {{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}
+              </button>
+            </div>
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-primary" (click)="register()" [disabled]="loading">
+          {{ loading ? 'Criando conta...' : 'Criar conta' }}
+        </button>
+
+        <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
+
+        <div class="helper-links">
+          <span>Já tem conta?</span>
+          <a routerLink="/auth/login">Entrar</a>
+        </div>
+
+        <div class="helper-links helper-links--secondary">
+          <a routerLink="/privacy">Privacidade</a>
+        </div>
+      </section>
+    </main>

@@ -1,0 +1,124 @@
+:root {
+  color-scheme: light;
+
+  // ── Layout ──
+  --page-max: 1440px;
+  --page-max-readable: 1180px;
+  --page-gutter: clamp(16px, 3vw, 40px);
+
+  // ── Spacing (8px grid) ──
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  // ── Typography ──
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --title-1: clamp(36px, 5vw, 60px);
+  --title-2: clamp(26px, 3.6vw, 40px);
+  --title-3: clamp(20px, 2.4vw, 28px);
+  --title-4: clamp(17px, 1.8vw, 22px);
+
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-brand: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-price: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  // ── Menta Palette (primary) ──
+  --mint-50: #edfdf6;
+  --mint-100: #d2f9e9;
+  --mint-200: #a8f2d4;
+  --mint-300: #6ee6b9;
+  --mint-400: #3ecfa5;
+  --mint-500: #22b78e;
+  --mint-600: #149573;
+  --mint-700: #11765e;
+  --mint-800: #105d4c;
+
+  // ── Graphite Palette (text/neutral) ──
+  --graphite-950: #0c1210;
+  --graphite-900: #141d1a;
+  --graphite-800: #1e2d28;
+  --graphite-700: #2e403a;
+  --graphite-600: #486058;
+  --graphite-500: #6b7f79;
+  --graphite-400: #92a29d;
+  --graphite-300: #c2ccc8;
+  --graphite-200: #dfe4e2;
+  --graphite-100: #f0f3f2;
+
+  // ── Surfaces ──
+  --white: #ffffff;
+  --cream: #fbfdfc;
+  --surface-elevated: #ffffff;
+  --surface-soft: #f7faf9;
+  --surface-muted: #eef4f1;
+  --surface-dark: #141d1a;
+
+  // ── Semantic Colors ──
+  --primary: #3ECFA5;
+  --primary-hover: #22b78e;
+  --primary-light: rgba(62, 207, 165, 0.12);
+  --primary-soft: rgba(62, 207, 165, 0.07);
+  --accent: #f0faf5;
+  --accent-hover: #e2f5ed;
+  --background: #f5f7f6;
+  --background-strong: #edf1ef;
+  --border: rgba(30, 45, 40, 0.1);
+  --border-strong: rgba(30, 45, 40, 0.16);
+  --glass-surface: #ffffff;
+  --glass-surface-strong: #ffffff;
+  --glass-surface-soft: #f7faf9;
+  --glass-dark: #141d1a;
+  --glass-border: rgba(30, 45, 40, 0.08);
+  --glass-border-soft: rgba(30, 45, 40, 0.05);
+  --text-primary: var(--graphite-800);
+  --text-secondary: var(--graphite-600);
+  --text-disabled: var(--graphite-400);
+  --label-ink: var(--graphite-700);
+  --label-ink-strong: var(--graphite-800);
+  --label-surface: rgba(62, 207, 165, 0.1);
+  --label-surface-soft: rgba(62, 207, 165, 0.06);
+  --label-border: rgba(62, 207, 165, 0.2);
+  --success: #16a34a;
+  --warning: #d97706;
+  --error: #dc2626;
+
+  // ── Radius ──
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  // ── Shadows ──
+  --shadow-xs: 0 1px 2px rgba(14, 22, 19, 0.04);
+  --shadow-soft: 0 4px 16px rgba(14, 22, 19, 0.06);
+  --shadow-strong: 0 12px 32px rgba(14, 22, 19, 0.1);
+  --glass-shadow: 0 4px 14px rgba(14, 22, 19, 0.04);
+  --glass-shadow-strong: 0 10px 28px rgba(14, 22, 19, 0.08);
+
+  // ── Input ──
+  --input-outline: rgba(30, 45, 40, 0.1);
+  --input-outline-focus: rgba(62, 207, 165, 0.4);
+
+  // ── Motion ──
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --easing-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

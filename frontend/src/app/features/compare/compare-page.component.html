@@ -1,0 +1,113 @@
+<main class="page compare-page">
+      <section class="compare-page__hero glass-panel-strong">
+        <div>
+          <span class="eyebrow">Comparador</span>
+          <h1>Veja lado a lado o que realmente muda entre os anúncios</h1>
+          <p>
+            Compare preço, câmbio, assentos, política de cancelamento e perfil
+            do anunciante antes de decidir.
+          </p>
+        </div>
+
+        <div class="compare-page__hero-actions">
+          <a class="btn btn-secondary" routerLink="/search">Adicionar mais</a>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            *ngIf="compareService.count()"
+            (click)="compareService.clear()"
+          >
+            Limpar seleção
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="compare-page__empty glass-panel-strong"
+        *ngIf="!compareService.count()"
+      >
+        <strong>Nenhum veículo selecionado</strong>
+        <p>
+          Vá para a busca, favoritos ou perfil público e toque em "Comparar"
+          nos anúncios que quiser colocar lado a lado.
+        </p>
+        <a class="btn btn-primary" routerLink="/search">Ir para a busca</a>
+      </section>
+
+      <section
+        class="compare-page__hint glass-panel-strong"
+        *ngIf="compareService.count() === 1"
+      >
+        <strong>Falta mais um veículo</strong>
+        <p>
+          A comparação fica mais útil com pelo menos dois anúncios na mesa.
+        </p>
+      </section>
+
+      <section class="compare-grid" *ngIf="compareService.count()">
+        <article
+          class="compare-column glass-panel-strong"
+          *ngFor="let vehicle of compareService.items(); trackBy: trackById"
+        >
+          <div class="compare-column__media">
+            <img [src]="vehicle.coverImage || fallbackImage" [alt]="vehicle.title" />
+            <button
+              type="button"
+              class="compare-column__remove"
+              (click)="compareService.remove(vehicle.id)"
+            >
+              <span class="material-icons" aria-hidden="true">close</span>
+            </button>
+          </div>
+
+          <div class="compare-column__head">
+            <h2>{{ vehicle.title }}</h2>
+            <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
+          </div>
+
+          <div class="compare-column__price price-text">
+            {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} /
+            semana
+          </div>
+
+          <dl class="compare-specs">
+            <div>
+              <dt>Categoria</dt>
+              <dd>{{ categoryLabel(vehicle.category) }}</dd>
+            </div>
+            <div>
+              <dt>Câmbio</dt>
+              <dd>{{ transmissionLabel(vehicle.transmission) }}</dd>
+            </div>
+            <div>
+              <dt>Combustível</dt>
+              <dd>{{ fuelTypeLabel(vehicle.fuelType) }}</dd>
+            </div>
+            <div>
+              <dt>Assentos</dt>
+              <dd>{{ vehicle.seats }} lugares</dd>
+            </div>
+            <div>
+              <dt>Reserva</dt>
+              <dd>{{ approvalModeLabel(vehicle.bookingApprovalMode) }}</dd>
+            </div>
+            <div>
+              <dt>Cancelamento</dt>
+              <dd>{{ cancellationLabel(vehicle.cancellationPolicy) }}</dd>
+            </div>
+            <div>
+              <dt>Avaliação</dt>
+              <dd>{{ ratingLabel(vehicle.owner?.ratingAverage, vehicle.owner?.reviewsCount) }}</dd>
+            </div>
+            <div>
+              <dt>Anunciante</dt>
+              <dd class="profile-name-text">{{ vehicle.owner?.fullName || 'Usuário Triluga' }}</dd>
+            </div>
+          </dl>
+
+          <a class="btn btn-primary compare-column__cta" [routerLink]="['/vehicles', vehicle.id]">
+            Ver anúncio
+          </a>
+        </article>
+      </section>
+    </main>

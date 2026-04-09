@@ -1,0 +1,45 @@
+<main class="page host-page">
+      <section class="hero-card">
+        <span class="eyebrow">Anunciar</span>
+        <h1>Seu carro vira anúncio em poucos minutos</h1>
+        <p>Publique fotos, informe o valor semanal e comece a receber contatos sem painel complicado.</p>
+
+        <div class="actions" *ngIf="!user">
+          <button type="button" class="btn btn-primary" (click)="router.navigate(['/auth/register'])">
+            Criar conta para anunciar
+          </button>
+          <a routerLink="/auth/login" class="btn btn-secondary">Já tenho conta</a>
+        </div>
+
+        <div class="actions" *ngIf="user">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="router.navigate(['/anunciar-carro'], { queryParams: { editor: 'create' } })"
+          >
+            Criar novo anúncio
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="router.navigate(['/anunciar-carro'])">
+            Abrir meus anúncios
+          </button>
+        </div>
+      </section>
+
+      <section class="info-grid">
+        <article>
+          <strong>1</strong>
+          <h2>Monte o classificado</h2>
+          <p>Preencha os dados essenciais e deixe o anúncio pronto para aparecer na busca.</p>
+        </article>
+        <article>
+          <strong>2</strong>
+          <h2>Envie boas fotos</h2>
+          <p>A primeira imagem vira a capa do anúncio e ajuda o carro a chamar atenção.</p>
+        </article>
+        <article>
+          <strong>3</strong>
+          <h2>Feche pelo chat</h2>
+          <p>Converse com interessados para alinhar retirada, disponibilidade e combinar o aluguel.</p>
+        </article>
+      </section>
+    </main>

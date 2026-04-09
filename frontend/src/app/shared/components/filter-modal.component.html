@@ -1,0 +1,96 @@
+<div class="filter-modal" *ngIf="open">
+  <div class="filter-modal__backdrop" (click)="close.emit()"></div>
+
+  <section class="filter-modal__sheet">
+    <header>
+      <div>
+        <span class="eyebrow">Filtros</span>
+        <h2>Refine sua busca</h2>
+      </div>
+      <button type="button" class="filter-modal__close" (click)="close.emit()">
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <label>
+      <span>Tipo de veículo</span>
+      <select [(ngModel)]="draft.vehicleType" (ngModelChange)="onVehicleTypeChange()">
+        <option value="">Todos</option>
+        <option value="CAR">Carro</option>
+        <option value="MOTORCYCLE">Moto</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Categoria</span>
+      <select [(ngModel)]="draft.category" [disabled]="draft.vehicleType === 'MOTORCYCLE'">
+        <option value="">Todas</option>
+        <option value="ECONOMY">Econômico</option>
+        <option value="HATCH">Hatch</option>
+        <option value="SEDAN">Sedan</option>
+        <option value="SUV">SUV</option>
+        <option value="PICKUP">Pickup</option>
+        <option value="VAN">Van</option>
+        <option value="LUXURY">Luxo</option>
+      </select>
+    </label>
+
+    <div class="filter-modal__grid" *ngIf="draft.vehicleType === 'MOTORCYCLE'">
+      <label>
+        <span>Estilo</span>
+        <select [(ngModel)]="draft.motorcycleStyle">
+          <option value="">Todos</option>
+          <option value="SCOOTER">Scooter</option>
+          <option value="STREET">Street</option>
+          <option value="SPORT">Sport</option>
+          <option value="TRAIL">Trail</option>
+          <option value="CUSTOM">Custom</option>
+          <option value="TOURING">Touring</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Raio (km)</span>
+        <input [(ngModel)]="draft.radiusKm" type="number" min="1" />
+      </label>
+    </div>
+
+    <div class="filter-modal__grid" *ngIf="draft.vehicleType === 'MOTORCYCLE'">
+      <label>
+        <span>Cilindrada mín.</span>
+        <input [(ngModel)]="draft.minEngineCc" type="number" min="50" />
+      </label>
+
+      <label>
+        <span>Cilindrada máx.</span>
+        <input [(ngModel)]="draft.maxEngineCc" type="number" min="50" />
+      </label>
+    </div>
+
+    <div class="filter-modal__grid">
+      <label>
+        <span>Preço mínimo</span>
+        <input [(ngModel)]="draft.minPrice" type="number" />
+      </label>
+
+      <label>
+        <span>Preço máximo</span>
+        <input [(ngModel)]="draft.maxPrice" type="number" />
+      </label>
+    </div>
+
+    <label *ngIf="draft.vehicleType !== 'MOTORCYCLE'">
+      <span>Raio (km)</span>
+      <input [(ngModel)]="draft.radiusKm" type="number" min="1" placeholder="Use com Minha localização" />
+    </label>
+
+    <footer>
+      <button type="button" class="btn btn-secondary" (click)="reset()">
+        Limpar
+      </button>
+      <button type="button" class="btn btn-primary" (click)="apply.emit(draft)">
+        Aplicar
+      </button>
+    </footer>
+  </section>
+</div>

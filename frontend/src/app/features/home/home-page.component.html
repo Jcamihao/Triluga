@@ -1,0 +1,224 @@
+<main class="page home-page page-shell">
+  <app-search-header
+    [minimal]="true"
+    [showFiltersAction]="false"
+    [showMeta]="false"
+    (search)="goToSearch($event)"
+    (filters)="goToSearch({})"
+  />
+
+  <!-- ── HERO ── -->
+  <section class="home-hero">
+    <div class="home-hero__copy">
+      <span class="eyebrow">Triluga</span>
+      <h1>Aluguel de carros direto, sem complicação.</h1>
+      <p>
+        Encontre o veículo ideal, compare preço e localização e fale direto
+        com quem anuncia — rápido, prático e sem burocracia.
+      </p>
+
+      <div class="home-hero__actions">
+        <button
+          type="button"
+          class="btn btn-primary btn-lg"
+          (click)="goToSearch({ vehicleType: 'CAR' })"
+        >
+          Buscar carros
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-lg"
+          (click)="goToSearch({ vehicleType: 'MOTORCYCLE' })"
+        >
+          Explorar motos
+        </button>
+      </div>
+
+      <div class="home-hero__trust">
+        <span>
+          <span class="material-icons" aria-hidden="true">chat_bubble_outline</span>
+          Contato direto
+        </span>
+        <span>
+          <span class="material-icons" aria-hidden="true">place</span>
+          Localização visível
+        </span>
+        <span>
+          <span class="material-icons" aria-hidden="true">trending_up</span>
+          Ranking real
+        </span>
+      </div>
+    </div>
+
+    <div class="home-hero__media">
+      <img [src]="heroImage" alt="Carro premium disponível para aluguel na Triluga" />
+      <div class="home-hero__overlay"></div>
+    </div>
+  </section>
+
+  <!-- ── MAIS VISITADOS (CARROSSEL) ── -->
+  <section class="home-section home-popular">
+    <div class="section-header">
+      <div>
+        <span>Mais visitados</span>
+        <h2>Os anúncios mais consultados agora</h2>
+      </div>
+
+      <div class="home-popular__controls">
+        <button
+          type="button"
+          class="home-popular__control"
+          (click)="scrollPopular('prev')"
+          aria-label="Ver cartões anteriores"
+        >
+          <span class="material-icons" aria-hidden="true">chevron_left</span>
+        </button>
+        <button
+          type="button"
+          class="home-popular__control"
+          (click)="scrollPopular('next')"
+          aria-label="Ver próximos cartões"
+        >
+          <span class="material-icons" aria-hidden="true">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-popular__rail" #popularRail>
+      <ng-container *ngIf="!loadingPopularVehicles; else popularSkeleton">
+        <app-vehicle-card
+          *ngFor="let vehicle of popularVehicles; trackBy: trackById"
+          [vehicle]="vehicle"
+          badgeLabelOverride="Mais visitado"
+          cardVariant="featured"
+        />
+      </ng-container>
+    </div>
+
+    <ng-template #popularSkeleton>
+      <div class="home-popular__rail home-popular__rail--skeleton">
+        <article class="skeleton-block home-popular__skeleton"></article>
+        <article class="skeleton-block home-popular__skeleton"></article>
+        <article class="skeleton-block home-popular__skeleton"></article>
+      </div>
+    </ng-template>
+  </section>
+
+  <!-- ── COMO FUNCIONA ── -->
+  <section class="home-highlights">
+    <article class="home-highlights__item">
+      <div class="home-highlights__icon">
+        <span class="material-icons" aria-hidden="true">search</span>
+      </div>
+      <h3>Encontre</h3>
+      <p>Busque por cidade, marca ou tipo e ache o anúncio ideal rapidamente.</p>
+    </article>
+    <article class="home-highlights__item">
+      <div class="home-highlights__icon">
+        <span class="material-icons" aria-hidden="true">compare_arrows</span>
+      </div>
+      <h3>Compare</h3>
+      <p>Veja fotos, preços e localização lado a lado para decidir melhor.</p>
+    </article>
+    <article class="home-highlights__item">
+      <div class="home-highlights__icon">
+        <span class="material-icons" aria-hidden="true">chat</span>
+      </div>
+      <h3>Converse</h3>
+      <p>Fale direto com o dono para alinhar retirada e fechar o aluguel.</p>
+    </article>
+  </section>
+
+  <!-- ── MARCAS ── -->
+  <section class="home-section brands-section">
+    <div class="section-header">
+      <div>
+        <span>Marcas</span>
+        <h2>Comece pelas mais procuradas</h2>
+      </div>
+    </div>
+
+    <div class="brands-rail">
+      <button
+        *ngFor="let brand of popularBrands"
+        type="button"
+        class="brand-chip"
+        (click)="goToSearch({ q: brand.query })"
+      >
+        <span class="brand-chip__icon" aria-hidden="true">
+          <svg
+            [attr.viewBox]="brand.iconViewBox || '0 0 24 24'"
+            focusable="false"
+            [class.brand-chip__icon-svg--wide]="brand.iconWide"
+          >
+            <ng-container [ngSwitch]="brand.iconKind || 'path'">
+              <path
+                *ngSwitchCase="'path'"
+                [attr.d]="brand.iconPath"
+                fill="currentColor"
+              ></path>
+
+              <g
+                *ngSwitchCase="'volkswagen'"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="8.8"></circle>
+                <path d="M7.55 7.45 10.45 12.1 12 9.35 13.55 12.1 16.45 7.45"></path>
+                <path d="M6.7 8.45 9.9 16 12 12.35 14.1 16 17.3 8.45"></path>
+              </g>
+
+              <g *ngSwitchCase="'byd'">
+                <rect
+                  x="2.75"
+                  y="4.75"
+                  width="42.5"
+                  height="14.5"
+                  rx="7.25"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <text
+                  x="24"
+                  y="15.2"
+                  text-anchor="middle"
+                  font-size="10.5"
+                  font-weight="800"
+                  letter-spacing="1.2"
+                  font-family="Inter, -apple-system, sans-serif"
+                  fill="currentColor"
+                >
+                  BYD
+                </text>
+              </g>
+            </ng-container>
+          </svg>
+        </span>
+        <span class="brand-chip__label">{{ brand.label }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── NOVOS ANÚNCIOS ── -->
+  <section class="home-section home-featured">
+    <div class="section-header">
+      <div>
+        <span>Novos anúncios</span>
+        <h2>Entradas recentes</h2>
+      </div>
+
+      <a class="home-featured__link" (click)="goToSearch({})">Ver todos</a>
+    </div>
+
+    <div class="vehicle-grid">
+      <app-vehicle-card
+        *ngFor="let vehicle of featuredVehicles; trackBy: trackById"
+        [vehicle]="vehicle"
+      />
+    </div>
+  </section>
+</main>

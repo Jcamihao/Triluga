@@ -1,0 +1,46 @@
+<main class="page privacy-page">
+      <section class="privacy-hero">
+        <span class="eyebrow">Privacidade</span>
+        <h1>Como a Triluga trata os seus dados</h1>
+        <p>
+          Transparência, minimização e controle do titular fazem parte do produto.
+        </p>
+
+        <div class="privacy-hero__actions">
+          <a class="btn btn-primary" *ngIf="authService.currentUser(); else loginLink" routerLink="/privacy-center">
+            Abrir central de privacidade
+          </a>
+
+          <ng-template #loginLink>
+            <a class="btn btn-primary" routerLink="/auth/login">Entrar para gerenciar preferências</a>
+          </ng-template>
+
+          <a class="btn btn-secondary" routerLink="/">Voltar para a Triluga</a>
+        </div>
+      </section>
+
+      <section class="privacy-card" *ngIf="loading">
+        <strong>Carregando política...</strong>
+        <p>Estamos buscando a versão mais recente do resumo de privacidade.</p>
+      </section>
+
+      <section class="privacy-card" *ngIf="!loading && policy">
+        <div class="privacy-card__meta">
+          <span>Versão {{ policy.version }}</span>
+          <span>Contato: {{ policy.contactEmail }}</span>
+        </div>
+
+        <article class="privacy-section" *ngFor="let section of policy.sections">
+          <strong>{{ section.title }}</strong>
+          <p>{{ section.summary }}</p>
+        </article>
+      </section>
+
+      <section class="privacy-card privacy-card--compact">
+        <strong>Direitos do titular</strong>
+        <p>
+          Pela central de privacidade você pode exportar seus dados, revisar preferências e registrar solicitações de acesso,
+          correção, eliminação, anonimização, portabilidade, oposição e revogação.
+        </p>
+      </section>
+    </main>

@@ -1,0 +1,347 @@
+<main class="page user-profile-page">
+      <section class="user-profile-shell glass-panel-strong" *ngIf="isLoading">
+        <span class="eyebrow">Perfil</span>
+        <h1>Carregando usuário</h1>
+        <p>Estamos buscando o histórico público e os anúncios desse perfil.</p>
+      </section>
+
+      <section
+        class="user-profile-shell glass-panel-strong"
+        *ngIf="!isLoading && errorMessage"
+      >
+        <span class="eyebrow">Perfil</span>
+        <h1>Perfil indisponível</h1>
+        <p>{{ errorMessage }}</p>
+        <a class="btn btn-secondary" routerLink="/search">Voltar</a>
+      </section>
+
+      <ng-container *ngIf="!isLoading && profile">
+        <section class="user-profile-hero glass-panel-strong">
+          <div class="user-profile-hero__top">
+            <img
+              class="user-profile-hero__avatar"
+              [src]="profile.avatarUrl || fallbackAvatarImage"
+              [alt]="profile.fullName"
+            />
+
+            <div class="user-profile-hero__copy">
+              <span class="eyebrow">{{ roleLabel(profile.role) }}</span>
+              <h1 class="profile-name-text">{{ profile.fullName }}</h1>
+              <p class="user-profile-hero__since">
+                Na Triluga desde {{ memberSinceLabel(profile.memberSince) }}
+              </p>
+              <p *ngIf="locationLabel(profile)">{{ locationLabel(profile) }}</p>
+            </div>
+          </div>
+
+          <p class="user-profile-hero__bio" *ngIf="profile.bio">
+            {{ profile.bio }}
+          </p>
+
+          <div class="user-profile-stats">
+            <article>
+              <strong>{{ scoreLabel(profile) }}</strong>
+              <span>Avaliação geral</span>
+            </article>
+            <article>
+              <strong>{{ profile.reviewsCount }}</strong>
+              <span>Avaliações</span>
+            </article>
+            <article>
+              <strong>{{ profile.activeListingsCount }}</strong>
+              <span>Anúncios ativos</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="user-profile-section glass-panel-strong">
+          <div class="user-profile-section__header">
+            <div>
+              <span class="eyebrow">Dados básicos</span>
+              <h2>Informações públicas</h2>
+            </div>
+          </div>
+
+          <div class="user-profile-facts">
+            <article>
+              <strong>{{ profile.state || '--' }}</strong>
+              <span>UF</span>
+            </article>
+            <article>
+              <strong>{{ profile.city || '--' }}</strong>
+              <span>Cidade</span>
+            </article>
+            <article>
+              <strong>{{ memberSinceLabel(profile.memberSince) }}</strong>
+              <span>Membro desde</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="user-profile-section glass-panel-strong">
+          <div class="user-profile-section__header">
+            <div>
+              <span class="eyebrow">Confiança operacional</span>
+              <h2>Como esse anunciante conduz as reservas</h2>
+            </div>
+          </div>
+
+          <div class="user-profile-trust-grid">
+            <article class="user-profile-trust-card">
+              <strong>{{
+                profile.trustMetrics.completedBookingsCount
+              }}</strong>
+              <span>locações concluídas</span>
+              <small>Histórico público finalizado na plataforma.</small>
+            </article>
+
+            <article class="user-profile-trust-card">
+              <strong>{{ profile.trustMetrics.responseRate }}%</strong>
+              <span>taxa de resposta</span>
+              <small>Pedidos que receberam uma resposta do anunciante.</small>
+            </article>
+
+            <article class="user-profile-trust-card">
+              <strong>{{ averageResponseLabel(profile) }}</strong>
+              <span>tempo médio de resposta</span>
+              <small>Calculado a partir da primeira decisão em cada pedido.</small>
+            </article>
+
+            <article class="user-profile-trust-card">
+              <strong>{{ profile.trustMetrics.approvalRate }}%</strong>
+              <span>taxa de aprovação</span>
+              <small>Pedidos respondidos que acabaram aprovados.</small>
+            </article>
+
+            <article class="user-profile-trust-card">
+              <strong>{{ profile.trustMetrics.cancellationRate }}%</strong>
+              <span>cancelamentos pelo anunciante</span>
+              <small>Quanto menor, mais estável tende a ser a operação.</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="user-profile-section glass-panel-strong">
+          <div class="user-profile-section__header">
+            <div>
+              <span class="eyebrow">Avaliações</span>
+              <h2>Reputação do usuário</h2>
+            </div>
+
+            <span class="user-profile-section__count">{{
+              profile.reviewsCount
+            }}</span>
+          </div>
+
+          <div class="user-profile-review-summary">
+            <div>
+              <strong>{{ scoreLabel(profile) }}</strong>
+              <p>{{ reviewSummaryLabel(profile) }}</p>
+            </div>
+
+            <div
+              class="user-profile-review-stars"
+              [attr.aria-label]="
+                profile.reviewsCount
+                  ? 'Nota média ' + profile.ratingAverage.toFixed(1) + ' de 5'
+                  : 'Sem avaliações'
+              "
+            >
+              <span
+                class="material-icons"
+                *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                aria-hidden="true"
+              >
+                {{
+                  star <= roundedScore(profile.ratingAverage)
+                    ? 'star'
+                    : 'star_border'
+                }}
+              </span>
+            </div>
+          </div>
+
+          <div
+            class="user-profile-review-list"
+            *ngIf="profile.reviews.length; else emptyReviews"
+          >
+            <article
+              class="user-profile-review-card"
+              *ngFor="let review of profile.reviews; trackBy: trackById"
+            >
+              <div class="user-profile-review-card__head">
+                <div class="user-profile-review-card__author">
+                  <img
+                    class="user-profile-review-card__avatar"
+                    [src]="review.author?.avatarUrl || fallbackAvatarImage"
+                    [alt]="review.author?.fullName || 'Usuário'"
+                  />
+
+                  <div>
+                    <strong class="profile-name-text">{{ review.author?.fullName || 'Usuário' }}</strong>
+                    <p>{{ review.createdAt | date: 'dd/MM/yyyy' }}</p>
+                  </div>
+                </div>
+
+                <div
+                  class="user-profile-review-stars"
+                  [attr.aria-label]="'Nota ' + review.rating + ' de 5'"
+                >
+                  <span
+                    class="material-icons"
+                    *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                    aria-hidden="true"
+                  >
+                    {{ star <= review.rating ? 'star' : 'star_border' }}
+                  </span>
+                </div>
+              </div>
+
+              <p>
+                {{
+                  review.comment ||
+                    'O usuário deixou a nota sem comentário adicional.'
+                }}
+              </p>
+            </article>
+          </div>
+
+          <ng-template #emptyReviews>
+            <div class="user-profile-empty">
+              <span class="material-icons" aria-hidden="true">reviews</span>
+              <strong>Ainda sem avaliações públicas</strong>
+              <p>
+                Quando esse usuário concluir locações avaliadas, elas vão
+                aparecer aqui.
+              </p>
+            </div>
+          </ng-template>
+        </section>
+
+        <section class="user-profile-section glass-panel-strong">
+          <div class="user-profile-section__header">
+            <div>
+              <span class="eyebrow">Confiança</span>
+              <h2>Verificações</h2>
+            </div>
+
+            <span
+              class="verification-pill"
+              [class.verification-pill--approved]="
+                profile.verification.profileStatus === 'APPROVED'
+              "
+              [class.verification-pill--pending]="
+                profile.verification.profileStatus === 'PENDING'
+              "
+            >
+              {{ verificationSummary(profile.verification.profileStatus) }}
+            </span>
+          </div>
+
+          <div class="verification-list">
+            <article
+              class="verification-item"
+              [class.verification-item--approved]="
+                profile.verification.documentStatus === 'APPROVED'
+              "
+              [class.verification-item--pending]="
+                profile.verification.documentStatus === 'PENDING'
+              "
+              [class.verification-item--rejected]="
+                profile.verification.documentStatus === 'REJECTED'
+              "
+            >
+              <span class="material-icons" aria-hidden="true">
+                {{ verificationIcon(profile.verification.documentStatus) }}
+              </span>
+              <div>
+                <strong>Documento</strong>
+                <p>
+                  {{ verificationLabel(profile.verification.documentStatus) }}
+                </p>
+              </div>
+            </article>
+
+            <article
+              class="verification-item"
+              [class.verification-item--approved]="
+                profile.verification.driverLicenseStatus === 'APPROVED'
+              "
+              [class.verification-item--pending]="
+                profile.verification.driverLicenseStatus === 'PENDING'
+              "
+              [class.verification-item--rejected]="
+                profile.verification.driverLicenseStatus === 'REJECTED'
+              "
+            >
+              <span class="material-icons" aria-hidden="true">
+                {{ verificationIcon(profile.verification.driverLicenseStatus) }}
+              </span>
+              <div>
+                <strong>CNH</strong>
+                <p>
+                  {{
+                    verificationLabel(profile.verification.driverLicenseStatus)
+                  }}
+                </p>
+              </div>
+            </article>
+
+            <article
+              class="verification-item"
+              [class.verification-item--approved]="
+                profile.verification.profileStatus === 'APPROVED'
+              "
+              [class.verification-item--pending]="
+                profile.verification.profileStatus === 'PENDING'
+              "
+              [class.verification-item--rejected]="
+                profile.verification.profileStatus === 'REJECTED'
+              "
+            >
+              <span class="material-icons" aria-hidden="true">
+                {{ verificationIcon(profile.verification.profileStatus) }}
+              </span>
+              <div>
+                <strong>Perfil</strong>
+                <p>
+                  {{ verificationSummary(profile.verification.profileStatus) }}
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="user-profile-section glass-panel-strong">
+          <div class="user-profile-section__header">
+            <div>
+              <span class="eyebrow">Anúncios</span>
+              <h2>Carros publicados</h2>
+            </div>
+            <span class="user-profile-section__count">{{
+              profile.vehicles.length
+            }}</span>
+          </div>
+
+          <div
+            class="user-profile-listings"
+            *ngIf="profile.vehicles.length; else emptyListings"
+          >
+            <app-vehicle-card
+              *ngFor="let vehicle of profile.vehicles"
+              [vehicle]="vehicle"
+            />
+          </div>
+
+          <ng-template #emptyListings>
+            <div class="user-profile-empty">
+              <span class="material-icons" aria-hidden="true"
+                >directions_car</span
+              >
+              <strong>Nenhum anúncio público no momento</strong>
+              <p>Esse usuário ainda não tem veículos ativos publicados.</p>
+            </div>
+          </ng-template>
+        </section>
+      </ng-container>
+    </main>

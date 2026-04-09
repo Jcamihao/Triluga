@@ -1,0 +1,114 @@
+<main class="page admin-page">
+      <section class="admin-hero">
+        <span class="eyebrow">Admin</span>
+        <h1>Visão geral do marketplace</h1>
+      </section>
+
+      <section class="admin-stats" *ngIf="dashboard">
+        <article><strong>{{ dashboard.totals.users }}</strong><span>usuários</span></article>
+        <article><strong>{{ dashboard.totals.vehicles }}</strong><span>veículos</span></article>
+        <article><strong>{{ dashboard.totals.bookings }}</strong><span>reservas</span></article>
+        <article><strong>{{ dashboard.totals.privacyRequests }}</strong><span>pedidos LGPD</span></article>
+      </section>
+
+      <section class="admin-card">
+        <h2>Usuários</h2>
+        <article class="row" *ngFor="let user of users">
+          <div>
+            <strong>{{ user.profile?.fullName || user.email }}</strong>
+            <p>{{ user.role }} • {{ user.status }}</p>
+            <p>
+              Documento: {{ verificationLabel(user.profile?.documentVerificationStatus) }} •
+              CNH: {{ verificationLabel(user.profile?.driverLicenseVerification) }}
+            </p>
+          </div>
+          <div class="row__actions">
+            <button type="button" class="btn btn-secondary" (click)="approveDocument(user.id)">
+              Aprovar doc
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="rejectDocument(user.id)">
+              Recusar doc
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="approveDriverLicense(user.id)">
+              Aprovar CNH
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="rejectDriverLicense(user.id)">
+              Recusar CNH
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="user.profile?.hasDocumentImage"
+              (click)="openVerificationFile(user.id, 'document')"
+            >
+              Ver doc
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="user.profile?.hasDriverLicenseImage"
+              (click)="openVerificationFile(user.id, 'driverLicense')"
+            >
+              Ver CNH
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="blockUser(user.id)">
+              Bloquear
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section class="admin-card">
+        <h2>Veículos</h2>
+        <article class="row" *ngFor="let vehicle of vehicles">
+          <div>
+            <strong>{{ vehicle.title }}</strong>
+            <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="deactivateVehicle(vehicle.id)">
+            Desativar
+          </button>
+        </article>
+      </section>
+
+      <section class="admin-card">
+        <h2>Reservas</h2>
+        <article class="row" *ngFor="let booking of bookings">
+          <div>
+            <strong>{{ booking.vehicle.title }}</strong>
+            <p>{{ booking.status }} • {{ booking.renter.profile?.fullName || booking.renter.email }}</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="admin-card">
+        <h2>Solicitações LGPD</h2>
+        <article class="row" *ngFor="let request of privacyRequests">
+          <div>
+            <strong>{{ privacyRequestTypeLabel(request.type) }}</strong>
+            <p>
+              {{ request.user?.profile?.fullName || request.user?.email }} • {{ privacyRequestStatusLabel(request.status) }}
+            </p>
+            <p *ngIf="request.notes">{{ request.notes }}</p>
+          </div>
+          <div class="row__actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="request.status === 'OPEN'"
+              (click)="updatePrivacyRequest(request.id, 'IN_REVIEW')"
+            >
+              Em análise
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="request.status !== 'COMPLETED'"
+              (click)="updatePrivacyRequest(request.id, 'COMPLETED')"
+            >
+              Concluir
+            </button>
+          </div>
+        </article>
+      </section>
+    </main>

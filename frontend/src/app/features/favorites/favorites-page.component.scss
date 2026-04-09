@@ -1,0 +1,61 @@
+.favorites-page {
+        display: grid;
+        gap: 18px;
+        padding: 20px 12px 40px;
+      }
+
+      .favorites-card,
+      .empty-card {
+        display: grid;
+        gap: 12px;
+        padding: 22px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .favorites-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+      }
+
+      .eyebrow {
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      h1,
+      p,
+      strong {
+        margin: 0;
+      }
+
+      p {
+        color: var(--text-secondary);
+      }
+
+      .empty-card .btn {
+        width: fit-content;
+        text-decoration: none;
+      }
+
+      @media (min-width: 1080px) {
+        .favorites-page {
+          gap: 20px;
+          padding: 28px 20px 56px;
+        }
+
+        .favorites-card,
+        .empty-card {
+          padding: 26px;
+        }
+
+        .favorites-list {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+      }

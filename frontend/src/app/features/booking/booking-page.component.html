@@ -1,0 +1,180 @@
+<main class="page booking-page" *ngIf="vehicle">
+      <section class="booking-card">
+        <div class="booking-card__copy">
+          <span class="eyebrow">Reserva</span>
+          <h1>{{ vehicle.title }}</h1>
+          <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
+          <strong class="price-text">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} / semana</strong>
+          <span class="booking-chip">
+            {{ vehicle.bookingApprovalMode === 'INSTANT' ? 'Confirmação instantânea' : 'Aprovação manual' }}
+          </span>
+        </div>
+
+        <img
+          class="booking-card__image"
+          [src]="vehicle.coverImage || fallbackImage"
+          [alt]="vehicle.title"
+        />
+      </section>
+
+      <section class="booking-form">
+        <label>
+          <span>Data de retirada</span>
+          <input [(ngModel)]="startDate" (ngModelChange)="refreshPricingPreview()" type="date" [min]="today" />
+        </label>
+
+        <label>
+          <span>Data de devolução</span>
+          <input [(ngModel)]="endDate" (ngModelChange)="refreshPricingPreview()" type="date" [min]="startDate || today" />
+        </label>
+
+        <label>
+          <span>Observações</span>
+          <textarea [(ngModel)]="notes" rows="4" placeholder="Combine detalhes com o proprietário"></textarea>
+        </label>
+
+        <section class="addon-card" *ngIf="vehicle.addons.length">
+          <div>
+            <span class="eyebrow eyebrow--soft">Extras</span>
+            <h2>Adicione opcionais</h2>
+          </div>
+
+          <label class="addon-option" *ngFor="let addon of activeAddons">
+            <input
+              type="checkbox"
+              [checked]="isAddonSelected(addon.id)"
+              (change)="toggleAddon(addon.id)"
+            />
+            <div>
+              <strong>{{ addon.name }}</strong>
+              <p>{{ addon.description || 'Item adicional para sua reserva.' }}</p>
+            </div>
+            <span class="price-text">{{ addon.price | currency: 'BRL' : 'symbol' : '1.2-2' }}</span>
+          </label>
+        </section>
+
+        <section class="promotion-card" *ngIf="hasPromotionOffer">
+          <div>
+            <span class="eyebrow eyebrow--soft">Promoções</span>
+            <h2>Economize nesta reserva</h2>
+          </div>
+
+          <div class="promotion-pill-list">
+            <span class="promotion-pill" *ngIf="vehicle.firstBookingDiscountPercent">
+              Primeira reserva {{ vehicle.firstBookingDiscountPercent }}% off
+            </span>
+            <span class="promotion-pill" *ngIf="vehicle.weeklyDiscountPercent">
+              Pacote semanal {{ vehicle.weeklyDiscountPercent }}% off
+            </span>
+            <span class="promotion-pill" *ngIf="vehicle.couponCode">
+              Cupom {{ vehicle.couponDiscountPercent }}% off
+            </span>
+          </div>
+
+          <label *ngIf="vehicle.couponCode">
+            <span>Cupom promocional</span>
+            <input [(ngModel)]="couponCode" placeholder="Digite o cupom recebido" />
+          </label>
+
+          <p class="hint" *ngIf="vehicle.firstBookingDiscountPercent && !isFirstBookingEligible">
+            O desconto de primeira reserva vale apenas para novos locatários.
+          </p>
+
+          <p class="hint" *ngIf="couponCode && vehicle.couponCode && !isCouponPreviewValid">
+            Este cupom não corresponde a este anúncio.
+          </p>
+        </section>
+
+        <p class="hint" *ngIf="pricingLoading">Atualizando preço dinâmico...</p>
+        <p class="feedback feedback--error" *ngIf="pricingError">{{ pricingError }}</p>
+
+        <p class="hint" *ngIf="availabilityLoading">Consultando datas indisponíveis...</p>
+        <p class="feedback feedback--error" *ngIf="availabilityError">{{ availabilityError }}</p>
+      </section>
+
+      <section class="availability-card" *ngIf="availability">
+        <div class="availability-card__head">
+          <div>
+            <span class="eyebrow eyebrow--soft">Disponibilidade</span>
+            <h2>Calendário da reserva</h2>
+          </div>
+          <span class="availability-status" [class.availability-status--error]="selectedRangeHasConflict">
+            {{ selectedRangeHasConflict ? 'Período indisponível' : 'Pronto para reservar' }}
+          </span>
+        </div>
+
+        <p class="availability-description">
+          O sistema já impede conflito com reservas aprovadas e bloqueios feitos pelo proprietário.
+        </p>
+
+        <div class="date-list" *ngIf="nextUnavailablePeriods.length">
+          <article class="date-pill" *ngFor="let period of nextUnavailablePeriods">
+            <strong>{{ period.label }}</strong>
+            <span>{{ period.reason }}</span>
+          </article>
+        </div>
+
+        <p class="hint" *ngIf="!nextUnavailablePeriods.length">
+          Nenhum bloqueio próximo encontrado. Escolha as datas e siga com a solicitação.
+        </p>
+      </section>
+
+      <section class="booking-summary">
+        <div><span>Diárias</span><strong>{{ totalDays }}</strong></div>
+        <div>
+          <span>Locação base</span>
+          <strong class="price-text">{{ staticRentalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div
+          *ngFor="let adjustment of pricingAdjustments"
+          class="booking-summary__adjustment"
+          [class.booking-summary__adjustment--discount]="adjustment.amount < 0"
+        >
+          <span>{{ adjustment.label }}</span>
+          <strong class="price-text">
+            {{ adjustment.amount > 0 ? '+' : '' }}{{ adjustment.amount | currency: 'BRL' : 'symbol' : '1.2-2' }}
+          </strong>
+        </div>
+        <div *ngIf="selectedAddons.length">
+          <span>Extras</span>
+          <strong class="price-text">{{ addonsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div>
+          <span>Subtotal</span>
+          <strong class="price-text">{{ subtotal | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div *ngFor="let promotion of appliedPromotionPreview" class="booking-summary__discount">
+          <span>{{ promotion.label }}</span>
+          <strong class="price-text">-{{ promotion.amount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div *ngIf="discountsAmount">
+          <span>Descontos</span>
+          <strong class="price-text">-{{ discountsAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div>
+          <span>Taxa da plataforma</span>
+          <strong class="price-text">{{ platformFee | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <div class="booking-summary__total">
+          <span>Total</span>
+          <strong class="price-text price-text--total">{{ totalAmount | currency: 'BRL' : 'symbol' : '1.2-2' }}</strong>
+        </div>
+        <p class="hint">
+          Cancelamento {{ cancellationPolicyLabel(vehicle.cancellationPolicy).toLowerCase() }}.
+        </p>
+        <p class="feedback feedback--error" *ngIf="selectedRangeHasConflict">
+          O período selecionado conflita com uma reserva já aprovada ou um bloqueio manual.
+        </p>
+      </section>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="submit()"
+        [disabled]="submitting || availabilityLoading || selectedRangeHasConflict"
+      >
+        {{ submitting ? 'Enviando...' : submitLabel }}
+      </button>
+
+      <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
+    </main>

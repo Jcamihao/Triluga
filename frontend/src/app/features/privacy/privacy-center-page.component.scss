@@ -1,0 +1,133 @@
+.privacy-center-page {
+        display: grid;
+        gap: 18px;
+        padding: 20px 12px 40px;
+      }
+
+      .hero-card,
+      .privacy-card {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
+        border-radius: var(--radius-lg);
+        background: var(--glass-surface-strong);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .privacy-card--compact {
+        gap: 8px;
+      }
+
+      .eyebrow {
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .eyebrow--soft {
+        color: var(--text-secondary);
+      }
+
+      h1,
+      h2,
+      p,
+      strong,
+      small,
+      span {
+        margin: 0;
+      }
+
+      p,
+      small {
+        color: var(--text-secondary);
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+      }
+
+      select,
+      textarea {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid var(--glass-border-soft);
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        font: inherit;
+        background: var(--surface-muted);
+      }
+
+      .section-head,
+      .request-item__top,
+      .action-row {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .action-row {
+        justify-content: flex-start;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        padding: 7px 12px;
+        border-radius: var(--radius-pill);
+        background: rgba(148, 163, 184, 0.14);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .status-pill--enabled,
+      .status-pill--completed {
+        background: rgba(34, 197, 94, 0.12);
+        color: var(--success);
+      }
+
+      .status-pill--open,
+      .status-pill--in_review {
+        background: rgba(245, 158, 11, 0.14);
+        color: var(--warning);
+      }
+
+      .status-pill--rejected,
+      .status-pill--cancelled {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--error);
+      }
+
+      .request-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .request-item {
+        display: grid;
+        gap: 6px;
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: var(--surface-dark-elevated);
+        border: 1px solid var(--glass-border-soft);
+      }
+
+      .feedback {
+        margin: 0;
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      .feedback--error {
+        color: var(--error);
+      }
+
+      @media (min-width: 1080px) {
+        .privacy-center-page {
+          padding: 28px 20px 56px;
+        }
+      }

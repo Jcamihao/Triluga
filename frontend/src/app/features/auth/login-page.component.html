@@ -1,0 +1,45 @@
+<main class="auth-page">
+      <section class="auth-card">
+        <a class="auth-card__back" routerLink="/">Voltar ao inicio</a>
+
+        <div class="auth-card__hero">
+          <img class="brand-logo" src="assets/branding/triluga-logo.png" alt="Triluga" />
+          <span class="eyebrow">Entrar</span>
+          <h1>Entre na Triluga</h1>
+          <p>Acesse seu painel, acompanhe reservas e gerencie anúncios com uma identidade mais leve, precisa e marcada pela menta.</p>
+
+          <div class="auth-highlights">
+            <span>Painel vivo</span>
+            <span>Reservas em tempo real</span>
+            <span>Radar menta</span>
+          </div>
+        </div>
+
+        <div class="auth-card__form">
+          <label>
+            <span>E-mail</span>
+            <input [(ngModel)]="email" type="email" />
+          </label>
+
+          <label>
+            <span>Senha</span>
+            <input [(ngModel)]="password" type="password" />
+          </label>
+
+          <button type="button" class="btn btn-primary" (click)="login()" [disabled]="loading">
+            {{ loading ? 'Entrando...' : 'Entrar' }}
+          </button>
+
+          <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
+
+          <div class="helper-links">
+            <span>Não tem conta?</span>
+            <a routerLink="/auth/register">Crie agora</a>
+          </div>
+
+          <div class="helper-links helper-links--secondary">
+            <a routerLink="/privacy">Privacidade</a>
+          </div>
+        </div>
+      </section>
+    </main>

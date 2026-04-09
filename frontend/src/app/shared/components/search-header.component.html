@@ -1,0 +1,146 @@
+<section class="search-header" [class.search-header--minimal]="minimal">
+  <div class="search-header__nav-shell">
+    <header class="search-header__nav">
+      <a
+        class="search-header__brand"
+        routerLink="/"
+        aria-label="Ir para a Home da Triluga"
+      >
+        <span class="search-header__brand-mark">
+          <img src="assets/branding/triluga-mark.svg" alt="Triluga" />
+        </span>
+      </a>
+
+      <form class="search-header__searchbar" (ngSubmit)="submit()">
+        <span class="material-icons" aria-hidden="true">search</span>
+        <input
+          name="query"
+          [(ngModel)]="query"
+          placeholder="Buscar anúncio, marca ou cidade"
+        />
+        <button *ngIf="!minimal" type="submit" class="search-header__search-submit">
+          Buscar
+        </button>
+      </form>
+
+      <button
+        type="button"
+        class="search-header__notifications-trigger"
+        aria-label="Abrir notificações"
+        (click)="toggleNotifications()"
+      >
+        <span class="material-icons" aria-hidden="true">notifications_none</span>
+        <span class="search-header__notifications-badge" *ngIf="notificationsService.unreadCount()">
+          {{ unreadBadge }}
+        </span>
+      </button>
+    </header>
+
+    <div class="search-header__copy" *ngIf="!minimal && (title || subtitle)">
+      <div class="search-header__copy-top">
+        <span class="eyebrow">Classificados</span>
+        <button
+          *ngIf="showFiltersAction"
+          type="button"
+          class="search-header__filters-link"
+          (click)="filters.emit()"
+        >
+          <span class="material-icons" aria-hidden="true">tune</span>
+          Filtros
+        </button>
+      </div>
+
+      <h1>{{ title }}</h1>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+
+      <div class="search-header__meta" *ngIf="showMeta">
+        <span *ngIf="query">Termo: {{ query }}</span>
+        <span *ngIf="activeFiltersLabel">{{ activeFiltersLabel }}</span>
+        <span *ngIf="!query && !activeFiltersLabel">Explore por cidade, estilo ou período</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Drawer -->
+  <div class="notifications-overlay" *ngIf="notificationsOpen">
+    <button
+      type="button"
+      class="notifications-overlay__backdrop"
+      (click)="closeNotifications()"
+      aria-label="Fechar notificações"
+    ></button>
+
+    <aside class="notifications-drawer">
+      <header class="notifications-drawer__head">
+        <div>
+          <span class="eyebrow">Notificações</span>
+          <h2>Central de avisos</h2>
+        </div>
+
+        <button
+          type="button"
+          class="notifications-drawer__close material-icons"
+          (click)="closeNotifications()"
+          aria-label="Fechar notificações"
+        >
+          close
+        </button>
+      </header>
+
+      <p class="notifications-drawer__summary" *ngIf="authService.hasSession()">
+        {{ notificationsService.unreadCount() }} não lidas
+      </p>
+
+      <section class="notifications-drawer__empty" *ngIf="!authService.hasSession()">
+        <strong>Entre para acompanhar suas notificações</strong>
+        <p>Atualizações de reserva, chat e status dos seus anúncios vão aparecer aqui.</p>
+        <button type="button" class="btn btn-primary" (click)="goToLogin()">Entrar</button>
+      </section>
+
+      <p class="notifications-drawer__state" *ngIf="authService.hasSession() && notificationsService.loading()">
+        Carregando notificações...
+      </p>
+
+      <p
+        class="notifications-drawer__state"
+        *ngIf="
+          authService.hasSession() &&
+          !notificationsService.loading() &&
+          !notificationsService.notifications().length
+        "
+      >
+        Nenhuma notificação por enquanto.
+      </p>
+
+      <div
+        class="notifications-drawer__list"
+        *ngIf="
+          authService.hasSession() &&
+          !notificationsService.loading() &&
+          notificationsService.notifications().length
+        "
+      >
+        <article
+          class="notifications-drawer__item"
+          *ngFor="let notification of notificationsService.notifications()"
+          [class.notifications-drawer__item--unread]="!notification.isRead"
+        >
+          <div>
+            <strong>{{ notification.title }}</strong>
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.createdAt | date: 'dd/MM HH:mm' }}</small>
+          </div>
+
+          <button
+            *ngIf="!notification.isRead"
+            type="button"
+            class="btn btn-secondary"
+            (click)="markNotificationRead(notification.id)"
+          >
+            Marcar como lida
+          </button>
+        </article>
+      </div>
+    </aside>
+  </div>
+</section>
