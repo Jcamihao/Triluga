@@ -1,0 +1,446 @@
+:host {
+  display: block;
+}
+
+.user-profile-page {
+  display: grid;
+  gap: 16px;
+  padding: var(--space-4) var(--page-gutter) 132px;
+}
+
+.user-profile-shell,
+.user-profile-hero,
+.user-profile-section {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-2xl);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--mint-50);
+  border: 1px solid var(--mint-100);
+  color: var(--mint-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 30px;
+  line-height: 1.04;
+}
+
+h2 {
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.user-profile-hero__top,
+.user-profile-section__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.user-profile-hero__top {
+  align-items: flex-start;
+}
+
+.user-profile-hero__avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-2xl);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface-muted);
+}
+
+.user-profile-hero__copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.user-profile-hero__copy p,
+.verification-item p,
+.user-profile-empty p {
+  color: var(--text-secondary);
+}
+
+.user-profile-hero__since {
+  font-weight: 600;
+}
+
+.user-profile-hero__bio {
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.user-profile-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.user-profile-facts {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+.user-profile-trust-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+.user-profile-stats article {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.user-profile-trust-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.user-profile-facts article {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.user-profile-stats strong {
+  font-size: 24px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.user-profile-facts strong {
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.user-profile-trust-card strong {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.user-profile-stats span,
+.user-profile-facts span,
+.user-profile-section__count {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-profile-trust-card span,
+.user-profile-trust-card small {
+  color: var(--text-secondary);
+}
+
+.user-profile-trust-card small {
+  line-height: 1.5;
+}
+
+.verification-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.verification-pill--approved {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+}
+
+.verification-pill--pending {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.verification-list {
+  display: grid;
+  gap: 12px;
+}
+
+.verification-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.verification-item .material-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-secondary);
+}
+
+.verification-item--approved .material-icons {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+}
+
+.verification-item--pending .material-icons {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.verification-item--rejected .material-icons {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--error);
+}
+
+.verification-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.user-profile-review-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.user-profile-review-summary strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.user-profile-review-summary p {
+  color: var(--text-secondary);
+}
+
+.user-profile-review-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #f59e0b;
+}
+
+.user-profile-review-stars .material-icons {
+  font-size: 18px;
+}
+
+.user-profile-review-list {
+  display: grid;
+  gap: 12px;
+}
+
+.user-profile-review-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.user-profile-review-card p,
+.user-profile-review-card strong {
+  margin: 0;
+}
+
+.user-profile-review-card__head,
+.user-profile-review-card__author {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.user-profile-review-card__author {
+  justify-content: flex-start;
+}
+
+.user-profile-review-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: var(--surface-muted);
+}
+
+.user-profile-listings {
+  display: grid;
+  gap: 10px;
+}
+
+.user-profile-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 6px 0 2px;
+}
+
+.user-profile-empty .material-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--surface-muted);
+  color: var(--primary);
+}
+
+@media (min-width: 641px) {
+  .user-profile-page {
+    padding: var(--space-5) var(--page-gutter) 132px;
+  }
+
+  .user-profile-shell,
+  .user-profile-hero,
+  .user-profile-section {
+    padding: 22px;
+    border-radius: var(--radius-2xl);
+  }
+
+  .user-profile-hero__top {
+    align-items: center;
+  }
+
+  .user-profile-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .user-profile-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .user-profile-trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .user-profile-page {
+    gap: var(--space-5);
+    padding: var(--space-6) var(--page-gutter) 156px;
+  }
+
+  .user-profile-hero {
+    grid-template-columns: minmax(0, 1.1fr) 320px;
+    align-items: start;
+  }
+
+  .user-profile-hero__top,
+  .user-profile-hero__bio {
+    grid-column: 1;
+  }
+
+  .user-profile-stats {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-template-columns: 1fr;
+  }
+
+  .verification-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .user-profile-trust-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .user-profile-listings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .user-profile-review-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Home style alignment ── */
+.user-profile-page {
+  gap: var(--space-6);
+  width: min(100%, var(--page-max));
+  margin: 0 auto;
+}
+
+.user-profile-shell,
+.user-profile-hero,
+.user-profile-section {
+  border-radius: var(--radius-2xl);
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+.user-profile-hero {
+  padding: var(--space-8) var(--space-6);
+  background:
+    radial-gradient(ellipse at 82% 0%, rgba(43, 184, 138, 0.08) 0%, transparent 58%),
+    var(--white);
+}
+
+.user-profile-section,
+.user-profile-shell {
+  padding: var(--space-6);
+}
+
+.user-profile-stats article,
+.user-profile-facts article,
+.user-profile-trust-card,
+.verification-item,
+.user-profile-review-card {
+  background: var(--gray-100);
+  border-color: var(--border);
+}

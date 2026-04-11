@@ -1,0 +1,141 @@
+.host-page {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--page-gutter) var(--space-8);
+}
+
+.hero-card,
+.info-grid article {
+  padding: 22px;
+  border-radius: var(--radius-2xl);
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+.hero-card {
+  display: grid;
+  gap: 14px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--mint-50);
+  border: 1px solid var(--mint-100);
+  color: var(--mint-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p,
+strong {
+  margin: 0;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.actions .btn,
+.actions a {
+  width: 100%;
+  justify-content: center;
+}
+
+.actions a {
+  text-decoration: none;
+}
+
+.info-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.info-grid article {
+  display: grid;
+  gap: 8px;
+}
+
+.info-grid strong {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+@media (min-width: 960px) {
+  .host-page {
+    gap: var(--space-5);
+    padding: var(--space-6) var(--page-gutter) 56px;
+  }
+
+  .hero-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--space-5);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .actions .btn,
+  .actions a {
+    width: auto;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+/* ── Home style alignment ── */
+.host-page {
+  gap: var(--space-6);
+  width: min(100%, var(--page-max));
+  margin: 0 auto;
+}
+
+.hero-card,
+.info-grid article {
+  border-radius: var(--radius-2xl);
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+.hero-card {
+  padding: var(--space-8) var(--space-6);
+  background:
+    radial-gradient(ellipse at 82% 0%, rgba(43, 184, 138, 0.08) 0%, transparent 58%),
+    var(--white);
+}
+
+.hero-card h1 {
+  max-width: 18ch;
+}
+
+.info-grid article {
+  padding: var(--space-6) var(--space-5);
+}

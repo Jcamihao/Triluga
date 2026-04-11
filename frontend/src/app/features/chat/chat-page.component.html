@@ -1,0 +1,236 @@
+<main
+  class="page chat-page"
+  [class.chat-page--conversation]="isConversationRoute"
+>
+  <section
+    class="chat-shell"
+    [class.chat-shell--conversation]="isConversationRoute"
+    *ngIf="authService.isAuthenticated(); else guestState"
+  >
+    <aside class="chat-sidebar" *ngIf="!isConversationRoute; else conversationView">
+      <div class="chat-sidebar__header">
+        <div>
+          <span class="eyebrow">Chat</span>
+          <h1>Conversas</h1>
+        </div>
+        <span class="connection-pill" [class.connection-pill--active]="socketService.isConfirmedOnline()">
+          {{ connectionStatusLabel }}
+        </span>
+      </div>
+
+      <p class="chat-sidebar__hint">
+        Abra uma conversa a partir da tela de um anúncio para falar direto com o anunciante.
+      </p>
+
+      <div class="chat-sidebar__actions">
+        <a class="btn btn-secondary" routerLink="/search">Ver anúncios</a>
+      </div>
+
+      <div class="chat-empty" *ngIf="!isLoadingConversations && !conversations.length">
+        <span class="material-icons" aria-hidden="true">forum</span>
+        <strong>Nenhuma conversa ainda</strong>
+        <p>Quando você falar com um anunciante, a conversa aparece aqui.</p>
+        <div class="chat-empty__actions">
+          <a class="btn btn-primary" routerLink="/search">Ver anúncios</a>
+          <a class="btn btn-secondary" routerLink="/">Voltar para início</a>
+        </div>
+      </div>
+
+      <div class="conversation-list" *ngIf="conversations.length">
+        <button
+          class="conversation-card"
+          type="button"
+          *ngFor="let conversation of conversations"
+          (click)="openConversation(conversation.id)"
+        >
+          <img
+            class="conversation-card__image"
+            [src]="conversation.otherParticipant.avatarUrl || fallbackAvatarImage"
+            [alt]="conversation.otherParticipant.fullName || conversation.otherParticipant.email"
+          />
+
+          <div class="conversation-card__content">
+            <div class="conversation-card__top">
+              <strong class="profile-name-text">{{ conversation.otherParticipant.fullName || conversation.otherParticipant.email }}</strong>
+              <span>{{ (conversation.lastMessageAt || conversation.updatedAt) | date: 'HH:mm' }}</span>
+            </div>
+
+            <span class="conversation-card__vehicle">{{ conversation.vehicle.title }}</span>
+            <p>{{ conversation.lastMessage?.content || 'Conversa iniciada. Envie sua primeira mensagem.' }}</p>
+          </div>
+
+          <span class="conversation-card__badge" *ngIf="conversation.unreadCount">
+            {{ conversation.unreadCount }}
+          </span>
+        </button>
+      </div>
+    </aside>
+
+    <ng-template #conversationView>
+      <section class="chat-thread" *ngIf="selectedConversation; else conversationFallback">
+        <header class="chat-thread__header chat-thread__header--single">
+          <div class="chat-thread__topbar">
+            <button
+              class="chat-thread__back"
+              type="button"
+              routerLink="/chat"
+              aria-label="Voltar para conversas"
+            >
+              <span class="material-icons" aria-hidden="true">arrow_back</span>
+            </button>
+
+            <a
+              class="chat-thread__identity"
+              [routerLink]="['/users', selectedConversation.otherParticipant.id]"
+              aria-label="Abrir perfil do anunciante"
+            >
+              <img
+                class="chat-thread__avatar"
+                [src]="selectedConversation.otherParticipant.avatarUrl || fallbackAvatarImage"
+                [alt]="selectedConversation.otherParticipant.fullName || selectedConversation.otherParticipant.email"
+              />
+
+              <div class="chat-thread__summary">
+                <h2 class="profile-name-text">{{ selectedConversation.otherParticipant.fullName || selectedConversation.otherParticipant.email }}</h2>
+                <p>
+                  <span
+                    class="chat-thread__presence"
+                    [class.chat-thread__presence--online]="selectedConversation.otherParticipant.isOnline"
+                  >
+                    {{ selectedConversation.otherParticipant.isOnline ? 'Online' : 'Offline' }}
+                  </span>
+                  <span aria-hidden="true">•</span>
+                  <span>{{ selectedConversation.vehicle.title }}</span>
+                </p>
+              </div>
+            </a>
+
+            <div class="chat-thread__actions">
+              <a
+                class="chat-thread__action"
+                [routerLink]="['/vehicles', selectedConversation.vehicle.id]"
+                aria-label="Abrir anúncio"
+              >
+                <span class="material-icons" aria-hidden="true">directions_car</span>
+              </a>
+
+              <div class="chat-thread__menu">
+                <button
+                  class="chat-thread__action"
+                  type="button"
+                  aria-label="Mais opções"
+                  (click)="toggleHeaderMenu()"
+                >
+                      <span class="material-icons" aria-hidden="true">more_vert</span>
+                </button>
+
+                <div class="chat-thread__menu-panel" *ngIf="headerMenuOpen">
+                  <a
+                    [routerLink]="['/users', selectedConversation.otherParticipant.id]"
+                    (click)="closeHeaderMenu()"
+                  >
+                    Ver perfil
+                  </a>
+                  <a
+                    [routerLink]="['/vehicles', selectedConversation.vehicle.id]"
+                    (click)="closeHeaderMenu()"
+                  >
+                    Abrir anúncio
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </header>
+
+        <div
+          #messagesContainer
+          class="chat-thread__messages"
+          *ngIf="messages.length; else noMessages"
+        >
+          <article
+            class="message"
+            *ngFor="let message of messages"
+            [class.message--mine]="message.sender.id === currentUserId"
+          >
+            <div class="message__bubble">
+              <strong class="profile-name-text" *ngIf="message.sender.id !== currentUserId">
+                {{ message.sender.fullName || message.sender.email }}
+              </strong>
+              <p>{{ message.content }}</p>
+              <span>{{ message.createdAt | date: 'dd/MM HH:mm' }}</span>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #noMessages>
+          <div class="chat-empty chat-empty--thread">
+            <span class="material-icons" aria-hidden="true">mark_chat_read</span>
+            <strong>Conversa pronta</strong>
+            <p>Envie a primeira mensagem para alinhar retirada, entrega ou tirar dúvidas.</p>
+          </div>
+        </ng-template>
+
+        <form class="chat-composer" (ngSubmit)="sendMessage()">
+          <textarea
+            name="draftMessage"
+            [(ngModel)]="draftMessage"
+            rows="3"
+            maxlength="2000"
+            placeholder="Escreva sua mensagem"
+            [disabled]="isSending || isLoadingMessages"
+          ></textarea>
+
+          <button class="btn btn-primary" type="submit" [disabled]="!canSendMessage">
+            {{ isSending ? 'Enviando...' : 'Enviar' }}
+          </button>
+        </form>
+      </section>
+
+      <ng-template #conversationFallback>
+        <section class="chat-thread chat-thread--empty" *ngIf="isLoadingConversations; else noSelection">
+          <div class="chat-empty chat-empty--thread">
+            <span class="material-icons" aria-hidden="true">hourglass_top</span>
+            <strong>Carregando conversa</strong>
+            <p>Estamos buscando as mensagens mais recentes para abrir esse chat.</p>
+          </div>
+        </section>
+      </ng-template>
+
+      <ng-template #noSelection>
+        <section class="chat-thread chat-thread--empty">
+          <div class="chat-empty chat-empty--thread">
+            <span class="material-icons" aria-hidden="true">chat</span>
+            <strong>Conversa não encontrada</strong>
+            <p>Volte para a lista de conversas para escolher um chat válido.</p>
+            <a class="btn btn-secondary" routerLink="/chat">Voltar para conversas</a>
+          </div>
+        </section>
+      </ng-template>
+    </ng-template>
+  </section>
+
+  <ng-template #guestState>
+    <section class="guest-card surface-card" *ngIf="authService.isRestoringSession(); else loginPrompt">
+      <span class="eyebrow">Chat</span>
+      <h1>Restaurando sua sessão</h1>
+      <p>Estamos confirmando seu login para abrir as conversas.</p>
+    </section>
+
+    <ng-template #loginPrompt>
+    <section class="guest-card surface-card">
+      <span class="eyebrow">Chat</span>
+      <h1>Converse em tempo real com o anunciante</h1>
+      <p>
+        Entre na sua conta para acompanhar conversas, combinar retirada e responder mensagens na hora.
+      </p>
+
+      <div class="guest-card__actions">
+        <a class="btn btn-primary" routerLink="/auth/login">Entrar</a>
+        <a class="btn btn-secondary" routerLink="/search">Ver anúncios</a>
+      </div>
+    </section>
+    </ng-template>
+  </ng-template>
+</main>

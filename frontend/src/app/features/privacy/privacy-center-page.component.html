@@ -1,0 +1,138 @@
+<main class="page privacy-center-page">
+  <section class="hero-card">
+    <span class="eyebrow">Central de privacidade</span>
+    <h1>Controle do titular em um só lugar</h1>
+    <p>
+      Ajuste preferências, exporte seus dados e registre solicitações relacionadas à LGPD.
+    </p>
+  </section>
+
+  <section class="privacy-card" *ngIf="loading">
+    <strong>Carregando central...</strong>
+    <p>Estamos buscando suas preferências e solicitações registradas.</p>
+  </section>
+
+  <ng-container *ngIf="!loading && overview">
+    <section class="privacy-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow eyebrow--soft">Preferências</span>
+          <h2>Analytics não essencial</h2>
+        </div>
+        <span class="status-pill" [class.status-pill--enabled]="privacyPreferencesService.analyticsConsentGranted()">
+          {{ privacyPreferencesService.analyticsConsentGranted() ? 'Ativo' : 'Desativado' }}
+        </span>
+      </div>
+
+      <p>
+        Quando ativado, a Triluga coleta métricas de navegação para melhorar produto, conteúdo e conversão.
+      </p>
+
+      <div class="action-row">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="savingPreferences || !privacyPreferencesService.analyticsConsentGranted()"
+          (click)="setAnalyticsConsent(false)"
+        >
+          {{ savingPreferences ? 'Salvando...' : 'Desativar' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="savingPreferences || privacyPreferencesService.analyticsConsentGranted()"
+          (click)="setAnalyticsConsent(true)"
+        >
+          {{ savingPreferences ? 'Salvando...' : 'Ativar' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="privacy-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow eyebrow--soft">Exportação</span>
+          <h2>Baixe seus dados</h2>
+        </div>
+      </div>
+
+      <p>
+        O arquivo inclui conta, perfil, reservas, anúncios, notificações, favoritos, alertas e solicitações LGPD registradas.
+      </p>
+
+      <button type="button" class="btn btn-primary" [disabled]="exporting" (click)="exportMyData()">
+        {{ exporting ? 'Preparando exportação...' : 'Exportar meus dados' }}
+      </button>
+    </section>
+
+    <section class="privacy-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow eyebrow--soft">Solicitações</span>
+          <h2>Registrar novo pedido</h2>
+        </div>
+      </div>
+
+      <label>
+        <span>Tipo de solicitação</span>
+        <select [(ngModel)]="selectedRequestType">
+          <option *ngFor="let option of requestTypeOptions" [value]="option">
+            {{ requestTypeLabel(option) }}
+          </option>
+        </select>
+      </label>
+
+      <label>
+        <span>Observações</span>
+        <textarea
+          [(ngModel)]="requestNotes"
+          rows="4"
+          placeholder="Explique o contexto da sua solicitação, se desejar."
+        ></textarea>
+      </label>
+
+      <button type="button" class="btn btn-primary" [disabled]="submittingRequest" (click)="submitRequest()">
+        {{ submittingRequest ? 'Enviando...' : 'Enviar solicitação' }}
+      </button>
+    </section>
+
+    <section class="privacy-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow eyebrow--soft">Histórico</span>
+          <h2>Pedidos já registrados</h2>
+        </div>
+      </div>
+
+      <div class="request-list" *ngIf="overview.requests.length; else emptyRequests">
+        <article class="request-item" *ngFor="let request of overview.requests">
+          <div class="request-item__top">
+            <strong>{{ requestTypeLabel(request.type) }}</strong>
+            <span class="status-pill" [class]="'status-pill status-pill--' + request.status.toLowerCase()">
+              {{ requestStatusLabel(request.status) }}
+            </span>
+          </div>
+
+          <p *ngIf="request.notes">{{ request.notes }}</p>
+          <small>Criada em {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+          <small *ngIf="request.resolutionNotes">Retorno: {{ request.resolutionNotes }}</small>
+        </article>
+      </div>
+
+      <ng-template #emptyRequests>
+        <p>Nenhuma solicitação LGPD registrada até o momento.</p>
+      </ng-template>
+    </section>
+
+    <section class="privacy-card privacy-card--compact">
+      <strong>Contato de privacidade</strong>
+      <p>
+        Para temas regulatórios e acompanhamento adicional, use {{ overview.policy.contactEmail }}.
+      </p>
+    </section>
+  </ng-container>
+
+  <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
+  <p class="feedback feedback--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+</main>

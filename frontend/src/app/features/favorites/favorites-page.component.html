@@ -1,0 +1,22 @@
+<main class="page favorites-page">
+  <section class="favorites-card">
+    <span class="eyebrow">Favoritos</span>
+    <h1>Seus veículos salvos</h1>
+    <p>Continue acompanhando os anúncios que chamaram sua atenção.</p>
+  </section>
+
+  <section class="favorites-list" *ngIf="favoriteItems.length; else emptyState">
+    <app-vehicle-card
+      *ngFor="let vehicle of favoriteItems"
+      [vehicle]="vehicle"
+    />
+  </section>
+
+  <ng-template #emptyState>
+    <section class="empty-card">
+      <strong>Nenhum favorito salvo ainda</strong>
+      <p>Explore os anúncios e toque no coração para montar sua lista.</p>
+      <a routerLink="/search" class="btn btn-primary">Buscar veículos</a>
+    </section>
+  </ng-template>
+</main>
