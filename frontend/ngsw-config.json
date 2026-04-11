@@ -34,10 +34,13 @@
       "urls": [
         "/api/v1/vehicles",
         "/api/v1/vehicles/**",
+        "!/api/v1/vehicles/me",
         "http://localhost:3002/api/v1/vehicles",
         "http://localhost:3002/api/v1/vehicles/**",
+        "!http://localhost:3002/api/v1/vehicles/me",
         "http://127.0.0.1:3002/api/v1/vehicles",
-        "http://127.0.0.1:3002/api/v1/vehicles/**"
+        "http://127.0.0.1:3002/api/v1/vehicles/**",
+        "!http://127.0.0.1:3002/api/v1/vehicles/me"
       ],
       "cacheConfig": {
         "maxSize": 40,

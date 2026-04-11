@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
+import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import {
   CreateVehiclePayload,
   FuelType,
@@ -36,6 +37,7 @@ type OwnerViewMode = 'ads';
     CommonModule,
     FormsModule,
     CurrencyPipe,
+    VehicleCardComponent,
   ],
   templateUrl: './owner-dashboard-page.component.html',
   styleUrls: ['./owner-dashboard-page.component.scss'],

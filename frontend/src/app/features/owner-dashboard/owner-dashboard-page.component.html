@@ -452,85 +452,74 @@
       Selecione um anúncio para editar, revisar fotos ou alterar a publicação.
     </p>
 
-    <article
-      class="vehicle-row"
-      *ngFor="let vehicle of vehicles; trackBy: trackById"
-      [class.vehicle-row--editing]="vehicle.id === editingVehicleId"
-    >
-      <div class="vehicle-row__media">
-        <img [src]="vehicle.coverImage || fallbackImage" [alt]="vehicle.title" />
-      </div>
+    <div class="cars-grid" *ngIf="!loading && vehicles.length && !showVehicleEditor">
+      <div
+        class="owner-card"
+        *ngFor="let vehicle of vehicles; trackBy: trackById"
+        [class.owner-card--editing]="vehicle.id === editingVehicleId"
+      >
+        <app-vehicle-card [vehicle]="vehicle" [hideOwner]="true"></app-vehicle-card>
 
-      <div class="vehicle-row__content">
-        <div class="vehicle-row__top">
-          <div>
-            <strong>{{ vehicle.title }}</strong>
-            <p>{{ vehicle.brand }} {{ vehicle.model }} • {{ vehicle.year }}</p>
+        <div class="owner-card__panel">
+          <div class="vehicle-row__top">
+            <span class="status status--editing" *ngIf="vehicle.id === editingVehicleId">Em edição</span>
           </div>
-          <span class="status status--editing" *ngIf="vehicle.id === editingVehicleId">Em edição</span>
-        </div>
 
-        <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
-        <span class="price-text">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }} / semana</span>
-        <div class="vehicle-row__stats" aria-label="Métricas do anúncio">
-          <article>
-            <span class="material-icons" aria-hidden="true">visibility</span>
-            <div>
-              <strong>{{ vehicleViewsLabel(vehicle) }}</strong>
-              <small>Total do anúncio</small>
-            </div>
-          </article>
+          <div class="vehicle-row__meta">
+            <span class="status status--published" *ngIf="vehicle.isPublished">Publicado</span>
+            <span class="status status--draft" *ngIf="!vehicle.isPublished">Rascunho</span>
+            <span class="status status--inactive" *ngIf="!vehicle.isActive">Desativado</span>
+          </div>
 
-          <article>
-            <span class="material-icons" aria-hidden="true">trending_up</span>
-            <div>
-              <strong>{{ vehicleRecentViewsLabel(vehicle) }}</strong>
-              <small>Interesse recente</small>
-            </div>
-          </article>
-        </div>
-        <p>
-          {{ vehicle.images.length }} fotos •
-          {{ vehicleTypeLabel(vehicle.vehicleType) }} •
-          {{ categoryLabel(vehicle.category) }} •
-          {{ transmissionLabel(vehicle.transmission) }}
-        </p>
-        <div class="vehicle-row__meta">
-          <span class="status status--published" *ngIf="vehicle.isPublished">Publicado</span>
-          <span class="status status--draft" *ngIf="!vehicle.isPublished">Rascunho</span>
-          <span class="status status--inactive" *ngIf="!vehicle.isActive">Desativado</span>
-        </div>
+          <div class="vehicle-row__stats" aria-label="Métricas do anúncio">
+            <article>
+              <span class="material-icons" aria-hidden="true">visibility</span>
+              <div>
+                <strong>{{ vehicleViewsLabel(vehicle) }}</strong>
+                <small>Total do anúncio</small>
+              </div>
+            </article>
 
-        <div class="vehicle-row__actions">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
-            (click)="startEditingVehicle(vehicle)"
-          >
-            Editar
-          </button>
+            <article>
+              <span class="material-icons" aria-hidden="true">trending_up</span>
+              <div>
+                <strong>{{ vehicleRecentViewsLabel(vehicle) }}</strong>
+                <small>Interesse recente</small>
+              </div>
+            </article>
+          </div>
 
-          <button
-            type="button"
-            class="btn btn-secondary"
-            [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
-            (click)="toggleVehiclePublication(vehicle)"
-          >
-            {{ vehicle.isPublished ? 'Virar rascunho' : 'Publicar' }}
-          </button>
+          <div class="vehicle-row__actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
+              (click)="startEditingVehicle(vehicle)"
+            >
+              Editar
+            </button>
 
-          <button
-            type="button"
-            class="btn btn-ghost btn-ghost--danger"
-            [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
-            (click)="deactivateVehicle(vehicle)"
-          >
-            {{ vehicleActionId === vehicle.id ? 'Salvando...' : 'Desativar' }}
-          </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
+              (click)="toggleVehiclePublication(vehicle)"
+            >
+              {{ vehicle.isPublished ? 'Virar rascunho' : 'Publicar' }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-ghost btn-ghost--danger"
+              [disabled]="vehicleActionId === vehicle.id || !vehicle.isActive"
+              (click)="deactivateVehicle(vehicle)"
+            >
+              {{ vehicleActionId === vehicle.id ? 'Salvando...' : 'Desativar' }}
+            </button>
+          </div>
         </div>
       </div>
-    </article>
+    </div>
   </section>
 
 </main>

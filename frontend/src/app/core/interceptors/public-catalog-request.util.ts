@@ -1,7 +1,7 @@
 const PUBLIC_CATALOG_PATH_PATTERNS = [
   /\/lookups\/cep\/\d{8}$/,
   /\/vehicles$/,
-  /\/vehicles\/[^/]+$/,
+  /\/vehicles\/(?!me$)[^/]+$/,
   /\/vehicles\/[^/]+\/pricing-preview$/,
 ];
 
