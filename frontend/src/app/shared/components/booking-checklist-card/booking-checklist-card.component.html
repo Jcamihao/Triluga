@@ -1,0 +1,110 @@
+<section class="booking-checklists" *ngIf="visibleChecklistTypes.length">
+  <article
+    class="booking-checklist"
+    *ngFor="let type of visibleChecklistTypes; trackBy: trackByType"
+  >
+    <div class="booking-checklist__head">
+      <div>
+        <strong>{{ typeTitle(type) }}</strong>
+        <p>{{ typeDescription(type) }}</p>
+      </div>
+
+      <span
+        class="booking-checklist__status"
+        [class.booking-checklist__status--done]="checklistFor(type)?.completedAt"
+      >
+        {{
+          checklistFor(type)?.completedAt ? 'Concluído' : 'Em andamento'
+        }}
+      </span>
+    </div>
+
+    <p class="booking-checklist__meta" *ngIf="checklistFor(type)?.completedAt">
+      Última confirmação em
+      {{ checklistFor(type)?.completedAt | date: 'dd/MM/yyyy HH:mm' }}
+    </p>
+
+    <div class="booking-checklist__items">
+      <label
+        class="booking-checklist__item"
+        *ngFor="let item of checklistItems(type); trackBy: trackByString"
+      >
+        <input
+          type="checkbox"
+          [checked]="isChecked(type, item)"
+          [disabled]="!canEdit(type) || isSubmitting(type)"
+          (change)="toggleItem(type, item, $any($event.target).checked)"
+        />
+        <span>{{ item }}</span>
+      </label>
+    </div>
+
+    <label class="booking-checklist__field">
+      <span>Observações</span>
+      <textarea
+        rows="3"
+        [disabled]="!canEdit(type) || isSubmitting(type)"
+        [ngModel]="draftFor(type).notes"
+        (ngModelChange)="updateNotes(type, $event)"
+        placeholder="Anote combustível, pequenos sinais, entrega de chave ou algo relevante."
+      ></textarea>
+    </label>
+
+    <div
+      class="booking-checklist__photos"
+      *ngIf="checklistFor(type)?.photos?.length"
+    >
+      <a
+        class="booking-checklist__photo"
+        *ngFor="let photo of checklistFor(type)?.photos || []; trackBy: trackByPhoto"
+        [href]="photo.url"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <img [src]="photo.url" alt="Foto do checklist" />
+      </a>
+    </div>
+
+    <div class="booking-checklist__pending-files" *ngIf="draftFor(type).files.length">
+      <strong>{{ draftFor(type).files.length }} foto(s) pronta(s) para envio</strong>
+      <p>{{ pendingFileNames(type) }}</p>
+    </div>
+
+    <label class="booking-checklist__upload" *ngIf="canEdit(type)">
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        [disabled]="isSubmitting(type)"
+        (change)="selectFiles(type, $event)"
+      />
+      <span>Adicionar fotos</span>
+      <small>Até 6 imagens por atualização.</small>
+    </label>
+
+    <label class="booking-checklist__complete" *ngIf="canEdit(type)">
+      <input
+        type="checkbox"
+        [checked]="draftFor(type).markComplete"
+        [disabled]="isSubmitting(type)"
+        (change)="setMarkComplete(type, $any($event.target).checked)"
+      />
+      <span>Marcar esse checklist como concluído</span>
+    </label>
+
+    <p class="feedback" *ngIf="feedbackByType[type]">{{ feedbackByType[type] }}</p>
+    <p class="feedback feedback--error" *ngIf="errorByType[type]">
+      {{ errorByType[type] }}
+    </p>
+
+    <button
+      type="button"
+      class="btn btn-secondary"
+      *ngIf="canEdit(type)"
+      [disabled]="isSubmitting(type)"
+      (click)="save(type)"
+    >
+      {{ isSubmitting(type) ? 'Salvando checklist...' : 'Salvar checklist' }}
+    </button>
+  </article>
+</section>

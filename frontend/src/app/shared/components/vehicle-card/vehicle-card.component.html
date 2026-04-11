@@ -1,0 +1,113 @@
+<article
+  class="vcard"
+  [routerLink]="['/vehicles', vehicle.id]"
+  tabindex="0"
+  role="link"
+>
+  <div class="vcard__media">
+    <img
+      class="vcard__image"
+      [src]="vehicle.coverImage || fallbackImage"
+      [alt]="vehicle.title"
+      loading="lazy"
+    />
+
+    <div class="vcard__media-overlay"></div>
+
+    <div class="vcard__media-top">
+      <span class="vcard__badge">{{ badgeLabel() }}</span>
+      <button
+        type="button"
+        class="vcard__action-icon"
+        [class.vcard__action-icon--active]="isFavorite"
+        [disabled]="isFavoritePending"
+        [attr.aria-label]="
+          isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'
+        "
+        (click)="toggleFavorite($event)"
+      >
+        <span class="material-icons" aria-hidden="true">{{
+          isFavorite ? 'favorite' : 'favorite_border'
+        }}</span>
+      </button>
+    </div>
+
+    <div class="vcard__media-bottom">
+      <span class="vcard__location">
+        <span class="material-icons" aria-hidden="true">place</span>
+        {{ vehicle.city }}, {{ vehicle.state }}
+      </span>
+    </div>
+  </div>
+
+  <div class="vcard__body">
+    <div class="vcard__header">
+      <h3 class="vcard__title">{{ vehicle.title }}</h3>
+      <div class="vcard__meta">
+        <span>
+          <span class="material-icons" aria-hidden="true">tune</span>
+          {{ transmissionLabel(vehicle.transmission) }}
+        </span>
+        <span>
+          <span class="material-icons" aria-hidden="true">event_seat</span>
+          {{ vehicle.seats }}
+        </span>
+      </div>
+    </div>
+
+    <div class="vcard__owner">
+      <img
+        *ngIf="vehicle.owner?.avatarUrl; else ownerInitialsAvatar"
+        class="vcard__owner-avatar"
+        [src]="vehicle.owner?.avatarUrl"
+        [alt]="ownerName"
+        loading="lazy"
+      />
+
+      <ng-template #ownerInitialsAvatar>
+        <span class="vcard__owner-avatar vcard__owner-avatar--fallback">
+          {{ ownerInitials }}
+        </span>
+      </ng-template>
+
+      <div class="vcard__owner-copy">
+        <span>Anunciante</span>
+        <strong class="profile-name-text">{{ ownerName }}</strong>
+      </div>
+
+      <span class="vcard__owner-rating">
+        <span class="material-icons" aria-hidden="true">star</span>
+        {{ ownerRatingLabel }}
+      </span>
+    </div>
+
+    <div class="vcard__footer">
+      <div class="vcard__price-group">
+        <strong class="vcard__price">
+          {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+        </strong>
+        <span class="vcard__price-unit">/ semana</span>
+      </div>
+
+      <div class="vcard__actions">
+        <button
+          type="button"
+          class="vcard__compare-btn"
+          [class.vcard__compare-btn--active]="isCompared"
+          [disabled]="compareDisabled"
+          (click)="toggleCompare($event)"
+          [attr.aria-label]="
+            isCompared
+              ? 'Remover da comparação'
+              : compareDisabled
+                ? 'Lista de comparação cheia'
+                : 'Comparar veículo'
+          "
+        >
+          <span class="material-icons" aria-hidden="true">compare_arrows</span>
+        </button>
+        <span class="vcard__cta">Ver detalhes</span>
+      </div>
+    </div>
+  </div>
+</article>

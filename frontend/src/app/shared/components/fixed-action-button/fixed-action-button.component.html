@@ -1,0 +1,33 @@
+<aside class="fixed-action">
+  <div class="fixed-action__copy">
+    <small>{{ helper }}</small>
+    <strong>{{ label }}</strong>
+  </div>
+  <div class="fixed-action__actions">
+    <button
+      *ngIf="secondaryActionLabel"
+      type="button"
+      class="fixed-action__chat"
+      [attr.aria-label]="secondaryActionLabel"
+      [attr.title]="secondaryActionLabel"
+      (click)="secondaryAction.emit()"
+    >
+      <span class="material-icons" aria-hidden="true" *ngIf="secondaryActionIcon">
+        {{ secondaryActionIcon }}
+      </span>
+      <span class="fixed-action__badge" *ngIf="secondaryBadgeLabel">
+        {{ secondaryBadgeLabel }}
+      </span>
+    </button>
+
+    <button type="button" class="btn btn-primary fixed-action__primary" (click)="action.emit()">
+      <span
+        class="material-icons"
+        aria-hidden="true"
+        *ngIf="actionIcon"
+        >{{ actionIcon }}</span
+      >
+      <span>{{ actionLabel }}</span>
+    </button>
+  </div>
+</aside>

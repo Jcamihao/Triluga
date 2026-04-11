@@ -1,0 +1,109 @@
+<section class="gallery">
+  <div class="gallery__hero">
+    <button
+      type="button"
+      class="gallery__nav gallery__nav--prev"
+      *ngIf="images.length > 1"
+      (click)="goToPreviousImage()"
+      aria-label="Ver foto anterior"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_left</span>
+    </button>
+
+    <button
+      type="button"
+      class="gallery__preview-trigger"
+      [disabled]="!images.length"
+      (click)="openPreview()"
+      aria-label="Ampliar foto do veículo"
+    >
+      <img
+        class="gallery__hero-image"
+        [src]="(activeImage() && activeImage()!.url) || fallbackImage"
+        alt="Imagem do veículo"
+      />
+      <span class="gallery__preview-label" *ngIf="images.length">
+        <span class="material-icons" aria-hidden="true">zoom_out_map</span>
+        Ampliar foto
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="gallery__nav gallery__nav--next"
+      *ngIf="images.length > 1"
+      (click)="goToNextImage()"
+      aria-label="Ver próxima foto"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_right</span>
+    </button>
+  </div>
+
+  <div class="gallery__thumbs">
+    <button
+      type="button"
+      *ngFor="let image of images; let index = index"
+      [class.is-active]="activeIndex() === index"
+      (click)="openPreview(index)"
+      [attr.aria-label]="'Ampliar foto ' + (index + 1)"
+    >
+      <img class="gallery__thumb-image" [src]="image.url" alt="" />
+    </button>
+  </div>
+</section>
+
+<section
+  class="gallery-preview"
+  *ngIf="previewOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Foto ampliada do veículo"
+>
+  <button
+    type="button"
+    class="gallery-preview__backdrop"
+    (click)="closePreview()"
+    aria-label="Fechar foto ampliada"
+  ></button>
+
+  <div class="gallery-preview__content">
+    <header class="gallery-preview__header">
+      <span>{{ activeIndex() + 1 }} de {{ images.length }}</span>
+
+      <button
+        type="button"
+        class="gallery-preview__close"
+        (click)="closePreview()"
+        aria-label="Fechar foto ampliada"
+      >
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <button
+      type="button"
+      class="gallery-preview__nav gallery-preview__nav--prev"
+      *ngIf="images.length > 1"
+      (click)="goToPreviousImage()"
+      aria-label="Ver foto anterior"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_left</span>
+    </button>
+
+    <img
+      class="gallery-preview__image"
+      [src]="(activeImage() && activeImage()!.url) || fallbackImage"
+      alt="Imagem ampliada do veículo"
+    />
+
+    <button
+      type="button"
+      class="gallery-preview__nav gallery-preview__nav--next"
+      *ngIf="images.length > 1"
+      (click)="goToNextImage()"
+      aria-label="Ver próxima foto"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_right</span>
+    </button>
+  </div>
+</section>

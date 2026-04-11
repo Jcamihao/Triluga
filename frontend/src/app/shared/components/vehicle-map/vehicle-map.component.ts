@@ -27,17 +27,8 @@ type VehicleMapMarker = {
   selector: 'app-vehicle-map',
   standalone: true,
   imports: [CommonModule],
-  template: `<div #map class="vehicle-map"></div>`,
-  styles: [
-    `
-      .vehicle-map {
-        width: 100%;
-        min-height: 320px;
-        border-radius: 22px;
-        overflow: hidden;
-      }
-    `,
-  ],
+  templateUrl: './vehicle-map.component.html',
+  styleUrls: ['./vehicle-map.component.scss'],
 })
 export class VehicleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('map') private mapRef?: ElementRef<HTMLDivElement>;
@@ -90,7 +81,7 @@ export class VehicleMapComponent implements AfterViewInit, OnChanges, OnDestroy 
       const leafletMarker = leaflet.marker([marker.latitude, marker.longitude], {
         icon: leaflet.divIcon({
           className: 'vehicle-map__marker',
-          html: '<span style="display:block;width:14px;height:14px;border-radius:999px;background:#1f8cff;border:3px solid #fff;box-shadow:0 10px 20px rgba(31,140,255,.35);"></span>',
+          html: '<span class="vehicle-map__marker-dot"></span>',
           iconSize: [20, 20],
           iconAnchor: [10, 10],
         }),

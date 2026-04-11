@@ -1,0 +1,146 @@
+<section class="sh" [class.sh--minimal]="minimal">
+  <div class="sh__shell">
+    <header class="sh__nav">
+      <a
+        class="sh__brand"
+        routerLink="/"
+        aria-label="Ir para a Home da Triluga"
+      >
+        <img src="assets/branding/triluga-mark.svg" alt="Triluga" class="sh__brand-img" />
+      </a>
+
+      <form class="sh__search" (ngSubmit)="submit()">
+        <span class="material-icons sh__search-icon" aria-hidden="true">search</span>
+        <input
+          name="query"
+          [(ngModel)]="query"
+          placeholder="Buscar marca, modelo ou cidade"
+          class="sh__search-input"
+        />
+        <button *ngIf="!minimal" type="submit" class="sh__search-btn">
+          Buscar
+        </button>
+      </form>
+
+      <button
+        type="button"
+        class="sh__notif-btn"
+        aria-label="Abrir notificações"
+        (click)="toggleNotifications()"
+      >
+        <span class="material-icons" aria-hidden="true">notifications_none</span>
+        <span class="sh__notif-badge" *ngIf="notificationsService.unreadCount()">
+          {{ unreadBadge }}
+        </span>
+      </button>
+    </header>
+
+    <div class="sh__copy" *ngIf="!minimal && (title || subtitle)">
+      <div class="sh__copy-top">
+        <span class="eyebrow">Classificados</span>
+
+        <button
+          *ngIf="showFiltersAction"
+          type="button"
+          class="sh__filters-btn"
+          (click)="filters.emit()"
+        >
+          <span class="material-icons" aria-hidden="true">tune</span>
+          Filtros
+        </button>
+      </div>
+
+      <h1>{{ title }}</h1>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+
+      <div class="sh__meta" *ngIf="showMeta">
+        <span *ngIf="query">Termo: {{ query }}</span>
+        <span *ngIf="activeFiltersLabel">{{ activeFiltersLabel }}</span>
+        <span *ngIf="!query && !activeFiltersLabel">Explore por cidade, estilo ou período</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Drawer -->
+  <div class="notif-overlay" *ngIf="notificationsOpen">
+    <button
+      type="button"
+      class="notif-overlay__backdrop"
+      (click)="closeNotifications()"
+      aria-label="Fechar notificações"
+    ></button>
+
+    <aside class="notif-drawer">
+      <header class="notif-drawer__head">
+        <div>
+          <span class="eyebrow">Notificações</span>
+          <h2>Avisos</h2>
+        </div>
+        <button
+          type="button"
+          class="notif-drawer__close material-icons"
+          (click)="closeNotifications()"
+          aria-label="Fechar notificações"
+        >
+          close
+        </button>
+      </header>
+
+      <p class="notif-drawer__summary" *ngIf="authService.hasSession()">
+        {{ notificationsService.unreadCount() }} não lidas
+      </p>
+
+      <section class="notif-drawer__empty" *ngIf="!authService.hasSession()">
+        <span class="material-icons notif-drawer__empty-icon" aria-hidden="true">notifications_none</span>
+        <strong>Entre para ver notificações</strong>
+        <p>Atualizações de reserva, chat e status dos seus anúncios aparecem aqui.</p>
+        <button type="button" class="btn btn-primary" (click)="goToLogin()">Entrar</button>
+      </section>
+
+      <p class="notif-drawer__state" *ngIf="authService.hasSession() && notificationsService.loading()">
+        Carregando...
+      </p>
+
+      <p
+        class="notif-drawer__state"
+        *ngIf="
+          authService.hasSession() &&
+          !notificationsService.loading() &&
+          !notificationsService.notifications().length
+        "
+      >
+        Nenhuma notificação por enquanto.
+      </p>
+
+      <div
+        class="notif-drawer__list"
+        *ngIf="
+          authService.hasSession() &&
+          !notificationsService.loading() &&
+          notificationsService.notifications().length
+        "
+      >
+        <article
+          class="notif-item"
+          *ngFor="let notification of notificationsService.notifications()"
+          [class.notif-item--unread]="!notification.isRead"
+        >
+          <div>
+            <strong>{{ notification.title }}</strong>
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.createdAt | date: 'dd/MM HH:mm' }}</small>
+          </div>
+
+          <button
+            *ngIf="!notification.isRead"
+            type="button"
+            class="btn btn-ghost btn-sm"
+            (click)="markNotificationRead(notification.id)"
+          >
+            Marcar lida
+          </button>
+        </article>
+      </div>
+    </aside>
+  </div>
+</section>

@@ -1,0 +1,39 @@
+<section class="compare-tray" *ngIf="compareService.count()">
+  <div class="compare-tray__copy">
+    <span class="compare-tray__eyebrow">Comparador</span>
+    <strong>
+      {{ compareService.count() }} veículo{{
+        compareService.count() > 1 ? 's' : ''
+      }} na mesa
+    </strong>
+    <div class="compare-tray__chips">
+      <button
+        type="button"
+        class="compare-tray__chip"
+        *ngFor="let vehicle of compareService.items(); trackBy: trackById"
+        (click)="compareService.remove(vehicle.id)"
+      >
+        <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
+        <span class="material-icons" aria-hidden="true">close</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="compare-tray__actions">
+    <button
+      type="button"
+      class="btn btn-ghost"
+      (click)="compareService.clear()"
+    >
+      Limpar
+    </button>
+
+    <a class="btn btn-primary" routerLink="/compare">
+      {{
+        compareService.canCompare()
+          ? 'Comparar agora'
+          : 'Escolha mais 1 veículo'
+      }}
+    </a>
+  </div>
+</section>

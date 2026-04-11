@@ -2,46 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { AuthService } from '../../core/services/auth.service';
-import { ChatInboxService } from '../../core/services/chat-inbox.service';
-import { AppLoggerService } from '../../core/services/app-logger.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { ChatInboxService } from '../../../core/services/chat-inbox.service';
+import { AppLoggerService } from '../../../core/services/app-logger.service';
 
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <nav
-      class="bottom-nav"
-      [style.--nav-count]="items.length"
-      [style.--active-index]="activeIndex()"
-    >
-      <div class="bottom-nav__track">
-        <span class="bottom-nav__indicator" aria-hidden="true"></span>
-
-        <button
-          type="button"
-          *ngFor="let item of items"
-          [class.is-active]="isItemActive(item)"
-          [attr.aria-label]="item.label"
-          [attr.title]="item.label"
-          (click)="handleItemClick(item)"
-        >
-          <span class="nav-icon-wrap">
-            <span class="nav-icon material-icons" aria-hidden="true">{{ item.icon }}</span>
-            <span
-              class="nav-badge"
-              *ngIf="item.key === 'chat' && unreadChatCount"
-            >
-              {{ unreadChatBadge }}
-            </span>
-          </span>
-
-          <span class="nav-label">{{ item.label }}</span>
-        </button>
-      </div>
-    </nav>
-  `,
+  templateUrl: './bottom-nav.component.html',
   styleUrls: ['./bottom-nav.component.scss'],
 })
 export class BottomNavComponent {
@@ -153,6 +122,10 @@ export class BottomNavComponent {
   protected activeIndex() {
     const activeIndex = this.items.findIndex((item) => this.isItemActive(item));
     return activeIndex === -1 ? 0 : activeIndex;
+  }
+
+  protected get activeClass() {
+    return `bottom-nav--active-${this.activeIndex()}`;
   }
 
   protected get unreadChatCount() {
