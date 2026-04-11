@@ -307,6 +307,8 @@ export interface OwnerVehicleItem {
   isPublished: boolean;
   ratingAverage: number;
   reviewsCount: number;
+  viewsCount: number;
+  viewsLast30Days: number;
   coverImage: string | null;
   images: VehicleImage[];
 }
@@ -337,6 +339,20 @@ export interface VehicleSearchResponse {
     page: number;
     limit: number;
     hasNextPage: boolean;
+  };
+}
+
+export interface MostViewedVehicleItem {
+  vehicle: VehicleCardItem;
+  viewCount: number;
+}
+
+export interface MostViewedVehiclesResponse {
+  items: MostViewedVehicleItem[];
+  meta: {
+    period: 'all' | '30d' | '7d' | 'today';
+    limit: number;
+    generatedAt: string;
   };
 }
 

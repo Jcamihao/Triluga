@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { MostViewedVehiclesResponse } from '../models/domain.models';
+import { normalizeApiPayloadUrls } from '../utils/network-url.util';
 import { AppLoggerService } from './app-logger.service';
 import { PrivacyPreferencesService } from './privacy-preferences.service';
 
@@ -14,6 +17,7 @@ export class AnalyticsTrackingService {
 
   private readonly visitorIdKey = 'triluga.analytics.visitorId';
   private readonly sessionTrackedKey = 'triluga.analytics.sessionTracked';
+  private readonly vehicleViewTrackedKeyPrefix = 'triluga.analytics.vehicleView.';
 
   trackCurrentSession(path: string) {
     if (!this.privacyPreferencesService.analyticsConsentGranted()) {
@@ -45,6 +49,64 @@ export class AnalyticsTrackingService {
           });
         },
       });
+  }
+
+  trackVehicleView(vehicleId: string, path: string) {
+    if (!this.privacyPreferencesService.analyticsConsentGranted()) {
+      this.logger.debug('analytics', 'vehicle_view_skipped_without_consent', {
+        vehicleId,
+        path,
+      });
+      return;
+    }
+
+    const sessionKey = `${this.vehicleViewTrackedKeyPrefix}${vehicleId}`;
+
+    if (this.sessionStorageRef.getItem(sessionKey)) {
+      return;
+    }
+
+    const visitorId = this.getOrCreateVisitorId();
+
+    this.http
+      .post(`${environment.apiBaseUrl}/analytics/vehicle-views`, {
+        vehicleId,
+        visitorId,
+        path,
+        referrer: typeof document !== 'undefined' ? document.referrer : '',
+      })
+      .subscribe({
+        next: () => {
+          this.sessionStorageRef.setItem(sessionKey, '1');
+          this.logger.debug('analytics', 'vehicle_view_tracked', {
+            vehicleId,
+            path,
+          });
+        },
+        error: (error) => {
+          this.logger.warn('analytics', 'vehicle_view_track_failed', {
+            vehicleId,
+            path,
+            message: error?.message ?? 'Erro desconhecido',
+          });
+        },
+      });
+  }
+
+  getMostViewedVehicles(limit = 8, period: 'all' | '30d' | '7d' | 'today' = '30d') {
+    return this.http
+      .get<MostViewedVehiclesResponse>(
+        `${environment.apiBaseUrl}/analytics/vehicles/most-viewed`,
+        {
+          params: {
+            limit,
+            period,
+          },
+        },
+      )
+      .pipe(
+        map((response) => normalizeApiPayloadUrls(response)),
+      );
   }
 
   private getOrCreateVisitorId() {
