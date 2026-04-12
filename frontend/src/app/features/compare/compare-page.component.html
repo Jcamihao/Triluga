@@ -66,8 +66,7 @@
       </div>
 
       <div class="compare-column__price price-text">
-        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} /
-        semana
+        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
       </div>
 
       <dl class="compare-specs">
@@ -86,14 +85,6 @@
         <div>
           <dt>Assentos</dt>
           <dd>{{ vehicle.seats }} lugares</dd>
-        </div>
-        <div>
-          <dt>Reserva</dt>
-          <dd>{{ approvalModeLabel(vehicle.bookingApprovalMode) }}</dd>
-        </div>
-        <div>
-          <dt>Cancelamento</dt>
-          <dd>{{ cancellationLabel(vehicle.cancellationPolicy) }}</dd>
         </div>
         <div>
           <dt>Avaliação</dt>

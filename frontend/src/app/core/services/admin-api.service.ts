@@ -7,7 +7,7 @@ export class AdminApiService {
   private readonly http = inject(HttpClient);
 
   getDashboard() {
-    return this.http.get<{ totals: { users: number; vehicles: number; bookings: number; privacyRequests: number } }>(
+    return this.http.get<{ totals: { users: number; vehicles: number; privacyRequests: number } }>(
       `${environment.apiBaseUrl}/admin/dashboard`,
     );
   }
@@ -18,10 +18,6 @@ export class AdminApiService {
 
   getVehicles() {
     return this.http.get(`${environment.apiBaseUrl}/admin/vehicles`);
-  }
-
-  getBookings() {
-    return this.http.get(`${environment.apiBaseUrl}/admin/bookings`);
   }
 
   blockUser(userId: string) {

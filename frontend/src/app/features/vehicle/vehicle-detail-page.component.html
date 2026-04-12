@@ -44,11 +44,6 @@
         <strong>{{ pickupTitle }}</strong>
         <p>{{ pickupSubtitle }}</p>
       </div>
-      <span
-        class="material-icons detail-stage__pickup-close"
-        aria-hidden="true"
-        >close</span
-      >
     </section>
 
     <section class="detail-stage__meta">
@@ -70,8 +65,7 @@
       </div>
 
       <strong class="detail-stage__price price-text">
-        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }} /
-        semana
+        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
       </strong>
     </section>
 
@@ -327,7 +321,7 @@
         <span class="detail-info-card__eyebrow">Como funciona</span>
         <span class="material-icons" aria-hidden="true">chat</span>
       </div>
-      <p>Veja o anúncio, chame no chat e alinhe retirada, documentos e disponibilidade direto com quem publicou.</p>
+      <p>Veja o anúncio, chame no chat e alinhe retirada, documentos e condições direto com quem publicou.</p>
       <span class="detail-info-card__meta">Fluxo simples, direto e com menos atrito.</span>
     </section>
   </section>
@@ -335,15 +329,14 @@
   <app-fixed-action-button
     [helper]="footerHelper"
     [label]="
-      (vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0') +
-      ' / semana'
+      (vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0') || ''
     "
     [actionLabel]="ctaLabel"
     [actionIcon]="ctaIcon"
     [secondaryActionLabel]="footerChatLabel"
     [secondaryActionIcon]="'chat_bubble'"
     [secondaryBadgeCount]="footerChatUnreadCount"
-    (action)="goToBooking()"
+    (action)="handlePrimaryAction()"
     (secondaryAction)="openChat()"
   />
 </main>

@@ -114,7 +114,7 @@ export class HomePageComponent {
   protected get carListSummary() {
     return this.carList.length
       ? `${this.carList.length} carros disponíveis agora`
-      : 'Carros disponíveis para reserva';
+      : 'Carros disponíveis agora';
   }
 
   private loadCarouselAds() {

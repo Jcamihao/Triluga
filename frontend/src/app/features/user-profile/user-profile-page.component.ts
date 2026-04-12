@@ -78,7 +78,7 @@ export class UserProfilePageComponent {
 
     return `Baseado em ${profile.reviewsCount} avaliação${
       profile.reviewsCount > 1 ? 'ões' : ''
-    } de locação concluída.`;
+    } pública.`;
   }
 
   protected roleLabel(role: PublicUserProfile['role']) {
@@ -92,14 +92,6 @@ export class UserProfilePageComponent {
 
   protected locationLabel(profile: PublicUserProfile) {
     return [profile.city, profile.state].filter(Boolean).join(', ');
-  }
-
-  protected averageResponseLabel(profile: PublicUserProfile) {
-    if (profile.trustMetrics.averageResponseHours === null) {
-      return 'Sem base';
-    }
-
-    return `${profile.trustMetrics.averageResponseHours.toFixed(1)}h`;
   }
 
   protected roundedScore(value: number) {

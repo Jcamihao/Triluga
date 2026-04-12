@@ -78,7 +78,7 @@
 
 .detail-stage__pickup-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   position: relative;
@@ -109,10 +109,6 @@
   margin-top: 4px;
   color: var(--detail-stage-card-ink-soft);
   font-size: 12px;
-}
-
-.detail-stage__pickup-close {
-  color: var(--detail-stage-card-ink-soft) !important;
 }
 
 .detail-stage__meta {

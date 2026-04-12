@@ -56,20 +56,6 @@ export class ComparePageComponent {
     return labels[fuelType] || fuelType;
   }
 
-  protected approvalModeLabel(mode: string) {
-    return mode === 'INSTANT' ? 'Instantânea' : 'Manual';
-  }
-
-  protected cancellationLabel(policy: string) {
-    const labels: Record<string, string> = {
-      FLEXIBLE: 'Flexível',
-      MODERATE: 'Moderada',
-      STRICT: 'Rígida',
-    };
-
-    return labels[policy] || policy;
-  }
-
   protected ratingLabel(ratingAverage?: number, reviewsCount?: number) {
     if (!reviewsCount) {
       return 'Novo anunciante';

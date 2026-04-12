@@ -53,14 +53,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'bookings/new/:vehicleId',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/booking/booking-page.component').then(
-        (m) => m.BookingPageComponent,
-      ),
-  },
-  {
     path: 'profile',
     canActivate: [authGuard],
     loadComponent: () =>

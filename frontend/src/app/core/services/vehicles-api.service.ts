@@ -8,7 +8,6 @@ import {
   UpdateVehiclePayload,
   VehicleImage,
   VehicleDetail,
-  VehiclePricingPreview,
   VehicleSearchResponse,
 } from '../models/domain.models';
 import { normalizeApiPayloadUrls } from '../utils/network-url.util';
@@ -37,18 +36,6 @@ export class VehiclesApiService {
     return this.http
       .get<VehicleDetail>(`${environment.apiBaseUrl}/vehicles/${vehicleId}`)
       .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
-  }
-
-  getPricingPreview(vehicleId: string, startDate: string, endDate: string) {
-    return this.http.get<VehiclePricingPreview>(
-      `${environment.apiBaseUrl}/vehicles/${vehicleId}/pricing-preview`,
-      {
-        params: {
-          startDate,
-          endDate,
-        },
-      },
-    );
   }
 
   getMine() {

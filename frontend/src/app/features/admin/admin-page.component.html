@@ -7,7 +7,6 @@
   <section class="admin-stats" *ngIf="dashboard">
     <article><strong>{{ dashboard.totals.users }}</strong><span>usuários</span></article>
     <article><strong>{{ dashboard.totals.vehicles }}</strong><span>veículos</span></article>
-    <article><strong>{{ dashboard.totals.bookings }}</strong><span>reservas</span></article>
     <article><strong>{{ dashboard.totals.privacyRequests }}</strong><span>pedidos LGPD</span></article>
   </section>
 
@@ -68,16 +67,6 @@
       <button type="button" class="btn btn-secondary" (click)="deactivateVehicle(vehicle.id)">
         Desativar
       </button>
-    </article>
-  </section>
-
-  <section class="admin-card">
-    <h2>Reservas</h2>
-    <article class="row" *ngFor="let booking of bookings">
-      <div>
-        <strong>{{ booking.vehicle.title }}</strong>
-        <p>{{ booking.status }} • {{ booking.renter.profile?.fullName || booking.renter.email }}</p>
-      </div>
     </article>
   </section>
 

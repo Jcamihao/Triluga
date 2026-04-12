@@ -81,42 +81,28 @@
     <section class="user-profile-section surface-card">
       <div class="user-profile-section__header">
         <div>
-          <span class="eyebrow">Confiança operacional</span>
-          <h2>Como esse anunciante conduz as reservas</h2>
+          <span class="eyebrow">Confiança</span>
+          <h2>Reputação pública do anunciante</h2>
         </div>
       </div>
 
       <div class="user-profile-trust-grid">
         <article class="user-profile-trust-card">
-          <strong>{{
-            profile.trustMetrics.completedBookingsCount
-          }}</strong>
-          <span>locações concluídas</span>
-          <small>Histórico público finalizado na plataforma.</small>
+          <strong>{{ profile.trustMetrics.activeListingsCount }}</strong>
+          <span>anúncios ativos</span>
+          <small>Veículos publicados por esse anunciante.</small>
         </article>
 
         <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.responseRate }}%</strong>
-          <span>taxa de resposta</span>
-          <small>Pedidos que receberam uma resposta do anunciante.</small>
+          <strong>{{ profile.trustMetrics.reviewsCount }}</strong>
+          <span>avaliações recebidas</span>
+          <small>Histórico público de reputação no perfil.</small>
         </article>
 
         <article class="user-profile-trust-card">
-          <strong>{{ averageResponseLabel(profile) }}</strong>
-          <span>tempo médio de resposta</span>
-          <small>Calculado a partir da primeira decisão em cada pedido.</small>
-        </article>
-
-        <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.approvalRate }}%</strong>
-          <span>taxa de aprovação</span>
-          <small>Pedidos respondidos que acabaram aprovados.</small>
-        </article>
-
-        <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.cancellationRate }}%</strong>
-          <span>cancelamentos pelo anunciante</span>
-          <small>Quanto menor, mais estável tende a ser a operação.</small>
+          <strong>{{ scoreLabel(profile) }}</strong>
+          <span>nota média</span>
+          <small>Baseada nas avaliações públicas disponíveis.</small>
         </article>
       </div>
     </section>
@@ -211,8 +197,7 @@
           <span class="material-icons" aria-hidden="true">reviews</span>
           <strong>Ainda sem avaliações públicas</strong>
           <p>
-            Quando esse usuário concluir locações avaliadas, elas vão
-            aparecer aqui.
+            Quando esse usuário receber avaliações públicas, elas vão aparecer aqui.
           </p>
         </div>
       </ng-template>

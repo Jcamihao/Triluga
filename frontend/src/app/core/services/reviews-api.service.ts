@@ -10,7 +10,7 @@ export class ReviewsApiService {
   private readonly http = inject(HttpClient);
 
   createUserReview(payload: {
-    bookingId: string;
+    targetUserId: string;
     rating: number;
     comment?: string;
   }) {

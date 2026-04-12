@@ -32,12 +32,12 @@ export class PrivacyPageComponent {
             {
               title: 'Dados coletados',
               summary:
-                'Cadastro, autenticação, perfil, anúncios, reservas, suporte, notificações e preferências de privacidade.',
+                'Cadastro, autenticação, perfil, anúncios, suporte, notificações e preferências de privacidade.',
             },
             {
               title: 'Finalidades',
               summary:
-                'Operar o marketplace, cumprir obrigações regulatórias, prevenir fraude, atender suporte e executar reservas.',
+                'Operar o marketplace, cumprir obrigações regulatórias, prevenir fraude e atender suporte.',
             },
           ],
         };

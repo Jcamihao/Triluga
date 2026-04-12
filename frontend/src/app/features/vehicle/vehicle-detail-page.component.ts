@@ -112,14 +112,14 @@ export class VehicleDetailPageComponent {
     const user = this.authService.currentUser();
 
     if (!user) {
-      return 'Entrar para continuar';
+      return 'Entrar para conversar';
     }
 
     if (this.isOwnVehicle) {
       return 'Editar anúncio';
     }
 
-    return 'Quero alugar';
+    return 'Conversar';
   }
 
   protected get ctaIcon() {
@@ -133,7 +133,7 @@ export class VehicleDetailPageComponent {
       return 'edit_square';
     }
 
-    return 'directions_car';
+    return 'chat_bubble';
   }
 
   protected get footerHelper() {
@@ -420,15 +420,8 @@ export class VehicleDetailPageComponent {
     });
   }
 
-  protected goToBooking() {
+  protected handlePrimaryAction() {
     if (!this.vehicle) {
-      return;
-    }
-
-    const user = this.authService.currentUser();
-
-    if (!user) {
-      this.router.navigate(['/auth/login']);
       return;
     }
 
@@ -437,7 +430,7 @@ export class VehicleDetailPageComponent {
       return;
     }
 
-    this.router.navigate(['/bookings/new', this.vehicle.id]);
+    this.openChat();
   }
 
   protected get showChatAction() {
@@ -461,7 +454,7 @@ export class VehicleDetailPageComponent {
   }
 
   protected get footerChatLabel() {
-    return this.showChatAction ? 'Conversar' : undefined;
+    return undefined;
   }
 
   protected get footerChatUnreadCount() {

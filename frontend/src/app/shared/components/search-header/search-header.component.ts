@@ -19,10 +19,8 @@ export class SearchHeaderComponent {
 
   @Input() title = 'Escolha seu próximo carro';
   @Input() subtitle =
-    'Pesquise por cidade, período e faixa de preço.';
+    'Pesquise por cidade, modelo e faixa de preço.';
   @Input() query = '';
-  @Input() startDate = '';
-  @Input() endDate = '';
   @Input() showFiltersAction = true;
   @Input() showMeta = true;
   @Input() minimal = false;
@@ -38,16 +36,6 @@ export class SearchHeaderComponent {
     if (this.authService.hasSession()) {
       this.notificationsService.ensureLoaded().subscribe();
     }
-  }
-
-  get activeFiltersLabel() {
-    const period = [this.startDate, this.endDate].filter(Boolean);
-
-    if (!period.length) {
-      return '';
-    }
-
-    return `Período: ${period.join(' até ')}`;
   }
 
   submit() {

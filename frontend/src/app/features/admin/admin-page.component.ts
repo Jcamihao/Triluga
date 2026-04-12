@@ -13,10 +13,9 @@ import { AdminApiService } from '../../core/services/admin-api.service';
 export class AdminPageComponent {
   private readonly adminApiService = inject(AdminApiService);
 
-  protected dashboard?: { totals: { users: number; vehicles: number; bookings: number; privacyRequests: number } };
+  protected dashboard?: { totals: { users: number; vehicles: number; privacyRequests: number } };
   protected users: any[] = [];
   protected vehicles: any[] = [];
-  protected bookings: any[] = [];
   protected privacyRequests: any[] = [];
 
   constructor() {
@@ -104,13 +103,11 @@ export class AdminPageComponent {
       dashboard: this.adminApiService.getDashboard(),
       users: this.adminApiService.getUsers(),
       vehicles: this.adminApiService.getVehicles(),
-      bookings: this.adminApiService.getBookings(),
       privacyRequests: this.adminApiService.getPrivacyRequests(),
-    }).subscribe(({ dashboard, users, vehicles, bookings, privacyRequests }) => {
+    }).subscribe(({ dashboard, users, vehicles, privacyRequests }) => {
       this.dashboard = dashboard;
       this.users = users as any[];
       this.vehicles = vehicles as any[];
-      this.bookings = bookings as any[];
       this.privacyRequests = privacyRequests as any[];
     });
   }

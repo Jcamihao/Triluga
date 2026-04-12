@@ -21,8 +21,6 @@ import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehic
 type SearchQuery = {
   q: string;
   city: string;
-  startDate: string;
-  endDate: string;
   vehicleType: VehicleType | '';
   category: string;
   motorcycleStyle: string;
@@ -71,8 +69,6 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   protected query: SearchQuery = {
     q: '',
     city: '',
-    startDate: '',
-    endDate: '',
     vehicleType: '',
     category: '',
     motorcycleStyle: '',
@@ -99,8 +95,6 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
         this.query = {
           q: params.get('q') || '',
           city: params.get('city') || '',
-          startDate: params.get('startDate') || '',
-          endDate: params.get('endDate') || '',
           vehicleType: (params.get('vehicleType') as VehicleType | '') || '',
           category: params.get('category') || '',
           motorcycleStyle: params.get('motorcycleStyle') || '',
@@ -349,10 +343,6 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       pills.push(`Cidade: ${this.query.city}`);
     }
 
-    if (this.query.startDate && this.query.endDate) {
-      pills.push(`Período: ${this.query.startDate} até ${this.query.endDate}`);
-    }
-
     if (this.query.vehicleType === 'CAR') {
       pills.push('Categoria: carros');
     }
@@ -389,7 +379,7 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       return 'Use o mapa e os filtros para encontrar anúncios perto de você e seguir direto para o contato com o anunciante.';
     }
 
-    return 'Filtre por cidade, período, tipo de veículo e faixa de preço para encontrar o anúncio certo mais rápido.';
+    return 'Filtre por cidade, tipo de veículo e faixa de preço para encontrar o anúncio certo mais rápido.';
   }
 
   protected get searchTitle() {
@@ -402,12 +392,12 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
 
   protected get searchSubtitle() {
     if (this.query.vehicleType === 'CAR') {
-      return 'Filtre por modelo, período e preço para encontrar carros e seguir para o chat com quem anunciou.';
+      return 'Filtre por modelo, cidade e preço para encontrar carros e seguir para o chat com quem anunciou.';
     }
 
     return this.query.vehicleType === 'MOTORCYCLE'
-      ? 'Filtre por modelo, período e preço para encontrar motos e ir direto ao anúncio.'
-      : 'Filtre por modelo, período, cidade e preço para encontrar o anúncio certo.';
+      ? 'Filtre por modelo, cidade e preço para encontrar motos e ir direto ao anúncio.'
+      : 'Filtre por modelo, cidade e preço para encontrar o anúncio certo.';
   }
 
   protected get resultsLabel() {

@@ -55,8 +55,7 @@
 
       <div class="sh__meta" *ngIf="showMeta">
         <span *ngIf="query">Termo: {{ query }}</span>
-        <span *ngIf="activeFiltersLabel">{{ activeFiltersLabel }}</span>
-        <span *ngIf="!query && !activeFiltersLabel">Explore por cidade, estilo ou período</span>
+        <span *ngIf="!query">Explore por cidade, estilo ou preço</span>
       </div>
     </div>
   </div>
@@ -93,7 +92,7 @@
       <section class="notif-drawer__empty" *ngIf="!authService.hasSession()">
         <span class="material-icons notif-drawer__empty-icon" aria-hidden="true">notifications_none</span>
         <strong>Entre para ver notificações</strong>
-        <p>Atualizações de reserva, chat e status dos seus anúncios aparecem aqui.</p>
+        <p>Atualizações de chat, anúncios e conta aparecem aqui.</p>
         <button type="button" class="btn btn-primary" (click)="goToLogin()">Entrar</button>
       </section>
 

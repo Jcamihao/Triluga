@@ -11,7 +11,6 @@ import {
   MotorcycleStyle,
   OwnerVehicleItem,
   TransmissionType,
-  VehicleAddon,
   VehicleImage,
   VehicleCategory,
   VehicleType,
@@ -206,7 +205,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         description:
           descriptionLength >= 80
             ? 'A descrição já responde as dúvidas principais.'
-            : 'Explique diferenciais, retirada e condições básicas do aluguel.',
+            : 'Explique diferenciais, retirada e condições básicas da negociação.',
         done: descriptionLength >= 80,
       },
       {
@@ -236,8 +235,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         title: 'Preço definido',
         description:
           Number(this.vehicleDraft.dailyRate) > 0
-            ? 'O valor semanal já está pronto para publicação.'
-            : 'Informe o valor semanal para publicar.',
+            ? 'O preço anunciado já está pronto para publicação.'
+            : 'Informe o preço anunciado para publicar.',
         done: Number(this.vehicleDraft.dailyRate) > 0,
       },
     ];
@@ -278,7 +277,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     const wasEditing = this.isEditingVehicle;
     const successMessage = wasEditing
       ? 'Anúncio atualizado com sucesso.'
-      : 'Anúncio criado com sucesso. Seu carro já pode receber reservas.';
+      : 'Anúncio criado com sucesso. Seu carro já pode receber contatos.';
 
     this.submittingVehicle = true;
     this.vehicleError = '';
@@ -344,22 +343,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       state: vehicle.state,
       vehicleType: vehicle.vehicleType || 'CAR',
       category: vehicle.category,
-      bookingApprovalMode: vehicle.bookingApprovalMode,
-      cancellationPolicy: vehicle.cancellationPolicy,
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
       dailyRate: vehicle.dailyRate,
-      addons: this.cloneAddons(vehicle.addons),
-      firstBookingDiscountPercent: vehicle.firstBookingDiscountPercent,
-      weeklyDiscountPercent: vehicle.weeklyDiscountPercent,
-      couponCode: vehicle.couponCode || '',
-      couponDiscountPercent: vehicle.couponDiscountPercent,
-      weekendSurchargePercent: vehicle.weekendSurchargePercent,
-      holidaySurchargePercent: vehicle.holidaySurchargePercent,
-      highDemandSurchargePercent: vehicle.highDemandSurchargePercent,
-      advanceBookingDiscountPercent: vehicle.advanceBookingDiscountPercent,
-      advanceBookingDaysThreshold: vehicle.advanceBookingDaysThreshold,
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
       engineCc: vehicle.engineCc || undefined,
       hasAbs: !!vehicle.hasAbs,
@@ -650,22 +637,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       state: profile?.state || '',
       vehicleType: 'CAR',
       category: 'HATCH',
-      bookingApprovalMode: 'MANUAL',
-      cancellationPolicy: 'FLEXIBLE',
       transmission: 'AUTOMATIC',
       fuelType: 'FLEX',
       seats: 5,
       dailyRate: 150,
-      addons: [],
-      firstBookingDiscountPercent: 0,
-      weeklyDiscountPercent: 0,
-      couponCode: '',
-      couponDiscountPercent: 0,
-      weekendSurchargePercent: 0,
-      holidaySurchargePercent: 0,
-      highDemandSurchargePercent: 0,
-      advanceBookingDiscountPercent: 0,
-      advanceBookingDaysThreshold: 0,
       motorcycleStyle: undefined,
       engineCc: undefined,
       hasAbs: false,
@@ -690,45 +665,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
       dailyRate: Number(this.vehicleDraft.dailyRate),
-      firstBookingDiscountPercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.firstBookingDiscountPercent,
-      ),
-      weeklyDiscountPercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.weeklyDiscountPercent,
-      ),
-      couponCode: this.normalizeCouponCode(this.vehicleDraft.couponCode),
-      couponDiscountPercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.couponDiscountPercent,
-      ),
-      weekendSurchargePercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.weekendSurchargePercent,
-      ),
-      holidaySurchargePercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.holidaySurchargePercent,
-      ),
-      highDemandSurchargePercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.highDemandSurchargePercent,
-      ),
-      advanceBookingDiscountPercent: this.normalizeDiscountPercent(
-        this.vehicleDraft.advanceBookingDiscountPercent,
-      ),
-      advanceBookingDaysThreshold: Math.max(
-        0,
-        Math.min(
-          365,
-          Math.round(Number(this.vehicleDraft.advanceBookingDaysThreshold ?? 0)),
-        ),
-      ),
       engineCc: this.parseOptionalNumber(this.vehicleDraft.engineCc),
-      addons: this.vehicleDraft.addons
-        .map((addon) => ({
-          ...addon,
-          name: addon.name.trim(),
-          description: addon.description?.trim() || '',
-          price: Number(addon.price),
-          enabled: addon.enabled !== false,
-        }))
-        .filter((addon) => addon.name && !Number.isNaN(addon.price)),
     };
 
     if (
@@ -748,21 +685,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       return null;
     }
 
-    if (!payload.couponCode) {
-      payload.couponDiscountPercent = 0;
-    }
-
     return payload;
-  }
-
-  private cloneAddons(addons: VehicleAddon[] | undefined) {
-    return (addons ?? []).map((addon) => ({
-      id: addon.id,
-      name: addon.name,
-      description: addon.description || '',
-      price: addon.price,
-      enabled: addon.enabled !== false,
-    }));
   }
 
   private parseOptionalNumber(value: number | null | undefined) {
@@ -814,7 +737,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     }
 
     if (!Number(this.vehicleDraft.dailyRate)) {
-      missingFields.push('valor semanal');
+      missingFields.push('preço anunciado');
     }
 
     if (!this.vehicleDraft.description.trim()) {
@@ -822,20 +745,6 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     }
 
     return missingFields;
-  }
-
-  private normalizeDiscountPercent(value: number | null | undefined) {
-    const parsed = Number(value ?? 0);
-
-    if (Number.isNaN(parsed)) {
-      return 0;
-    }
-
-    return Math.max(0, Math.min(90, Math.round(parsed)));
-  }
-
-  private normalizeCouponCode(value: string | null | undefined) {
-    return (value || '').trim().toUpperCase();
   }
 
   private get publicationChecklistSummary() {

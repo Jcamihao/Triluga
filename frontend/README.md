@@ -1,11 +1,11 @@
-# Triluga Frontend 0.2.0
+# Triluga Frontend 0.5.0
 
-Aplicação Angular standalone do marketplace Triluga.
+Aplicação Angular standalone do classificado Triluga.
 
 ## Escopo atual
 
 - home, busca e detalhe de veículo
-- fluxo de favoritos, chat, perfil e reservas
+- fluxo de favoritos, chat e perfil
 - comparação entre veículos
 - dashboard de anúncios e área administrativa
 - branding PWA e base iOS com Capacitor

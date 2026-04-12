@@ -1,12 +1,4 @@
 export type UserRole = 'ADMIN' | 'USER';
-export type BookingStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'CANCELLED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED';
-export type PaymentMethod = 'CREDIT_CARD' | 'PIX' | 'BOLETO' | 'BANK_TRANSFER';
 export type VehicleCategory =
   | 'ECONOMY'
   | 'HATCH'
@@ -16,9 +8,6 @@ export type VehicleCategory =
   | 'VAN'
   | 'LUXURY';
 export type VehicleType = 'CAR' | 'MOTORCYCLE';
-export type BookingApprovalMode = 'MANUAL' | 'INSTANT';
-export type CancellationPolicy = 'FLEXIBLE' | 'MODERATE' | 'STRICT';
-export type BookingChecklistType = 'PICKUP' | 'RETURN';
 export type MotorcycleStyle =
   | 'SCOOTER'
   | 'STREET'
@@ -83,44 +72,6 @@ export interface Profile {
   driverLicenseVerification?: VerificationStatus;
 }
 
-export interface VehicleAddon {
-  id: string;
-  name: string;
-  description?: string | null;
-  price: number;
-  enabled?: boolean;
-}
-
-export interface AppliedPromotion {
-  code: 'FIRST_BOOKING' | 'WEEKLY_PACKAGE' | 'COUPON';
-  label: string;
-  amount: number;
-}
-
-export interface VehiclePricingPreview {
-  vehicleId: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  baseDailyRate: number;
-  averageDailyRate: number;
-  baseRentalAmount: number;
-  adjustedRentalAmount: number;
-  dynamicPricingAmount: number;
-  adjustments: Array<{
-    code: 'WEEKEND' | 'HOLIDAY' | 'HIGH_DEMAND' | 'ADVANCE';
-    label: string;
-    amount: number;
-  }>;
-  ruleSummary: {
-    weekendSurchargePercent: number;
-    holidaySurchargePercent: number;
-    highDemandSurchargePercent: number;
-    advanceBookingDiscountPercent: number;
-    advanceBookingDaysThreshold: number;
-  };
-}
-
 export interface SearchAlert {
   id: string;
   title?: string | null;
@@ -155,11 +106,9 @@ export interface PublicUserProfile {
   reviewsCount: number;
   activeListingsCount: number;
   trustMetrics: {
-    completedBookingsCount: number;
-    responseRate: number;
-    averageResponseHours: number | null;
-    approvalRate: number;
-    cancellationRate: number;
+    activeListingsCount: number;
+    reviewsCount: number;
+    averageRating: number;
   };
   reviews: UserReviewItem[];
   verification: {
@@ -232,22 +181,10 @@ export interface VehicleCardItem {
   state: string;
   vehicleType: VehicleType;
   category: string;
-  bookingApprovalMode: BookingApprovalMode;
-  cancellationPolicy: CancellationPolicy;
   seats: number;
   transmission: string;
   fuelType: string;
   dailyRate: number;
-  addons: VehicleAddon[];
-  firstBookingDiscountPercent: number;
-  weeklyDiscountPercent: number;
-  couponCode?: string | null;
-  couponDiscountPercent: number;
-  weekendSurchargePercent: number;
-  holidaySurchargePercent: number;
-  highDemandSurchargePercent: number;
-  advanceBookingDiscountPercent: number;
-  advanceBookingDaysThreshold: number;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean | null;
@@ -279,22 +216,10 @@ export interface OwnerVehicleItem {
   state: string;
   vehicleType: VehicleType;
   category: VehicleCategory;
-  bookingApprovalMode: BookingApprovalMode;
-  cancellationPolicy: CancellationPolicy;
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
   dailyRate: number;
-  addons: VehicleAddon[];
-  firstBookingDiscountPercent: number;
-  weeklyDiscountPercent: number;
-  couponCode?: string | null;
-  couponDiscountPercent: number;
-  weekendSurchargePercent: number;
-  holidaySurchargePercent: number;
-  highDemandSurchargePercent: number;
-  advanceBookingDiscountPercent: number;
-  advanceBookingDaysThreshold: number;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean | null;
@@ -366,22 +291,10 @@ export interface CreateVehiclePayload {
   state: string;
   vehicleType: VehicleType;
   category: VehicleCategory;
-  bookingApprovalMode: BookingApprovalMode;
-  cancellationPolicy: CancellationPolicy;
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
   dailyRate: number;
-  addons: VehicleAddon[];
-  firstBookingDiscountPercent: number;
-  weeklyDiscountPercent: number;
-  couponCode?: string | null;
-  couponDiscountPercent: number;
-  weekendSurchargePercent: number;
-  holidaySurchargePercent: number;
-  highDemandSurchargePercent: number;
-  advanceBookingDiscountPercent: number;
-  advanceBookingDaysThreshold: number;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean;
@@ -394,103 +307,6 @@ export interface CreateVehiclePayload {
 }
 
 export type UpdateVehiclePayload = Partial<CreateVehiclePayload>;
-
-export interface Booking {
-  id: string;
-  status: BookingStatus;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  dailyRate: number;
-  subtotal: number;
-  platformFee: number;
-  totalAmount: number;
-  addonsAmount: number;
-  discountsAmount: number;
-  couponCode?: string | null;
-  selectedAddons: VehicleAddon[];
-  appliedPromotions: AppliedPromotion[];
-  notes?: string | null;
-  approvedAt?: string | null;
-  rejectedAt?: string | null;
-  cancelledAt?: string | null;
-  completedAt?: string | null;
-  createdAt: string;
-  vehicle: {
-    id: string;
-    title: string;
-    city: string;
-    state: string;
-    dailyRate: number;
-    image: string | null;
-  };
-  renter: {
-    id: string;
-    email: string;
-    fullName: string | null;
-  };
-  owner: {
-    id: string;
-    email: string;
-    fullName: string | null;
-  };
-  payment?: {
-    id: string;
-    status: string;
-    method: PaymentMethod;
-    amount: number;
-    ownerAmount: number;
-    platformFee: number;
-    transactionId: string;
-  } | null;
-  statusHistory: Array<{
-    id: string;
-    fromStatus?: BookingStatus | null;
-    toStatus: BookingStatus;
-    reason?: string | null;
-    changedAt: string;
-  }>;
-  review?: unknown;
-  userReview?: UserReviewItem | null;
-  checklists: BookingChecklist[];
-}
-
-export interface BookingChecklist {
-  id: string;
-  type: BookingChecklistType;
-  items: string[];
-  notes?: string | null;
-  completedAt?: string | null;
-  updatedAt: string;
-  updatedById?: string | null;
-  photos: Array<{
-    url: string;
-    key?: string | null;
-  }>;
-}
-
-export interface VehicleAvailabilityResponse {
-  vehicleId: string;
-  weeklyAvailability: Array<{
-    id: string;
-    dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-    isAvailable: boolean;
-  }>;
-  blockedDates: Array<{
-    id: string;
-    startDate: string;
-    endDate: string;
-    reason?: string | null;
-  }>;
-  approvedBookings: Array<{
-    id: string;
-    startDate: string;
-    endDate: string;
-    status: BookingStatus;
-  }>;
-}
 
 export interface NotificationItem {
   id: string;
