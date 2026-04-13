@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { request } from 'node:https';
+import { URL } from 'node:url';
 
 type ViaCepResponse = {
   cep?: string;
@@ -25,24 +27,16 @@ export class LookupsService {
       throw new BadRequestException('Informe um CEP válido com 8 dígitos.');
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, {
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-        },
-      });
+      const response = await this.fetchViaCep(digits);
 
-      if (!response.ok) {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
         throw new BadGatewayException(
           'Não foi possível consultar o serviço de CEP.',
         );
       }
 
-      const payload = (await response.json()) as ViaCepResponse;
+      const payload = response.payload;
 
       if (payload.erro) {
         throw new NotFoundException('CEP não encontrado.');
@@ -67,9 +61,49 @@ export class LookupsService {
       throw new BadGatewayException(
         'Não foi possível consultar o serviço de CEP.',
       );
-    } finally {
-      clearTimeout(timeout);
     }
+  }
+
+  private fetchViaCep(zipCode: string) {
+    const url = new URL(`https://viacep.com.br/ws/${zipCode}/json/`);
+
+    return new Promise<{ statusCode: number; payload: ViaCepResponse }>(
+      (resolve, reject) => {
+        const req = request(
+          url,
+          {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+            },
+          },
+          (response) => {
+            let rawBody = '';
+
+            response.setEncoding('utf8');
+            response.on('data', (chunk) => {
+              rawBody += chunk;
+            });
+            response.on('end', () => {
+              try {
+                resolve({
+                  statusCode: response.statusCode ?? 502,
+                  payload: rawBody ? JSON.parse(rawBody) : {},
+                });
+              } catch (error) {
+                reject(error);
+              }
+            });
+          },
+        );
+
+        req.setTimeout(8000, () => {
+          req.destroy(new Error('CEP lookup timed out.'));
+        });
+        req.on('error', reject);
+        req.end();
+      },
+    );
   }
 
   private formatZipCode(value: string) {
