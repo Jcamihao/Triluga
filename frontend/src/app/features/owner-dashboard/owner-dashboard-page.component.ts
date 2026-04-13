@@ -234,10 +234,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       {
         title: 'Preço definido',
         description:
-          Number(this.vehicleDraft.dailyRate) > 0
-            ? 'O preço anunciado já está pronto para publicação.'
-            : 'Informe o preço anunciado para publicar.',
-        done: Number(this.vehicleDraft.dailyRate) > 0,
+          Number(this.vehicleDraft.weeklyRate) > 0
+            ? 'O preço semanal já está pronto para publicação.'
+            : 'Informe o preço por semana para publicar.',
+        done: Number(this.vehicleDraft.weeklyRate) > 0,
       },
     ];
 
@@ -257,9 +257,48 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     this.currentStep = Math.min(3, this.currentStep + 1);
   }
 
+  protected maxVisitedStep = 1;
+
   protected prevStep() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.currentStep = Math.max(1, this.currentStep - 1);
+  }
+
+  protected goToStep(step: number) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.currentStep = step;
+    if (step > this.maxVisitedStep) {
+      this.maxVisitedStep = step;
+    }
+  }
+
+  protected checkStepCompletion(step: number): boolean {
+    const d = this.vehicleDraft;
+    if (step === 1) {
+      return !!(d.title?.trim() && d.plate?.trim() && d.brand?.trim() && d.model?.trim() && Number(d.year));
+    }
+    if (step === 2) {
+      const isMotoComplete = d.vehicleType === 'MOTORCYCLE' ? !!(d.motorcycleStyle && Number(d.engineCc)) : true;
+      return !!(d.mechanicsCondition?.trim() && Number(d.seats) > 0 && isMotoComplete);
+    }
+    if (step === 3) {
+      const hasPhotos = (this.editingVehicle?.images?.length ?? 0) + this.pendingVehicleFiles.length > 0;
+      return !!(hasPhotos && Number(d.weeklyRate) > 0 && d.city?.trim() && d.state?.trim().length === 2 && d.addressLine?.trim() && d.description?.trim());
+    }
+    return false;
+  }
+
+  protected getStepStatus(step: number): 'active' | 'completed' | 'warning' | 'pending' {
+    if (this.currentStep === step) return 'active';
+    
+    const isComplete = this.checkStepCompletion(step);
+    
+    // Once visualizou or if it's a backward step, mark as warning if not complete
+    if (!isComplete && (step < this.currentStep || step < this.maxVisitedStep)) {
+      return 'warning';
+    }
+    
+    return isComplete ? 'completed' : 'pending';
   }
 
   protected saveVehicle() {
@@ -347,10 +386,16 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
       dailyRate: vehicle.dailyRate,
+      weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
+      kmPolicy: vehicle.kmPolicy || 'FREE',
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
       engineCc: vehicle.engineCc || undefined,
       hasAbs: !!vehicle.hasAbs,
       hasTopCase: !!vehicle.hasTopCase,
+      hasInsurance: !!vehicle.hasInsurance,
+      mechanicsCondition: vehicle.mechanicsCondition || '',
+      hasDetranIssues: !!vehicle.hasDetranIssues,
+      trunkSize: vehicle.trunkSize || undefined,
       description: vehicle.description,
       addressLine: vehicle.addressLine || '',
       isPublished: vehicle.isPublished,
@@ -402,15 +447,15 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     }
 
     const imageFiles = selectedFiles.filter((file) => file.type.startsWith('image/'));
-    const exceededLimit = this.pendingVehicleFiles.length + imageFiles.length > 8;
-    const limitedFiles = [...this.pendingVehicleFiles, ...imageFiles].slice(0, 8);
+    const exceededLimit = this.pendingVehicleFiles.length + imageFiles.length > 7;
+    const limitedFiles = [...this.pendingVehicleFiles, ...imageFiles].slice(0, 7);
 
     this.setPendingVehicleFiles(limitedFiles);
     this.mediaError =
       imageFiles.length !== selectedFiles.length
         ? 'Somente arquivos de imagem podem ser enviados.'
         : exceededLimit
-          ? 'Você pode enviar até 8 novas fotos por vez.'
+          ? 'Você pode enviar até 7 novas fotos por vez.'
           : '';
     this.mediaFeedback = `${this.pendingVehicleFiles.length} foto(s) pronta(s) para envio.`;
     input.value = '';
@@ -641,10 +686,16 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       fuelType: 'FLEX',
       seats: 5,
       dailyRate: 150,
+      weeklyRate: 1050,
+      kmPolicy: 'FREE',
       motorcycleStyle: undefined,
       engineCc: undefined,
       hasAbs: false,
       hasTopCase: false,
+      hasInsurance: false,
+      mechanicsCondition: '',
+      hasDetranIssues: false,
+      trunkSize: undefined,
       description: '',
       addressLine: profile?.addressLine || '',
       isPublished: true,
@@ -665,6 +716,12 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
       dailyRate: Number(this.vehicleDraft.dailyRate),
+      weeklyRate: Number(this.vehicleDraft.weeklyRate),
+      kmPolicy: this.vehicleDraft.kmPolicy || 'FREE',
+      hasInsurance: !!this.vehicleDraft.hasInsurance,
+      mechanicsCondition: this.vehicleDraft.mechanicsCondition?.trim() || '',
+      hasDetranIssues: !!this.vehicleDraft.hasDetranIssues,
+      trunkSize: this.parseOptionalNumber(this.vehicleDraft.trunkSize),
       engineCc: this.parseOptionalNumber(this.vehicleDraft.engineCc),
     };
 
@@ -679,7 +736,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       !payload.description ||
       Number.isNaN(payload.year) ||
       Number.isNaN(payload.seats) ||
-      Number.isNaN(payload.dailyRate) ||
+      Number.isNaN(payload.weeklyRate) ||
+      (payload.trunkSize !== undefined && Number.isNaN(payload.trunkSize)) ||
       (payload.engineCc !== undefined && Number.isNaN(payload.engineCc))
     ) {
       return null;
@@ -736,8 +794,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       missingFields.push('assentos');
     }
 
-    if (!Number(this.vehicleDraft.dailyRate)) {
-      missingFields.push('preço anunciado');
+    if (!Number(this.vehicleDraft.weeklyRate)) {
+      missingFields.push('preço por semana');
     }
 
     if (!this.vehicleDraft.description.trim()) {
