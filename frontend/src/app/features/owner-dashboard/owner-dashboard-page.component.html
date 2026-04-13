@@ -1,5 +1,5 @@
 <main class="page owner-page">
-  <section class="owner-hero">
+  <section class="owner-hero" *ngIf="!showVehicleEditor">
     <span class="eyebrow">{{ createMode ? 'Novo anúncio' : 'Meus anúncios' }}</span>
     <h1>
       {{ createMode ? 'Publique um novo anúncio' : 'Gerencie seus anúncios publicados' }}
@@ -16,6 +16,11 @@
   </section>
 
   <section class="dashboard-card dashboard-card--form" *ngIf="isAdsView && showVehicleEditor">
+    <button type="button" class="owner-back" (click)="cancelEditingVehicle()">
+      <span class="material-icons" aria-hidden="true">arrow_back</span>
+      Voltar
+    </button>
+
     <div class="card-head">
       <div>
         <h2>{{ isEditingVehicle ? 'Editar anúncio' : 'Publicar anúncio' }}</h2>
@@ -27,9 +32,6 @@
           }}
         </p>
       </div>
-      <button type="button" class="btn btn-ghost" (click)="cancelEditingVehicle()">
-        Fechar editor
-      </button>
     </div>
 
     <div class="announcement-steps">
@@ -49,6 +51,68 @@
 
     <div class="editor-layout">
       <div class="editor-main">
+        <section class="editor-panel media-manager">
+          <div class="media-manager__head">
+            <div>
+              <span class="eyebrow eyebrow--soft">Fotos</span>
+              <h3>Fotos do veículo</h3>
+              <p>A primeira imagem vira a capa do anúncio e aparece na busca.</p>
+            </div>
+          </div>
+
+          <label class="media-upload-zone">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/*"
+              multiple
+              (change)="onVehicleFilesSelected($event)"
+            />
+            <span class="material-icons" aria-hidden="true">add_photo_alternate</span>
+            <strong>Adicionar fotos</strong>
+            <small>Até 8 imagens. A primeira vira capa.</small>
+          </label>
+
+          <p class="state-message" *ngIf="!isEditingVehicle">
+            As fotos serão enviadas automaticamente depois que o anúncio for salvo.
+          </p>
+
+          <div class="media-grid" *ngIf="editingVehicle?.images?.length || pendingVehiclePreviews.length">
+            <article
+              class="media-card"
+              *ngFor="let image of editingVehicle?.images; let index = index; trackBy: trackById"
+            >
+              <img [src]="image.url" [alt]="image.alt || vehicleDraft.title || 'Foto do veículo'" />
+              <span class="media-badge" *ngIf="index === 0">Capa</span>
+              <button
+                type="button"
+                class="media-card__action"
+                [disabled]="imageActionId === image.id"
+                (click)="removeVehicleImage(image)"
+              >
+                {{ imageActionId === image.id ? 'Removendo...' : 'Excluir' }}
+              </button>
+            </article>
+
+            <article
+              class="media-card media-card--pending"
+              *ngFor="let preview of pendingVehiclePreviews; let index = index; trackBy: trackByPreview"
+            >
+              <img [src]="preview.url" [alt]="preview.name" />
+              <span class="media-badge media-badge--pending">Nova</span>
+              <button type="button" class="media-card__action" (click)="removePendingVehicleFile(index)">
+                Remover
+              </button>
+            </article>
+          </div>
+
+          <p class="state-message" *ngIf="!editingVehicle?.images?.length && !pendingVehiclePreviews.length">
+            Adicione pelo menos 3 fotos para aumentar a taxa de conversão do anúncio.
+          </p>
+
+          <p class="feedback" *ngIf="mediaFeedback">{{ mediaFeedback }}</p>
+          <p class="feedback feedback--error" *ngIf="mediaError">{{ mediaError }}</p>
+        </section>
+
         <!-- STEP 1: Basic Info -->
         <ng-container *ngIf="currentStep === 1">
           <section class="editor-panel">
@@ -292,61 +356,6 @@
                 {{ vehicleDraft.isPublished ? 'Publicar automaticamente' : 'Salvar como rascunho' }}
               </button>
             </label>
-          </section>
-
-          <section class="editor-panel media-manager">
-            <div class="media-manager__head">
-              <div>
-                <span class="eyebrow eyebrow--soft">Etapa 3</span>
-                <h3>Fotos do veículo</h3>
-                <p>A primeira imagem vira a capa do anúncio e aparece na busca.</p>
-              </div>
-
-              <label class="upload-trigger">
-                <input type="file" accept="image/*" multiple (change)="onVehicleFilesSelected($event)" />
-                <span>Adicionar fotos</span>
-              </label>
-            </div>
-
-            <p class="state-message" *ngIf="!isEditingVehicle">
-              Você pode selecionar as fotos agora. Elas serão enviadas automaticamente depois que o anúncio for salvo.
-            </p>
-
-            <div class="media-grid" *ngIf="editingVehicle?.images?.length || pendingVehiclePreviews.length">
-              <article
-                class="media-card"
-                *ngFor="let image of editingVehicle?.images; let index = index; trackBy: trackById"
-              >
-                <img [src]="image.url" [alt]="image.alt || vehicleDraft.title || 'Foto do veículo'" />
-                <span class="media-badge" *ngIf="index === 0">Capa</span>
-                <button
-                  type="button"
-                  class="media-card__action"
-                  [disabled]="imageActionId === image.id"
-                  (click)="removeVehicleImage(image)"
-                >
-                  {{ imageActionId === image.id ? 'Removendo...' : 'Excluir' }}
-                </button>
-              </article>
-
-              <article
-                class="media-card media-card--pending"
-                *ngFor="let preview of pendingVehiclePreviews; let index = index; trackBy: trackByPreview"
-              >
-                <img [src]="preview.url" [alt]="preview.name" />
-                <span class="media-badge media-badge--pending">Nova</span>
-                <button type="button" class="media-card__action" (click)="removePendingVehicleFile(index)">
-                  Remover
-                </button>
-              </article>
-            </div>
-
-            <p class="state-message" *ngIf="!editingVehicle?.images?.length && !pendingVehiclePreviews.length">
-              Adicione pelo menos 3 fotos para aumentar a taxa de conversão do anúncio.
-            </p>
-
-            <p class="feedback" *ngIf="mediaFeedback">{{ mediaFeedback }}</p>
-            <p class="feedback feedback--error" *ngIf="mediaError">{{ mediaError }}</p>
           </section>
 
           <div class="form-actions">

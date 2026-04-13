@@ -18,17 +18,22 @@
 .eyebrow {
   display: inline-flex;
   align-items: center;
+  justify-self: start;
   width: fit-content;
+  max-width: 100%;
   gap: 6px;
-  padding: 6px 14px;
+  min-height: 28px;
+  padding: 5px 12px;
   border-radius: var(--radius-full);
   background: var(--mint-50);
   border: 1px solid var(--mint-100);
   color: var(--mint-700);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   letter-spacing: 0.08em;
+  line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 h1,
@@ -47,6 +52,31 @@ span {
 .owner-hero__actions {
   display: grid;
   gap: 10px;
+}
+
+.owner-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--graphite-400);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--duration-fast) ease;
+}
+
+.owner-back:hover {
+  color: var(--mint-600);
+}
+
+.owner-back .material-icons {
+  font-size: 18px;
 }
 
 .dashboard-card--form {
@@ -135,11 +165,13 @@ span {
   align-items: flex-start;
   justify-content: space-between;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .publication-guide__head strong {
+  justify-self: start;
   font-size: 28px;
+  line-height: 1;
   color: var(--primary);
 }
 
@@ -292,10 +324,10 @@ textarea {
 
 .media-manager {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 18px;
   border-radius: 22px;
-  background: var(--surface-muted);
+  background: var(--white);
   border: 1px solid var(--border);
 }
 
@@ -313,8 +345,14 @@ textarea {
   color: var(--text-primary);
 }
 
-.upload-trigger {
+.upload-trigger,
+.media-upload-zone {
   position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.upload-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -323,16 +361,63 @@ textarea {
   border-radius: var(--radius-full);
   background: var(--mint-500);
   color: var(--white);
-  cursor: pointer;
-  overflow: hidden;
   box-shadow: var(--shadow-mint);
 }
 
-.upload-trigger input {
+.upload-trigger input,
+.media-upload-zone input {
   position: absolute;
   inset: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+.media-upload-zone {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px 16px;
+  border-radius: 18px;
+  border: 1px dashed var(--mint-200);
+  background: var(--mint-50);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.media-upload-zone .material-icons {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--primary);
+  font-size: 23px;
+  line-height: 1;
+  font-family: 'Material Icons';
+  font-weight: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-xs);
+}
+
+.media-upload-zone strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.media-upload-zone small {
+  max-width: 26ch;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.media-upload-zone:hover {
+  border-color: var(--mint-500);
+  background: var(--primary-light);
 }
 
 .media-grid {
@@ -620,6 +705,10 @@ textarea {
 
   .card-head,
   .media-manager__head {
+    flex-direction: row;
+  }
+
+  .publication-guide__head {
     flex-direction: row;
   }
 
