@@ -31,17 +31,71 @@ export class SearchHeaderComponent {
   @Output() filters = new EventEmitter<void>();
 
   protected notificationsOpen = false;
+  protected recentSearches: string[] = [];
+  protected showRecentSearches = false;
 
   constructor() {
     if (this.authService.hasSession()) {
       this.notificationsService.ensureLoaded().subscribe();
     }
+    this.loadRecentSearches();
   }
 
   submit() {
-    this.search.emit({
-      q: this.query.trim(),
-    });
+    const q = this.query.trim();
+    this.saveRecentSearch(q);
+    this.search.emit({ q });
+    this.showRecentSearches = false;
+  }
+
+  protected removeRecentSearch(event: Event, search: string) {
+    event.stopPropagation();
+    this.recentSearches = this.recentSearches.filter(s => s !== search);
+    localStorage.setItem('triluga_recent_searches', JSON.stringify(this.recentSearches));
+  }
+
+  protected selectRecentSearch(search: string) {
+    this.query = search;
+    this.submit();
+  }
+
+  private loadRecentSearches() {
+    try {
+      const stored = localStorage.getItem('triluga_recent_searches');
+      if (stored) {
+        this.recentSearches = JSON.parse(stored);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private saveRecentSearch(query: string) {
+    if (!query) return;
+    this.recentSearches = [
+      query,
+      ...this.recentSearches.filter(s => s !== query)
+    ].slice(0, 5);
+    localStorage.setItem('triluga_recent_searches', JSON.stringify(this.recentSearches));
+  }
+
+  private blurTimeout?: any;
+
+  protected onSearchFocus() {
+    if (this.blurTimeout) {
+      clearTimeout(this.blurTimeout);
+      this.blurTimeout = undefined;
+    }
+    // Recarrega sempre para garantir a versão mais recente e resolver eventuais bugs de estado visual
+    this.loadRecentSearches();
+    this.showRecentSearches = true;
+  }
+
+  protected onSearchBlur() {
+    this.blurTimeout = setTimeout(() => {
+      this.showRecentSearches = false;
+      this.blurTimeout = undefined;
+    }, 200);
   }
 
   protected toggleNotifications() {

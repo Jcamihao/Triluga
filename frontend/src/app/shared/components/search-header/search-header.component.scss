@@ -33,6 +33,7 @@
 /* ── Search ── */
 
 .sh__search {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -42,6 +43,7 @@
   background: var(--white);
   border: 1.5px solid var(--border);
   transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+  z-index: 10;
 }
 
 .sh__search:focus-within {
@@ -91,6 +93,73 @@
 
 .sh__search-btn:hover {
   background: var(--mint-600);
+}
+
+.sh__recent {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-3) 0;
+  z-index: 20;
+}
+
+.sh__recent-eyebrow {
+  margin: 0 var(--space-4) var(--space-2);
+}
+
+.sh__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sh__recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  color: var(--graphite-600);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.sh__recent-item:hover {
+  background: var(--gray-50);
+}
+
+.sh__recent-icon {
+  font-size: 18px;
+  color: var(--graphite-300);
+}
+
+.sh__recent-text {
+  flex: 1;
+  font-size: 14px;
+}
+
+.sh__recent-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--graphite-300);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease, background var(--duration-fast) ease;
+}
+
+.sh__recent-remove:hover {
+  color: var(--error);
+  background: var(--error-50);
 }
 
 /* ── Notifications Button ── */

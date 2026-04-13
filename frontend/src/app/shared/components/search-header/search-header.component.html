@@ -16,10 +16,26 @@
           [(ngModel)]="query"
           placeholder="Buscar marca, modelo ou cidade"
           class="sh__search-input"
+          (focus)="onSearchFocus()"
+          (blur)="onSearchBlur()"
+          autocomplete="off"
         />
         <button *ngIf="!minimal" type="submit" class="sh__search-btn">
           Buscar
         </button>
+
+        <div class="sh__recent" *ngIf="showRecentSearches && recentSearches.length > 0">
+          <span class="eyebrow sh__recent-eyebrow">Buscas recentes</span>
+          <ul class="sh__recent-list">
+            <li *ngFor="let search of recentSearches" class="sh__recent-item" (click)="selectRecentSearch(search)">
+              <span class="material-icons sh__recent-icon" aria-hidden="true">history</span>
+              <span class="sh__recent-text">{{ search }}</span>
+              <button type="button" class="sh__recent-remove" (click)="removeRecentSearch($event, search)" aria-label="Remover busca">
+                <span class="material-icons" aria-hidden="true">close</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </form>
 
       <button
@@ -54,8 +70,7 @@
       <p *ngIf="subtitle">{{ subtitle }}</p>
 
       <div class="sh__meta" *ngIf="showMeta">
-        <span *ngIf="query">Termo: {{ query }}</span>
-        <span *ngIf="!query">Explore por cidade, estilo ou preço</span>
+        <span>Explore por cidade, estilo ou preço</span>
       </div>
     </div>
   </div>
