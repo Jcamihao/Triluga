@@ -13,7 +13,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { SearchAlertsApiService } from '../../core/services/search-alerts-api.service';
 import { FilterModalComponent } from '../../shared/components/filter-modal/filter-modal.component';
 import { SearchHeaderComponent } from '../../shared/components/search-header/search-header.component';
-import { VehicleMapComponent } from '../../shared/components/vehicle-map/vehicle-map.component';
 import { SearchAlert, VehicleCardItem, VehicleType } from '../../core/models/domain.models';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
@@ -40,7 +39,6 @@ type SearchQuery = {
     CommonModule,
     SearchHeaderComponent,
     FilterModalComponent,
-    VehicleMapComponent,
     VehicleCardComponent,
   ],
   templateUrl: './search-page.component.html',
@@ -60,7 +58,6 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   protected hasNextPage = false;
   protected totalItems = 0;
   protected filtersOpen = false;
-  protected mapOpen = false;
   protected searchAlerts: SearchAlert[] = [];
   protected alertsLoading = false;
   protected alertSaving = false;
@@ -122,6 +119,18 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     return !!currentSignature && this.searchAlerts.some(
       (alert) => this.alertSignature(alert.filters) === currentSignature,
     );
+  }
+
+  protected get searchAlertActionLabel() {
+    if (!this.canSaveCurrentSearch) {
+      return 'Aplique filtros para salvar';
+    }
+
+    if (this.currentAlertSaved) {
+      return 'Alerta salvo';
+    }
+
+    return this.alertSaving ? 'Salvando...' : 'Salvar alerta';
   }
 
   ngAfterViewInit() {
@@ -303,33 +312,8 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  protected get mapMarkers() {
-    return this.vehicles
-      .filter(
-        (vehicle) =>
-          vehicle.latitude !== null &&
-          vehicle.latitude !== undefined &&
-          vehicle.longitude !== null &&
-          vehicle.longitude !== undefined,
-      )
-      .map((vehicle) => ({
-        id: vehicle.id,
-        title: vehicle.title,
-        city: vehicle.city,
-        state: vehicle.state,
-        latitude: vehicle.latitude as number,
-        longitude: vehicle.longitude as number,
-      }));
-  }
-
   protected get hasLocationFilter() {
     return !!this.query.latitude && !!this.query.longitude;
-  }
-
-  protected get locationSummary() {
-    return this.hasLocationFilter
-      ? `Raio de ${this.query.radiusKm || '20'} km`
-      : 'Use sua localização para filtrar no mapa';
   }
 
   protected get activeSearchPills() {
@@ -371,15 +355,15 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       return this.query.city ? `Carros em radar por ${this.query.city}` : 'Carros em radar';
     }
 
-    return this.query.city ? `Classificados em ${this.query.city}` : 'Classificados disponíveis';
+    return this.query.city ? `Encontre seu carro ideal em ${this.query.city}` : 'Encontre seu carro ideal';
   }
 
   protected get searchOverviewSubtitle() {
     if (this.hasLocationFilter) {
-      return 'Use o mapa e os filtros para encontrar anúncios perto de você e seguir direto para o contato com o anunciante.';
+      return 'Use os filtros para encontrar anúncios perto de você e seguir direto para o contato com o anunciante.';
     }
 
-    return 'Filtre por cidade, tipo de veículo e faixa de preço para encontrar o anúncio certo mais rápido.';
+    return 'Filtre por cidade, tipo de veículo e faixa de preço para encontrar seu carro ideal mais rápido.';
   }
 
   protected get searchTitle() {
@@ -397,7 +381,7 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
 
     return this.query.vehicleType === 'MOTORCYCLE'
       ? 'Filtre por modelo, cidade e preço para encontrar motos e ir direto ao anúncio.'
-      : 'Filtre por modelo, cidade e preço para encontrar o anúncio certo.';
+      : 'Filtre por modelo, cidade e preço para encontrar seu carro ideal.';
   }
 
   protected get resultsLabel() {

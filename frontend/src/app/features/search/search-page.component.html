@@ -7,58 +7,6 @@
     (filters)="filtersOpen = true"
   />
 
-  <section class="search-page__summary">
-    <div class="search-page__summary-copy">
-      <span class="eyebrow">Buscar</span>
-      <h2>{{ searchOverviewTitle }}</h2>
-      <p>{{ searchOverviewSubtitle }}</p>
-    </div>
-
-    <div class="search-page__summary-meta">
-      <strong>{{ totalItems || vehicles.length || '--' }}</strong>
-      <span>{{ totalItems === 1 ? 'resultado encontrado' : 'resultados encontrados' }}</span>
-    </div>
-
-    <div class="search-page__summary-actions">
-      <button type="button" class="btn btn-primary" (click)="filtersOpen = true">
-        Abrir filtros
-      </button>
-      <button type="button" class="btn btn-secondary" (click)="useCurrentLocation()">
-        Usar minha posição
-      </button>
-      <button
-        type="button"
-        class="btn btn-secondary"
-        *ngIf="hasLocationFilter"
-        (click)="clearLocationFilter()"
-      >
-        Limpar raio
-      </button>
-      <button type="button" class="btn btn-secondary" (click)="mapOpen = !mapOpen">
-        {{ mapOpen ? 'Fechar mapa' : 'Abrir mapa' }}
-      </button>
-      <button
-        *ngIf="authService.hasSession()"
-        type="button"
-        class="btn btn-secondary"
-        [disabled]="alertSaving || !canSaveCurrentSearch || currentAlertSaved"
-        (click)="saveCurrentSearchAlert()"
-      >
-        {{
-          currentAlertSaved
-            ? 'Radar salvo'
-            : alertSaving
-              ? 'Salvando radar...'
-              : 'Salvar radar'
-        }}
-      </button>
-    </div>
-
-    <div class="search-page__summary-pills" *ngIf="activeSearchPills.length">
-      <span *ngFor="let pill of activeSearchPills">{{ pill }}</span>
-    </div>
-  </section>
-
   <section class="search-page__journey">
     <button type="button" class="search-page__journey-chip" (click)="showAllAds()">
       Ver todos os anúncios
@@ -77,7 +25,17 @@
   <section class="search-page__alerts-card" *ngIf="authService.hasSession()">
     <div class="search-page__section-head">
       <h2>Alertas de busca</h2>
-      <span>{{ searchAlerts.length }} salvo(s)</span>
+      <div class="search-page__alerts-actions">
+        <span>{{ searchAlerts.length }} salvo(s)</span>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="alertSaving || !canSaveCurrentSearch || currentAlertSaved"
+          (click)="saveCurrentSearchAlert()"
+        >
+          {{ searchAlertActionLabel }}
+        </button>
+      </div>
     </div>
 
     <p class="loading" *ngIf="alertsLoading">Carregando alertas...</p>
@@ -103,24 +61,6 @@
         </button>
       </article>
     </div>
-  </section>
-
-  <section class="search-page__map-card" *ngIf="mapOpen">
-    <div class="search-page__section-head">
-      <h2>Mapa</h2>
-      <span>{{ locationSummary }}</span>
-    </div>
-
-    <app-vehicle-map
-      *ngIf="mapMarkers.length"
-      [markers]="mapMarkers"
-      [centerLatitude]="query.latitude ? +query.latitude : null"
-      [centerLongitude]="query.longitude ? +query.longitude : null"
-    />
-
-    <p class="loading" *ngIf="!mapMarkers.length">
-      Nenhum resultado com coordenadas para mostrar no mapa.
-    </p>
   </section>
 
   <section class="search-page__section">

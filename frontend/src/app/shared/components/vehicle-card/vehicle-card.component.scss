@@ -1,6 +1,12 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .vcard {
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
   height: 100%;
   padding: var(--space-3);
   border-radius: var(--radius-xl);
@@ -25,6 +31,7 @@
 
 .vcard__media {
   position: relative;
+  min-width: 0;
   aspect-ratio: 16 / 10;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -147,12 +154,14 @@
 
 .vcard__body {
   display: grid;
+  min-width: 0;
   gap: var(--space-3);
   padding: var(--space-1) var(--space-1) 0;
 }
 
 .vcard__header {
   display: grid;
+  min-width: 0;
   gap: var(--space-2);
 }
 
@@ -277,12 +286,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .vcard__price-group {
   display: flex;
   align-items: baseline;
   gap: 4px;
+  min-width: 0;
 }
 
 .vcard__price {
