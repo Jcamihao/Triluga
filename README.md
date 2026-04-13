@@ -1,9 +1,14 @@
-# Triluga 0.5.0
+# Triluga 0.6.0
 
 Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e uma base mais pronta para deploy contínuo, cadastro estável e configuração dinâmica em produção.
 
 ## Destaques da versão
 
+- **Experiência mobile refinada**: navegação por swipe entre abas principais, CTA fixo acima da navbar e ajustes de responsividade em cards.
+- **Busca e alertas**: botão para salvar alertas de busca, filtros centralizados e remoção da visualização de mapa da listagem.
+- **Detalhe do veículo**: mapa de localização exibido apenas na página do anúncio, logo abaixo do card visual do veículo.
+- **Editor de anúncio**: upload de imagens sempre visível no criador, botão de voltar no padrão da autenticação e layout mais consistente no mobile.
+- **CEP mais estável no backend**: consulta ViaCEP sem depender de `fetch` global, mantendo compatibilidade com o runtime atual.
 - **Sistema de Analytics**: Rastreamento de visualizações de veículos para identificar os mais populares.
 - **Carrossel de Anúncios**: Destaque dinâmico dos veículos mais visualizados na home page.
 - **Reorganização de Componentes**: Migração para estrutura de diretórios, facilitando a manutenção e escalabilidade.
@@ -112,7 +117,9 @@ Fluxos disponíveis no Angular:
 
 - home com busca rápida
 - lista com filtros e carregamento progressivo
+- alertas de busca salvos para usuários autenticados
 - detalhe do veículo com galeria e reviews
+- mapa de localização no detalhe do veículo quando o anúncio possui coordenadas
 - login e cadastro
 - perfil com notificações
 - política de privacidade pública
@@ -131,6 +138,8 @@ Componentes obrigatórios implementados:
 
 Preparação mobile adicional:
 
+- navegação por arraste lateral entre início, busca, anúncio e chat
+- barra de ação do detalhe fixa acima da navegação inferior
 - base do Capacitor configurada para iOS em `frontend/capacitor.config.ts`
 - projeto nativo iOS gerado em `frontend/ios`
 
