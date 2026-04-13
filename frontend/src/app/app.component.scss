@@ -13,8 +13,11 @@
   min-height: 100dvh;
   overscroll-behavior-y: contain;
   transition: transform 320ms var(--ease-out);
-  transform: translate3d(0, calc(var(--pull-distance, 0px) * 0.72), 0);
   background: var(--background);
+}
+
+.app-shell--pulling {
+  transform: translate3d(0, calc(var(--pull-distance, 0px) * 0.72), 0);
 }
 
 .app-shell--pull-1 {
@@ -427,22 +430,18 @@
   @keyframes app-route-enter-a {
     0% {
       opacity: 0;
-      transform: translateY(12px);
     }
     100% {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
   @keyframes app-route-enter-b {
     0% {
       opacity: 0;
-      transform: translateY(10px);
     }
     100% {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 }

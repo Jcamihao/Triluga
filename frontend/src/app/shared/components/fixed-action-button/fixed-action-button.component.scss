@@ -3,7 +3,7 @@
   left: 12px;
   right: 12px;
   bottom: calc(102px + env(safe-area-inset-bottom, 0px));
-  z-index: 22;
+  z-index: 90;
   display: flex;
   align-items: stretch;
   justify-content: space-between;
@@ -184,7 +184,7 @@ strong {
   .fixed-action {
     left: 0;
     right: 0;
-    bottom: 28px;
+    bottom: calc(112px + env(safe-area-inset-bottom, 0px));
     width: min(760px, calc(100vw - 72px));
     margin: 0 auto;
     padding: 16px 18px;
