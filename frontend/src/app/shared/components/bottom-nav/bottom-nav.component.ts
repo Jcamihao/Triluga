@@ -30,10 +30,10 @@ export class BottomNavComponent {
 
   protected readonly items = [
     { key: 'home', label: 'Início', link: '/', icon: 'home' },
-    { key: 'search', label: 'Buscar', link: '/search', icon: 'search' },
-    { key: 'host', label: 'Anunciar', link: '/anunciar', icon: 'add_circle' },
-    { key: 'chat', label: 'Chat', link: '/chat', icon: 'chat_bubble_outline' },
-    { key: 'menu', label: 'Menu', icon: 'menu' },
+    { key: 'search', label: 'Busca', link: '/search', icon: 'search' },
+    { key: 'host', label: 'Anunciar', link: '/anunciar-carro', icon: 'add_circle' },
+    { key: 'chat', label: 'Mensagens', link: '/chat', icon: 'chat' },
+    { key: 'menu', label: 'Perfil', icon: 'person' },
   ] as const;
 
   constructor() {
@@ -92,9 +92,7 @@ export class BottomNavComponent {
     }
 
     if (item.key === 'host') {
-      this.router.navigateByUrl(
-        this.authService.hasSession() ? '/anunciar-carro' : item.link,
-      );
+      this.router.navigateByUrl(item.link);
       return;
     }
 
@@ -113,7 +111,7 @@ export class BottomNavComponent {
     }
 
     if (item.key === 'host') {
-      return currentUrl.startsWith('/anunciar');
+      return currentUrl.startsWith('/anunciar-carro');
     }
 
     return currentUrl.startsWith(item.link);

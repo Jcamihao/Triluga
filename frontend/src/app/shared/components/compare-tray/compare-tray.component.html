@@ -1,39 +1,70 @@
-<section class="compare-tray" *ngIf="compareService.count()">
-  <div class="compare-tray__copy">
-    <span class="compare-tray__eyebrow">Comparador</span>
-    <strong>
-      {{ compareService.count() }} veículo{{
-        compareService.count() > 1 ? 's' : ''
-      }} na mesa
-    </strong>
-    <div class="compare-tray__chips">
-      <button
-        type="button"
-        class="compare-tray__chip"
-        *ngFor="let vehicle of compareService.items(); trackBy: trackById"
-        (click)="compareService.remove(vehicle.id)"
-      >
-        <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
-        <span class="material-icons" aria-hidden="true">close</span>
-      </button>
-    </div>
-  </div>
+<ng-container *ngIf="compareService.count()">
+  <!-- Collapsed FAB (on /compare page or manually collapsed) -->
+  <button
+    *ngIf="collapsed"
+    class="fixed right-4 z-30 bg-gradient-to-br from-primary to-primary-container text-white w-14 h-14 rounded-full shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-all hover:shadow-primary/50"
+    style="bottom: calc(94px + env(safe-area-inset-bottom, 0px))"
+    (click)="toggleCollapsed()"
+    aria-label="Abrir comparador"
+  >
+    <span class="material-symbols-outlined text-2xl">compare_arrows</span>
+    <span class="absolute -top-1 -right-1 bg-error text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+      {{ compareService.count() }}
+    </span>
+  </button>
 
-  <div class="compare-tray__actions">
+  <!-- Expanded Tray (hidden on /compare unless manually toggled) -->
+  <section
+    class="fixed right-3 left-3 z-30 grid gap-4 p-5 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-xl border border-outline-variant/15 shadow-[0_20px_60px_-12px_rgba(9,29,46,0.25)]"
+    style="bottom: calc(84px + env(safe-area-inset-bottom, 0px))"
+    *ngIf="!collapsed"
+  >
+    <!-- Collapse button -->
     <button
-      type="button"
-      class="btn btn-ghost"
-      (click)="compareService.clear()"
+      class="absolute top-3 right-3 text-on-surface-variant/40 hover:text-on-surface-variant active:scale-90 transition-all"
+      (click)="toggleCollapsed()"
+      aria-label="Minimizar comparador"
     >
-      Limpar
+      <span class="material-symbols-outlined text-xl">keyboard_arrow_down</span>
     </button>
 
-    <a class="btn btn-primary" routerLink="/compare">
-      {{
-        compareService.canCompare()
-          ? 'Comparar agora'
-          : 'Escolha mais 1 veículo'
-      }}
-    </a>
-  </div>
-</section>
+    <!-- Header -->
+    <div class="grid gap-2.5">
+      <span class="text-primary text-[10px] font-extrabold tracking-[0.14em] uppercase">Comparador</span>
+      <strong class="text-on-surface text-lg font-bold tracking-tight !m-0">
+        {{ compareService.count() }} veículo{{ compareService.count() > 1 ? 's' : '' }} na mesa
+      </strong>
+
+      <!-- Chips -->
+      <div class="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 h-8 px-3 border border-outline-variant/20 rounded-full bg-surface-container-low text-on-surface text-xs font-semibold active:scale-95 transition-all hover:bg-surface-container-high"
+          *ngFor="let vehicle of compareService.items(); trackBy: trackById"
+          (click)="compareService.remove(vehicle.id)"
+        >
+          <span class="truncate max-w-[120px]">{{ vehicle.brand }} {{ vehicle.model }}</span>
+          <span class="material-symbols-outlined text-on-surface-variant/60 text-[16px]">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="grid gap-2.5">
+      <a
+        class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-3.5 rounded-full font-bold text-sm text-center flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-md shadow-primary/20"
+        routerLink="/compare"
+      >
+        <span class="material-symbols-outlined text-lg">compare_arrows</span>
+        {{ compareService.canCompare() ? 'Comparar agora' : 'Escolha mais 1 veículo' }}
+      </a>
+      <button
+        type="button"
+        class="w-full text-on-surface-variant/70 py-2 font-bold text-xs text-center active:scale-95 transition-all hover:text-error"
+        (click)="compareService.clear()"
+      >
+        Limpar
+      </button>
+    </div>
+  </section>
+</ng-container>

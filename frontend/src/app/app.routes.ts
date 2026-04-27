@@ -18,13 +18,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'anunciar',
-    loadComponent: () =>
-      import('./features/host/host-page.component').then(
-        (m) => m.HostPageComponent,
-      ),
-  },
-  {
     path: 'chat/:conversationId',
     loadComponent: () =>
       import('./features/chat/chat-page.component').then(

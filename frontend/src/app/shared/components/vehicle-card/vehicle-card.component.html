@@ -1,114 +1,116 @@
 <article
-  class="vcard"
+  class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_24px_-4px_rgba(9,29,46,0.05)] hover:shadow-[0_20px_40px_-8px_rgba(9,29,46,0.1)] transition-all duration-500 cursor-pointer flex flex-col h-full"
   [routerLink]="['/vehicles', vehicle.id]"
   tabindex="0"
   role="link"
 >
-  <div class="vcard__media">
+  <div class="relative aspect-[16/10] overflow-hidden flex-shrink-0">
     <img
-      class="vcard__image"
+      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
       [src]="vehicle.coverImage || fallbackImage"
       [alt]="vehicle.title"
       loading="lazy"
     />
 
-    <div class="vcard__media-overlay"></div>
+    <!-- Gradient overlay for text readability -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
 
-    <div class="vcard__media-top">
-      <span class="vcard__badge">{{ badgeLabel() }}</span>
-      <div class="vcard__media-actions">
-        <button
-          type="button"
-          class="vcard__action-icon vcard__compare-btn"
-          [class.vcard__compare-btn--active]="isCompared"
-          [disabled]="compareDisabled"
-          (click)="toggleCompare($event)"
-          [attr.aria-label]="
-            isCompared
-              ? 'Remover da comparação'
-              : compareDisabled
-                ? 'Lista de comparação cheia'
-                : 'Comparar veículo'
-          "
-        >
-          <span class="material-icons" aria-hidden="true">compare_arrows</span>
-        </button>
+    <!-- Actions (Compare & Favorite) -->
+    <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
+      <button
+        type="button"
+        class="bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-lg active:scale-90 transition-all hover:bg-white"
+        [ngClass]="isFavorite ? 'text-error' : 'text-on-surface-variant'"
+        [disabled]="isFavoritePending"
+        [attr.aria-label]="isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'"
+        (click)="toggleFavorite($event)"
+      >
+        <span class="material-symbols-outlined text-[20px]" [style.font-variation-settings]="isFavorite ? '\'FILL\' 1' : '\'FILL\' 0'">
+          {{ isFavorite ? 'favorite' : 'favorite_border' }}
+        </span>
+      </button>
 
-        <button
-          type="button"
-          class="vcard__action-icon"
-          [class.vcard__action-icon--active]="isFavorite"
-          [disabled]="isFavoritePending"
-          [attr.aria-label]="
-            isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'
-          "
-          (click)="toggleFavorite($event)"
-        >
-          <span class="material-icons" aria-hidden="true">{{
-            isFavorite ? 'favorite' : 'favorite_border'
-          }}</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        class="bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-lg active:scale-90 transition-all hover:bg-white"
+        [ngClass]="isCompared ? 'text-primary' : 'text-on-surface-variant'"
+        [disabled]="compareDisabled && !isCompared"
+        [attr.aria-label]="isCompared ? 'Remover da comparação' : compareDisabled ? 'Lista de comparação cheia' : 'Comparar veículo'"
+        (click)="toggleCompare($event)"
+      >
+        <span class="material-symbols-outlined text-[20px]" [style.font-variation-settings]="isCompared ? '\'FILL\' 1' : '\'FILL\' 0'">
+          compare_arrows
+        </span>
+      </button>
     </div>
 
-    <div class="vcard__media-bottom">
-      <span class="vcard__location">
-        <span class="material-icons" aria-hidden="true">place</span>
-        {{ vehicle.city }}, {{ vehicle.state }}
+    <!-- Badge / Category -->
+    <div class="absolute bottom-4 left-4 z-10">
+      <span class="bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
+        {{ badgeLabel() }}
+      </span>
+    </div>
+
+    <!-- Location -->
+    <div class="absolute bottom-4 right-4 z-10">
+      <span class="text-white text-[10px] font-medium flex items-center gap-1 drop-shadow-md">
+        <span class="material-symbols-outlined text-[14px]">place</span>
+        {{ vehicle.city }}
       </span>
     </div>
   </div>
 
-  <div class="vcard__body">
-    <div class="vcard__header">
-      <h3 class="vcard__title">{{ vehicle.title }}</h3>
-      <div class="vcard__meta">
-        <span>
-          <span class="material-icons" aria-hidden="true">tune</span>
-          {{ transmissionLabel(vehicle.transmission) }}
-        </span>
-        <span>
-          <span class="material-icons" aria-hidden="true">event_seat</span>
-          {{ vehicle.seats }}
-        </span>
+  <div class="p-5 flex flex-col flex-grow">
+    <!-- Title & Specs -->
+    <div class="mb-4">
+      <h3 class="text-lg font-bold tracking-tight text-on-surface line-clamp-1 mb-1.5">{{ vehicle.title }}</h3>
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant/80 text-xs font-medium">
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">tune</span> {{ transmissionLabel(vehicle.transmission) }}</span>
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">event_seat</span> {{ vehicle.seats }}</span>
       </div>
     </div>
 
-    <div class="vcard__owner" *ngIf="!hideOwner">
+    <!-- Spacer to push footer down -->
+    <div class="flex-grow"></div>
+
+    <!-- Owner section -->
+    <div class="flex items-center gap-3 mb-4 p-3 bg-surface-container-low rounded-lg" *ngIf="!hideOwner">
       <img
         *ngIf="vehicle.owner?.avatarUrl; else ownerInitialsAvatar"
-        class="vcard__owner-avatar"
+        class="w-10 h-10 rounded-full object-cover bg-surface-container-high border border-outline-variant/20 shadow-sm"
         [src]="vehicle.owner?.avatarUrl"
         [alt]="ownerName"
         loading="lazy"
       />
-
       <ng-template #ownerInitialsAvatar>
-        <span class="vcard__owner-avatar vcard__owner-avatar--fallback">
+        <span class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-sm border border-outline-variant/20 flex items-center justify-center shadow-sm">
           {{ ownerInitials }}
         </span>
       </ng-template>
 
-      <div class="vcard__owner-copy">
-        <span>Anunciante</span>
-        <strong class="profile-name-text">{{ ownerName }}</strong>
+      <div class="flex flex-col min-w-0 flex-grow">
+        <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/70">Anunciante</span>
+        <strong class="text-sm font-bold text-on-surface truncate">{{ ownerName }}</strong>
       </div>
 
-      <span class="vcard__owner-rating">
-        <span class="material-icons" aria-hidden="true">star</span>
+      <span class="ml-auto text-xs font-black text-amber-500 bg-amber-50 px-2 py-1 rounded-full flex items-center gap-1 shrink-0">
+        <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
         {{ ownerRatingLabel }}
       </span>
     </div>
 
-    <div class="vcard__footer">
-      <div class="vcard__price-group">
-        <strong class="vcard__price">
-          {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
-        </strong>
-        <span class="vcard__price-unit">preço anunciado</span>
+    <!-- Bottom Pricing -->
+    <div class="flex items-end justify-between pt-4 border-t border-surface-container-low">
+      <div class="flex flex-col">
+        <span class="text-[9px] font-bold text-on-surface-variant/60 uppercase tracking-widest mb-0.5">Preço Anunciado</span>
+        <div class="flex items-baseline gap-1">
+          <span class="text-2xl font-black text-primary tracking-tight leading-none">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}</span>
+          <span class="text-xs font-semibold text-primary/70">/ dia</span>
+        </div>
       </div>
-
-      <span class="vcard__cta">Ver detalhes</span>
+      <span class="text-primary font-bold text-sm tracking-tight flex items-center gap-0.5 bg-primary/5 p-2 rounded-full hidden md:flex transition-colors group-hover:bg-primary/10">
+        <span class="material-symbols-outlined text-lg">chevron_right</span>
+      </span>
     </div>
   </div>
 </article>

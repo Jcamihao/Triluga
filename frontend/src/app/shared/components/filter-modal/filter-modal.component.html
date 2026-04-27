@@ -1,102 +1,167 @@
-<div class="fm" *ngIf="open">
-  <div class="fm__backdrop" (click)="close.emit()"></div>
+<div class="fixed inset-0 bg-on-background/60 backdrop-blur-sm z-[100] transition-opacity" *ngIf="open" (click)="close.emit()"></div>
 
-  <section class="fm__sheet">
-    <header class="fm__header">
-      <div>
-        <span class="eyebrow">Filtros</span>
-        <h2>Refine sua busca</h2>
+<div class="fixed bottom-0 inset-x-0 z-[101] flex justify-center transition-transform duration-300" [class.translate-y-full]="!open" [class.translate-y-0]="open">
+<div class="bg-surface-container-lowest w-full max-w-[390px] h-[85dvh] rounded-t-[2rem] flex flex-col shadow-[0_-12px_48px_rgba(0,0,0,0.15)] overflow-hidden">
+<!-- Drag Handle & Header -->
+<div class="pt-4 pb-6 flex flex-col items-center shrink-0">
+<div class="w-10 h-1.5 bg-outline-variant/30 rounded-full mb-6"></div>
+<div class="w-full px-8 flex justify-between items-center">
+<h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Filtrar Resultados</h2>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors" (click)="close.emit()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Filter Content -->
+<div class="flex-1 overflow-y-auto px-8 pb-36 no-scrollbar flex flex-col" style="gap: 43px;">
+
+<!-- Section: Tipo -->
+<section>
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline mb-4">Tipo de Veículo</h3>
+<div class="bg-surface-container-low p-1.5 rounded-2xl flex gap-1">
+<button class="flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2.5 transition-all"
+        [ngClass]="draft.vehicleType === 'CAR' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high'"
+        (click)="setVehicleType('CAR')">
+<span class="material-symbols-outlined text-xl" [style.font-variation-settings]="draft.vehicleType === 'CAR' ? '\'FILL\' 1' : '\'FILL\' 0'">directions_car</span>
+Carro
+</button>
+<button class="flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2.5 transition-all"
+        [ngClass]="draft.vehicleType === 'MOTORCYCLE' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high'"
+        (click)="setVehicleType('MOTORCYCLE')">
+<span class="material-symbols-outlined text-xl" [style.font-variation-settings]="draft.vehicleType === 'MOTORCYCLE' ? '\'FILL\' 1' : '\'FILL\' 0'">motorcycle</span>
+Moto
+</button>
+</div>
+</section>
+
+<!-- Section: Categoria (CAR) -->
+<section *ngIf="draft.vehicleType !== 'MOTORCYCLE'">
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline mb-4">Categoria</h3>
+<div class="flex flex-wrap gap-2.5">
+  <ng-container *ngFor="let cat of [{id: 'HATCH', label: 'Hatch'}, {id: 'SEDAN', label: 'Sedan'}, {id: 'SUV', label: 'SUV'}, {id: 'LUXURY', label: 'Luxury'}, {id: 'PICKUP', label: 'Picape'}, {id: 'ECONOMY', label: 'Econômico'}]">
+    <button class="px-5 py-2.5 rounded-full text-sm transition-colors"
+            [ngClass]="draft.category === cat.id ? 'bg-primary text-on-primary font-bold shadow-md ring-2 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant font-semibold hover:bg-surface-container-highest'"
+            (click)="setCategory(cat.id)">
+      {{ cat.label }}
+    </button>
+  </ng-container>
+</div>
+</section>
+
+<!-- Section: Categoria/Style (MOTO) -->
+<section *ngIf="draft.vehicleType === 'MOTORCYCLE'">
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline mb-4">Estilo</h3>
+<div class="flex flex-wrap gap-2.5">
+  <ng-container *ngFor="let style of [{id: 'SCOOTER', label: 'Scooter'}, {id: 'STREET', label: 'Street'}, {id: 'SPORT', label: 'Sport'}, {id: 'TRAIL', label: 'Trail'}, {id: 'CUSTOM', label: 'Custom'}, {id: 'TOURING', label: 'Touring'}]">
+    <button class="px-5 py-2.5 rounded-full text-sm transition-colors"
+            [ngClass]="draft.motorcycleStyle === style.id ? 'bg-primary text-on-primary font-bold shadow-md ring-2 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant font-semibold hover:bg-surface-container-highest'"
+            (click)="draft.motorcycleStyle = draft.motorcycleStyle === style.id ? '' : style.id">
+      {{ style.label }}
+    </button>
+  </ng-container>
+</div>
+</section>
+
+<!-- Section: Preço (Enhanced Range Slider) -->
+<section>
+<div class="flex justify-between items-baseline mb-6">
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline">Preço Diário</h3>
+<div class="text-primary text-lg font-black tracking-tight">R$ {{ draft.minPrice || '50' }} - <span *ngIf="draft.maxPrice">R$ {{ draft.maxPrice }}</span><span *ngIf="!draft.maxPrice">R$ 1.000+</span></div>
+</div>
+<div class="relative w-full h-8 flex items-center">
+<div class="absolute w-full h-2.5 bg-surface-container-highest rounded-full"></div>
+<div class="absolute h-2.5 bg-primary-container rounded-full" [style.left.%]="priceTrackLeft" [style.width.%]="priceTrackWidth"></div>
+<input class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20" max="1000" min="50" step="10" type="range" [(ngModel)]="draft.minPrice" (ngModelChange)="syncPriceSliders('min')" />
+<input class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20" max="1000" min="50" step="10" type="range" [(ngModel)]="draft.maxPrice" (ngModelChange)="syncPriceSliders('max')" />
+</div>
+<div class="flex justify-between mt-3 text-[10px] font-bold text-outline-variant uppercase tracking-widest">
+<span>Min</span>
+<span>Max</span>
+</div>
+</section>
+
+<!-- Section: Cilindradas (MOTO) -->
+<section *ngIf="draft.vehicleType === 'MOTORCYCLE'">
+  <div class="flex justify-between items-baseline mb-6">
+    <h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline">Cilindrada</h3>
+  </div>
+  <div class="flex gap-4">
+    <div class="flex-1">
+      <div class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors">
+        <input type="number" [(ngModel)]="draft.minEngineCc" class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50" placeholder="Mín.">
+        <span class="text-on-surface-variant text-xs font-bold ml-2">cc</span>
       </div>
-      <button type="button" class="fm__close" (click)="close.emit()">
-        <span class="material-icons">close</span>
-      </button>
-    </header>
-
-    <div class="fm__body">
-      <label>
-        <span>Tipo de veículo</span>
-        <select [(ngModel)]="draft.vehicleType" (ngModelChange)="onVehicleTypeChange()">
-          <option value="">Todos</option>
-          <option value="CAR">Carro</option>
-          <option value="MOTORCYCLE">Moto</option>
-        </select>
-      </label>
-
-      <label>
-        <span>Categoria</span>
-        <select
-          [(ngModel)]="draft.category"
-          [disabled]="draft.vehicleType === 'MOTORCYCLE'"
-        >
-          <option value="">Todas</option>
-          <option value="ECONOMY">Econômico</option>
-          <option value="HATCH">Hatch</option>
-          <option value="SEDAN">Sedan</option>
-          <option value="SUV">SUV</option>
-          <option value="PICKUP">Pickup</option>
-          <option value="VAN">Van</option>
-          <option value="LUXURY">Luxo</option>
-        </select>
-      </label>
-
-      <div class="fm__grid" *ngIf="draft.vehicleType === 'MOTORCYCLE'">
-        <label>
-          <span>Estilo</span>
-          <select [(ngModel)]="draft.motorcycleStyle">
-            <option value="">Todos</option>
-            <option value="SCOOTER">Scooter</option>
-            <option value="STREET">Street</option>
-            <option value="SPORT">Sport</option>
-            <option value="TRAIL">Trail</option>
-            <option value="CUSTOM">Custom</option>
-            <option value="TOURING">Touring</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Raio (km)</span>
-          <input [(ngModel)]="draft.radiusKm" type="number" min="1" placeholder="Ex: 20" />
-        </label>
-      </div>
-
-      <div class="fm__grid" *ngIf="draft.vehicleType === 'MOTORCYCLE'">
-        <label>
-          <span>Cilindrada mín.</span>
-          <input [(ngModel)]="draft.minEngineCc" type="number" min="50" placeholder="cc" />
-        </label>
-
-        <label>
-          <span>Cilindrada máx.</span>
-          <input [(ngModel)]="draft.maxEngineCc" type="number" min="50" placeholder="cc" />
-        </label>
-      </div>
-
-      <div class="fm__grid">
-        <label>
-          <span>Preço mínimo</span>
-          <input [(ngModel)]="draft.minPrice" type="number" placeholder="R$" />
-        </label>
-
-        <label>
-          <span>Preço máximo</span>
-          <input [(ngModel)]="draft.maxPrice" type="number" placeholder="R$" />
-        </label>
-      </div>
-
-      <label *ngIf="draft.vehicleType !== 'MOTORCYCLE'">
-        <span>Raio (km)</span>
-        <input [(ngModel)]="draft.radiusKm" type="number" min="1" placeholder="Usar com minha localização" />
-      </label>
-
     </div>
+    <div class="flex-1">
+      <div class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors">
+        <input type="number" [(ngModel)]="draft.maxEngineCc" class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50" placeholder="Máx.">
+        <span class="text-on-surface-variant text-xs font-bold ml-2">cc</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <footer class="fm__footer">
-      <button type="button" class="btn btn-secondary" (click)="reset()">
-        Limpar tudo
-      </button>
-      <button type="button" class="btn btn-primary" (click)="apply.emit(draft)">
-        Aplicar filtros
-      </button>
-    </footer>
-  </section>
+<!-- Section: Raio -->
+<section>
+  <div class="flex justify-between items-baseline mb-6">
+    <h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline">Raio de Busca</h3>
+  </div>
+  <div class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors">
+    <input type="number" [(ngModel)]="draft.radiusKm" class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50" placeholder="Raio" min="1">
+    <span class="text-on-surface-variant text-xs font-bold ml-2">km</span>
+  </div>
+</section>
+
+<!-- Section: Transmissão -->
+<section *ngIf="draft.vehicleType !== 'MOTORCYCLE'">
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline mb-4">Transmissão</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Auto -->
+<button class="py-5 border-2 rounded-2xl flex flex-col items-center gap-3 transition-colors"
+        [ngClass]="draft.transmission === 'AUTOMATIC' ? 'border-primary bg-primary/5 text-primary' : 'border-outline-variant/20 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'"
+        (click)="setTransmission('AUTOMATIC')">
+<span class="material-symbols-outlined text-3xl" [style.font-variation-settings]="draft.transmission === 'AUTOMATIC' ? '\'FILL\' 1' : '\'FILL\' 0'">settings_input_component</span>
+<span class="text-sm" [ngClass]="draft.transmission === 'AUTOMATIC' ? 'font-black' : 'font-bold'">Automático</span>
+</button>
+<!-- Manual -->
+<button class="py-5 border-2 rounded-2xl flex flex-col items-center gap-3 transition-colors"
+        [ngClass]="draft.transmission === 'MANUAL' ? 'border-primary bg-primary/5 text-primary' : 'border-outline-variant/20 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'"
+        (click)="setTransmission('MANUAL')">
+<span class="material-symbols-outlined text-3xl" [style.font-variation-settings]="draft.transmission === 'MANUAL' ? '\'FILL\' 1' : '\'FILL\' 0'">hardware</span>
+<span class="text-sm" [ngClass]="draft.transmission === 'MANUAL' ? 'font-black' : 'font-bold'">Manual</span>
+</button>
+</div>
+</section>
+
+<!-- Section: Combustível -->
+<section *ngIf="draft.vehicleType !== 'MOTORCYCLE'">
+<h3 class="text-xs font-bold uppercase tracking-[0.15em] text-outline mb-4">Combustível</h3>
+<div class="flex flex-wrap gap-3">
+<label class="relative flex items-center flex-1 min-w-[80px]">
+<input [checked]="draft.fuel === 'FLEX'" (change)="setFuel('FLEX')" name="fuelSelector" class="peer sr-only" type="checkbox"/>
+<div class="w-full text-center px-4 py-3 rounded-2xl border-2 border-outline-variant/10 text-sm font-bold peer-checked:bg-primary peer-checked:text-white peer-checked:border-transparent peer-checked:shadow-lg peer-checked:shadow-primary/20 transition-all">Flex</div>
+</label>
+<label class="relative flex items-center flex-1 min-w-[80px]">
+<input [checked]="draft.fuel === 'DIESEL'" (change)="setFuel('DIESEL')" name="fuelSelector" class="peer sr-only" type="checkbox"/>
+<div class="w-full text-center px-4 py-3 rounded-2xl border-2 border-outline-variant/10 text-sm font-bold peer-checked:bg-primary peer-checked:text-white peer-checked:border-transparent peer-checked:shadow-lg peer-checked:shadow-primary/20 transition-all">Diesel</div>
+</label>
+<label class="relative flex items-center flex-1 min-w-[80px]">
+<input [checked]="draft.fuel === 'ELECTRIC'" (change)="setFuel('ELECTRIC')" name="fuelSelector" class="peer sr-only" type="checkbox"/>
+<div class="w-full text-center px-4 py-3 rounded-2xl border-2 border-outline-variant/10 text-sm font-bold peer-checked:bg-primary peer-checked:text-white peer-checked:border-transparent peer-checked:shadow-lg peer-checked:shadow-primary/20 transition-all">Elétrico</div>
+</label>
+</div>
+</section>
+
+</div>
+
+<!-- Fixed Footer Actions -->
+<div class="absolute bottom-0 inset-x-0 p-8 pt-4 bg-white/80 backdrop-blur-xl flex items-center gap-5 border-t border-surface-container-high shrink-0 z-50">
+<button class="px-4 py-4 text-on-surface font-extrabold text-sm hover:bg-surface-container-high rounded-full transition-colors uppercase tracking-widest shrink-0" (click)="reset()">
+Limpar
+</button>
+<button class="flex-1 py-4 bg-primary text-on-primary font-black text-base rounded-[1.25rem] shadow-lg shadow-primary/30 active:scale-95 transition-all w-full" (click)="apply.emit(draft)">
+Aplicar Filtros
+</button>
+</div>
+</div>
 </div>

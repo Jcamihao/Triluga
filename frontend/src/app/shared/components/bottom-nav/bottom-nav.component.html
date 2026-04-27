@@ -1,29 +1,39 @@
 <nav
-  class="bottom-nav"
-  [ngClass]="activeClass"
+  class="fixed bottom-0 left-0 w-full grid grid-cols-5 justify-items-center items-center px-2 pt-2 bg-surface/90 backdrop-blur-2xl z-40 shadow-[0_-8px_32px_rgba(0,0,0,0.08)] border-t border-outline-variant/20"
+  style="padding-bottom: env(safe-area-inset-bottom, 8px)"
 >
-  <div class="bottom-nav__track">
-    <span class="bottom-nav__indicator" aria-hidden="true"></span>
-
-    <button
-      type="button"
-      *ngFor="let item of items"
-      [class.is-active]="isItemActive(item)"
-      [attr.aria-label]="item.label"
-      [attr.title]="item.label"
-      (click)="handleItemClick(item)"
-    >
-      <span class="nav-icon-wrap">
-        <span class="nav-icon material-icons" aria-hidden="true">{{ item.icon }}</span>
-        <span
-          class="nav-badge"
-          *ngIf="item.key === 'chat' && unreadChatCount"
-        >
-          {{ unreadChatBadge }}
-        </span>
+  <button
+    type="button"
+    *ngFor="let item of items"
+    [ngClass]="
+      isItemActive(item)
+        ? 'text-primary font-bold bg-primary/10 rounded-[1.1rem] px-3 py-2.5'
+        : 'text-on-surface-variant/70'
+    "
+    class="flex flex-col items-center justify-center w-[68px] max-w-full hover:opacity-80 tap-highlight-transparent transition-all active:scale-95 -translate-y-[2px]"
+    [attr.aria-label]="item.label"
+    [attr.title]="item.label"
+    (click)="handleItemClick(item)"
+  >
+    <div class="relative flex inline-flex items-center justify-center">
+      <span
+        class="material-symbols-outlined text-2xl transition-all"
+        [style.font-variation-settings]="
+          isItemActive(item) ? '\'FILL\' 1' : '\'FILL\' 0'
+        "
+        >{{ item.icon }}</span
+      >
+      <span
+        *ngIf="item.key === 'chat' && unreadChatCount"
+        class="absolute -top-1 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-error px-1 text-[9px] font-black text-white shadow-md z-10"
+      >
+        {{ unreadChatBadge }}
       </span>
-
-      <span class="nav-label">{{ item.label }}</span>
-    </button>
-  </div>
+    </div>
+    <span
+      class="text-[10px] uppercase tracking-tight mt-1 transition-all"
+      [ngClass]="isItemActive(item) ? 'font-black' : 'font-bold'"
+      >{{ item.label }}</span
+    >
+  </button>
 </nav>

@@ -8,88 +8,9 @@
 /* ── App Shell ── */
 
 .app-shell {
-  --pull-distance: 0px;
   min-height: 100vh;
   min-height: 100dvh;
-  overscroll-behavior-y: contain;
-  transition: transform 320ms var(--ease-out);
   background: var(--background);
-}
-
-.app-shell--pulling {
-  transform: translate3d(0, calc(var(--pull-distance, 0px) * 0.72), 0);
-}
-
-.app-shell--pull-1 {
-  --pull-distance: 20px;
-}
-
-.app-shell--pull-2 {
-  --pull-distance: 40px;
-}
-
-.app-shell--pull-3 {
-  --pull-distance: 60px;
-}
-
-.app-shell--pull-4 {
-  --pull-distance: 80px;
-}
-
-.app-shell--pull-5 {
-  --pull-distance: 100px;
-}
-
-.app-shell--pull-6 {
-  --pull-distance: 116px;
-}
-
-.app-shell__pull-refresh {
-  position: fixed;
-  top: calc(10px + env(safe-area-inset-top, 0px));
-  left: 50%;
-  z-index: 80;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-lg);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate3d(-50%, calc(-100% + min(var(--pull-distance, 0px), 60px)), 0);
-  transition:
-    opacity 220ms ease,
-    transform 320ms var(--ease-out);
-}
-
-.app-shell--pulling .app-shell__pull-refresh,
-.app-shell--refreshing .app-shell__pull-refresh {
-  opacity: 1;
-}
-
-.app-shell--refreshing {
-  transform: translate3d(0, 56px, 0);
-}
-
-.app-shell__pull-icon {
-  font-size: 18px;
-  color: var(--mint-500);
-}
-
-.app-shell__pull-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--graphite-500);
-}
-
-.app-shell--refreshing .app-shell__pull-icon {
-  animation: app-pull-spin 0.9s linear infinite;
 }
 
 /* ── Page Stage ── */
@@ -97,14 +18,6 @@
 .app-shell__page-stage {
   position: relative;
   min-height: 100vh;
-}
-
-.app-shell__page-stage--a {
-  animation: app-route-enter-a 400ms var(--ease-out) both;
-}
-
-.app-shell__page-stage--b {
-  animation: app-route-enter-b 400ms var(--ease-out) both;
 }
 
 .app-shell.with-bottom-nav {
@@ -145,9 +58,7 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: var(--space-5);
-  padding:
-    calc(var(--space-6) + env(safe-area-inset-top, 0px))
-    var(--space-5)
+  padding: calc(var(--space-6) + env(safe-area-inset-top, 0px)) var(--space-5)
     calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
   background: var(--white);
   color: var(--text-primary);
@@ -422,41 +333,289 @@
   }
 }
 
-/* ═══════════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════════ */
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes app-route-enter-a {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-
-  @keyframes app-route-enter-b {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .app-shell,
+  .app-shell__page-stage {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
-@keyframes app-pull-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* ── Stitch mobile navigation drawer ── */
+.menu-stitch {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  font-family: 'Inter', sans-serif;
+  color: #091d2e;
+}
+
+.menu-stitch .menu-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(9, 29, 46, 0.3);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.menu-stitch .menu-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  min-height: 100dvh;
+  padding: calc(32px + env(safe-area-inset-top, 0px)) 0
+    calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+  border: 0;
+  border-radius: 0 1.5rem 1.5rem 0;
+  background: #f7f9ff;
+  box-shadow: 32px 0 32px rgba(9, 29, 46, 0.06);
+  animation: menu-drawer-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.menu-stitch .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.menu-drawer__profile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 24px;
+  margin-bottom: 40px;
+}
+
+.menu-drawer__avatar-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.menu-drawer__avatar-frame {
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 4px rgba(0, 109, 55, 0.1);
+}
+
+.menu-stitch .menu-drawer__avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.menu-stitch .menu-drawer__avatar--fallback {
+  display: grid;
+  place-items: center;
+  background: #edf4ff;
+  color: #006d37;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.menu-drawer__verified {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 0.5rem;
+  background: #006d37;
+  color: #ffffff;
+}
+
+.menu-drawer__verified .material-symbols-outlined {
+  font-size: 14px;
+  font-variation-settings: 'FILL' 1;
+}
+
+.menu-stitch .menu-drawer h2 {
+  margin: 0;
+  max-width: 100%;
+  color: #091d2e;
+  font-size: 20px !important;
+  font-weight: 700;
+  line-height: 1.2 !important;
+}
+
+.menu-stitch .menu-drawer__brand {
+  color: #006d37;
+  font-size: 24px !important;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.menu-drawer__member {
+  margin: 4px 0 0;
+  color: #006d37;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.menu-drawer__location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  color: rgba(9, 29, 46, 0.5);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.menu-drawer__location .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.menu-stitch .menu-drawer__nav {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 0 16px;
+  overflow-y: auto;
+}
+
+.menu-stitch .menu-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #091d2e;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.menu-stitch .menu-link:active {
+  transform: scale(0.95);
+}
+
+.menu-stitch .menu-link:hover {
+  background: #edf4ff;
+}
+
+.menu-stitch .menu-link .material-symbols-outlined {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: currentColor;
+  font-size: 24px;
+}
+
+.menu-stitch .menu-link--active {
+  background: linear-gradient(90deg, #006d37 0%, #2ecc71 100%);
+  color: #ffffff;
+}
+
+.menu-stitch .menu-link--active:hover {
+  background: linear-gradient(90deg, #006d37 0%, #2ecc71 100%);
+  opacity: 0.9;
+}
+
+.menu-stitch .menu-drawer__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 32px 0;
+}
+
+.menu-drawer__balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 1rem;
+  background: #edf4ff;
+}
+
+.menu-drawer__balance p,
+.menu-drawer__balance strong {
+  margin: 0;
+}
+
+.menu-drawer__balance p {
+  color: rgba(9, 29, 46, 0.5);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.menu-drawer__balance strong {
+  color: #091d2e;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.menu-drawer__balance .material-symbols-outlined {
+  color: #2ecc71;
+}
+
+.menu-drawer__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  color: rgba(9, 29, 46, 0.4);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.menu-drawer__meta button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu-drawer__meta button:hover {
+  color: #006d37;
+}
+
+@keyframes menu-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-shell,
-  .app-shell__page-stage,
-  .app-shell__pull-refresh,
-  .app-shell__pull-icon {
-    animation: none !important;
-    transition: none !important;
+  .menu-stitch .menu-drawer {
+    animation: none;
   }
 }
