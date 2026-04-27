@@ -2,6 +2,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CompareService } from '../../core/services/compare.service';
+import { UiStateService } from '../../core/services/ui-state.service';
 
 @Component({
   selector: 'app-compare-page',
@@ -12,8 +13,13 @@ import { CompareService } from '../../core/services/compare.service';
 })
 export class ComparePageComponent {
   protected readonly compareService = inject(CompareService);
+  private readonly uiStateService = inject(UiStateService);
   protected readonly fallbackImage =
     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80';
+
+  protected toggleMenu() {
+    this.uiStateService.toggleMenu();
+  }
 
   protected trackById(_index: number, item: { id: string }) {
     return item.id;

@@ -1,104 +1,176 @@
-<main class="page compare-page">
-  <section class="compare-page__hero surface-card">
-    <div>
-      <span class="eyebrow">Comparador</span>
-      <h1>Veja lado a lado o que realmente muda entre os anúncios</h1>
-      <p>
-        Compare preço, câmbio, assentos, política de cancelamento e perfil
-        do anunciante antes de decidir.
-      </p>
-    </div>
-
-    <div class="compare-page__hero-actions">
-      <a class="btn btn-secondary" routerLink="/search">Adicionar mais</a>
-      <button
-        type="button"
-        class="btn btn-ghost"
-        *ngIf="compareService.count()"
-        (click)="compareService.clear()"
+<main class="bg-surface text-on-surface pb-4 font-body antialiased">
+  <!-- TopAppBar -->
+  <header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4">
+    <div class="flex items-center gap-3">
+      <span
+        class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+        (click)="toggleMenu()"
+        >menu</span
       >
-        Limpar seleção
-      </button>
+      <h1 class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0">
+        Triluga
+      </h1>
     </div>
-  </section>
+    <div class="flex items-center gap-4">
+      <span
+        class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+        >notifications</span
+      >
+    </div>
+  </header>
 
-  <section
-    class="compare-page__empty surface-card"
-    *ngIf="!compareService.count()"
-  >
-    <strong>Nenhum veículo selecionado</strong>
-    <p>
-      Vá para a busca, favoritos ou perfil público e toque em "Comparar"
-      nos anúncios que quiser colocar lado a lado.
-    </p>
-    <a class="btn btn-primary" routerLink="/search">Ir para a busca</a>
-  </section>
-
-  <section
-    class="compare-page__hint surface-card"
-    *ngIf="compareService.count() === 1"
-  >
-    <strong>Falta mais um veículo</strong>
-    <p>
-      A comparação fica mais útil com pelo menos dois anúncios na mesa.
-    </p>
-  </section>
-
-  <section class="compare-grid" *ngIf="compareService.count()">
-    <article
-      class="compare-column surface-card"
-      *ngFor="let vehicle of compareService.items(); trackBy: trackById"
-    >
-      <div class="compare-column__media">
-        <img [src]="vehicle.coverImage || fallbackImage" [alt]="vehicle.title" />
-        <button
-          type="button"
-          class="compare-column__remove"
-          (click)="compareService.remove(vehicle.id)"
+  <div class="pt-2 pb-2 px-4 sm:px-6 max-w-7xl mx-auto">
+    <!-- Hero Title Section -->
+    <section class="mb-8 px-2">
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-on-surface mb-2">Comparativo Premium</h2>
+      <p class="text-on-surface-variant/70 max-w-md text-[15px] sm:text-base">Analise as melhores opções de mobilidade lado a lado e escolha a que melhor se adapta ao seu estilo.</p>
+      
+      <div class="flex gap-3 mt-6" *ngIf="compareService.count()">
+        <a routerLink="/search" class="inline-flex items-center gap-1.5 bg-surface-container-low text-on-surface px-4 py-2 rounded-full font-bold text-xs border border-outline-variant/20 active:scale-95 transition-all hover:bg-surface-container-high whitespace-nowrap">
+          <span class="material-symbols-outlined text-base">add</span> Adicionar mais
+        </a>
+        <button 
+          type="button" 
+          class="inline-flex items-center gap-1.5 text-error/80 px-4 py-2 rounded-full font-bold text-xs border border-error/10 bg-error-container/20 active:scale-95 transition-all hover:bg-error-container/40 whitespace-nowrap"
+          (click)="compareService.clear()"
         >
-          <span class="material-icons" aria-hidden="true">close</span>
+          <span class="material-symbols-outlined text-base">delete_sweep</span> Limpar seleção
         </button>
       </div>
+    </section>
 
-      <div class="compare-column__head">
-        <h2>{{ vehicle.title }}</h2>
-        <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
+    <!-- Empty State: No vehicles -->
+    <section 
+      class="flex flex-col items-center justify-center py-20 text-center" 
+      *ngIf="!compareService.count()"
+    >
+      <div class="w-24 h-24 bg-surface-container-low rounded-full flex items-center justify-center mb-6 border border-surface-container-high/50 shadow-sm">
+        <span class="material-symbols-outlined text-5xl text-on-surface-variant/30">compare_arrows</span>
       </div>
-
-      <div class="compare-column__price price-text">
-        {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
-      </div>
-
-      <dl class="compare-specs">
-        <div>
-          <dt>Categoria</dt>
-          <dd>{{ categoryLabel(vehicle.category) }}</dd>
-        </div>
-        <div>
-          <dt>Câmbio</dt>
-          <dd>{{ transmissionLabel(vehicle.transmission) }}</dd>
-        </div>
-        <div>
-          <dt>Combustível</dt>
-          <dd>{{ fuelTypeLabel(vehicle.fuelType) }}</dd>
-        </div>
-        <div>
-          <dt>Assentos</dt>
-          <dd>{{ vehicle.seats }} lugares</dd>
-        </div>
-        <div>
-          <dt>Avaliação</dt>
-          <dd>{{ ratingLabel(vehicle.owner?.ratingAverage, vehicle.owner?.reviewsCount) }}</dd>
-        </div>
-        <div>
-          <dt>Anunciante</dt>
-          <dd class="profile-name-text">{{ vehicle.owner?.fullName || 'Usuário Triluga' }}</dd>
-        </div>
-      </dl>
-
-      <a class="btn btn-primary compare-column__cta" [routerLink]="['/vehicles', vehicle.id]">
-        Ver anúncio
+      <h3 class="text-2xl font-bold text-on-surface mb-2">Nenhum veículo selecionado</h3>
+      <p class="text-on-surface-variant/60 max-w-xs mb-8 text-sm">
+        Vá para a busca, favoritos ou perfil público e toque em "Comparar" nos anúncios que quiser colocar lado a lado.
+      </p>
+      <a routerLink="/search" class="bg-primary text-on-primary px-8 py-3.5 rounded-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all text-sm">
+        Ir para a busca
       </a>
-    </article>
-  </section>
+    </section>
+
+    <!-- Hint: Only 1 vehicle -->
+    <div 
+      class="mb-8 p-5 rounded-xl bg-surface-container-low flex items-center gap-4 border border-outline-variant/10"
+      *ngIf="compareService.count() === 1"
+    >
+      <span class="material-symbols-outlined text-primary shrink-0">info</span>
+      <div>
+        <strong class="text-sm font-bold text-on-surface">Falta mais um veículo</strong>
+        <p class="text-xs text-on-surface-variant/70 mt-0.5">A comparação fica mais útil com pelo menos dois anúncios na mesa.</p>
+      </div>
+    </div>
+
+    <!-- Comparison Table Container -->
+    <div class="relative overflow-x-auto hide-scrollbar -mx-4 px-4" *ngIf="compareService.count()">
+      <div class="flex min-w-[640px] md:min-w-full gap-4 pb-4">
+        
+        <!-- Vehicle Comparison Columns -->
+        <div 
+          class="flex-1 min-w-[280px]" 
+          *ngFor="let vehicle of compareService.items(); trackBy: trackById"
+        >
+          <div class="bg-surface-container-lowest rounded-xl p-4 transition-all duration-300 h-full flex flex-col">
+            <!-- Vehicle Image -->
+            <div class="relative mb-4 group">
+              <img 
+                class="w-full aspect-[4/3] object-cover rounded-lg shadow-sm" 
+                [src]="vehicle.coverImage || fallbackImage" 
+                [alt]="vehicle.title" 
+                loading="lazy"
+              />
+              <button 
+                class="absolute top-2 right-2 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-sm text-error hover:scale-110 active:scale-90 transition-transform"
+                (click)="compareService.remove(vehicle.id)"
+                aria-label="Remover da comparação"
+              >
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <!-- Vehicle Info -->
+            <div class="space-y-6 flex-grow flex flex-col">
+              <div>
+                <h3 class="text-xl font-bold tracking-tight text-on-surface">{{ vehicle.title }}</h3>
+                <div class="flex items-center gap-1 mt-1">
+                  <span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                  <span class="text-sm font-semibold">{{ ratingLabel(vehicle.owner?.ratingAverage, vehicle.owner?.reviewsCount) }}</span>
+                </div>
+                <p class="text-xs text-on-surface-variant/60 mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">place</span>
+                  {{ vehicle.city }}, {{ vehicle.state }}
+                </p>
+              </div>
+
+              <!-- Feature List -->
+              <div class="space-y-4 flex-grow">
+                <div class="flex flex-col border-b border-outline-variant/10 pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Preço/dia</span>
+                  <span class="text-lg font-bold text-primary">{{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}</span>
+                </div>
+                <div class="flex flex-col border-b border-outline-variant/10 pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Ano</span>
+                  <span class="text-md font-medium">{{ vehicle.year }}</span>
+                </div>
+                <div class="flex flex-col border-b border-outline-variant/10 pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Categoria</span>
+                  <span class="text-md font-medium">{{ categoryLabel(vehicle.category) }}</span>
+                </div>
+                <div class="flex flex-col border-b border-outline-variant/10 pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Câmbio</span>
+                  <span class="text-md font-medium">{{ transmissionLabel(vehicle.transmission) }}</span>
+                </div>
+                <div class="flex flex-col border-b border-outline-variant/10 pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Combustível</span>
+                  <span class="text-md font-medium">{{ fuelTypeLabel(vehicle.fuelType) }}</span>
+                </div>
+                <div class="flex flex-col pb-4">
+                  <span class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1">Assentos</span>
+                  <span class="text-md font-medium">{{ vehicle.seats }} lugares</span>
+                </div>
+              </div>
+
+              <!-- CTA -->
+              <a 
+                class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-4 rounded-full font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-md mt-auto"
+                [routerLink]="['/vehicles', vehicle.id]"
+              >
+                <span class="material-symbols-outlined">visibility</span>
+                Ver anúncio
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Vehicle Slot (when less than 3 columns) -->
+        <div class="flex-1 min-w-[280px]" *ngIf="compareService.count() < 3">
+          <a 
+            routerLink="/search"
+            class="h-full border-2 border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center p-8 bg-surface-container-low/30 hover:bg-surface-container-low transition-colors cursor-pointer group min-h-[400px]"
+          >
+            <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-primary text-[32px]">add</span>
+            </div>
+            <p class="font-bold text-on-surface-variant text-center">Adicionar veículo</p>
+            <p class="text-xs text-on-surface-variant/60 text-center mt-2 px-6">Escolha outro carro para refinar sua busca</p>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Bar (Desktop) -->
+    <div class="mt-10 p-5 bg-surface-container-low rounded-xl border border-outline-variant/10 hidden md:flex justify-between items-center" *ngIf="compareService.count()">
+      <div class="flex gap-4 items-center">
+        <span class="material-symbols-outlined text-primary">info</span>
+        <p class="text-sm font-medium text-on-surface-variant">Os preços podem variar de acordo com o período de locação e pacotes de seguro.</p>
+      </div>
+    </div>
+  </div>
 </main>
