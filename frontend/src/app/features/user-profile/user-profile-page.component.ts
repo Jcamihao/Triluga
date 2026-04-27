@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,6 +20,7 @@ import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehic
 export class UserProfilePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly profileApiService = inject(ProfileApiService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -65,6 +66,10 @@ export class UserProfilePageComponent {
       this.linkCopied = true;
       setTimeout(() => (this.linkCopied = false), 2500);
     });
+  }
+
+  protected goBack() {
+    this.location.back();
   }
 
   protected contactUser() {
@@ -160,5 +165,20 @@ export class UserProfilePageComponent {
 
   protected trackByValue(_: number, value: number) {
     return value;
+  }
+
+  protected get verificationLevel(): 'error' | 'warning' | 'success' {
+    if (!this.profile) return 'error';
+
+    const docStatus = this.profile.verification.documentStatus;
+    const cnhStatus = this.profile.verification.driverLicenseStatus;
+
+    const sentCount =
+      (docStatus !== 'NOT_SUBMITTED' ? 1 : 0) +
+      (cnhStatus !== 'NOT_SUBMITTED' ? 1 : 0);
+
+    if (sentCount === 0) return 'error';
+    if (sentCount === 1) return 'warning';
+    return 'success';
   }
 }

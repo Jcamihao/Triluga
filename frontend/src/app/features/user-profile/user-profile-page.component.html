@@ -1,390 +1,298 @@
-<main class="page user-profile-page">
-  <!-- ── Skeleton Loading ── -->
-  <section class="user-profile-hero surface-card" *ngIf="isLoading">
-    <div class="user-profile-hero__top">
-      <div class="skeleton user-profile-skeleton__avatar"></div>
-
-      <div class="user-profile-hero__copy">
-        <div class="skeleton user-profile-skeleton__eyebrow"></div>
-        <div class="skeleton user-profile-skeleton__name"></div>
-        <div class="skeleton user-profile-skeleton__since"></div>
-      </div>
-    </div>
-
-    <div class="skeleton user-profile-skeleton__bio"></div>
-
-    <div class="user-profile-stats">
-      <article *ngFor="let i of [1, 2, 3]">
-        <div class="skeleton user-profile-skeleton__stat-value"></div>
-        <div class="skeleton user-profile-skeleton__stat-label"></div>
-      </article>
-    </div>
-  </section>
-
-  <!-- ── Error ── -->
-  <section
-    class="user-profile-shell surface-card"
-    *ngIf="!isLoading && errorMessage"
-  >
-    <span class="eyebrow">Perfil</span>
-    <h1>Perfil indisponível</h1>
-    <p>{{ errorMessage }}</p>
-    <a class="btn btn-secondary" routerLink="/search">Voltar</a>
-  </section>
-
-  <ng-container *ngIf="!isLoading && profile">
-    <!-- ── Hero ── -->
-    <section class="user-profile-hero surface-card">
-      <div class="user-profile-hero__top">
-        <img
-          class="user-profile-hero__avatar"
-          [src]="profile.avatarUrl || fallbackAvatarImage"
-          [alt]="profile.fullName"
-        />
-
-        <div class="user-profile-hero__copy">
-          <span class="eyebrow">{{ roleLabel(profile.role) }}</span>
-          <h1 class="profile-name-text">{{ profile.fullName }}</h1>
-          <p class="user-profile-hero__since">
-            Na Triluga desde {{ memberSinceLabel(profile.memberSince) }}
-          </p>
-          <p *ngIf="locationLabel(profile)">{{ locationLabel(profile) }}</p>
-
-          <p
-            class="user-profile-hero__response-badge"
-            *ngIf="profile.responseTimeLabel"
-          >
-            <span class="material-icons" aria-hidden="true">bolt</span>
-            {{ profile.responseTimeLabel }}
-          </p>
-        </div>
-      </div>
-
-      <p class="user-profile-hero__bio" *ngIf="profile.bio">
-        {{ profile.bio }}
-      </p>
-
-      <div class="user-profile-hero__actions">
-        <button
-          class="btn btn-primary btn-sm btn-pill"
-          (click)="contactUser()"
-          *ngIf="profile.vehicles.length"
-        >
-          <span class="material-icons" aria-hidden="true">chat_bubble</span>
-          Contatar
-        </button>
-
-        <button
-          class="btn btn-secondary btn-sm btn-pill"
-          (click)="copyProfileLink()"
-        >
-          <span class="material-icons" aria-hidden="true">
-            {{ linkCopied ? 'check' : 'share' }}
-          </span>
-          {{ linkCopied ? 'Link copiado!' : 'Compartilhar' }}
-        </button>
-      </div>
-
-      <div class="user-profile-stats">
-        <article>
-          <strong>{{ scoreLabel(profile) }}</strong>
-          <span>Avaliação geral</span>
-        </article>
-        <article>
-          <strong>{{ profile.reviewsCount }}</strong>
-          <span>Avaliações</span>
-        </article>
-        <article>
-          <strong>{{ profile.activeListingsCount }}</strong>
-          <span>Anúncios ativos</span>
-        </article>
-      </div>
-    </section>
-
-    <!-- ── Basic Info ── -->
-    <section class="user-profile-section surface-card">
-      <div class="user-profile-section__header">
-        <div>
-          <span class="eyebrow">Dados básicos</span>
-          <h2>Informações públicas</h2>
-        </div>
-      </div>
-
-      <div class="user-profile-facts">
-        <article>
-          <strong>{{ profile.state || '--' }}</strong>
-          <span>UF</span>
-        </article>
-        <article>
-          <strong>{{ profile.city || '--' }}</strong>
-          <span>Cidade</span>
-        </article>
-        <article>
-          <strong>{{ memberSinceLabel(profile.memberSince) }}</strong>
-          <span>Membro desde</span>
-        </article>
-      </div>
-    </section>
-
-    <!-- ── Trust Metrics ── -->
-    <section class="user-profile-section surface-card">
-      <div class="user-profile-section__header">
-        <div>
-          <span class="eyebrow">Confiança</span>
-          <h2>Reputação pública do anunciante</h2>
-        </div>
-      </div>
-
-      <div class="user-profile-trust-grid">
-        <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.activeListingsCount }}</strong>
-          <span>anúncios ativos</span>
-          <small>Veículos publicados por esse anunciante.</small>
-        </article>
-
-        <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.reviewsCount }}</strong>
-          <span>avaliações recebidas</span>
-          <small>Histórico público de reputação no perfil.</small>
-        </article>
-
-        <article class="user-profile-trust-card">
-          <strong>{{ scoreLabel(profile) }}</strong>
-          <span>nota média</span>
-          <small>Baseada nas avaliações públicas disponíveis.</small>
-        </article>
-
-        <article class="user-profile-trust-card">
-          <strong>{{ profile.trustMetrics.completedRentalsCount }}</strong>
-          <span>aluguéis concluídos</span>
-          <small>Total de locações finalizadas com sucesso.</small>
-        </article>
-      </div>
-    </section>
-
-    <!-- ── Reviews ── -->
-    <section class="user-profile-section surface-card">
-      <div class="user-profile-section__header">
-        <div>
-          <span class="eyebrow">Avaliações</span>
-          <h2>Reputação do usuário</h2>
-        </div>
-
-        <span class="user-profile-section__count">{{
-          profile.reviewsCount
-        }}</span>
-      </div>
-
-      <div class="user-profile-review-summary">
-        <div>
-          <strong>{{ scoreLabel(profile) }}</strong>
-          <p>{{ reviewSummaryLabel(profile) }}</p>
-        </div>
-
-        <div
-          class="user-profile-review-stars"
-          [attr.aria-label]="
-            profile.reviewsCount
-              ? 'Nota média ' + profile.ratingAverage.toFixed(1) + ' de 5'
-              : 'Sem avaliações'
-          "
-        >
-          <span
-            class="material-icons"
-            *ngFor="let star of ratingOptions; trackBy: trackByValue"
-            aria-hidden="true"
-          >
-            {{
-              star <= roundedScore(profile.ratingAverage)
-                ? 'star'
-                : 'star_border'
-            }}
-          </span>
-        </div>
-      </div>
-
-      <div
-        class="user-profile-review-list"
-        *ngIf="profile.reviews.length; else emptyReviews"
+<main class="bg-surface text-on-surface pb-24 font-body antialiased">
+  <!-- TopAppBar -->
+  <header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4">
+    <div class="flex items-center gap-3">
+      <span
+        class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+        (click)="goBack()"
+        >arrow_back</span
       >
-        <article
-          class="user-profile-review-card"
-          *ngFor="let review of profile.reviews; trackBy: trackById"
-        >
-          <div class="user-profile-review-card__head">
-            <div class="user-profile-review-card__author">
-              <img
-                class="user-profile-review-card__avatar"
-                [src]="review.author?.avatarUrl || fallbackAvatarImage"
-                [alt]="review.author?.fullName || 'Usuário'"
-              />
+      <h1 class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0">
+        Perfil
+      </h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <span
+        class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+        (click)="copyProfileLink()"
+        >{{ linkCopied ? 'check' : 'share' }}</span
+      >
+    </div>
+  </header>
 
-              <div>
-                <strong class="profile-name-text">{{ review.author?.fullName || 'Usuário' }}</strong>
-                <p>{{ review.createdAt | date: 'dd/MM/yyyy' }}</p>
-              </div>
+  <div class="px-4 space-y-6 max-w-4xl mx-auto pt-2">
+    <!-- Skeleton Loading -->
+    <section class="bg-surface-container-low rounded-[2rem] p-8 animate-pulse space-y-6" *ngIf="isLoading">
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-28 h-28 rounded-full bg-surface-container-high"></div>
+        <div class="space-y-2 w-full max-w-[200px]">
+          <div class="h-4 bg-surface-container-high rounded-full"></div>
+          <div class="h-3 bg-surface-container-high rounded-full w-3/4 mx-auto"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="h-20 bg-surface-container-high rounded-2xl" *ngFor="let i of [1, 2, 3]"></div>
+      </div>
+    </section>
+
+    <!-- Error State -->
+    <section
+      class="flex flex-col items-center justify-center py-20 text-center"
+      *ngIf="!isLoading && errorMessage"
+    >
+      <div class="w-20 h-20 bg-error-container/30 rounded-full flex items-center justify-center mb-6">
+        <span class="material-symbols-outlined text-4xl text-error/60">error</span>
+      </div>
+      <h2 class="text-xl font-bold text-on-surface mb-2">Perfil indisponível</h2>
+      <p class="text-on-surface-variant/60 text-sm max-w-xs mb-6">{{ errorMessage }}</p>
+      <a routerLink="/search" class="bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-sm active:scale-95 transition-all shadow-md shadow-primary/20">
+        Voltar à busca
+      </a>
+    </section>
+
+    <ng-container *ngIf="!isLoading && profile">
+      <!-- Profile Hero Section -->
+      <section class="relative bg-surface-container-low rounded-[2rem] p-6 sm:p-8 overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-container/10 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none"></div>
+        <div class="relative flex flex-col items-center text-center gap-5">
+          <!-- Avatar -->
+          <div class="relative">
+            <div class="w-28 h-28 rounded-full border-4 border-surface overflow-hidden shadow-2xl">
+              <img [src]="profile.avatarUrl || fallbackAvatarImage" [alt]="profile.fullName" class="w-full h-full object-cover" />
             </div>
-
             <div
-              class="user-profile-review-stars"
-              [attr.aria-label]="'Nota ' + review.rating + ' de 5'"
+              *ngIf="profile.verification.profileStatus === 'APPROVED'"
+              class="absolute bottom-1 right-1 bg-primary text-on-primary p-1.5 rounded-full border-2 border-surface flex items-center justify-center"
             >
-              <span
-                class="material-icons"
-                *ngFor="let star of ratingOptions; trackBy: trackByValue"
-                aria-hidden="true"
-              >
-                {{ star <= review.rating ? 'star' : 'star_border' }}
+              <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">verified</span>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="space-y-2">
+            <div class="flex flex-col items-center gap-2">
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-on-surface">{{ profile.fullName }}</h2>
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-wider">
+                {{ roleLabel(profile.role) }}
               </span>
             </div>
-          </div>
-
-          <p>
-            {{
-              review.comment ||
-                'O usuário deixou a nota sem comentário adicional.'
-            }}
-          </p>
-        </article>
-      </div>
-
-      <ng-template #emptyReviews>
-        <div class="user-profile-empty">
-          <span class="material-icons" aria-hidden="true">reviews</span>
-          <strong>Ainda sem avaliações públicas</strong>
-          <p>
-            Quando esse usuário receber avaliações públicas, elas vão aparecer aqui.
-          </p>
-        </div>
-      </ng-template>
-    </section>
-
-    <!-- ── Verifications ── -->
-    <section class="user-profile-section surface-card">
-      <div class="user-profile-section__header">
-        <div>
-          <span class="eyebrow">Confiança</span>
-          <h2>Verificações</h2>
-        </div>
-
-        <span
-          class="verification-pill"
-          [class.verification-pill--approved]="
-            profile.verification.profileStatus === 'APPROVED'
-          "
-          [class.verification-pill--pending]="
-            profile.verification.profileStatus === 'PENDING'
-          "
-        >
-          {{ verificationSummary(profile.verification.profileStatus) }}
-        </span>
-      </div>
-
-      <div class="verification-list">
-        <article
-          class="verification-item"
-          [class.verification-item--approved]="
-            profile.verification.documentStatus === 'APPROVED'
-          "
-          [class.verification-item--pending]="
-            profile.verification.documentStatus === 'PENDING'
-          "
-          [class.verification-item--rejected]="
-            profile.verification.documentStatus === 'REJECTED'
-          "
-        >
-          <span class="material-icons" aria-hidden="true">
-            {{ verificationIcon(profile.verification.documentStatus) }}
-          </span>
-          <div>
-            <strong>Documento</strong>
-            <p>
-              {{ verificationLabel(profile.verification.documentStatus) }}
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-on-surface-variant text-sm font-medium">
+              <span *ngIf="locationLabel(profile)" class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-base">location_on</span>
+                {{ locationLabel(profile) }}
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-base">calendar_today</span>
+                Desde {{ memberSinceLabel(profile.memberSince) }}
+              </span>
+            </div>
+            <p *ngIf="profile.bio" class="text-sm text-on-surface/70 max-w-sm mx-auto leading-relaxed mt-2">{{ profile.bio }}</p>
+            <p *ngIf="profile.responseTimeLabel" class="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full mt-2">
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+              {{ profile.responseTimeLabel }}
             </p>
           </div>
-        </article>
 
-        <article
-          class="verification-item"
-          [class.verification-item--approved]="
-            profile.verification.driverLicenseStatus === 'APPROVED'
-          "
-          [class.verification-item--pending]="
-            profile.verification.driverLicenseStatus === 'PENDING'
-          "
-          [class.verification-item--rejected]="
-            profile.verification.driverLicenseStatus === 'REJECTED'
-          "
-        >
-          <span class="material-icons" aria-hidden="true">
-            {{ verificationIcon(profile.verification.driverLicenseStatus) }}
-          </span>
-          <div>
-            <strong>CNH</strong>
-            <p>
-              {{
-                verificationLabel(profile.verification.driverLicenseStatus)
-              }}
-            </p>
+          <!-- Actions -->
+          <div class="flex flex-wrap justify-center gap-3 mt-2">
+            <button
+              *ngIf="profile.vehicles.length"
+              class="px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center gap-2 text-sm"
+              (click)="contactUser()"
+            >
+              <span class="material-symbols-outlined text-lg">chat</span>
+              Conversar
+            </button>
+            <button
+              class="px-6 py-3 border border-outline-variant/30 text-primary font-bold rounded-full active:scale-95 transition-all text-sm"
+              (click)="copyProfileLink()"
+            >
+              {{ linkCopied ? 'Link copiado!' : 'Compartilhar' }}
+            </button>
           </div>
-        </article>
-
-        <article
-          class="verification-item"
-          [class.verification-item--approved]="
-            profile.verification.profileStatus === 'APPROVED'
-          "
-          [class.verification-item--pending]="
-            profile.verification.profileStatus === 'PENDING'
-          "
-          [class.verification-item--rejected]="
-            profile.verification.profileStatus === 'REJECTED'
-          "
-        >
-          <span class="material-icons" aria-hidden="true">
-            {{ verificationIcon(profile.verification.profileStatus) }}
-          </span>
-          <div>
-            <strong>Perfil</strong>
-            <p>
-              {{ verificationSummary(profile.verification.profileStatus) }}
-            </p>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- ── Vehicle Listings ── -->
-    <section class="user-profile-section surface-card">
-      <div class="user-profile-section__header">
-        <div>
-          <span class="eyebrow">Anúncios</span>
-          <h2>Carros publicados</h2>
         </div>
-        <span class="user-profile-section__count">{{
-          profile.vehicles.length
-        }}</span>
+      </section>
+
+      <!-- Trust Metrics Bento Grid -->
+      <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+          <span class="text-primary font-black text-xl flex items-center gap-1">
+            {{ scoreLabel(profile) }}
+            <span *ngIf="profile.reviewsCount" class="material-symbols-outlined text-primary-container text-lg" style="font-variation-settings: 'FILL' 1;">star</span>
+          </span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70 mt-1">Avaliação</span>
+        </div>
+        <div class="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+          <span class="text-on-surface font-black text-xl">{{ profile.activeListingsCount }}</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70 mt-1">Veículos</span>
+        </div>
+        <div class="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+          <span class="text-on-surface font-black text-xl">{{ profile.trustMetrics.completedRentalsCount }}</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70 mt-1">Aluguéis</span>
+        </div>
+        <div class="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+          <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70 mt-1">
+            {{ verificationSummary(profile.verification.profileStatus) }}
+          </span>
+        </div>
+      </section>
+
+      <!-- Vehicles & Reviews -->
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Vehicles List -->
+        <section class="lg:col-span-3 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold tracking-tight text-on-surface">Veículos Disponíveis</h3>
+            <span class="text-xs font-bold text-primary" *ngIf="profile.vehicles.length">{{ profile.vehicles.length }} anúncios</span>
+          </div>
+
+          <div class="space-y-3" *ngIf="profile.vehicles.length; else emptyListings">
+            <a
+              *ngFor="let vehicle of profile.vehicles; trackBy: trackById"
+              [routerLink]="['/vehicles', vehicle.id]"
+              class="bg-surface-container-lowest rounded-2xl p-4 flex gap-4 hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
+            >
+              <div class="w-28 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                <img
+                  [src]="vehicle.coverImage || fallbackAvatarImage"
+                  [alt]="vehicle.brand + ' ' + vehicle.model"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="flex flex-col justify-between py-0.5 flex-grow min-w-0">
+                <div>
+                  <h4 class="font-bold text-on-surface text-sm truncate">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+                  <p class="text-xs text-on-surface-variant truncate">{{ vehicle.year }} • {{ vehicle.city }}, {{ vehicle.state }}</p>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="text-primary font-extrabold text-sm">R$ {{ vehicle.dailyRate }}</span>
+                  <span class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-tighter">/ dia</span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <ng-template #emptyListings>
+            <div class="flex flex-col items-center justify-center py-12 text-center bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
+              <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 mb-3">directions_car</span>
+              <strong class="text-sm font-bold text-on-surface">Nenhum anúncio público</strong>
+              <p class="text-xs text-on-surface-variant/60 mt-1">Esse usuário ainda não tem veículos ativos.</p>
+            </div>
+          </ng-template>
+        </section>
+
+        <!-- Reviews Section -->
+        <section class="lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold tracking-tight text-on-surface">Avaliações</h3>
+            <span class="text-xs font-bold text-on-surface-variant/60" *ngIf="profile.reviewsCount">{{ profile.reviewsCount }} total</span>
+          </div>
+
+          <!-- Rating Summary -->
+          <div class="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/10">
+            <span class="text-3xl font-black text-primary">{{ scoreLabel(profile) }}</span>
+            <div>
+              <div
+                class="flex text-primary-container"
+                [attr.aria-label]="profile.reviewsCount ? 'Nota média ' + profile.ratingAverage.toFixed(1) + ' de 5' : 'Sem avaliações'"
+              >
+                <span
+                  class="material-symbols-outlined text-[16px]"
+                  *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                  style="font-variation-settings: 'FILL' 1;"
+                >{{ star <= roundedScore(profile.ratingAverage) ? 'star' : 'star_border' }}</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant/60 mt-0.5">{{ reviewSummaryLabel(profile) }}</p>
+            </div>
+          </div>
+
+          <!-- Review Cards -->
+          <div class="space-y-3" *ngIf="profile.reviews.length; else emptyReviews">
+            <div
+              *ngFor="let review of profile.reviews; trackBy: trackById"
+              class="bg-surface-container-low/50 p-4 rounded-2xl space-y-2.5"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                  <img [src]="review.author?.avatarUrl || fallbackAvatarImage" [alt]="review.author?.fullName || 'Usuário'" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-grow min-w-0">
+                  <p class="text-sm font-bold text-on-surface truncate">{{ review.author?.fullName || 'Usuário' }}</p>
+                  <div class="flex text-primary-container">
+                    <span
+                      class="material-symbols-outlined text-[12px]"
+                      *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                      style="font-variation-settings: 'FILL' 1;"
+                    >{{ star <= review.rating ? 'star' : 'star_border' }}</span>
+                  </div>
+                </div>
+                <span class="text-[10px] text-on-surface-variant/40 font-medium shrink-0">{{ review.createdAt | date: 'dd/MM/yy' }}</span>
+              </div>
+              <p class="text-xs text-on-surface-variant italic leading-relaxed">
+                {{ review.comment || 'O usuário deixou a nota sem comentário adicional.' }}
+              </p>
+            </div>
+          </div>
+
+          <ng-template #emptyReviews>
+            <div class="flex flex-col items-center justify-center py-12 text-center bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
+              <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 mb-3">reviews</span>
+              <strong class="text-sm font-bold text-on-surface">Sem avaliações</strong>
+              <p class="text-xs text-on-surface-variant/60 mt-1">Esse perfil ainda não recebeu avaliações públicas.</p>
+            </div>
+          </ng-template>
+        </section>
       </div>
 
-      <div
-        class="user-profile-listings"
-        *ngIf="profile.vehicles.length; else emptyListings"
+      <!-- Verification Shield -->
+      <section
+        class="rounded-2xl p-5 flex items-start gap-4 border transition-colors"
+        [ngClass]="{
+          'bg-error/5 border-error/20': verificationLevel === 'error',
+          'bg-tertiary-container/10 border-tertiary-container/30': verificationLevel === 'warning',
+          'bg-primary/5 border-primary/10': verificationLevel === 'success'
+        }"
       >
-        <app-vehicle-card
-          *ngFor="let vehicle of profile.vehicles"
-          [vehicle]="vehicle"
-        />
-      </div>
-
-      <ng-template #emptyListings>
-        <div class="user-profile-empty">
-          <span class="material-icons" aria-hidden="true"
-            >directions_car</span
-          >
-          <strong>Nenhum anúncio público no momento</strong>
-          <p>Esse usuário ainda não tem veículos ativos publicados.</p>
+        <div
+          class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+          [ngClass]="{
+            'bg-error/10 text-error': verificationLevel === 'error',
+            'bg-tertiary-container/20 text-tertiary': verificationLevel === 'warning',
+            'bg-primary/10 text-primary': verificationLevel === 'success'
+          }"
+        >
+          <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
         </div>
-      </ng-template>
-    </section>
-  </ng-container>
+        <div class="flex-grow">
+          <h4 class="font-bold text-on-surface text-sm">Verificação de Segurança</h4>
+          <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">
+            {{ verificationSummary(profile.verification.profileStatus) }} — Este anunciante passou pelas etapas de verificação de identidade.
+          </p>
+          <div class="flex gap-2 mt-3">
+            <span
+              class="bg-surface px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors"
+              [ngClass]="{
+                'text-error border-error/20': verificationLevel === 'error',
+                'text-tertiary border-tertiary-container/30': verificationLevel === 'warning',
+                'text-primary border-primary/20': verificationLevel === 'success'
+              }"
+            >
+              Doc {{ verificationLabel(profile.verification.documentStatus) }}
+            </span>
+            <span
+              class="bg-surface px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors"
+              [ngClass]="{
+                'text-error border-error/20': verificationLevel === 'error',
+                'text-tertiary border-tertiary-container/30': verificationLevel === 'warning',
+                'text-primary border-primary/20': verificationLevel === 'success'
+              }"
+            >
+              CNH {{ verificationLabel(profile.verification.driverLicenseStatus) }}
+            </span>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
 </main>
