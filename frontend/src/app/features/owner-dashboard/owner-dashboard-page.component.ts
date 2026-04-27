@@ -3,6 +3,7 @@ import { Component, OnDestroy, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import {
@@ -32,17 +33,13 @@ type OwnerViewMode = 'ads';
 @Component({
   selector: 'app-owner-dashboard-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    CurrencyPipe,
-    VehicleCardComponent,
-  ],
+  imports: [CommonModule, FormsModule, CurrencyPipe, VehicleCardComponent],
   templateUrl: './owner-dashboard-page.component.html',
   styleUrls: ['./owner-dashboard-page.component.scss'],
 })
 export class OwnerDashboardPageComponent implements OnDestroy {
   private readonly authService = inject(AuthService);
+  protected readonly uiStateService = inject(UiStateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
@@ -52,7 +49,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   private publicationChecklistCacheKey = '';
   private publicationChecklistCache: PublicationChecklistItem[] = [];
-  private publicationChecklistSummaryCacheSource: PublicationChecklistItem[] | null = null;
+  private publicationChecklistSummaryCacheSource:
+    | PublicationChecklistItem[]
+    | null = null;
   private publicationChecklistSummaryCache = {
     completed: 0,
     percentage: 0,
@@ -112,10 +111,15 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected pendingVehicleFiles: File[] = [];
   protected pendingVehiclePreviews: Array<{ name: string; url: string }> = [];
   protected vehicleDraft = this.createVehicleDraft();
+  protected readonly photoSlots = Array.from(
+    { length: 6 },
+    (_, index) => index,
+  );
 
   constructor() {
     this.createMode =
-      this.isAdsView && this.route.snapshot.queryParamMap.get('editor') === 'create';
+      this.isAdsView &&
+      this.route.snapshot.queryParamMap.get('editor') === 'create';
 
     if (this.createMode) {
       this.vehicleDraft = this.createVehicleDraft();
@@ -126,6 +130,26 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.revokePendingPreviewUrls();
+  }
+
+  protected get ownerAvatarUrl() {
+    return this.authService.currentUser()?.profile?.avatarUrl || this.fallbackImage;
+  }
+
+  protected get totalAds() {
+    return this.vehicles.length;
+  }
+
+  protected get totalViews() {
+    return this.vehicles.reduce((acc, v) => acc + (v.viewsCount || 0), 0);
+  }
+
+  protected get totalViews30Days() {
+    return this.vehicles.reduce((acc, v) => acc + (v.viewsLast30Days || 0), 0);
+  }
+
+  protected get ownerRating() {
+    return 5.0; // Default rating for prototype.
   }
 
   protected get isEditingVehicle() {
@@ -146,10 +170,111 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     }
 
     if (this.submittingVehicle) {
-      return this.isEditingVehicle ? 'Salvando anúncio...' : 'Publicando anúncio...';
+      return this.isEditingVehicle
+        ? 'Salvando anúncio...'
+        : 'Publicando anúncio...';
     }
 
     return this.isEditingVehicle ? 'Salvar alterações' : 'Publicar anúncio';
+  }
+
+  protected get stepProgressLabel() {
+    return `${Math.round((this.currentStep / 3) * 100)}% Concluído`;
+  }
+
+  protected get stepProgressWidth() {
+    return `${(this.currentStep / 3) * 100}%`;
+  }
+
+  protected get stepTitle() {
+    if (this.currentStep === 1) {
+      return 'Dados Principais';
+    }
+
+    if (this.currentStep === 2) {
+      return 'Condições do Veículo';
+    }
+
+    return 'Finalize seu anúncio';
+  }
+
+  protected get cityStateValue() {
+    const city = this.vehicleDraft.city?.trim();
+    const state = this.vehicleDraft.state?.trim();
+
+    return [city, state].filter(Boolean).join(city && state ? ', ' : '');
+  }
+
+  protected get selectedVehicleImages() {
+    return [
+      ...(this.editingVehicle?.images ?? []).map((image) => ({
+        id: image.id,
+        url: image.url,
+        source: 'saved' as const,
+      })),
+      ...this.pendingVehiclePreviews.map((preview, index) => ({
+        id: preview.url,
+        url: preview.url,
+        source: 'pending' as const,
+        pendingIndex: index,
+      })),
+    ];
+  }
+
+  protected get primaryVehicleImageUrl() {
+    return this.selectedVehicleImages[0]?.url || '';
+  }
+
+  protected get vehicleSummaryImageUrl() {
+    return this.primaryVehicleImageUrl || this.fallbackImage;
+  }
+
+  protected get vehicleSummaryTitle() {
+    return this.vehicleDraft.title.trim() || 'Seu veículo';
+  }
+
+  protected get vehicleSummarySubtitle() {
+    return [
+      this.transmissionLabel(this.vehicleDraft.transmission),
+      this.fuelOptions.find(
+        (option) => option.value === this.vehicleDraft.fuelType,
+      )?.label,
+      this.vehicleDraft.year || null,
+    ]
+      .filter(Boolean)
+      .join(' • ');
+  }
+
+  protected updateCityState(value: string) {
+    const [cityPart, statePart] = value.split(',').map((part) => part.trim());
+
+    this.vehicleDraft.city = cityPart || '';
+    this.vehicleDraft.state = (statePart || this.vehicleDraft.state || '')
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+  protected setVehicleType(vehicleType: VehicleType) {
+    this.vehicleDraft.vehicleType = vehicleType;
+
+    if (vehicleType !== 'MOTORCYCLE') {
+      this.vehicleDraft.motorcycleStyle = undefined;
+      this.vehicleDraft.engineCc = undefined;
+      this.vehicleDraft.hasAbs = false;
+      this.vehicleDraft.hasTopCase = false;
+    }
+  }
+
+  protected setTransmission(transmission: TransmissionType) {
+    this.vehicleDraft.transmission = transmission;
+  }
+
+  protected setKmPolicy(kmPolicy: 'FREE' | 'FIXED') {
+    this.vehicleDraft.kmPolicy = kmPolicy;
+  }
+
+  protected photoSlotUrl(index: number) {
+    return this.selectedVehicleImages[index + 1]?.url || '';
   }
 
   protected get editingVehicle() {
@@ -163,13 +288,16 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     this.editingVehicleCacheSource = this.vehicles;
     this.editingVehicleCacheId = this.editingVehicleId;
     this.editingVehicleCache =
-      this.vehicles.find((vehicle) => vehicle.id === this.editingVehicleId) ?? null;
+      this.vehicles.find((vehicle) => vehicle.id === this.editingVehicleId) ??
+      null;
 
     return this.editingVehicleCache;
   }
 
   protected get publicationChecklist() {
-    const totalPhotos = (this.editingVehicle?.images.length ?? 0) + this.pendingVehicleFiles.length;
+    const totalPhotos =
+      (this.editingVehicle?.images.length ?? 0) +
+      this.pendingVehicleFiles.length;
     const descriptionLength = this.vehicleDraft.description.trim().length;
     const hasPickupPoint = !!this.vehicleDraft.addressLine?.trim();
     const hasTitleContext =
@@ -210,14 +338,16 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       },
       {
         title: 'Retirada definida',
-        description:
-          hasPickupPoint
-            ? 'O endereço de retirada já está definido.'
-            : 'Defina onde o carro pode ser retirado.',
+        description: hasPickupPoint
+          ? 'O endereço de retirada já está definido.'
+          : 'Defina onde o carro pode ser retirado.',
         done: hasPickupPoint,
       },
       {
-        title: this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'Ficha da moto' : 'Título específico',
+        title:
+          this.vehicleDraft.vehicleType === 'MOTORCYCLE'
+            ? 'Ficha da moto'
+            : 'Título específico',
         description:
           this.vehicleDraft.vehicleType === 'MOTORCYCLE'
             ? this.vehicleDraft.motorcycleStyle && this.vehicleDraft.engineCc
@@ -228,7 +358,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
               : 'Use um título mais específico com marca, modelo e diferencial.',
         done:
           this.vehicleDraft.vehicleType === 'MOTORCYCLE'
-            ? !!this.vehicleDraft.motorcycleStyle && !!this.vehicleDraft.engineCc
+            ? !!this.vehicleDraft.motorcycleStyle &&
+              !!this.vehicleDraft.engineCc
             : hasTitleContext,
       },
       {
@@ -275,29 +406,57 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected checkStepCompletion(step: number): boolean {
     const d = this.vehicleDraft;
     if (step === 1) {
-      return !!(d.title?.trim() && d.plate?.trim() && d.brand?.trim() && d.model?.trim() && Number(d.year));
+      return !!(
+        d.title?.trim() &&
+        d.plate?.trim() &&
+        d.brand?.trim() &&
+        d.model?.trim() &&
+        Number(d.year)
+      );
     }
     if (step === 2) {
-      const isMotoComplete = d.vehicleType === 'MOTORCYCLE' ? !!(d.motorcycleStyle && Number(d.engineCc)) : true;
-      return !!(d.mechanicsCondition?.trim() && Number(d.seats) > 0 && isMotoComplete);
+      const isMotoComplete =
+        d.vehicleType === 'MOTORCYCLE'
+          ? !!(d.motorcycleStyle && Number(d.engineCc))
+          : true;
+      return !!(
+        d.mechanicsCondition?.trim() &&
+        Number(d.seats) > 0 &&
+        isMotoComplete
+      );
     }
     if (step === 3) {
-      const hasPhotos = (this.editingVehicle?.images?.length ?? 0) + this.pendingVehicleFiles.length > 0;
-      return !!(hasPhotos && Number(d.weeklyRate) > 0 && d.city?.trim() && d.state?.trim().length === 2 && d.addressLine?.trim() && d.description?.trim());
+      const hasPhotos =
+        (this.editingVehicle?.images?.length ?? 0) +
+          this.pendingVehicleFiles.length >
+        0;
+      return !!(
+        hasPhotos &&
+        Number(d.weeklyRate) > 0 &&
+        d.city?.trim() &&
+        d.state?.trim().length === 2 &&
+        d.addressLine?.trim() &&
+        d.description?.trim()
+      );
     }
     return false;
   }
 
-  protected getStepStatus(step: number): 'active' | 'completed' | 'warning' | 'pending' {
+  protected getStepStatus(
+    step: number,
+  ): 'active' | 'completed' | 'warning' | 'pending' {
     if (this.currentStep === step) return 'active';
-    
+
     const isComplete = this.checkStepCompletion(step);
-    
+
     // Once visualizou or if it's a backward step, mark as warning if not complete
-    if (!isComplete && (step < this.currentStep || step < this.maxVisitedStep)) {
+    if (
+      !isComplete &&
+      (step < this.currentStep || step < this.maxVisitedStep)
+    ) {
       return 'warning';
     }
-    
+
     return isComplete ? 'completed' : 'pending';
   }
 
@@ -351,7 +510,11 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         }
 
         if (this.pendingVehicleFiles.length > 0) {
-          this.uploadPendingVehicleFiles(vehicleId, successMessage, shouldRedirectToList ? undefined : vehicleId);
+          this.uploadPendingVehicleFiles(
+            vehicleId,
+            successMessage,
+            shouldRedirectToList ? undefined : vehicleId,
+          );
           return;
         }
 
@@ -446,9 +609,15 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       return;
     }
 
-    const imageFiles = selectedFiles.filter((file) => file.type.startsWith('image/'));
-    const exceededLimit = this.pendingVehicleFiles.length + imageFiles.length > 7;
-    const limitedFiles = [...this.pendingVehicleFiles, ...imageFiles].slice(0, 7);
+    const imageFiles = selectedFiles.filter((file) =>
+      file.type.startsWith('image/'),
+    );
+    const exceededLimit =
+      this.pendingVehicleFiles.length + imageFiles.length > 7;
+    const limitedFiles = [...this.pendingVehicleFiles, ...imageFiles].slice(
+      0,
+      7,
+    );
 
     this.setPendingVehicleFiles(limitedFiles);
     this.mediaError =
@@ -462,7 +631,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected removePendingVehicleFile(index: number) {
-    const nextFiles = this.pendingVehicleFiles.filter((_, fileIndex) => fileIndex !== index);
+    const nextFiles = this.pendingVehicleFiles.filter(
+      (_, fileIndex) => fileIndex !== index,
+    );
     this.setPendingVehicleFiles(nextFiles);
     this.mediaFeedback = nextFiles.length
       ? `${nextFiles.length} foto(s) pronta(s) para envio.`
@@ -519,7 +690,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
           this.vehicleActionId = null;
           this.vehicleFeedback = '';
           this.vehicleError =
-            error?.error?.message || 'Não foi possível alterar a publicação do anúncio.';
+            error?.error?.message ||
+            'Não foi possível alterar a publicação do anúncio.';
         },
       });
   }
@@ -547,21 +719,31 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         this.vehicleActionId = null;
         this.vehicleFeedback = '';
         this.vehicleError =
-          error?.error?.message || 'Não foi possível desativar o anúncio agora.';
+          error?.error?.message ||
+          'Não foi possível desativar o anúncio agora.';
       },
     });
   }
 
   protected categoryLabel(category: VehicleCategory) {
-    return this.categoryOptions.find((option) => option.value === category)?.label ?? category;
+    return (
+      this.categoryOptions.find((option) => option.value === category)?.label ??
+      category
+    );
   }
 
   protected vehicleTypeLabel(vehicleType: VehicleType) {
-    return this.vehicleTypeOptions.find((option) => option.value === vehicleType)?.label ?? vehicleType;
+    return (
+      this.vehicleTypeOptions.find((option) => option.value === vehicleType)
+        ?.label ?? vehicleType
+    );
   }
 
   protected transmissionLabel(transmission: TransmissionType) {
-    return this.transmissionOptions.find((option) => option.value === transmission)?.label ?? transmission;
+    return (
+      this.transmissionOptions.find((option) => option.value === transmission)
+        ?.label ?? transmission
+    );
   }
 
   protected trackById(_index: number, item: { id: string }) {
@@ -575,42 +757,61 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   protected vehicleRecentViewsLabel(vehicle: OwnerVehicleItem) {
     const viewsCount = vehicle.viewsLast30Days ?? 0;
-    return viewsCount === 1 ? '1 nos últimos 30 dias' : `${viewsCount} nos últimos 30 dias`;
+    return viewsCount === 1
+      ? '1 nos últimos 30 dias'
+      : `${viewsCount} nos últimos 30 dias`;
   }
 
   protected trackByString(_index: number, value: string) {
     return value;
   }
 
-  protected trackByChecklistTitle(_index: number, item: PublicationChecklistItem) {
+  protected trackByIndex(index: number) {
+    return index;
+  }
+
+  protected trackByChecklistTitle(
+    _index: number,
+    item: PublicationChecklistItem,
+  ) {
     return item.title;
   }
 
-  protected trackByPreview(_index: number, item: { name: string; url: string }) {
+  protected trackByPreview(
+    _index: number,
+    item: { name: string; url: string },
+  ) {
     return item.url;
   }
 
-  private uploadPendingVehicleFiles(vehicleId: string, successMessage: string, focusVehicleId?: string) {
+  private uploadPendingVehicleFiles(
+    vehicleId: string,
+    successMessage: string,
+    focusVehicleId?: string,
+  ) {
     this.uploadingVehicleImages = true;
     this.mediaError = '';
 
-    this.vehiclesApiService.uploadImages(vehicleId, this.pendingVehicleFiles).subscribe({
-      next: () => {
-        this.uploadingVehicleImages = false;
-        this.vehicleFeedback = successMessage;
-        this.mediaFeedback = 'Fotos enviadas com sucesso.';
-        this.clearPendingVehicleFiles();
-        this.loadData(focusVehicleId);
-      },
-      error: (error) => {
-        this.uploadingVehicleImages = false;
-        this.vehicleFeedback = successMessage;
-        this.mediaFeedback = '';
-        this.mediaError =
-          error?.error?.message || 'O anúncio foi salvo, mas as fotos não puderam ser enviadas agora.';
-        this.loadData(focusVehicleId);
-      },
-    });
+    this.vehiclesApiService
+      .uploadImages(vehicleId, this.pendingVehicleFiles)
+      .subscribe({
+        next: () => {
+          this.uploadingVehicleImages = false;
+          this.vehicleFeedback = successMessage;
+          this.mediaFeedback = 'Fotos enviadas com sucesso.';
+          this.clearPendingVehicleFiles();
+          this.loadData(focusVehicleId);
+        },
+        error: (error) => {
+          this.uploadingVehicleImages = false;
+          this.vehicleFeedback = successMessage;
+          this.mediaFeedback = '';
+          this.mediaError =
+            error?.error?.message ||
+            'O anúncio foi salvo, mas as fotos não puderam ser enviadas agora.';
+          this.loadData(focusVehicleId);
+        },
+      });
   }
 
   private setPendingVehicleFiles(files: File[]) {
@@ -627,7 +828,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   private revokePendingPreviewUrls() {
-    this.pendingVehiclePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    this.pendingVehiclePreviews.forEach((preview) =>
+      URL.revokeObjectURL(preview.url),
+    );
   }
 
   private loadData(focusVehicleId?: string) {
@@ -636,7 +839,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       next: (vehicles) => {
         this.vehicles = vehicles;
 
-        if (this.editingVehicleId && !this.vehicles.some((vehicle) => vehicle.id === this.editingVehicleId)) {
+        if (
+          this.editingVehicleId &&
+          !this.vehicles.some((vehicle) => vehicle.id === this.editingVehicleId)
+        ) {
           this.cancelEditingVehicle();
         }
 
