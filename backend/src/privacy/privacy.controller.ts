@@ -14,35 +14,45 @@ export class PrivacyController {
 
   @Public()
   @Get('policy')
-  @ApiOperation({ summary: 'Retorna um resumo público da política de privacidade' })
+  @ApiOperation({
+    summary: 'Retorna um resumo público da política de privacidade',
+  })
   getPolicy() {
     return this.privacyService.getPolicySummary();
   }
 
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Retorna preferências e solicitações LGPD do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Retorna preferências e solicitações LGPD do usuário autenticado',
+  })
   getMyPrivacyCenter(@CurrentUser() user: AuthenticatedUser) {
     return this.privacyService.getMyPrivacyCenter(user.sub);
   }
 
   @Get('me/export')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Exporta os principais dados da conta do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Exporta os principais dados da conta do usuário autenticado',
+  })
   exportMyData(@CurrentUser() user: AuthenticatedUser) {
     return this.privacyService.exportMyData(user.sub);
   }
 
   @Get('me/requests')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Lista solicitações LGPD abertas pelo usuário autenticado' })
+  @ApiOperation({
+    summary: 'Lista solicitações LGPD abertas pelo usuário autenticado',
+  })
   listMyRequests(@CurrentUser() user: AuthenticatedUser) {
     return this.privacyService.listMyRequests(user.sub);
   }
 
   @Post('me/requests')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cria uma solicitação LGPD para o usuário autenticado' })
+  @ApiOperation({
+    summary: 'Cria uma solicitação LGPD para o usuário autenticado',
+  })
   createRequest(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreatePrivacyRequestDto,
@@ -52,7 +62,9 @@ export class PrivacyController {
 
   @Patch('me/preferences')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualiza preferências de privacidade do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Atualiza preferências de privacidade do usuário autenticado',
+  })
   updatePreferences(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdatePrivacyPreferencesDto,

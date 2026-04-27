@@ -1,10 +1,21 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { catchError, finalize, map, Observable, of, shareReplay, tap } from 'rxjs';
+import {
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  tap,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, Profile, User, UserRole } from '../models/domain.models';
-import { normalizeApiPayloadUrls, normalizeNetworkUrl } from '../utils/network-url.util';
+import {
+  normalizeApiPayloadUrls,
+  normalizeNetworkUrl,
+} from '../utils/network-url.util';
 import { AppLoggerService } from './app-logger.service';
 import { PrivacyPreferencesService } from './privacy-preferences.service';
 
@@ -35,7 +46,9 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly logger = inject(AppLoggerService);
-  private readonly privacyPreferencesService = inject(PrivacyPreferencesService);
+  private readonly privacyPreferencesService = inject(
+    PrivacyPreferencesService,
+  );
   private readonly storage = globalThis.sessionStorage;
   private readonly persistentStorage = globalThis.localStorage;
 
@@ -46,7 +59,9 @@ export class AuthService {
   private readonly accessTokenSignal = signal<string | null>(
     this.readStoredValue(this.accessTokenKey),
   );
-  private readonly currentUserSignal = signal<User | null>(this.readStoredUser());
+  private readonly currentUserSignal = signal<User | null>(
+    this.readStoredUser(),
+  );
   private readonly sessionHintSignal = signal(this.readSessionHint());
   private readonly restoringSessionSignal = signal(false);
   private restoreSessionRequest$?: Observable<boolean>;
@@ -236,11 +251,19 @@ export class AuthService {
   }
 
   getSessionUserId() {
-    return this.currentUser()?.id ?? this.decodeToken(this.accessTokenSignal())?.sub ?? null;
+    return (
+      this.currentUser()?.id ??
+      this.decodeToken(this.accessTokenSignal())?.sub ??
+      null
+    );
   }
 
   getSessionRole() {
-    return this.currentUser()?.role ?? this.decodeToken(this.accessTokenSignal())?.role ?? null;
+    return (
+      this.currentUser()?.role ??
+      this.decodeToken(this.accessTokenSignal())?.role ??
+      null
+    );
   }
 
   hasRole(roles: UserRole[]) {
@@ -265,9 +288,9 @@ export class AuthService {
         addressLine:
           profile.addressLine ?? currentUser.profile?.addressLine ?? null,
         addressComplement:
-          profile.addressComplement
-          ?? currentUser.profile?.addressComplement
-          ?? null,
+          profile.addressComplement ??
+          currentUser.profile?.addressComplement ??
+          null,
         city: profile.city ?? currentUser.profile?.city ?? '',
         state: profile.state ?? currentUser.profile?.state ?? '',
         bio: profile.bio ?? currentUser.profile?.bio ?? null,
@@ -277,19 +300,21 @@ export class AuthService {
         documentImageUrl: null,
         driverLicenseImageUrl: null,
         hasDocumentImage:
-          profile.hasDocumentImage ?? currentUser.profile?.hasDocumentImage ?? false,
+          profile.hasDocumentImage ??
+          currentUser.profile?.hasDocumentImage ??
+          false,
         hasDriverLicenseImage:
-          profile.hasDriverLicenseImage
-          ?? currentUser.profile?.hasDriverLicenseImage
-          ?? false,
+          profile.hasDriverLicenseImage ??
+          currentUser.profile?.hasDriverLicenseImage ??
+          false,
         documentVerificationStatus:
-          profile.documentVerificationStatus
-          ?? currentUser.profile?.documentVerificationStatus
-          ?? 'NOT_SUBMITTED',
+          profile.documentVerificationStatus ??
+          currentUser.profile?.documentVerificationStatus ??
+          'NOT_SUBMITTED',
         driverLicenseVerification:
-          profile.driverLicenseVerification
-          ?? currentUser.profile?.driverLicenseVerification
-          ?? 'NOT_SUBMITTED',
+          profile.driverLicenseVerification ??
+          currentUser.profile?.driverLicenseVerification ??
+          'NOT_SUBMITTED',
       },
     });
   }

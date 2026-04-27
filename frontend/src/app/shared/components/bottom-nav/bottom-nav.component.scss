@@ -1,1 +1,7 @@
 /* Visual styling for the bottom application navigation bar is entirely migrated to utility classes locally on the HTML component */
+
+@media (min-width: 768px) {
+  :host {
+    display: none;
+  }
+}

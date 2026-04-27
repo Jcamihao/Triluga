@@ -1,7 +1,6 @@
 <main
-  class="bg-surface text-on-surface font-body max-w-[390px] mx-auto min-h-screen relative overflow-x-hidden pb-24 md:max-w-full"
+  class="home-mobile bg-surface text-on-surface font-body max-w-[390px] mx-auto min-h-screen relative overflow-x-hidden pb-24"
 >
-  <!-- TopAppBar -->
   <header
     class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
   >
@@ -25,7 +24,6 @@
   </header>
 
   <main class="space-y-8 pt-2">
-    <!-- Search Section -->
     <section class="px-6">
       <div
         class="bg-surface-container-low p-5 rounded-2xl shadow-sm border border-surface-container"
@@ -52,7 +50,6 @@
       </div>
     </section>
 
-    <!-- Quick Shortcuts -->
     <section class="px-6 overflow-x-auto hide-scrollbar">
       <div class="flex gap-5 min-w-max pb-2">
         <button
@@ -76,71 +73,6 @@
         </button>
       </div>
     </section>
-
-    <!-- Mais Vistos Carousel -->
-    <!-- <section class="space-y-4">
-      <div class="flex justify-between items-center px-6">
-        <h3 class="!text-xl !font-bold tracking-tight">Mais Vistos</h3>
-        <span
-          class="text-sm font-bold text-primary active:opacity-60 transition-opacity cursor-pointer"
-          (click)="goToSearch({})"
-        >Ver todos</span>
-      </div>
-
-      <div class="flex gap-4 overflow-x-auto hide-scrollbar px-6 snap-x" *ngIf="carouselLoading">
-        <div *ngFor="let s of [1,2]" class="min-w-[300px] bg-white rounded-2xl shadow-md overflow-hidden border border-surface-container animate-pulse">
-          <div class="h-44 bg-gray-200"></div>
-          <div class="p-4 space-y-3">
-            <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex gap-4 overflow-x-auto hide-scrollbar px-6 snap-x" *ngIf="!carouselLoading && carouselAds.length">
-        <div
-          *ngFor="let vehicle of carouselAds; trackBy: trackByVehicleId"
-          class="min-w-[300px] bg-white rounded-2xl p-0 snap-center shadow-md overflow-hidden border border-surface-container cursor-pointer"
-          [routerLink]="['/vehicles', vehicle.id]"
-        >
-          <div class="relative h-44 overflow-hidden">
-            <img
-              [alt]="vehicle.title"
-              class="w-full h-full object-cover"
-              [src]="vehicle.coverImage || 'assets/placeholder-car.jpg'"
-              loading="lazy"
-            />
-            <div class="absolute top-3 right-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md" *ngIf="vehicle.owner?.ratingAverage">
-              <span class="material-symbols-outlined text-sm text-yellow-500" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="text-xs font-bold text-on-surface">{{ vehicle.owner?.ratingAverage | number:'1.1-1' }}</span>
-            </div>
-          </div>
-          <div class="p-4 space-y-3">
-            <div class="flex justify-between items-start">
-              <div class="space-y-0.5">
-                <h4 class="!font-bold !text-lg text-on-surface !leading-tight">{{ vehicle.title }}</h4>
-                <div class="flex items-center gap-1 text-on-surface-variant/80 text-xs">
-                  <span class="material-symbols-outlined text-sm">location_on</span>
-                  <span>{{ vehicle.city }}, {{ vehicle.state }}</span>
-                </div>
-              </div>
-              <div class="text-right flex flex-col items-end">
-                <div class="flex items-baseline gap-0.5">
-                  <span class="text-xs font-bold text-primary">R$</span>
-                  <span class="text-xl font-black text-primary">{{ vehicle.dailyRate | number:'1.0-0' }}</span>
-                </div>
-                <span class="text-[10px] text-outline font-bold uppercase tracking-wider">por dia</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <p class="px-6 text-sm text-outline" *ngIf="!carouselLoading && !carouselAds.length">
-        Nenhum anúncio disponível por enquanto.
-      </p>
-    </section> -->
 
     <section class="px-6 space-y-4">
       <h3 class="!text-xl !font-bold tracking-tight">Categorias em Destaque</h3>
@@ -167,7 +99,6 @@
       </div>
     </section>
 
-    <!-- Confiança Section -->
     <section class="px-6 pb-6 border-b border-outline-variant/30">
       <div
         class="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex items-center gap-4"
@@ -190,11 +121,9 @@
       </div>
     </section>
 
-    <!-- Carros Anunciados / Explore Section -->
     <section class="px-6 space-y-4">
       <h3 class="!text-xl !font-bold tracking-tight">Explore Veículos</h3>
 
-      <!-- Loading State -->
       <div
         *ngIf="carsLoading && carList.length === 0"
         class="flex flex-col gap-5"
@@ -205,7 +134,6 @@
         ></div>
       </div>
 
-      <!-- Cars Grid -->
       <div class="flex flex-col gap-5">
         <app-vehicle-card
           *ngFor="let vehicle of carList; trackBy: trackByVehicleId"
@@ -213,7 +141,6 @@
         ></app-vehicle-card>
       </div>
 
-      <!-- Load More Button -->
       <div class="pt-4 pb-2" *ngIf="hasMoreCars">
         <button
           class="w-full py-4 rounded-xl bg-surface-container-high text-on-surface font-bold active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
@@ -229,7 +156,6 @@
         </button>
       </div>
 
-      <!-- End of List -->
       <p
         class="text-center text-sm font-semibold text-outline py-4"
         *ngIf="!hasMoreCars && carList.length > 0"
@@ -239,7 +165,6 @@
     </section>
   </main>
 
-  <!-- Footer -->
   <footer
     class="bg-surface-container-lowest border-t border-outline-variant/30 mt-6 px-6 pt-8 pb-10 space-y-6"
   >
@@ -318,6 +243,251 @@
       <p class="text-xs text-on-surface-variant font-medium">
         © 2026 Triluga. Todos os direitos reservados.
       </p>
+    </div>
+  </footer>
+</main>
+
+<main class="home-web">
+  <nav class="home-web__nav" aria-label="Navegação principal">
+    <div class="home-web__nav-inner">
+      <div class="home-web__brand-group">
+        <a routerLink="/" class="home-web__brand">Triluga</a>
+
+        <div class="home-web__links">
+          <button type="button" (click)="goToSearch({ vehicleType: 'CAR' })">
+            Comprar
+          </button>
+          <button type="button" routerLink="/anunciar-carro">Vender</button>
+          <button type="button" (click)="goToSearch({ category: 'LUXURY' })">
+            Financiamento
+          </button>
+          <button type="button" (click)="goToSearch({})">Catálogo</button>
+          <a routerLink="/privacy">Blog</a>
+        </div>
+      </div>
+
+      <div class="home-web__actions">
+        <button
+          type="button"
+          class="home-web__icon"
+          aria-label="Favoritos"
+          (click)="openProtected('/favorites')"
+        >
+          <span class="material-symbols-outlined">favorite</span>
+        </button>
+        <button type="button" class="home-web__icon" aria-label="Notificações">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <button
+          type="button"
+          class="home-web__announce"
+          routerLink="/anunciar-carro"
+        >
+          Anunciar Grátis
+        </button>
+        <button
+          type="button"
+          class="home-web__avatar"
+          aria-label="Abrir perfil"
+          (click)="openProtected('/profile')"
+        >
+          <img [src]="avatarUrl" alt="Avatar do usuário" />
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="home-web__hero">
+    <div class="home-web__hero-media">
+      <img
+        [src]="heroImage"
+        alt="Carro esportivo em uma estrada costeira ao amanhecer"
+      />
+      <div></div>
+    </div>
+
+    <div class="home-web__hero-content">
+      <span class="home-web__eyebrow">Urban Kinetic Marketplace</span>
+      <h1>
+        Encontre o movimento
+        <span>perfeito para você.</span>
+      </h1>
+      <p>
+        A curadoria mais premium de veículos da sua cidade. Conectando pessoas
+        através de máquinas extraordinárias, com segurança e fluidez.
+      </p>
+
+      <form
+        class="home-web__search"
+        (submit)="
+          $event.preventDefault();
+          submitSearch(modelInput.value, cityInput.value)
+        "
+      >
+        <label>
+          <span class="material-symbols-outlined">search</span>
+          <input #modelInput type="search" placeholder="Marca ou Modelo" />
+        </label>
+
+        <label>
+          <span class="material-symbols-outlined">location_on</span>
+          <input #cityInput type="search" placeholder="Cidade" />
+        </label>
+
+        <button type="submit">
+          Explorar
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <section class="home-web__section home-web__section--surface">
+    <div class="home-web__container">
+      <div class="home-web__section-head">
+        <div>
+          <h2>Coleções em Destaque</h2>
+          <p>Navegue pelas categorias mais buscadas do momento.</p>
+        </div>
+      </div>
+
+      <div class="home-web__collections">
+        <button
+          *ngFor="let collection of collections"
+          type="button"
+          class="home-web__collection"
+          (click)="goToSearch(collection.params)"
+        >
+          <span class="home-web__collection-icon">
+            <span class="material-symbols-outlined">{{ collection.icon }}</span>
+          </span>
+          <strong>{{ collection.label }}</strong>
+          <small>{{ collection.count }}</small>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-web__section home-web__section--muted">
+    <div class="home-web__container">
+      <div class="home-web__section-head home-web__section-head--row">
+        <div>
+          <h2>Seleção Exclusiva</h2>
+          <p>Os veículos mais desejados da semana.</p>
+        </div>
+        <button type="button" (click)="goToSearch({})">
+          Ver todos
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+
+      <div class="home-web__vehicle-grid" *ngIf="featuredLoading">
+        <article
+          class="home-web__vehicle home-web__vehicle--loading"
+          *ngFor="let item of [1, 2, 3]"
+        >
+          <div></div>
+          <span></span>
+          <small></small>
+        </article>
+      </div>
+
+      <div class="home-web__vehicle-grid" *ngIf="!featuredLoading">
+        <article
+          *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
+          class="home-web__vehicle"
+          [routerLink]="['/vehicles', vehicle.id]"
+          tabindex="0"
+          role="link"
+        >
+          <div class="home-web__vehicle-image">
+            <img
+              [src]="vehicle.coverImage || vehicleFallback"
+              [alt]="vehicle.title"
+              loading="lazy"
+            />
+            <button
+              type="button"
+              aria-label="Salvar nos favoritos"
+              (click)="toggleFavorite($event, vehicle)"
+              [class.is-active]="favoritesService.isFavorite(vehicle.id)"
+              [disabled]="favoritesService.isPending(vehicle.id)"
+            >
+              <span class="material-symbols-outlined">favorite</span>
+            </button>
+          </div>
+
+          <div class="home-web__vehicle-body">
+            <div>
+              <h3>{{ vehicle.title }}</h3>
+              <p>{{ vehicleSubtitle(vehicle) }}</p>
+            </div>
+
+            <div class="home-web__vehicle-meta">
+              <span>
+                <span class="material-symbols-outlined">location_on</span>
+                {{ vehicle.city }}, {{ vehicle.state }}
+              </span>
+              <strong>R$ {{ vehicle.dailyRate | number: '1.0-0' }}</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <p
+        class="home-web__empty"
+        *ngIf="!featuredLoading && !featuredVehicles.length"
+      >
+        Nenhum veículo disponível por enquanto.
+      </p>
+    </div>
+  </section>
+
+  <section class="home-web__section home-web__trust-section">
+    <div class="home-web__container home-web__trust">
+      <div class="home-web__trust-copy">
+        <h2>
+          Negocie de pessoa para pessoa, com
+          <span>segurança de ponta a ponta.</span>
+        </h2>
+        <p>
+          A Triluga redefine a confiança no mercado automotivo. Combinamos
+          tecnologia antifraude avançada com vistorias certificadas para
+          garantir que cada transação seja transparente.
+        </p>
+        <a routerLink="/privacy">
+          Entenda nossa Garantia
+          <span class="material-symbols-outlined">open_in_new</span>
+        </a>
+      </div>
+
+      <div class="home-web__trust-grid">
+        <article
+          *ngFor="let card of trustCards; let odd = odd"
+          [class.home-web__trust-card--offset]="odd"
+          class="home-web__trust-card"
+        >
+          <span>
+            <span class="material-symbols-outlined">{{ card.icon }}</span>
+          </span>
+          <h3>{{ card.title }}</h3>
+          <p>{{ card.description }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer class="home-web__footer">
+    <div class="home-web__container">
+      <strong>Triluga</strong>
+      <nav aria-label="Links de rodapé">
+        <a routerLink="/privacy">Termos</a>
+        <a routerLink="/privacy">Privacidade</a>
+        <a routerLink="/privacy">Ajuda</a>
+        <a routerLink="/">Sobre</a>
+        <a routerLink="/anunciar-carro">Anunciar</a>
+      </nav>
+      <span>© 2026 Triluga. A nova era da mobilidade urbana.</span>
     </div>
   </footer>
 </main>

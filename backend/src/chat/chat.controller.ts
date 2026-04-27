@@ -16,7 +16,9 @@ export class ChatController {
   ) {}
 
   @Post('vehicle/:vehicleId/start')
-  @ApiOperation({ summary: 'Inicia ou reutiliza uma conversa sobre um veiculo' })
+  @ApiOperation({
+    summary: 'Inicia ou reutiliza uma conversa sobre um veiculo',
+  })
   startConversation(
     @CurrentUser() user: AuthenticatedUser,
     @Param('vehicleId') vehicleId: string,

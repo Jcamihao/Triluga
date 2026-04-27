@@ -38,7 +38,8 @@ async function bootstrap() {
       const durationMs = Date.now() - startedAt;
       const userId = req.user?.sub ?? 'anonymous';
       const statusCode = res.statusCode;
-      const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'log';
+      const level =
+        statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'log';
       const logMessage =
         `request_completed requestId=${requestId} method=${req.method} ` +
         `path=${req.originalUrl ?? req.url} status=${statusCode} durationMs=${durationMs} userId=${userId}`;

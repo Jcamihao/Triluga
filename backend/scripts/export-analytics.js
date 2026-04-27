@@ -142,10 +142,7 @@ async function exportPdf(filePath, summaries) {
         doc.addPage();
       }
 
-      doc
-        .fontSize(16)
-        .fillColor('#111111')
-        .text(summary.periodLabel);
+      doc.fontSize(16).fillColor('#111111').text(summary.periodLabel);
       doc.moveDown(0.4);
       doc
         .fontSize(10)
@@ -184,9 +181,7 @@ async function main() {
     selectedPeriods.map((period) => getAnalyticsSummary(period)),
   );
   const reportsDir = path.resolve(__dirname, '..', 'reports');
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
   fs.mkdirSync(reportsDir, { recursive: true });
 

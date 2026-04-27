@@ -46,7 +46,9 @@ export class ChatGateway
 
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
       client.data.user = payload;
-      this.logger.log(`socket_connected socketId=${client.id} userId=${payload.sub}`);
+      this.logger.log(
+        `socket_connected socketId=${client.id} userId=${payload.sub}`,
+      );
 
       client.join(this.getUserRoom(payload.sub));
 
@@ -229,10 +231,12 @@ export class ChatGateway
     });
 
     contactIds.forEach((contactId) => {
-      this.server.to(this.getUserRoom(contactId)).emit('chat:presence-updated', {
-        userId,
-        isOnline,
-      });
+      this.server
+        .to(this.getUserRoom(contactId))
+        .emit('chat:presence-updated', {
+          userId,
+          isOnline,
+        });
     });
 
     this.logger.debug(

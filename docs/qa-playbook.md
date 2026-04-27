@@ -213,14 +213,14 @@ Execute este roteiro sempre que houver build nova:
 4. Favoritar um veiculo e confirmar que ele entra em `/favorites`.
 5. Abrir detalhe de um veiculo, iniciar chat e enviar mensagem.
 6. Fazer logout e validar limpeza da sessao no navegador.
-8. Fazer login com `OWNER` e abrir `/owner-dashboard`.
-9. Criar um anúncio navegando por todo o fluxo wizard em 3 etapas (Dados principais, Condições gerais, Fotos e Preços).
-10. Avançar para um passo seguinte deixando dados obrigatórios vazios, para validar a exibição de ícone de (⚠️) "Alerta Laranja" apontando campos incompletos.
-11. Preencher tudo corretamente, testar o limite de 7 imagens da galeria, publicar e checar na busca online.
-10. Fazer login com `ADMIN` e validar dashboard, usuarios, veiculos e privacidade.
-11. Aprovar ou recusar documento/CNH e validar status no perfil do usuario.
-12. Abrir `/privacy` e `/privacy-center`, mudar consentimento de analytics, exportar dados e criar uma solicitacao LGPD.
-13. Em `/admin`, validar que a solicitacao LGPD aparece e pode mudar para `IN_REVIEW` e `COMPLETED`.
+7. Fazer login com `OWNER` e abrir `/owner-dashboard`.
+8. Criar um anúncio navegando por todo o fluxo wizard em 3 etapas (Dados principais, Condições gerais, Fotos e Preços).
+9. Avançar para um passo seguinte deixando dados obrigatórios vazios, para validar a exibição de ícone de (⚠️) "Alerta Laranja" apontando campos incompletos.
+10. Preencher tudo corretamente, testar o limite de 7 imagens da galeria, publicar e checar na busca online.
+11. Fazer login com `ADMIN` e validar dashboard, usuarios, veiculos e privacidade.
+12. Aprovar ou recusar documento/CNH e validar status no perfil do usuario.
+13. Abrir `/privacy` e `/privacy-center`, mudar consentimento de analytics, exportar dados e criar uma solicitacao LGPD.
+14. Em `/admin`, validar que a solicitacao LGPD aparece e pode mudar para `IN_REVIEW` e `COMPLETED`.
 
 ## Roteiro de regressao por perfil
 

@@ -15,7 +15,11 @@ export class VehicleImagesService {
     private readonly cacheQueueService: CacheQueueService,
   ) {}
 
-  async upload(ownerId: string, vehicleId: string, files: Express.Multer.File[]) {
+  async upload(
+    ownerId: string,
+    vehicleId: string,
+    files: Express.Multer.File[],
+  ) {
     if (!files || files.length === 0) {
       throw new BadRequestException('Envie pelo menos um arquivo.');
     }
@@ -41,7 +45,10 @@ export class VehicleImagesService {
     const uploadedImages = [];
 
     for (const file of files) {
-      const uploaded = await this.storageService.uploadPublicFile(file, 'vehicles');
+      const uploaded = await this.storageService.uploadPublicFile(
+        file,
+        'vehicles',
+      );
       const createdImage = await this.prisma.vehicleImage.create({
         data: {
           vehicleId,

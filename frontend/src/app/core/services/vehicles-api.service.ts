@@ -52,7 +52,10 @@ export class VehiclesApiService {
 
   update(vehicleId: string, payload: UpdateVehiclePayload) {
     return this.http
-      .patch<VehicleDetail>(`${environment.apiBaseUrl}/vehicles/${vehicleId}`, payload)
+      .patch<VehicleDetail>(
+        `${environment.apiBaseUrl}/vehicles/${vehicleId}`,
+        payload,
+      )
       .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
 
@@ -70,10 +73,9 @@ export class VehiclesApiService {
     });
 
     return this.http
-      .post<VehicleImage[]>(
-        `${environment.apiBaseUrl}/vehicles/${vehicleId}/images`,
-        formData,
-      )
+      .post<
+        VehicleImage[]
+      >(`${environment.apiBaseUrl}/vehicles/${vehicleId}/images`, formData)
       .pipe(map((images) => normalizeApiPayloadUrls(images)));
   }
 

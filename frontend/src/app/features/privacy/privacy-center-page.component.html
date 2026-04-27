@@ -3,7 +3,8 @@
     <span class="eyebrow">Central de privacidade</span>
     <h1>Controle do titular em um só lugar</h1>
     <p>
-      Ajuste preferências, exporte seus dados e registre solicitações relacionadas à LGPD.
+      Ajuste preferências, exporte seus dados e registre solicitações
+      relacionadas à LGPD.
     </p>
   </section>
 
@@ -19,20 +20,33 @@
           <span class="eyebrow eyebrow--soft">Preferências</span>
           <h2>Analytics não essencial</h2>
         </div>
-        <span class="status-pill" [class.status-pill--enabled]="privacyPreferencesService.analyticsConsentGranted()">
-          {{ privacyPreferencesService.analyticsConsentGranted() ? 'Ativo' : 'Desativado' }}
+        <span
+          class="status-pill"
+          [class.status-pill--enabled]="
+            privacyPreferencesService.analyticsConsentGranted()
+          "
+        >
+          {{
+            privacyPreferencesService.analyticsConsentGranted()
+              ? 'Ativo'
+              : 'Desativado'
+          }}
         </span>
       </div>
 
       <p>
-        Quando ativado, a Triluga coleta métricas de navegação para melhorar produto, conteúdo e conversão.
+        Quando ativado, a Triluga coleta métricas de navegação para melhorar
+        produto, conteúdo e conversão.
       </p>
 
       <div class="action-row">
         <button
           type="button"
           class="btn btn-secondary"
-          [disabled]="savingPreferences || !privacyPreferencesService.analyticsConsentGranted()"
+          [disabled]="
+            savingPreferences ||
+            !privacyPreferencesService.analyticsConsentGranted()
+          "
           (click)="setAnalyticsConsent(false)"
         >
           {{ savingPreferences ? 'Salvando...' : 'Desativar' }}
@@ -41,7 +55,10 @@
         <button
           type="button"
           class="btn btn-primary"
-          [disabled]="savingPreferences || privacyPreferencesService.analyticsConsentGranted()"
+          [disabled]="
+            savingPreferences ||
+            privacyPreferencesService.analyticsConsentGranted()
+          "
           (click)="setAnalyticsConsent(true)"
         >
           {{ savingPreferences ? 'Salvando...' : 'Ativar' }}
@@ -58,10 +75,16 @@
       </div>
 
       <p>
-        O arquivo inclui conta, perfil, anúncios, notificações, favoritos, alertas e solicitações LGPD registradas.
+        O arquivo inclui conta, perfil, anúncios, notificações, favoritos,
+        alertas e solicitações LGPD registradas.
       </p>
 
-      <button type="button" class="btn btn-primary" [disabled]="exporting" (click)="exportMyData()">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="exporting"
+        (click)="exportMyData()"
+      >
         {{ exporting ? 'Preparando exportação...' : 'Exportar meus dados' }}
       </button>
     </section>
@@ -92,7 +115,12 @@
         ></textarea>
       </label>
 
-      <button type="button" class="btn btn-primary" [disabled]="submittingRequest" (click)="submitRequest()">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="submittingRequest"
+        (click)="submitRequest()"
+      >
         {{ submittingRequest ? 'Enviando...' : 'Enviar solicitação' }}
       </button>
     </section>
@@ -105,18 +133,30 @@
         </div>
       </div>
 
-      <div class="request-list" *ngIf="overview.requests.length; else emptyRequests">
+      <div
+        class="request-list"
+        *ngIf="overview.requests.length; else emptyRequests"
+      >
         <article class="request-item" *ngFor="let request of overview.requests">
           <div class="request-item__top">
             <strong>{{ requestTypeLabel(request.type) }}</strong>
-            <span class="status-pill" [class]="'status-pill status-pill--' + request.status.toLowerCase()">
+            <span
+              class="status-pill"
+              [class]="
+                'status-pill status-pill--' + request.status.toLowerCase()
+              "
+            >
               {{ requestStatusLabel(request.status) }}
             </span>
           </div>
 
           <p *ngIf="request.notes">{{ request.notes }}</p>
-          <small>Criada em {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
-          <small *ngIf="request.resolutionNotes">Retorno: {{ request.resolutionNotes }}</small>
+          <small
+            >Criada em {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small
+          >
+          <small *ngIf="request.resolutionNotes"
+            >Retorno: {{ request.resolutionNotes }}</small
+          >
         </article>
       </div>
 
@@ -128,11 +168,14 @@
     <section class="privacy-card privacy-card--compact">
       <strong>Contato de privacidade</strong>
       <p>
-        Para temas regulatórios e acompanhamento adicional, use {{ overview.policy.contactEmail }}.
+        Para temas regulatórios e acompanhamento adicional, use
+        {{ overview.policy.contactEmail }}.
       </p>
     </section>
   </ng-container>
 
   <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
-  <p class="feedback feedback--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="feedback feedback--error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </p>
 </main>

@@ -96,7 +96,11 @@ p {
 .privacy-hero {
   padding: var(--space-8) var(--space-6);
   background:
-    radial-gradient(ellipse at 82% 0%, rgba(43, 184, 138, 0.08) 0%, transparent 58%),
+    radial-gradient(
+      ellipse at 82% 0%,
+      rgba(43, 184, 138, 0.08) 0%,
+      transparent 58%
+    ),
     var(--white);
 }
 

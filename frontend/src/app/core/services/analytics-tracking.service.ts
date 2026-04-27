@@ -11,13 +11,16 @@ import { PrivacyPreferencesService } from './privacy-preferences.service';
 export class AnalyticsTrackingService {
   private readonly http = inject(HttpClient);
   private readonly logger = inject(AppLoggerService);
-  private readonly privacyPreferencesService = inject(PrivacyPreferencesService);
+  private readonly privacyPreferencesService = inject(
+    PrivacyPreferencesService,
+  );
   private readonly storage = globalThis.localStorage;
   private readonly sessionStorageRef = globalThis.sessionStorage;
 
   private readonly visitorIdKey = 'triluga.analytics.visitorId';
   private readonly sessionTrackedKey = 'triluga.analytics.sessionTracked';
-  private readonly vehicleViewTrackedKeyPrefix = 'triluga.analytics.vehicleView.';
+  private readonly vehicleViewTrackedKeyPrefix =
+    'triluga.analytics.vehicleView.';
 
   trackCurrentSession(path: string) {
     if (!this.privacyPreferencesService.analyticsConsentGranted()) {
@@ -93,7 +96,10 @@ export class AnalyticsTrackingService {
       });
   }
 
-  getMostViewedVehicles(limit = 8, period: 'all' | '30d' | '7d' | 'today' = '30d') {
+  getMostViewedVehicles(
+    limit = 8,
+    period: 'all' | '30d' | '7d' | 'today' = '30d',
+  ) {
     return this.http
       .get<MostViewedVehiclesResponse>(
         `${environment.apiBaseUrl}/analytics/vehicles/most-viewed`,
@@ -104,9 +110,7 @@ export class AnalyticsTrackingService {
           },
         },
       )
-      .pipe(
-        map((response) => normalizeApiPayloadUrls(response)),
-      );
+      .pipe(map((response) => normalizeApiPayloadUrls(response)));
   }
 
   private getOrCreateVisitorId() {

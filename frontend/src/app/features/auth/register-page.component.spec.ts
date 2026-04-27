@@ -44,7 +44,8 @@ describe('RegisterPageComponent', () => {
   });
 
   function createComponent() {
-    return TestBed.createComponent(RegisterPageComponent).componentInstance as RegisterPageComponent & {
+    return TestBed.createComponent(RegisterPageComponent)
+      .componentInstance as RegisterPageComponent & {
       phone: string;
       formatPhone(value: string): string;
     };
@@ -59,12 +60,16 @@ describe('RegisterPageComponent', () => {
   it('keeps the country code from being recycled as the area code while deleting', () => {
     const component = createComponent();
 
-    expect(component.formatPhone('+55 (11) 999-9000')).toBe('+55 (11) 9999-000');
+    expect(component.formatPhone('+55 (11) 999-9000')).toBe(
+      '+55 (11) 9999-000',
+    );
   });
 
   it('still supports Brazilian numbers whose area code is 55', () => {
     const component = createComponent();
 
-    expect(component.formatPhone('+55 (55) 98765-4321')).toBe('+55 (55) 98765-4321');
+    expect(component.formatPhone('+55 (55) 98765-4321')).toBe(
+      '+55 (55) 98765-4321',
+    );
   });
 });

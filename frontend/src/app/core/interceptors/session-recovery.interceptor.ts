@@ -1,7 +1,4 @@
-import {
-  HttpErrorResponse,
-  HttpInterceptorFn,
-} from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AppLoggerService } from '../services/app-logger.service';
@@ -20,20 +17,21 @@ export const sessionRecoveryInterceptor: HttpInterceptorFn = (req, next) => {
         error instanceof HttpErrorResponse
           ? error
           : new HttpErrorResponse({ error });
-      const isAuthRoute = req.url.includes('/auth/login')
-        || req.url.includes('/auth/register')
-        || req.url.includes('/auth/refresh');
+      const isAuthRoute =
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/register') ||
+        req.url.includes('/auth/refresh');
       const isPublicCatalogApiRequest = isPublicCatalogRequest(
         req.url,
         req.method,
       );
       const alreadyRetried = req.headers.has(RETRY_HEADER);
       const shouldAttemptRecovery =
-        httpError.status === 401
-        && !isAuthRoute
-        && !isPublicCatalogApiRequest
-        && !alreadyRetried
-        && authService.hasSessionHint();
+        httpError.status === 401 &&
+        !isAuthRoute &&
+        !isPublicCatalogApiRequest &&
+        !alreadyRetried &&
+        authService.hasSessionHint();
 
       if (!shouldAttemptRecovery) {
         return throwError(() => error);

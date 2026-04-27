@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnDestroy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 type FilterDraft = {
@@ -50,7 +56,7 @@ export class FilterModalComponent implements OnDestroy {
       ...this.createDraft(),
       ...value,
     };
-    
+
     if (!this.draft.vehicleType) {
       this.draft.vehicleType = 'CAR';
     }

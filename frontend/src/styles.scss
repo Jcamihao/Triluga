@@ -17,93 +17,100 @@
   color-scheme: light;
 
   /* ── Mint (Primary) ── */
-  --mint-50:  #F0FBF7;
-  --mint-100: #D1F5E8;
-  --mint-200: #A3EBCF;
-  --mint-300: #6DDBB2;
-  --mint-400: #3CC99A;
-  --mint-500: #2BB88A;
-  --mint-600: #1F9B71;
-  --mint-700: #177D5B;
-  --mint-800: #125F45;
-  --mint-900: #0D4030;
+  --mint-50: #f0fbf7;
+  --mint-100: #d1f5e8;
+  --mint-200: #a3ebcf;
+  --mint-300: #6ddbb2;
+  --mint-400: #3cc99a;
+  --mint-500: #2bb88a;
+  --mint-600: #1f9b71;
+  --mint-700: #177d5b;
+  --mint-800: #125f45;
+  --mint-900: #0d4030;
 
   /* ── White / Gray (Base) ── */
-  --white:     #FFFFFF;
-  --gray-50:   #FAFCFB;
-  --gray-100:  #F3F7F5;
-  --gray-150:  #EBF0ED;
-  --gray-200:  #E2E7E5;
+  --white: #ffffff;
+  --gray-50: #fafcfb;
+  --gray-100: #f3f7f5;
+  --gray-150: #ebf0ed;
+  --gray-200: #e2e7e5;
 
   /* ── Graphite (Support ~15%) ── */
-  --graphite-100: #E2E7E5;
-  --graphite-200: #C5CCC9;
-  --graphite-300: #8A9592;
-  --graphite-400: #5C6B66;
-  --graphite-500: #3A4845;
-  --graphite-600: #252F2C;
-  --graphite-700: #1A2421;
+  --graphite-100: #e2e7e5;
+  --graphite-200: #c5ccc9;
+  --graphite-300: #8a9592;
+  --graphite-400: #5c6b66;
+  --graphite-500: #3a4845;
+  --graphite-600: #252f2c;
+  --graphite-700: #1a2421;
 
   /* ── Semantic ── */
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --error:   #EF4444;
-  --info:    #3B82F6;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
 
   /* ── Aliases ── */
-  --primary:       var(--mint-500);
-  --primary-hover:  var(--mint-600);
-  --primary-light:  var(--mint-50);
-  --primary-subtle:  var(--mint-100);
-  --background:    var(--gray-50);
-  --surface:       var(--white);
+  --primary: var(--mint-500);
+  --primary-hover: var(--mint-600);
+  --primary-light: var(--mint-50);
+  --primary-subtle: var(--mint-100);
+  --background: var(--gray-50);
+  --surface: var(--white);
   --surface-muted: var(--gray-100);
-  --border:        var(--gray-150);
+  --border: var(--gray-150);
   --border-strong: var(--graphite-100);
-  --text-primary:   var(--graphite-700);
+  --text-primary: var(--graphite-700);
   --text-secondary: var(--graphite-400);
-  --text-disabled:  var(--graphite-200);
-  --label-ink:     var(--graphite-500);
+  --text-disabled: var(--graphite-200);
+  --label-ink: var(--graphite-500);
 
   /* ── Typography ── */
-  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-brand:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:    'SF Mono', 'Fira Code', monospace;
+  --font-body:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-brand:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   /* ── Spacing (8px grid) ── */
-  --space-1:   4px;
-  --space-2:   8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
   --space-20: 80px;
 
   /* ── Radius ── */
-  --radius-sm:   8px;
-  --radius-md:  12px;
-  --radius-lg:  16px;
-  --radius-xl:  20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-2xl: 24px;
   --radius-full: 999px;
 
   /* ── Shadows ── */
-  --shadow-xs:  0 1px 2px rgba(26, 36, 33, 0.05);
-  --shadow-sm:  0 2px 8px rgba(26, 36, 33, 0.06), 0 1px 2px rgba(26, 36, 33, 0.04);
-  --shadow-md:  0 4px 16px rgba(26, 36, 33, 0.08), 0 2px 4px rgba(26, 36, 33, 0.04);
-  --shadow-lg:  0 8px 32px rgba(26, 36, 33, 0.10), 0 2px 8px rgba(26, 36, 33, 0.04);
-  --shadow-xl:  0 16px 48px rgba(26, 36, 33, 0.12), 0 4px 12px rgba(26, 36, 33, 0.06);
+  --shadow-xs: 0 1px 2px rgba(26, 36, 33, 0.05);
+  --shadow-sm:
+    0 2px 8px rgba(26, 36, 33, 0.06), 0 1px 2px rgba(26, 36, 33, 0.04);
+  --shadow-md:
+    0 4px 16px rgba(26, 36, 33, 0.08), 0 2px 4px rgba(26, 36, 33, 0.04);
+  --shadow-lg:
+    0 8px 32px rgba(26, 36, 33, 0.1), 0 2px 8px rgba(26, 36, 33, 0.04);
+  --shadow-xl:
+    0 16px 48px rgba(26, 36, 33, 0.12), 0 4px 12px rgba(26, 36, 33, 0.06);
   --shadow-mint: 0 4px 16px rgba(43, 184, 138, 0.25);
 
   /* Legacy aliases (backward compat) */
-  --shadow-soft:   var(--shadow-xs);
+  --shadow-soft: var(--shadow-xs);
   --shadow-strong: var(--shadow-md);
-  --glass-shadow:  var(--shadow-sm);
+  --glass-shadow: var(--shadow-sm);
   --glass-shadow-strong: var(--shadow-md);
   --glass-border: var(--border);
   --glass-border-soft: var(--gray-150);
@@ -206,7 +213,11 @@ img {
    3. TYPOGRAPHY
    ═══════════════════════════════════════════ */
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -255,10 +266,18 @@ small {
 
 /* .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); } */
-.text-mint { color: var(--mint-600); }
-.text-center { text-align: center; }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
+.text-mint {
+  color: var(--mint-600);
+}
+.text-center {
+  text-align: center;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
 
 .eyebrow {
   display: inline-flex;
@@ -466,7 +485,9 @@ small {
 /* ── Inputs ── */
 
 :where(
-  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+      [type='color']
+    ),
   select,
   textarea
 ) {
@@ -487,7 +508,9 @@ small {
 }
 
 :where(
-  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+      [type='color']
+    ),
   select,
   textarea
 )::placeholder {
@@ -495,7 +518,9 @@ small {
 }
 
 :where(
-  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+      [type='color']
+    ),
   select,
   textarea
 ):focus {
@@ -695,18 +720,24 @@ label > span:first-child {
 /* ── Skeleton Loader ── */
 
 .skeleton {
-  background: linear-gradient(90deg,
+  background: linear-gradient(
+    90deg,
     var(--gray-100) 25%,
     var(--gray-150) 50%,
-    var(--gray-100) 75%);
+    var(--gray-100) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
 
 @keyframes skeleton-pulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ── Empty State ── */

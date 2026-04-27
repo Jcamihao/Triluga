@@ -134,7 +134,11 @@ p {
 .admin-stats article {
   border-radius: var(--radius-2xl);
   background:
-    radial-gradient(ellipse at 82% 0%, rgba(43, 184, 138, 0.08) 0%, transparent 58%),
+    radial-gradient(
+      ellipse at 82% 0%,
+      rgba(43, 184, 138, 0.08) 0%,
+      transparent 58%
+    ),
     var(--white);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-xs);

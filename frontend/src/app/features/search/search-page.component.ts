@@ -31,11 +31,7 @@ type SearchQuery = {
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    FilterModalComponent,
-  ],
+  imports: [CommonModule, RouterLink, FilterModalComponent],
   templateUrl: './search-page.component.html',
   styleUrls: ['./search-page.component.scss'],
 })
@@ -80,27 +76,25 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   private observer?: IntersectionObserver;
 
   constructor() {
-    this.route.queryParamMap
-      .pipe(takeUntilDestroyed())
-      .subscribe((params) => {
-        this.query = {
-          q: params.get('q') || '',
-          city: params.get('city') || '',
-          vehicleType: (params.get('vehicleType') as VehicleType | '') || '',
-          category: params.get('category') || '',
-          motorcycleStyle: params.get('motorcycleStyle') || '',
-          minEngineCc: params.get('minEngineCc') || '',
-          maxEngineCc: params.get('maxEngineCc') || '',
-          minPrice: params.get('minPrice') || '',
-          maxPrice: params.get('maxPrice') || '',
-          latitude: params.get('latitude') || '',
-          longitude: params.get('longitude') || '',
-          radiusKm: params.get('radiusKm') || '',
-        };
-        this.currentPage = 1;
-        this.vehicles = [];
-        this.fetchVehicles();
-      });
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.query = {
+        q: params.get('q') || '',
+        city: params.get('city') || '',
+        vehicleType: (params.get('vehicleType') as VehicleType | '') || '',
+        category: params.get('category') || '',
+        motorcycleStyle: params.get('motorcycleStyle') || '',
+        minEngineCc: params.get('minEngineCc') || '',
+        maxEngineCc: params.get('maxEngineCc') || '',
+        minPrice: params.get('minPrice') || '',
+        maxPrice: params.get('maxPrice') || '',
+        latitude: params.get('latitude') || '',
+        longitude: params.get('longitude') || '',
+        radiusKm: params.get('radiusKm') || '',
+      };
+      this.currentPage = 1;
+      this.vehicles = [];
+      this.fetchVehicles();
+    });
   }
 
   ngAfterViewInit() {
@@ -272,7 +266,10 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     }
 
     if (this.hasLocationFilter) {
-      pills.push({ key: 'location', label: `Raio de ${this.query.radiusKm || '20'} km` });
+      pills.push({
+        key: 'location',
+        label: `Raio de ${this.query.radiusKm || '20'} km`,
+      });
     }
 
     return pills;
@@ -294,14 +291,20 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
 
   protected get searchOverviewTitle() {
     if (this.query.vehicleType === 'MOTORCYCLE') {
-      return this.query.city ? `Motos em radar por ${this.query.city}` : 'Motos em radar';
+      return this.query.city
+        ? `Motos em radar por ${this.query.city}`
+        : 'Motos em radar';
     }
 
     if (this.query.vehicleType === 'CAR') {
-      return this.query.city ? `Carros em radar por ${this.query.city}` : 'Carros em radar';
+      return this.query.city
+        ? `Carros em radar por ${this.query.city}`
+        : 'Carros em radar';
     }
 
-    return this.query.city ? `Encontre seu carro ideal em ${this.query.city}` : 'Encontre seu carro ideal';
+    return this.query.city
+      ? `Encontre seu carro ideal em ${this.query.city}`
+      : 'Encontre seu carro ideal';
   }
 
   protected get searchOverviewSubtitle() {
@@ -317,7 +320,9 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       return 'Buscar carros';
     }
 
-    return this.query.vehicleType === 'MOTORCYCLE' ? 'Buscar motos' : 'Buscar veículos';
+    return this.query.vehicleType === 'MOTORCYCLE'
+      ? 'Buscar motos'
+      : 'Buscar veículos';
   }
 
   protected get searchSubtitle() {
@@ -335,7 +340,9 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       return 'carros encontrados';
     }
 
-    return this.query.vehicleType === 'MOTORCYCLE' ? 'motos encontradas' : 'veículos encontrados';
+    return this.query.vehicleType === 'MOTORCYCLE'
+      ? 'motos encontradas'
+      : 'veículos encontrados';
   }
 
   protected get emptyStateTitle() {
@@ -357,5 +364,4 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       ? 'Tente mudar a cidade ou ampliar a faixa de preço para ver mais motos.'
       : 'Tente mudar a cidade, o tipo de veículo ou ampliar a faixa de preço.';
   }
-
 }

@@ -55,7 +55,9 @@ export class VehiclesController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualiza os dados de um veículo do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Atualiza os dados de um veículo do usuário autenticado',
+  })
   update(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') vehicleId: string,

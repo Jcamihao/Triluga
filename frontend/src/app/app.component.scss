@@ -28,6 +28,13 @@
   padding-bottom: calc(286px + env(safe-area-inset-bottom, 0px));
 }
 
+@media (min-width: 768px) {
+  .app-shell.with-bottom-nav,
+  .app-shell.with-bottom-nav.with-floating-banner {
+    padding-bottom: 0;
+  }
+}
+
 /* ── Menu Overlay ── */
 
 .menu-overlay {

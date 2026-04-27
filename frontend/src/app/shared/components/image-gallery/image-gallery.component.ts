@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, Input, OnDestroy, signal } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  Input,
+  OnDestroy,
+  signal,
+} from '@angular/core';
 
 @Component({
   selector: 'app-image-gallery',

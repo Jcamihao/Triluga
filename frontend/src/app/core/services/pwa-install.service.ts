@@ -146,7 +146,8 @@ export class PwaInstallService {
   private isIosSafari() {
     const userAgent = globalThis.navigator?.userAgent?.toLowerCase() ?? '';
     const isIos = /iphone|ipad|ipod/.test(userAgent);
-    const isSafari = /safari/.test(userAgent) && !/crios|fxios|edgios/.test(userAgent);
+    const isSafari =
+      /safari/.test(userAgent) && !/crios|fxios|edgios/.test(userAgent);
 
     return isIos && isSafari;
   }

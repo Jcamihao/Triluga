@@ -71,7 +71,9 @@ export class ProfilesController {
       required: ['file'],
     },
   })
-  @ApiOperation({ summary: 'Faz upload da foto de perfil do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Faz upload da foto de perfil do usuário autenticado',
+  })
   uploadMyAvatar(
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File,
@@ -109,7 +111,9 @@ export class ProfilesController {
   }
 
   @Get('me/document/url')
-  @ApiOperation({ summary: 'Gera uma URL temporária para o documento do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Gera uma URL temporária para o documento do usuário autenticado',
+  })
   getMyDocumentUrl(@CurrentUser() user: AuthenticatedUser) {
     return this.profilesService.getVerificationFileUrl(user.sub, 'document');
   }
@@ -144,8 +148,13 @@ export class ProfilesController {
   }
 
   @Get('me/driver-license/url')
-  @ApiOperation({ summary: 'Gera uma URL temporária para a CNH do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Gera uma URL temporária para a CNH do usuário autenticado',
+  })
   getMyDriverLicenseUrl(@CurrentUser() user: AuthenticatedUser) {
-    return this.profilesService.getVerificationFileUrl(user.sub, 'driverLicense');
+    return this.profilesService.getVerificationFileUrl(
+      user.sub,
+      'driverLicense',
+    );
   }
 }

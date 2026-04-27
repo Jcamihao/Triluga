@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job, Queue, Worker } from 'bullmq';
 import Redis from 'ioredis';
@@ -12,15 +17,13 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
   private queueClient: Redis | null = null;
   private notificationsQueue: Queue | null = null;
   private notificationsWorker: Worker | null = null;
-  private queueConnection:
-    | {
-        host: string;
-        port: number;
-        password?: string;
-        db?: number;
-        maxRetriesPerRequest: null;
-      }
-    | null = null;
+  private queueConnection: {
+    host: string;
+    port: number;
+    password?: string;
+    db?: number;
+    maxRetriesPerRequest: null;
+  } | null = null;
   private isAvailable = false;
 
   constructor(private readonly configService: ConfigService) {
@@ -65,7 +68,10 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
       this.attachRedisErrorHandler(this.cacheClient, 'cache');
       this.attachRedisErrorHandler(this.queueClient, 'queue');
 
-      await Promise.all([this.cacheClient.connect(), this.queueClient.connect()]);
+      await Promise.all([
+        this.cacheClient.connect(),
+        this.queueClient.connect(),
+      ]);
 
       this.notificationsQueue = new Queue('notifications', {
         connection: this.queueConnection,
@@ -180,9 +186,6 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
     this.cacheClient = null;
     this.queueClient = null;
 
-    await Promise.all([
-      cacheClient?.disconnect(),
-      queueClient?.disconnect(),
-    ]);
+    await Promise.all([cacheClient?.disconnect(), queueClient?.disconnect()]);
   }
 }

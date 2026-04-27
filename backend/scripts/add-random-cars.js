@@ -256,7 +256,9 @@ async function invalidateVehicleCache() {
       await redis.del(...keys);
     }
   } catch (error) {
-    console.warn('Nao foi possivel invalidar o cache Redis apos adicionar carros.');
+    console.warn(
+      'Nao foi possivel invalidar o cache Redis apos adicionar carros.',
+    );
   } finally {
     await redis.quit();
   }
@@ -417,7 +419,9 @@ async function generateUniquePlate() {
     }
   }
 
-  throw new Error('Nao foi possivel gerar uma placa unica apos varias tentativas.');
+  throw new Error(
+    'Nao foi possivel gerar uma placa unica apos varias tentativas.',
+  );
 }
 
 async function createRandomCar(ownerId, index) {
@@ -471,7 +475,9 @@ async function main() {
   const count = parseCount(process.argv.slice(2));
 
   if (!Number.isInteger(count) || count <= 0) {
-    throw new Error('Informe uma quantidade inteira maior que zero. Ex.: npm run db:add:cars -- 25');
+    throw new Error(
+      'Informe uma quantidade inteira maior que zero. Ex.: npm run db:add:cars -- 25',
+    );
   }
 
   const owners = await Promise.all(

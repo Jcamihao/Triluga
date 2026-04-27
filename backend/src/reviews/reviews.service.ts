@@ -33,9 +33,7 @@ export class ReviewsService {
     }
 
     if (vehicle.ownerId === authorId) {
-      throw new ForbiddenException(
-        'Você não pode avaliar o próprio anúncio.',
-      );
+      throw new ForbiddenException('Você não pode avaliar o próprio anúncio.');
     }
 
     const existingReview = await this.prisma.review.findFirst({
@@ -145,5 +143,4 @@ export class ReviewsService {
       },
     });
   }
-
 }

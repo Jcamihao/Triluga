@@ -29,14 +29,18 @@ const apiBaseUrl =
     'API_BASE_URL',
     'FRONTEND_APP_API_BASE_URL',
     'APP_API_BASE_URL',
-  ]) ?? buildApiBaseUrl(derivedBackendOrigin) ?? 'http://localhost:3002/api/v1';
+  ]) ??
+  buildApiBaseUrl(derivedBackendOrigin) ??
+  'http://localhost:3002/api/v1';
 const wsBaseUrl =
   pickEnvValue(resolvedEnv, [
     'FRONTEND_WS_BASE_URL',
     'WS_BASE_URL',
     'FRONTEND_APP_WS_BASE_URL',
     'APP_WS_BASE_URL',
-  ]) ?? derivedBackendOrigin ?? 'http://localhost:3002';
+  ]) ??
+  derivedBackendOrigin ??
+  'http://localhost:3002';
 const clientLoggingEnabled =
   (pickEnvValue(resolvedEnv, [
     'FRONTEND_CLIENT_LOGGING_ENABLED',
@@ -65,7 +69,12 @@ async function loadEnvFile(filePath) {
     const contents = await readFile(filePath, 'utf8');
     return parseEnvFile(contents);
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
       return null;
     }
 

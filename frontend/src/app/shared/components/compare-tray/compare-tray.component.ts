@@ -20,13 +20,17 @@ export class CompareTrayComponent {
   protected collapsed = this.router.url.startsWith('/compare');
 
   constructor() {
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe((e) => {
-      // Auto-collapse when entering /compare, auto-expand when leaving
-      this.collapsed = (e as NavigationEnd).urlAfterRedirects.startsWith('/compare');
-    });
+    this.router.events
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => {
+        // Auto-collapse when entering /compare, auto-expand when leaving
+        this.collapsed = (e as NavigationEnd).urlAfterRedirects.startsWith(
+          '/compare',
+        );
+      });
   }
 
   protected toggleCollapsed() {

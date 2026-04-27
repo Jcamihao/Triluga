@@ -18,7 +18,9 @@ export class NotificationsCenterService {
   readonly notifications = computed(() => this.notificationsSignal());
   readonly loading = computed(() => this.loadingSignal());
   readonly unreadCount = computed(
-    () => this.notificationsSignal().filter((notification) => !notification.isRead).length,
+    () =>
+      this.notificationsSignal().filter((notification) => !notification.isRead)
+        .length,
   );
 
   constructor() {
@@ -48,25 +50,38 @@ export class NotificationsCenterService {
     }
 
     this.loadingSignal.set(true);
-    this.logger.debug('notifications', force ? 'refresh_started' : 'load_started');
+    this.logger.debug(
+      'notifications',
+      force ? 'refresh_started' : 'load_started',
+    );
 
     return this.profileApiService.getNotifications().pipe(
       tap({
         next: (notifications) => {
           this.notificationsSignal.set(
-            [...notifications].sort((left, right) =>
-              new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+            [...notifications].sort(
+              (left, right) =>
+                new Date(right.createdAt).getTime() -
+                new Date(left.createdAt).getTime(),
             ),
           );
           this.initializedSignal.set(true);
-          this.logger.debug('notifications', force ? 'refresh_succeeded' : 'load_succeeded', {
-            count: notifications.length,
-          });
+          this.logger.debug(
+            'notifications',
+            force ? 'refresh_succeeded' : 'load_succeeded',
+            {
+              count: notifications.length,
+            },
+          );
         },
         error: (error) => {
-          this.logger.warn('notifications', force ? 'refresh_failed' : 'load_failed', {
-            message: error?.message ?? 'Erro desconhecido',
-          });
+          this.logger.warn(
+            'notifications',
+            force ? 'refresh_failed' : 'load_failed',
+            {
+              message: error?.message ?? 'Erro desconhecido',
+            },
+          );
         },
       }),
       finalize(() => this.loadingSignal.set(false)),

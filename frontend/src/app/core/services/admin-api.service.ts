@@ -7,9 +7,9 @@ export class AdminApiService {
   private readonly http = inject(HttpClient);
 
   getDashboard() {
-    return this.http.get<{ totals: { users: number; vehicles: number; privacyRequests: number } }>(
-      `${environment.apiBaseUrl}/admin/dashboard`,
-    );
+    return this.http.get<{
+      totals: { users: number; vehicles: number; privacyRequests: number };
+    }>(`${environment.apiBaseUrl}/admin/dashboard`);
   }
 
   getUsers() {
@@ -21,7 +21,10 @@ export class AdminApiService {
   }
 
   blockUser(userId: string) {
-    return this.http.patch(`${environment.apiBaseUrl}/admin/users/${userId}/block`, {});
+    return this.http.patch(
+      `${environment.apiBaseUrl}/admin/users/${userId}/block`,
+      {},
+    );
   }
 
   approveUserDocument(userId: string) {

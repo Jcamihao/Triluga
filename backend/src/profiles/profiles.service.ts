@@ -96,7 +96,9 @@ export class ProfilesService {
     const driverLicenseStatus =
       user.profile?.driverLicenseVerification ??
       VerificationStatus.NOT_SUBMITTED;
-    const ratingAverage = Number((reviewsAggregate._avg.rating ?? 0).toFixed(1));
+    const ratingAverage = Number(
+      (reviewsAggregate._avg.rating ?? 0).toFixed(1),
+    );
 
     const responseTimeLabel = this.resolveResponseTimeLabel(user.lastLoginAt);
 

@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
@@ -13,7 +21,9 @@ export class SearchAlertsController {
   constructor(private readonly searchAlertsService: SearchAlertsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Salva um alerta de busca para o usuário autenticado' })
+  @ApiOperation({
+    summary: 'Salva um alerta de busca para o usuário autenticado',
+  })
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateSearchAlertDto,
@@ -35,10 +45,7 @@ export class SearchAlertsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove um alerta de busca do usuário autenticado' })
-  remove(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') alertId: string,
-  ) {
+  remove(@CurrentUser() user: AuthenticatedUser, @Param('id') alertId: string) {
     return this.searchAlertsService.remove(user.sub, alertId);
   }
 }

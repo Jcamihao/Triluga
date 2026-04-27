@@ -2,10 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  ChatConversationItem,
-  ChatMessage,
-} from '../models/domain.models';
+import { ChatConversationItem, ChatMessage } from '../models/domain.models';
 import { normalizeApiPayloadUrls } from '../utils/network-url.util';
 
 @Injectable({ providedIn: 'root' })
@@ -29,15 +26,20 @@ export class ChatApiService {
 
   getMessages(conversationId: string) {
     return this.http
-      .get<ChatMessage[]>(`${environment.apiBaseUrl}/chats/${conversationId}/messages`)
+      .get<
+        ChatMessage[]
+      >(`${environment.apiBaseUrl}/chats/${conversationId}/messages`)
       .pipe(map((messages) => normalizeApiPayloadUrls(messages)));
   }
 
   sendMessage(conversationId: string, content: string) {
     return this.http
-      .post<ChatMessage>(`${environment.apiBaseUrl}/chats/${conversationId}/messages`, {
-        content,
-      })
+      .post<ChatMessage>(
+        `${environment.apiBaseUrl}/chats/${conversationId}/messages`,
+        {
+          content,
+        },
+      )
       .pipe(map((message) => normalizeApiPayloadUrls(message)));
   }
 

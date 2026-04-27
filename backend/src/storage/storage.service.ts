@@ -31,7 +31,10 @@ export class StorageService {
       'storage.privateFileUrlExpiresInSeconds',
       600,
     );
-    this.endpoint = this.configService.get<string>('storage.endpoint', 'localhost');
+    this.endpoint = this.configService.get<string>(
+      'storage.endpoint',
+      'localhost',
+    );
     this.client = new MinioClient({
       endPoint: this.endpoint,
       port: this.configService.get<number>('storage.port', 9000),
@@ -87,10 +90,7 @@ export class StorageService {
     };
   }
 
-  async uploadPrivateFile(
-    file: Express.Multer.File,
-    folder: 'documents',
-  ) {
+  async uploadPrivateFile(file: Express.Multer.File, folder: 'documents') {
     const extension = extname(file.originalname || '');
     const objectKey = `${folder}/${uuidv4()}${extension}`;
 
@@ -123,17 +123,22 @@ export class StorageService {
     const legacyPublicObjectKey = this.extractObjectKeyFromPublicUrl(value);
 
     if (legacyPublicObjectKey) {
-      await this.deleteObjectFromBucket(this.publicBucket, legacyPublicObjectKey);
+      await this.deleteObjectFromBucket(
+        this.publicBucket,
+        legacyPublicObjectKey,
+      );
       return;
     }
 
-    await this.deleteObjectFromBucket(this.privateBucket, value).catch((error) => {
-      this.logger.warn(
-        `Nao foi possivel remover o arquivo privado ${value}: ${
-          error instanceof Error ? error.message : 'Erro desconhecido'
-        }`,
-      );
-    });
+    await this.deleteObjectFromBucket(this.privateBucket, value).catch(
+      (error) => {
+        this.logger.warn(
+          `Nao foi possivel remover o arquivo privado ${value}: ${
+            error instanceof Error ? error.message : 'Erro desconhecido'
+          }`,
+        );
+      },
+    );
   }
 
   async getPrivateFileUrl(value: string | null | undefined) {
@@ -185,10 +190,7 @@ export class StorageService {
       ],
     };
 
-    await this.client.setBucketPolicy(
-      bucket,
-      JSON.stringify(publicReadPolicy),
-    );
+    await this.client.setBucketPolicy(bucket, JSON.stringify(publicReadPolicy));
   }
 
   private isCloudflareR2() {
@@ -234,7 +236,9 @@ export class StorageService {
         return null;
       }
 
-      return decodeURIComponent(parsedUrl.pathname.slice(publicPath.length + 1));
+      return decodeURIComponent(
+        parsedUrl.pathname.slice(publicPath.length + 1),
+      );
     } catch (error) {
       this.logger.warn(
         `Nao foi possivel extrair a chave do arquivo publico: ${url}`,

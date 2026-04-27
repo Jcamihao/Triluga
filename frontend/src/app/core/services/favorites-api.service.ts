@@ -17,10 +17,10 @@ export class FavoritesApiService {
 
   addFavorite(vehicleId: string) {
     return this.http
-      .post<{ message: string; vehicle: VehicleCardItem }>(
-        `${environment.apiBaseUrl}/favorites/${vehicleId}`,
-        {},
-      )
+      .post<{
+        message: string;
+        vehicle: VehicleCardItem;
+      }>(`${environment.apiBaseUrl}/favorites/${vehicleId}`, {})
       .pipe(map((response) => normalizeApiPayloadUrls(response)));
   }
 

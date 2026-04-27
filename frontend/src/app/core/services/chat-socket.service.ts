@@ -27,7 +27,8 @@ export class ChatSocketService {
   private readonly selfPresenceSignal = signal(false);
   private readonly transportConnectedSignal = signal(false);
 
-  readonly message$: Observable<ChatMessage> = this.messageSubject.asObservable();
+  readonly message$: Observable<ChatMessage> =
+    this.messageSubject.asObservable();
   readonly conversationUpdated$: Observable<{ conversationId: string }> =
     this.conversationUpdatedSubject.asObservable();
   readonly presenceUpdated$: Observable<{ userId: string; isOnline: boolean }> =
@@ -100,7 +101,11 @@ export class ChatSocketService {
       const { io } = await import('socket.io-client');
       const token = this.authService.getAccessToken();
 
-      if (!token || bootstrapToken !== this.socketBootstrapToken || this.socket) {
+      if (
+        !token ||
+        bootstrapToken !== this.socketBootstrapToken ||
+        this.socket
+      ) {
         return;
       }
 

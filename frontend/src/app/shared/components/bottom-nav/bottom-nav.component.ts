@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, effect, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  effect,
+  inject,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
@@ -31,7 +38,12 @@ export class BottomNavComponent {
   protected readonly items = [
     { key: 'home', label: 'Início', link: '/', icon: 'home' },
     { key: 'search', label: 'Busca', link: '/search', icon: 'search' },
-    { key: 'host', label: 'Anunciar', link: '/anunciar-carro', icon: 'add_circle' },
+    {
+      key: 'host',
+      label: 'Anunciar',
+      link: '/anunciar-carro',
+      icon: 'add_circle',
+    },
     { key: 'chat', label: 'Mensagens', link: '/chat', icon: 'chat' },
     { key: 'menu', label: 'Perfil', icon: 'person' },
   ] as const;

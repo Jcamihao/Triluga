@@ -13,7 +13,9 @@ import { AdminApiService } from '../../core/services/admin-api.service';
 export class AdminPageComponent {
   private readonly adminApiService = inject(AdminApiService);
 
-  protected dashboard?: { totals: { users: number; vehicles: number; privacyRequests: number } };
+  protected dashboard?: {
+    totals: { users: number; vehicles: number; privacyRequests: number };
+  };
   protected users: any[] = [];
   protected vehicles: any[] = [];
   protected privacyRequests: any[] = [];
@@ -27,19 +29,27 @@ export class AdminPageComponent {
   }
 
   protected approveDocument(userId: string) {
-    this.adminApiService.approveUserDocument(userId).subscribe(() => this.loadData());
+    this.adminApiService
+      .approveUserDocument(userId)
+      .subscribe(() => this.loadData());
   }
 
   protected rejectDocument(userId: string) {
-    this.adminApiService.rejectUserDocument(userId).subscribe(() => this.loadData());
+    this.adminApiService
+      .rejectUserDocument(userId)
+      .subscribe(() => this.loadData());
   }
 
   protected approveDriverLicense(userId: string) {
-    this.adminApiService.approveUserDriverLicense(userId).subscribe(() => this.loadData());
+    this.adminApiService
+      .approveUserDriverLicense(userId)
+      .subscribe(() => this.loadData());
   }
 
   protected rejectDriverLicense(userId: string) {
-    this.adminApiService.rejectUserDriverLicense(userId).subscribe(() => this.loadData());
+    this.adminApiService
+      .rejectUserDriverLicense(userId)
+      .subscribe(() => this.loadData());
   }
 
   protected verificationLabel(status?: string) {
@@ -54,10 +64,15 @@ export class AdminPageComponent {
   }
 
   protected deactivateVehicle(vehicleId: string) {
-    this.adminApiService.deactivateVehicle(vehicleId).subscribe(() => this.loadData());
+    this.adminApiService
+      .deactivateVehicle(vehicleId)
+      .subscribe(() => this.loadData());
   }
 
-  protected openVerificationFile(userId: string, type: 'document' | 'driverLicense') {
+  protected openVerificationFile(
+    userId: string,
+    type: 'document' | 'driverLicense',
+  ) {
     this.adminApiService.getUserVerificationFileUrl(userId, type).subscribe({
       next: ({ url }) => {
         window.open(url, '_blank', 'noopener,noreferrer');

@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  PrivacyRequestStatus,
-  VerificationStatus,
-} from '@prisma/client';
+import { PrivacyRequestStatus, VerificationStatus } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrivacyRequestDto } from './dto/create-privacy-request.dto';
@@ -73,10 +70,7 @@ export class PrivacyService {
     };
   }
 
-  async updateMyPreferences(
-    userId: string,
-    dto: UpdatePrivacyPreferencesDto,
-  ) {
+  async updateMyPreferences(userId: string, dto: UpdatePrivacyPreferencesDto) {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -258,9 +252,7 @@ export class PrivacyService {
         status: params.status,
         resolutionNotes: params.resolutionNotes?.trim() || null,
         completedAt:
-          params.status === PrivacyRequestStatus.COMPLETED
-            ? new Date()
-            : null,
+          params.status === PrivacyRequestStatus.COMPLETED ? new Date() : null,
       },
     });
   }

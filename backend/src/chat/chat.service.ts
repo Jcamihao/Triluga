@@ -38,7 +38,9 @@ export class ChatService {
   ) {}
 
   async startVehicleConversation(userId: string, vehicleId: string) {
-    this.logger.log(`chat_start_attempt userId=${userId} vehicleId=${vehicleId}`);
+    this.logger.log(
+      `chat_start_attempt userId=${userId} vehicleId=${vehicleId}`,
+    );
     const vehicle = await this.prisma.vehicle.findFirst({
       where: {
         id: vehicleId,
@@ -61,12 +63,16 @@ export class ChatService {
     });
 
     if (!vehicle) {
-      this.logger.warn(`chat_start_vehicle_not_found userId=${userId} vehicleId=${vehicleId}`);
+      this.logger.warn(
+        `chat_start_vehicle_not_found userId=${userId} vehicleId=${vehicleId}`,
+      );
       throw new NotFoundException('Veiculo nao encontrado.');
     }
 
     if (vehicle.ownerId === userId) {
-      this.logger.warn(`chat_start_own_vehicle_blocked userId=${userId} vehicleId=${vehicleId}`);
+      this.logger.warn(
+        `chat_start_own_vehicle_blocked userId=${userId} vehicleId=${vehicleId}`,
+      );
       throw new ForbiddenException(
         'Voce nao pode abrir chat para o proprio veiculo.',
       );
@@ -360,8 +366,12 @@ export class ChatService {
       },
     });
 
-    const ids = conversations.map((conversation) => conversation.conversationId);
-    this.logger.debug(`chat_room_list userId=${userId} conversations=${ids.length}`);
+    const ids = conversations.map(
+      (conversation) => conversation.conversationId,
+    );
+    this.logger.debug(
+      `chat_room_list userId=${userId} conversations=${ids.length}`,
+    );
     return ids;
   }
 

@@ -133,7 +133,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected get ownerAvatarUrl() {
-    return this.authService.currentUser()?.profile?.avatarUrl || this.fallbackImage;
+    return (
+      this.authService.currentUser()?.profile?.avatarUrl || this.fallbackImage
+    );
   }
 
   protected get totalAds() {

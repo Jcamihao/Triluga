@@ -102,7 +102,8 @@ export class AnalyticsService {
       take: limit,
     });
     const vehicleIds = ranking.map((item) => item.vehicleId);
-    const vehicles = await this.vehiclesService.findPublicSummariesByIds(vehicleIds);
+    const vehicles =
+      await this.vehiclesService.findPublicSummariesByIds(vehicleIds);
     const viewCountsByVehicleId = new Map(
       ranking.map((item) => [item.vehicleId, item._count.vehicleId]),
     );

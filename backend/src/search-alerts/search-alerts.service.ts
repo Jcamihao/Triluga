@@ -181,7 +181,9 @@ export class SearchAlertsService {
     return filters.city ? `Veículos em ${filters.city}` : 'Alerta de veículos';
   }
 
-  private normalizeFilters(filters: Record<string, unknown>): NormalizedAlertFilters {
+  private normalizeFilters(
+    filters: Record<string, unknown>,
+  ): NormalizedAlertFilters {
     const normalized: NormalizedAlertFilters = {};
 
     const readString = (value: unknown) => String(value ?? '').trim();
@@ -219,7 +221,9 @@ export class SearchAlertsService {
     normalized.radiusKm = readNumber(filters.radiusKm);
 
     return Object.fromEntries(
-      Object.entries(normalized).filter(([, value]) => value !== undefined && value !== ''),
+      Object.entries(normalized).filter(
+        ([, value]) => value !== undefined && value !== '',
+      ),
     ) as NormalizedAlertFilters;
   }
 
@@ -309,8 +313,7 @@ export class SearchAlertsService {
       const latitudeDelta = radiusKm / 111;
       const longitudeDelta =
         radiusKm /
-        (111 *
-          Math.max(Math.cos((filters.latitude * Math.PI) / 180), 0.2));
+        (111 * Math.max(Math.cos((filters.latitude * Math.PI) / 180), 0.2));
       const latitude = Number(vehicle.latitude);
       const longitude = Number(vehicle.longitude);
 

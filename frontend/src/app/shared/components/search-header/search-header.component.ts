@@ -22,8 +22,7 @@ export class SearchHeaderComponent {
   private readonly router = inject(Router);
 
   @Input() title = 'Escolha seu próximo carro';
-  @Input() subtitle =
-    'Pesquise por cidade, modelo e faixa de preço.';
+  @Input() subtitle = 'Pesquise por cidade, modelo e faixa de preço.';
   @Input() query = '';
   @Input() showFiltersAction = true;
   @Input() showNotifications = true;
@@ -58,8 +57,11 @@ export class SearchHeaderComponent {
 
   protected removeRecentSearch(event: Event, search: string) {
     event.stopPropagation();
-    this.recentSearches = this.recentSearches.filter(s => s !== search);
-    localStorage.setItem('triluga_recent_searches', JSON.stringify(this.recentSearches));
+    this.recentSearches = this.recentSearches.filter((s) => s !== search);
+    localStorage.setItem(
+      'triluga_recent_searches',
+      JSON.stringify(this.recentSearches),
+    );
   }
 
   protected selectRecentSearch(search: string) {
@@ -82,9 +84,12 @@ export class SearchHeaderComponent {
     if (!query) return;
     this.recentSearches = [
       query,
-      ...this.recentSearches.filter(s => s !== query)
+      ...this.recentSearches.filter((s) => s !== query),
     ].slice(0, 5);
-    localStorage.setItem('triluga_recent_searches', JSON.stringify(this.recentSearches));
+    localStorage.setItem(
+      'triluga_recent_searches',
+      JSON.stringify(this.recentSearches),
+    );
   }
 
   private blurTimeout?: any;

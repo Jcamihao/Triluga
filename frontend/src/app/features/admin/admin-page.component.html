@@ -5,9 +5,18 @@
   </section>
 
   <section class="admin-stats" *ngIf="dashboard">
-    <article><strong>{{ dashboard.totals.users }}</strong><span>usuários</span></article>
-    <article><strong>{{ dashboard.totals.vehicles }}</strong><span>veículos</span></article>
-    <article><strong>{{ dashboard.totals.privacyRequests }}</strong><span>pedidos LGPD</span></article>
+    <article>
+      <strong>{{ dashboard.totals.users }}</strong
+      ><span>usuários</span>
+    </article>
+    <article>
+      <strong>{{ dashboard.totals.vehicles }}</strong
+      ><span>veículos</span>
+    </article>
+    <article>
+      <strong>{{ dashboard.totals.privacyRequests }}</strong
+      ><span>pedidos LGPD</span>
+    </article>
   </section>
 
   <section class="admin-card">
@@ -17,21 +26,38 @@
         <strong>{{ user.profile?.fullName || user.email }}</strong>
         <p>{{ user.role }} • {{ user.status }}</p>
         <p>
-          Documento: {{ verificationLabel(user.profile?.documentVerificationStatus) }} •
+          Documento:
+          {{ verificationLabel(user.profile?.documentVerificationStatus) }} •
           CNH: {{ verificationLabel(user.profile?.driverLicenseVerification) }}
         </p>
       </div>
       <div class="row__actions">
-        <button type="button" class="btn btn-secondary" (click)="approveDocument(user.id)">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="approveDocument(user.id)"
+        >
           Aprovar doc
         </button>
-        <button type="button" class="btn btn-secondary" (click)="rejectDocument(user.id)">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="rejectDocument(user.id)"
+        >
           Recusar doc
         </button>
-        <button type="button" class="btn btn-secondary" (click)="approveDriverLicense(user.id)">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="approveDriverLicense(user.id)"
+        >
           Aprovar CNH
         </button>
-        <button type="button" class="btn btn-secondary" (click)="rejectDriverLicense(user.id)">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="rejectDriverLicense(user.id)"
+        >
           Recusar CNH
         </button>
         <button
@@ -50,7 +76,11 @@
         >
           Ver CNH
         </button>
-        <button type="button" class="btn btn-secondary" (click)="blockUser(user.id)">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="blockUser(user.id)"
+        >
           Bloquear
         </button>
       </div>
@@ -64,7 +94,11 @@
         <strong>{{ vehicle.title }}</strong>
         <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
       </div>
-      <button type="button" class="btn btn-secondary" (click)="deactivateVehicle(vehicle.id)">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="deactivateVehicle(vehicle.id)"
+      >
         Desativar
       </button>
     </article>
@@ -76,7 +110,8 @@
       <div>
         <strong>{{ privacyRequestTypeLabel(request.type) }}</strong>
         <p>
-          {{ request.user?.profile?.fullName || request.user?.email }} • {{ privacyRequestStatusLabel(request.status) }}
+          {{ request.user?.profile?.fullName || request.user?.email }} •
+          {{ privacyRequestStatusLabel(request.status) }}
         </p>
         <p *ngIf="request.notes">{{ request.notes }}</p>
       </div>

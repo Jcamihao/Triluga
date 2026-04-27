@@ -32,7 +32,10 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @ApiOperation({ summary: 'Autentica o usuário e retorna access token, renovando refresh token por cookie seguro' })
+  @ApiOperation({
+    summary:
+      'Autentica o usuário e retorna access token, renovando refresh token por cookie seguro',
+  })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -44,7 +47,10 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  @ApiOperation({ summary: 'Renova o access token usando refresh token recebido por cookie seguro ou body' })
+  @ApiOperation({
+    summary:
+      'Renova o access token usando refresh token recebido por cookie seguro ou body',
+  })
   async refresh(
     @Body() dto: RefreshDto,
     @Req() request: Request,
@@ -90,11 +96,17 @@ export class AuthController {
 
   private setRefreshCookie(response: Response, refreshToken: string) {
     response.cookie(
-      this.configService.get<string>('auth.refreshCookieName', 'triluga_refresh_token'),
+      this.configService.get<string>(
+        'auth.refreshCookieName',
+        'triluga_refresh_token',
+      ),
       refreshToken,
       {
         httpOnly: true,
-        secure: this.configService.get<boolean>('auth.refreshCookieSecure', false),
+        secure: this.configService.get<boolean>(
+          'auth.refreshCookieSecure',
+          false,
+        ),
         sameSite: this.normalizeSameSite(
           this.configService.get<string>('auth.refreshCookieSameSite', 'lax'),
         ),
@@ -108,10 +120,16 @@ export class AuthController {
 
   private clearRefreshCookie(response: Response) {
     response.clearCookie(
-      this.configService.get<string>('auth.refreshCookieName', 'triluga_refresh_token'),
+      this.configService.get<string>(
+        'auth.refreshCookieName',
+        'triluga_refresh_token',
+      ),
       {
         httpOnly: true,
-        secure: this.configService.get<boolean>('auth.refreshCookieSecure', false),
+        secure: this.configService.get<boolean>(
+          'auth.refreshCookieSecure',
+          false,
+        ),
         sameSite: this.normalizeSameSite(
           this.configService.get<string>('auth.refreshCookieSameSite', 'lax'),
         ),

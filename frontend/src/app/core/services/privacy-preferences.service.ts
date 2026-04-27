@@ -17,7 +17,10 @@ export class PrivacyPreferencesService {
 
   setAnalyticsConsent(granted: boolean) {
     this.analyticsConsentSignal.set(granted);
-    this.storage.setItem(this.analyticsConsentKey, granted ? 'granted' : 'denied');
+    this.storage.setItem(
+      this.analyticsConsentKey,
+      granted ? 'granted' : 'denied',
+    );
   }
 
   hydrateAnalyticsConsent(granted: boolean | null | undefined) {

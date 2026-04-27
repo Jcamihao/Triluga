@@ -24,7 +24,9 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    this.logger.log(`register_attempt email=${dto.email.toLowerCase()} role=${Role.USER}`);
+    this.logger.log(
+      `register_attempt email=${dto.email.toLowerCase()} role=${Role.USER}`,
+    );
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.usersService.createUser({
@@ -42,7 +44,9 @@ export class AuthService {
       },
     });
 
-    this.logger.log(`register_success userId=${user.id} email=${user.email} role=${user.role}`);
+    this.logger.log(
+      `register_success userId=${user.id} email=${user.email} role=${user.role}`,
+    );
     return this.issueTokens(user.id, user.email, user.role, user);
   }
 
@@ -60,15 +64,22 @@ export class AuthService {
       throw new ForbiddenException('Sua conta está bloqueada.');
     }
 
-    const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
 
     if (!passwordMatches) {
-      this.logger.warn(`login_invalid_password userId=${user.id} email=${user.email}`);
+      this.logger.warn(
+        `login_invalid_password userId=${user.id} email=${user.email}`,
+      );
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
     await this.usersService.updateLastLogin(user.id);
-    this.logger.log(`login_success userId=${user.id} email=${user.email} role=${user.role}`);
+    this.logger.log(
+      `login_success userId=${user.id} email=${user.email} role=${user.role}`,
+    );
 
     return this.issueTokens(user.id, user.email, user.role, user);
   }
@@ -126,9 +137,12 @@ export class AuthService {
       'triluga_refresh_secret';
 
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
-        secret: refreshSecret,
-      });
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret: refreshSecret,
+        },
+      );
       await this.usersService.updateRefreshToken(payload.sub, null);
       this.logger.log(`logout_success userId=${payload.sub}`);
     } catch (error) {

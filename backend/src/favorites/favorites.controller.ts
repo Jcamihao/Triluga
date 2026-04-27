@@ -11,13 +11,17 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get('my')
-  @ApiOperation({ summary: 'Lista os veículos favoritos do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Lista os veículos favoritos do usuário autenticado',
+  })
   listMyFavorites(@CurrentUser() user: AuthenticatedUser) {
     return this.favoritesService.listMyFavorites(user.sub);
   }
 
   @Post(':vehicleId')
-  @ApiOperation({ summary: 'Adiciona um veículo aos favoritos do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Adiciona um veículo aos favoritos do usuário autenticado',
+  })
   addFavorite(
     @CurrentUser() user: AuthenticatedUser,
     @Param('vehicleId') vehicleId: string,
@@ -26,7 +30,9 @@ export class FavoritesController {
   }
 
   @Delete(':vehicleId')
-  @ApiOperation({ summary: 'Remove um veículo dos favoritos do usuário autenticado' })
+  @ApiOperation({
+    summary: 'Remove um veículo dos favoritos do usuário autenticado',
+  })
   removeFavorite(
     @CurrentUser() user: AuthenticatedUser,
     @Param('vehicleId') vehicleId: string,

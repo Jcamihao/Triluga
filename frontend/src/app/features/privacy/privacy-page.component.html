@@ -7,12 +7,18 @@
     </p>
 
     <div class="privacy-hero__actions">
-      <a class="btn btn-primary" *ngIf="authService.currentUser(); else loginLink" routerLink="/privacy-center">
+      <a
+        class="btn btn-primary"
+        *ngIf="authService.currentUser(); else loginLink"
+        routerLink="/privacy-center"
+      >
         Abrir central de privacidade
       </a>
 
       <ng-template #loginLink>
-        <a class="btn btn-primary" routerLink="/auth/login">Entrar para gerenciar preferências</a>
+        <a class="btn btn-primary" routerLink="/auth/login"
+          >Entrar para gerenciar preferências</a
+        >
       </ng-template>
 
       <a class="btn btn-secondary" routerLink="/">Voltar para a Triluga</a>
@@ -39,8 +45,9 @@
   <section class="privacy-card privacy-card--compact">
     <strong>Direitos do titular</strong>
     <p>
-      Pela central de privacidade você pode exportar seus dados, revisar preferências e registrar solicitações de acesso,
-      correção, eliminação, anonimização, portabilidade, oposição e revogação.
+      Pela central de privacidade você pode exportar seus dados, revisar
+      preferências e registrar solicitações de acesso, correção, eliminação,
+      anonimização, portabilidade, oposição e revogação.
     </p>
   </section>
 </main>

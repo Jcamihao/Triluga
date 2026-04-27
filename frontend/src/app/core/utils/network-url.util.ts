@@ -58,10 +58,9 @@ export function normalizeApiPayloadUrls<T>(value: T): T {
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
-        key,
-        normalizeApiPayloadUrls(entryValue),
-      ]),
+      Object.entries(value as Record<string, unknown>).map(
+        ([key, entryValue]) => [key, normalizeApiPayloadUrls(entryValue)],
+      ),
     ) as T;
   }
 

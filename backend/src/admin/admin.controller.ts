@@ -30,7 +30,9 @@ export class AdminController {
   }
 
   @Get('users/:id/verification-file')
-  @ApiOperation({ summary: 'Gera uma URL temporária para o documento ou CNH de um usuário' })
+  @ApiOperation({
+    summary: 'Gera uma URL temporária para o documento ou CNH de um usuário',
+  })
   getUserVerificationFileUrl(
     @Param('id') userId: string,
     @Query('type') type: 'document' | 'driverLicense',
@@ -39,7 +41,9 @@ export class AdminController {
   }
 
   @Get('privacy/requests')
-  @ApiOperation({ summary: 'Lista solicitações LGPD para tratamento administrativo' })
+  @ApiOperation({
+    summary: 'Lista solicitações LGPD para tratamento administrativo',
+  })
   getPrivacyRequests() {
     return this.adminService.getPrivacyRequests();
   }

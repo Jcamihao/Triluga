@@ -18,7 +18,9 @@ import { PrivacyPreferencesService } from '../../core/services/privacy-preferenc
 })
 export class PrivacyCenterPageComponent {
   private readonly privacyApiService = inject(PrivacyApiService);
-  protected readonly privacyPreferencesService = inject(PrivacyPreferencesService);
+  protected readonly privacyPreferencesService = inject(
+    PrivacyPreferencesService,
+  );
   protected overview: PrivacyCenterOverview | null = null;
   protected readonly requestTypeOptions: PrivacyRequestType[] = [
     'ACCESS',
@@ -64,7 +66,8 @@ export class PrivacyCenterPageComponent {
       },
       error: (error) => {
         this.errorMessage =
-          error?.error?.message || 'Não foi possível atualizar suas preferências.';
+          error?.error?.message ||
+          'Não foi possível atualizar suas preferências.';
         this.savingPreferences = false;
       },
     });
@@ -103,7 +106,10 @@ export class PrivacyCenterPageComponent {
     this.errorMessage = '';
 
     this.privacyApiService
-      .createRequest(this.selectedRequestType, this.requestNotes.trim() || undefined)
+      .createRequest(
+        this.selectedRequestType,
+        this.requestNotes.trim() || undefined,
+      )
       .subscribe({
         next: (request) => {
           this.overview = this.prependRequest(request, this.overview);
@@ -113,7 +119,8 @@ export class PrivacyCenterPageComponent {
         },
         error: (error) => {
           this.errorMessage =
-            error?.error?.message || 'Não foi possível registrar sua solicitação.';
+            error?.error?.message ||
+            'Não foi possível registrar sua solicitação.';
           this.submittingRequest = false;
         },
       });
@@ -158,7 +165,8 @@ export class PrivacyCenterPageComponent {
       },
       error: (error) => {
         this.errorMessage =
-          error?.error?.message || 'Não foi possível carregar sua central de privacidade.';
+          error?.error?.message ||
+          'Não foi possível carregar sua central de privacidade.';
         this.loading = false;
       },
     });

@@ -24,8 +24,8 @@ export class FavoritesService {
   readonly items = computed(() => this.favoriteItemsSignal());
   readonly count = computed(() => this.favoriteItemsSignal().length);
   readonly isLoading = computed(() => this.loadingSignal());
-  readonly favoriteIds = computed(() =>
-    new Set(this.favoriteItemsSignal().map((vehicle) => vehicle.id)),
+  readonly favoriteIds = computed(
+    () => new Set(this.favoriteItemsSignal().map((vehicle) => vehicle.id)),
   );
 
   constructor() {

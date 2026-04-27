@@ -94,15 +94,17 @@ export class ProfileApiService {
 
   getMyDocumentUrl() {
     return this.http
-      .get<{ url: string }>(`${environment.apiBaseUrl}/profiles/me/document/url`)
+      .get<{
+        url: string;
+      }>(`${environment.apiBaseUrl}/profiles/me/document/url`)
       .pipe(map((response) => normalizeApiPayloadUrls(response)));
   }
 
   getMyDriverLicenseUrl() {
     return this.http
-      .get<{ url: string }>(
-        `${environment.apiBaseUrl}/profiles/me/driver-license/url`,
-      )
+      .get<{
+        url: string;
+      }>(`${environment.apiBaseUrl}/profiles/me/driver-license/url`)
       .pipe(map((response) => normalizeApiPayloadUrls(response)));
   }
 

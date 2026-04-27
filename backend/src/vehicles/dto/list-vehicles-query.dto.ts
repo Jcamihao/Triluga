@@ -1,9 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  MotorcycleStyle,
-  VehicleCategory,
-  VehicleType,
-} from '@prisma/client';
+import { MotorcycleStyle, VehicleCategory, VehicleType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
