@@ -1,6 +1,6 @@
-# Triluga Backend 0.5.0
+# Triluga Backend 2.0.0
 
-API NestJS do classificado Triluga.
+API NestJS do classificado Triluga. A versão 2.0 mantém a base modular do backend para servir o redesign completo do frontend.
 
 ## Escopo atual
 

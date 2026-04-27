@@ -1,6 +1,6 @@
-# Triluga Frontend 0.5.0
+# Triluga Frontend 2.0.0
 
-Aplicação Angular standalone do classificado Triluga.
+Aplicação Angular standalone do classificado Triluga, atualizada com o redesign 2.0 para web e mobile.
 
 ## Escopo atual
 
@@ -9,6 +9,7 @@ Aplicação Angular standalone do classificado Triluga.
 - comparação entre veículos
 - dashboard de anúncios e área administrativa
 - branding PWA e base iOS com Capacitor
+- Tailwind, PostCSS e Material Symbols para sustentar a nova interface
 
 ## Desenvolvimento
 

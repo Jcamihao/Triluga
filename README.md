@@ -1,22 +1,14 @@
-# Triluga 0.6.0
+# Triluga 2.0.0
 
-Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e uma base mais pronta para deploy contínuo, cadastro estável e configuração dinâmica em produção.
+Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e nova experiência visual baseada no redesign Triluga para web e mobile.
 
 ## Destaques da versão
 
-- **Experiência mobile refinada**: navegação por swipe entre abas principais, CTA fixo acima da navbar e ajustes de responsividade em cards.
-- **Busca e alertas**: botão para salvar alertas de busca, filtros centralizados e remoção da visualização de mapa da listagem.
-- **Detalhe do veículo**: mapa de localização exibido apenas na página do anúncio, logo abaixo do card visual do veículo.
-- **Editor de anúncio**: fluxo wizard de 3 etapas (Dados, Condições e Fotos/Precificação) com botão para livre navegação entre passos, alertas visuais (warning laranja) para campos pendentes ignorados, e limite de 7 imagens por publicação.
-- **CEP mais estável no backend**: consulta ViaCEP sem depender de `fetch` global, mantendo compatibilidade com o runtime atual.
-- **Sistema de Analytics**: Rastreamento de visualizações de veículos para identificar os mais populares.
-- **Carrossel de Anúncios**: Destaque dinâmico dos veículos mais visualizados na home page.
-- **Reorganização de Componentes**: Migração para estrutura de diretórios, facilitando a manutenção e escalabilidade.
-- blueprint `render.yaml` para subir frontend, backend e banco no Render
-- descoberta automática da URL pública do backend no runtime config do frontend
-- registro com telefone inicial vazio e formatação mais robusta para números brasileiros
-- cobertura de testes ampliada para bootstrap da aplicação e cadastro
-- documentação de deploy atualizada com fluxo principal no Render
+- **Redesign 2.0**: home, busca, detalhes do veículo, favoritos, comparação, chat, autenticação, perfis e painel do proprietário atualizados com a nova linguagem visual.
+- **Shell e navegação**: menu, bottom navigation, compare tray, filtros e card de veículo revisados para manter consistência entre páginas.
+- **Fluxo de anúncio**: painel do proprietário reorganizado em uma experiência mais próxima das telas de criação de anúncio do redesign.
+- **Base visual**: Tailwind, PostCSS, Material Symbols e scripts de formatação adicionados para sustentar as novas telas.
+- **Frontend funcional**: as telas continuam conectadas aos serviços Angular existentes, com rotas, busca, favoritos, comparação, chat e ações principais preservadas.
 
 ## Arquitetura
 
@@ -115,16 +107,17 @@ No Docker Compose padrão, Swagger fica disponível em `http://localhost:3002/ap
 
 Fluxos disponíveis no Angular:
 
-- home com busca rápida
-- lista com filtros e carregamento progressivo
+- home redesenhada com busca rápida e atalhos
+- lista redesenhada com filtros e carregamento progressivo
 - alertas de busca salvos para usuários autenticados
-- detalhe do veículo com galeria e reviews
+- detalhe do veículo redesenhado com galeria e reviews
 - mapa de localização no detalhe do veículo quando o anúncio possui coordenadas
-- login e cadastro
-- perfil com notificações
+- login e cadastro redesenhados
+- perfil e perfil público redesenhados
+- favoritos, comparação e chat redesenhados
 - política de privacidade pública
 - central de privacidade autenticada
-- painel do proprietário
+- painel do proprietário redesenhado
 - painel admin
 
 Componentes obrigatórios implementados:
@@ -218,6 +211,7 @@ Guia alternativo para frontend no Vercel e backend no Railway em [docs/deploy-ve
 
 ## Releases
 
+- release notes 2.0.0: [docs/releases/v2.0.0.md](./docs/releases/v2.0.0.md)
 - release notes 0.7.0: [docs/releases/v0.7.0.md](./docs/releases/v0.7.0.md)
 - release notes 0.6.0: [docs/releases/v0.6.0.md](./docs/releases/v0.6.0.md)
 - release notes 0.4.0: [docs/releases/v0.4.0.md](./docs/releases/v0.4.0.md)

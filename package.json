@@ -1,6 +1,6 @@
 {
   "name": "triluga",
-  "version": "0.7.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "npm run dev:infra && concurrently -n backend,frontend -c blue,orange \"npm run dev:backend\" \"npm run dev:frontend\"",
