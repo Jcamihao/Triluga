@@ -1,6 +1,6 @@
-# Triluga Frontend 2.0.0
+# Triluga Frontend 2.1.0
 
-Aplicação Angular standalone do classificado Triluga, atualizada com o redesign 2.0 para web e mobile.
+Aplicação Angular standalone do classificado Triluga, atualizada com refinamentos da experiência 2.1 para web e mobile.
 
 ## Escopo atual
 

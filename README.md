@@ -1,13 +1,13 @@
-# Triluga 2.0.0
+# Triluga 2.1.0
 
-Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e nova experiência visual baseada no redesign Triluga para web e mobile.
+Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e experiência visual orientada ao marketplace para web e mobile.
 
 ## Destaques da versão
 
-- **Redesign 2.0**: home, busca, detalhes do veículo, favoritos, comparação, chat, autenticação, perfis e painel do proprietário atualizados com a nova linguagem visual.
-- **Shell e navegação**: menu, bottom navigation, compare tray, filtros e card de veículo revisados para manter consistência entre páginas.
-- **Fluxo de anúncio**: painel do proprietário reorganizado em uma experiência mais próxima das telas de criação de anúncio do redesign.
-- **Base visual**: Tailwind, PostCSS, Material Symbols e scripts de formatação adicionados para sustentar as novas telas.
+- **Experiência 2.1**: home, perfis, privacidade, comparação, filtros e navegação mobile refinados sobre a base do redesign 2.0.
+- **Serviços mais resilientes**: auth, chat, favoritos, notificações, privacidade, storage, analytics e APIs de veículos revisados para fluxos reais de uso.
+- **Operação e deploy**: Docker, Render, runtime config e documentação de QA ajustados para ambientes gerenciados.
+- **Backend defensivo**: controllers e services reforçados em autenticação, preferências, busca, avaliações e imagens.
 - **Frontend funcional**: as telas continuam conectadas aos serviços Angular existentes, com rotas, busca, favoritos, comparação, chat e ações principais preservadas.
 
 ## Arquitetura
@@ -16,6 +16,7 @@ Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, 
 - Backend: NestJS 10 em monólito modular com módulos de domínio e serviços transversais.
 - Banco: PostgreSQL com Prisma.
 - Infra local: Docker Compose com PostgreSQL, Redis, MinIO, backend e frontend.
+- Runtime config gerado para frontend web/mobile.
 - Integrações desacopladas:
   - `StorageService` para MinIO/S3 futuro.
   - `CacheQueueService` para cache Redis e filas BullMQ.
@@ -119,6 +120,7 @@ Fluxos disponíveis no Angular:
 - central de privacidade autenticada
 - painel do proprietário redesenhado
 - painel admin
+- notificações e recuperação de sessão mais previsíveis
 
 Componentes obrigatórios implementados:
 
@@ -211,6 +213,7 @@ Guia alternativo para frontend no Vercel e backend no Railway em [docs/deploy-ve
 
 ## Releases
 
+- release notes 2.1.0: [docs/releases/v2.1.0.md](./docs/releases/v2.1.0.md)
 - release notes 2.0.0: [docs/releases/v2.0.0.md](./docs/releases/v2.0.0.md)
 - release notes 0.7.0: [docs/releases/v0.7.0.md](./docs/releases/v0.7.0.md)
 - release notes 0.6.0: [docs/releases/v0.6.0.md](./docs/releases/v0.6.0.md)
