@@ -8,6 +8,8 @@
 /* ── App Shell ── */
 
 .app-shell {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--background);
@@ -17,6 +19,7 @@
 
 .app-shell__page-stage {
   position: relative;
+  flex: 1 0 auto;
   min-height: 100vh;
 }
 
@@ -29,6 +32,10 @@
 }
 
 @media (min-width: 768px) {
+  .app-shell__page-stage {
+    min-height: 0;
+  }
+
   .app-shell.with-bottom-nav,
   .app-shell.with-bottom-nav.with-floating-banner {
     padding-bottom: 0;
@@ -302,7 +309,7 @@
 @media (min-width: 1024px) {
   .app-shell.with-bottom-nav,
   .app-shell.with-bottom-nav.with-floating-banner {
-    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
 
   .menu-overlay {

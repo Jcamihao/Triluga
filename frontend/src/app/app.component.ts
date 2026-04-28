@@ -13,6 +13,7 @@ import { RouteTraceService } from './core/services/route-trace.service';
 import { BottomNavComponent } from './shared/components/bottom-nav/bottom-nav.component';
 import { CompareTrayComponent } from './shared/components/compare-tray/compare-tray.component';
 import { UiStateService } from './core/services/ui-state.service';
+import { WebFooterComponent } from './shared/components/web-footer/web-footer.component';
 
 @Component({
   selector: 'app-root',
@@ -22,6 +23,7 @@ import { UiStateService } from './core/services/ui-state.service';
     RouterOutlet,
     BottomNavComponent,
     CompareTrayComponent,
+    WebFooterComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
