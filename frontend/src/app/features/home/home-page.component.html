@@ -248,54 +248,7 @@
 </main>
 
 <main class="home-web">
-  <nav class="home-web__nav" aria-label="Navegação principal">
-    <div class="home-web__nav-inner">
-      <div class="home-web__brand-group">
-        <a routerLink="/" class="home-web__brand">Triluga</a>
-
-        <div class="home-web__links">
-          <button type="button" (click)="goToSearch({ vehicleType: 'CAR' })">
-            Comprar
-          </button>
-          <button type="button" routerLink="/anunciar-carro">Vender</button>
-          <button type="button" (click)="goToSearch({ category: 'LUXURY' })">
-            Financiamento
-          </button>
-          <button type="button" (click)="goToSearch({})">Catálogo</button>
-          <a routerLink="/privacy">Blog</a>
-        </div>
-      </div>
-
-      <div class="home-web__actions">
-        <button
-          type="button"
-          class="home-web__icon"
-          aria-label="Favoritos"
-          (click)="openProtected('/favorites')"
-        >
-          <span class="material-symbols-outlined">favorite</span>
-        </button>
-        <button type="button" class="home-web__icon" aria-label="Notificações">
-          <span class="material-symbols-outlined">notifications</span>
-        </button>
-        <button
-          type="button"
-          class="home-web__announce"
-          routerLink="/anunciar-carro"
-        >
-          Anunciar Grátis
-        </button>
-        <button
-          type="button"
-          class="home-web__avatar"
-          aria-label="Abrir perfil"
-          (click)="openProtected('/profile')"
-        >
-          <img [src]="avatarUrl" alt="Avatar do usuário" />
-        </button>
-      </div>
-    </div>
-  </nav>
+  <app-web-header></app-web-header>
 
   <header class="home-web__hero">
     <div class="home-web__hero-media">
@@ -477,17 +430,4 @@
     </div>
   </section>
 
-  <footer class="home-web__footer">
-    <div class="home-web__container">
-      <strong>Triluga</strong>
-      <nav aria-label="Links de rodapé">
-        <a routerLink="/privacy">Termos</a>
-        <a routerLink="/privacy">Privacidade</a>
-        <a routerLink="/privacy">Ajuda</a>
-        <a routerLink="/">Sobre</a>
-        <a routerLink="/anunciar-carro">Anunciar</a>
-      </nav>
-      <span>© 2026 Triluga. A nova era da mobilidade urbana.</span>
-    </div>
-  </footer>
 </main>

@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 type QuickShortcut = {
   label: string;
@@ -124,7 +125,13 @@ const TRUST_CARDS: TrustCard[] = [
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, DecimalPipe, VehicleCardComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    DecimalPipe,
+    VehicleCardComponent,
+    WebHeaderComponent,
+  ],
   templateUrl: './home-page.component.html',
   styleUrls: ['./home-page.component.scss'],
 })
