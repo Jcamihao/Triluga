@@ -1,4 +1,4 @@
-<main class="bg-surface text-on-surface pb-24 font-body antialiased">
+<main class="bg-surface text-on-surface pb-24 font-body antialiased md:hidden">
   <!-- TopAppBar -->
   <header
     class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
@@ -441,3 +441,225 @@
     </section>
   </div>
 </main>
+
+<div class="profile-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="profile-web__layout" *ngIf="!loading; else profileWebLoading">
+    <aside class="profile-web__sidebar">
+      <section class="profile-web__mini-card">
+        <div class="profile-web__mini-head">
+          <div class="profile-web__avatar profile-web__avatar--small">
+            <img
+              *ngIf="resolvedAvatarUrl; else webInitialsSmall"
+              [src]="resolvedAvatarUrl"
+              alt="Foto de perfil"
+            />
+            <ng-template #webInitialsSmall>
+              <span>{{ avatarInitials }}</span>
+            </ng-template>
+          </div>
+
+          <div>
+            <strong>{{ displayName }}</strong>
+            <p>{{ memberSinceLabel }}</p>
+          </div>
+        </div>
+
+        <div class="profile-web__progress">
+          <span [style.width.%]="profileCompletion"></span>
+        </div>
+        <p>{{ profileCompletion }}% do perfil completo</p>
+      </section>
+
+      <nav class="profile-web__nav" aria-label="Menu do perfil">
+        <a class="profile-web__nav-item profile-web__nav-item--active">
+          <span class="material-symbols-outlined">person</span>
+          Meu Perfil
+        </a>
+        <a class="profile-web__nav-item" routerLink="/favorites">
+          <span class="material-symbols-outlined">favorite</span>
+          Favoritos
+        </a>
+        <a class="profile-web__nav-item" routerLink="/chat">
+          <span class="material-symbols-outlined">chat_bubble</span>
+          Mensagens
+          <small *ngIf="chatInboxService.unreadCount()">{{
+            unreadChatBadge
+          }}</small>
+        </a>
+        <a class="profile-web__nav-item" routerLink="/anunciar-carro">
+          <span class="material-symbols-outlined">directions_car</span>
+          Meus Anúncios
+        </a>
+        <a class="profile-web__nav-item" routerLink="/privacy-center">
+          <span class="material-symbols-outlined">verified_user</span>
+          Privacidade e Segurança
+        </a>
+
+        <button
+          type="button"
+          class="profile-web__nav-item profile-web__nav-item--danger"
+          (click)="logout()"
+        >
+          <span class="material-symbols-outlined">logout</span>
+          Sair da conta
+        </button>
+      </nav>
+    </aside>
+
+    <section class="profile-web__content">
+      <section class="profile-web__hero">
+        <div>
+          <h1>Olá, {{ displayName.split(' ')[0] || 'usuário' }}!</h1>
+          <p>
+            Seu perfil está quase pronto. Verifique sua identidade para aumentar
+            a confiança em suas negociações.
+          </p>
+          <a routerLink="/privacy-center">Verificar agora</a>
+        </div>
+        <span class="material-symbols-outlined">shield</span>
+      </section>
+
+      <section class="profile-web__grid">
+        <article class="profile-web__card">
+          <div class="profile-web__card-head">
+            <h2>Dados Pessoais</h2>
+            <button type="button" (click)="save()" [disabled]="saving">
+              {{ saving ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+
+          <div class="profile-web__form-grid">
+            <div class="profile-web__photo-field">
+              <div class="profile-web__avatar profile-web__avatar--form">
+                <img
+                  *ngIf="resolvedAvatarUrl; else webInitialsForm"
+                  [src]="resolvedAvatarUrl"
+                  alt="Foto de perfil"
+                />
+                <ng-template #webInitialsForm>
+                  <span>{{ avatarInitials }}</span>
+                </ng-template>
+              </div>
+
+              <div>
+                <span>Foto de Perfil</span>
+                <p>Aparece no chat e aumenta a confiança.</p>
+                <label>
+                  <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
+                  <span class="material-symbols-outlined">add_a_photo</span>
+                  {{ pendingAvatarFile ? 'Trocar foto' : 'Adicionar foto' }}
+                </label>
+              </div>
+            </div>
+
+            <label>
+              <span>Nome Completo</span>
+              <input [(ngModel)]="profile.fullName" />
+            </label>
+            <label>
+              <span>Email</span>
+              <input [value]="authService.currentUser()?.email || ''" disabled />
+            </label>
+            <label>
+              <span>Telefone</span>
+              <input [(ngModel)]="profile.phone" />
+            </label>
+            <label>
+              <span>CEP</span>
+              <input
+                [ngModel]="profile.zipCode"
+                (ngModelChange)="onZipCodeChange($event)"
+                inputmode="numeric"
+                maxlength="9"
+                placeholder="13010-111"
+              />
+            </label>
+            <p
+              class="profile-web__zip-message profile-web__zip-message--ok"
+              *ngIf="zipCodeHint && !zipCodeError"
+            >
+              {{ zipCodeHint }}
+            </p>
+            <p
+              class="profile-web__zip-message profile-web__zip-message--error"
+              *ngIf="zipCodeError"
+            >
+              {{ zipCodeError }}
+            </p>
+            <label class="profile-web__wide">
+              <span>Endereço</span>
+              <input [(ngModel)]="profile.addressLine" />
+            </label>
+            <label>
+              <span>Cidade</span>
+              <input [(ngModel)]="profile.city" />
+            </label>
+            <label>
+              <span>UF</span>
+              <input
+                [ngModel]="profile.state"
+                (ngModelChange)="profile.state = formatState($event)"
+                maxlength="2"
+              />
+            </label>
+          </div>
+
+          <p class="profile-web__feedback profile-web__feedback--ok" *ngIf="feedback">
+            {{ feedback }}
+          </p>
+          <p
+            class="profile-web__feedback profile-web__feedback--error"
+            *ngIf="errorMessage"
+          >
+            {{ errorMessage }}
+          </p>
+        </article>
+
+        <article class="profile-web__card">
+          <h2>Status de Verificação</h2>
+
+          <div class="profile-web__verification-list">
+            <div
+              class="profile-web__verification"
+              *ngFor="let row of verificationRows"
+              [class.profile-web__verification--pending]="row.status === 'pending'"
+            >
+              <span class="material-symbols-outlined">{{ row.icon }}</span>
+              <div>
+                <strong>{{ row.title }}</strong>
+                <p>{{ row.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-web__uploads">
+            <label>
+              <input type="file" accept="image/*" (change)="onDocumentSelected($event)" />
+              <span class="material-symbols-outlined">badge</span>
+              {{ pendingDocumentFile ? 'Documento selecionado' : 'Enviar documento' }}
+            </label>
+            <label>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onDriverLicenseSelected($event)"
+              />
+              <span class="material-symbols-outlined">credit_card</span>
+              {{ pendingDriverLicenseFile ? 'CNH selecionada' : 'Enviar CNH' }}
+            </label>
+          </div>
+        </article>
+      </section>
+
+    </section>
+  </main>
+
+  <ng-template #profileWebLoading>
+    <section class="profile-web__loading">
+      <span class="material-symbols-outlined">person</span>
+      <strong>Carregando seu perfil...</strong>
+    </section>
+  </ng-template>
+</div>

@@ -4,19 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { CepLookupService } from '../../core/services/cep-lookup.service';
+import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
 import { Profile } from '../../core/models/domain.models';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent],
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.scss'],
 })
 export class ProfilePageComponent implements OnDestroy {
   protected readonly authService = inject(AuthService);
+  protected readonly chatInboxService = inject(ChatInboxService);
+  private readonly cepLookupService = inject(CepLookupService);
   private readonly profileApiService = inject(ProfileApiService);
   private readonly uiStateService = inject(UiStateService);
   private readonly router = inject(Router);
@@ -39,9 +44,13 @@ export class ProfilePageComponent implements OnDestroy {
   protected pendingDriverLicenseFile: File | null = null;
   protected openingDocument = false;
   protected openingDriverLicense = false;
+  protected zipCodeHint = '';
+  protected zipCodeError = '';
   private avatarPreviewUrl: string | null = null;
+  private lastRequestedZipCode = '';
 
   constructor() {
+    this.chatInboxService.ensureReady().subscribe();
     this.loadData();
   }
 
@@ -80,6 +89,100 @@ export class ProfilePageComponent implements OnDestroy {
       .slice(0, 2)
       .map((part) => part.charAt(0).toUpperCase())
       .join('');
+  }
+
+  protected get displayName() {
+    return (
+      this.profile.fullName ||
+      this.authService.currentUser()?.profile?.fullName ||
+      'Meu perfil'
+    );
+  }
+
+  protected get profileCompletion() {
+    const checks = [
+      this.profile.fullName,
+      this.profile.phone,
+      this.profile.city,
+      this.profile.state,
+      this.profile.bio,
+      this.profile.avatarUrl || this.pendingAvatarFile,
+      this.profile.documentNumber,
+      this.profile.driverLicenseNumber,
+      this.profile.hasDocumentImage || this.pendingDocumentFile,
+      this.profile.hasDriverLicenseImage || this.pendingDriverLicenseFile,
+    ];
+
+    return Math.round(
+      (checks.filter(Boolean).length / checks.length) * 100,
+    );
+  }
+
+  protected get memberSinceLabel() {
+    const currentUser = this.authService.currentUser();
+    const createdAt =
+      currentUser && 'createdAt' in currentUser ? currentUser.createdAt : null;
+
+    if (!createdAt) {
+      return 'Membro Triluga';
+    }
+
+    const date = new Date(createdAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Membro Triluga';
+    }
+
+    return `Membro desde ${date.getFullYear()}`;
+  }
+
+  protected get locationLabel() {
+    const parts = [this.profile.city, this.profile.state].filter(Boolean);
+    return parts.length ? parts.join(', ') : 'Localização não informada';
+  }
+
+  protected get verificationRows() {
+    return [
+      {
+        title: 'Email Verificado',
+        description: this.authService.currentUser()?.email || 'Email da conta',
+        status: 'approved',
+        icon: 'check_circle',
+      },
+      {
+        title: 'Documento',
+        description: this.verificationStatusLabel(
+          this.profile.documentVerificationStatus,
+        ),
+        status:
+          this.profile.documentVerificationStatus === 'APPROVED'
+            ? 'approved'
+            : 'pending',
+        icon:
+          this.profile.documentVerificationStatus === 'APPROVED'
+            ? 'check_circle'
+            : 'error',
+      },
+      {
+        title: 'CNH',
+        description: this.verificationStatusLabel(
+          this.profile.driverLicenseVerification,
+        ),
+        status:
+          this.profile.driverLicenseVerification === 'APPROVED'
+            ? 'approved'
+            : 'pending',
+        icon:
+          this.profile.driverLicenseVerification === 'APPROVED'
+            ? 'check_circle'
+            : 'error',
+      },
+    ];
+  }
+
+  protected get unreadChatBadge() {
+    const count = this.chatInboxService.unreadCount();
+    return count > 99 ? '99+' : String(count);
   }
 
   protected save() {
@@ -193,6 +296,59 @@ export class ProfilePageComponent implements OnDestroy {
       .toUpperCase()
       .replace(/[^A-Z]/g, '')
       .slice(0, 2);
+  }
+
+  protected onZipCodeChange(value: string) {
+    this.profile.zipCode = this.cepLookupService.formatZipCode(value);
+    const zipCodeDigits = (this.profile.zipCode || '').replace(/\D/g, '');
+
+    if (zipCodeDigits.length < 8) {
+      this.lastRequestedZipCode = '';
+      this.zipCodeHint = '';
+      this.zipCodeError = '';
+      return;
+    }
+
+    if (zipCodeDigits === this.lastRequestedZipCode) {
+      return;
+    }
+
+    this.lastRequestedZipCode = zipCodeDigits;
+    this.zipCodeHint = 'Buscando endereço pelo CEP...';
+    this.zipCodeError = '';
+
+    this.cepLookupService.lookup(this.profile.zipCode || '').subscribe({
+      next: (address) => {
+        if ((this.profile.zipCode || '').replace(/\D/g, '') !== zipCodeDigits) {
+          return;
+        }
+
+        this.profile.zipCode = address.zipCode || this.profile.zipCode;
+        this.profile.addressLine =
+          address.addressLine || this.profile.addressLine;
+        this.profile.city = address.city || this.profile.city;
+        this.profile.state = address.state || this.profile.state;
+
+        if (!this.profile.addressComplement?.trim() && address.addressComplement) {
+          this.profile.addressComplement = address.addressComplement;
+        }
+
+        this.zipCodeHint =
+          address.addressLine || address.city || address.state
+            ? 'Endereço preenchido automaticamente.'
+            : 'CEP encontrado. Complete os detalhes restantes manualmente.';
+        this.zipCodeError = '';
+      },
+      error: () => {
+        if ((this.profile.zipCode || '').replace(/\D/g, '') !== zipCodeDigits) {
+          return;
+        }
+
+        this.zipCodeHint = '';
+        this.zipCodeError =
+          'Não foi possível localizar esse CEP. Você pode preencher o endereço manualmente.';
+      },
+    });
   }
 
   private loadData() {
