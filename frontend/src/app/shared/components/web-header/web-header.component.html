@@ -1,0 +1,155 @@
+<nav
+  class="web-header"
+  [class.web-header--fixed]="fixed"
+  aria-label="Navegação principal"
+>
+  <div class="web-header__inner">
+    <div class="web-header__brand-group">
+      <a routerLink="/" class="web-header__brand">Triluga</a>
+
+      <div class="web-header__links">
+        <button
+          type="button"
+          class="web-header__link web-header__link--active"
+          (click)="goToSearch({})"
+        >
+          Catálogo
+        </button>
+        <button
+          type="button"
+          class="web-header__link"
+          routerLink="/anunciar-carro"
+        >
+          Meus Anúncios
+        </button>
+        <button
+          type="button"
+          class="web-header__link"
+          (click)="openProtected('/favorites')"
+        >
+          Meus Favoritos
+        </button>
+        <button
+          type="button"
+          class="web-header__link"
+          (click)="openProtected('/profile')"
+        >
+          Meu Perfil
+        </button>
+      </div>
+    </div>
+
+    <div class="web-header__actions">
+      <button
+        type="button"
+        class="web-header__icon web-header__icon--with-badge"
+        aria-label="Chat"
+        (click)="openProtected('/chat')"
+      >
+        <span class="material-symbols-outlined">chat</span>
+        <span class="web-header__badge" *ngIf="unreadChatCount">
+          {{ unreadChatBadge }}
+        </span>
+      </button>
+      <button
+        type="button"
+        class="web-header__icon web-header__icon--with-badge"
+        aria-label="Notificações"
+        (click)="toggleNotifications()"
+      >
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="web-header__badge" *ngIf="unreadNotificationCount">
+          {{ unreadNotificationBadge }}
+        </span>
+      </button>
+      <button
+        type="button"
+        class="web-header__announce"
+        routerLink="/anunciar-carro"
+      >
+        Anunciar Grátis
+      </button>
+      <button
+        type="button"
+        class="web-header__avatar"
+        aria-label="Abrir perfil"
+        (click)="openProtected('/profile')"
+      >
+        <img [src]="avatarUrl" alt="Avatar do usuário" />
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="web-notifications" *ngIf="notificationsOpen">
+  <button
+    type="button"
+    class="web-notifications__backdrop"
+    aria-label="Fechar notificações"
+    (click)="closeNotifications()"
+  ></button>
+
+  <aside class="web-notifications__panel">
+    <header class="web-notifications__head">
+      <div>
+        <span>Notificações</span>
+        <h2>Avisos</h2>
+      </div>
+
+      <button
+        type="button"
+        class="web-notifications__close"
+        aria-label="Fechar notificações"
+        (click)="closeNotifications()"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <p class="web-notifications__summary">
+      {{ unreadNotificationCount }} não lidas
+    </p>
+
+    <p class="web-notifications__state" *ngIf="notificationsService.loading()">
+      Carregando...
+    </p>
+
+    <p
+      class="web-notifications__state"
+      *ngIf="
+        !notificationsService.loading() &&
+        !notificationsService.notifications().length
+      "
+    >
+      Nenhuma notificação por enquanto.
+    </p>
+
+    <div
+      class="web-notifications__list"
+      *ngIf="
+        !notificationsService.loading() &&
+        notificationsService.notifications().length
+      "
+    >
+      <article
+        class="web-notification"
+        *ngFor="let notification of notificationsService.notifications()"
+        [class.web-notification--unread]="!notification.isRead"
+      >
+        <div>
+          <strong>{{ notification.title }}</strong>
+          <p>{{ notification.message }}</p>
+          <small>{{ notification.createdAt | date: 'dd/MM HH:mm' }}</small>
+        </div>
+
+        <button
+          type="button"
+          *ngIf="!notification.isRead"
+          (click)="markNotificationRead(notification.id)"
+        >
+          Marcar lida
+        </button>
+      </article>
+    </div>
+  </aside>
+</div>
