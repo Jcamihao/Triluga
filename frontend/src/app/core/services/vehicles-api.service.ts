@@ -46,7 +46,10 @@ export class VehiclesApiService {
 
   create(payload: CreateVehiclePayload) {
     return this.http
-      .post<VehicleDetail>(`${environment.apiBaseUrl}/vehicles`, payload)
+      .post<VehicleDetail>(
+        `${environment.apiBaseUrl}/vehicles`,
+        this.toVehicleApiPayload(payload),
+      )
       .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
 
@@ -54,7 +57,7 @@ export class VehiclesApiService {
     return this.http
       .patch<VehicleDetail>(
         `${environment.apiBaseUrl}/vehicles/${vehicleId}`,
-        payload,
+        this.toVehicleApiPayload(payload),
       )
       .pipe(map((vehicle) => normalizeApiPayloadUrls(vehicle)));
   }
@@ -82,6 +85,45 @@ export class VehiclesApiService {
   removeImage(vehicleId: string, imageId: string) {
     return this.http.delete<{ message: string }>(
       `${environment.apiBaseUrl}/vehicles/${vehicleId}/images/${imageId}`,
+    );
+  }
+
+  private toVehicleApiPayload(
+    payload: CreateVehiclePayload | UpdateVehiclePayload,
+  ) {
+    const allowedPayload: UpdateVehiclePayload = {
+      title: payload.title,
+      brand: payload.brand,
+      model: payload.model,
+      year: payload.year,
+      plate: payload.plate,
+      city: payload.city,
+      state: payload.state,
+      vehicleType: payload.vehicleType,
+      category: payload.category,
+      transmission: payload.transmission,
+      fuelType: payload.fuelType,
+      seats: payload.seats,
+      dailyRate: payload.dailyRate,
+      weeklyRate: payload.weeklyRate,
+      kmPolicy: payload.kmPolicy,
+      motorcycleStyle: payload.motorcycleStyle,
+      engineCc: payload.engineCc,
+      hasAbs: payload.hasAbs,
+      hasTopCase: payload.hasTopCase,
+      hasInsurance: payload.hasInsurance,
+      mechanicsCondition: payload.mechanicsCondition,
+      hasDetranIssues: payload.hasDetranIssues,
+      trunkSize: payload.trunkSize,
+      description: payload.description,
+      addressLine: payload.addressLine,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      isPublished: payload.isPublished,
+    };
+
+    return Object.fromEntries(
+      Object.entries(allowedPayload).filter(([, value]) => value !== undefined),
     );
   }
 }

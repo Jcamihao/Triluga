@@ -23,6 +23,7 @@ export type FuelType =
   | 'ELECTRIC'
   | 'HYBRID';
 export type TransmissionType = 'MANUAL' | 'AUTOMATIC' | 'CVT';
+export type MechanicsCondition = 'REVIEW' | 'GOOD' | 'EXCELLENT';
 export type VerificationStatus =
   | 'NOT_SUBMITTED'
   | 'PENDING'
@@ -183,7 +184,7 @@ export interface VehicleCardItem {
   hasAbs?: boolean | null;
   hasTopCase?: boolean | null;
   hasInsurance?: boolean | null;
-  mechanicsCondition?: string | null;
+  mechanicsCondition?: MechanicsCondition | null;
   hasDetranIssues?: boolean | null;
   trunkSize?: number | null;
   weeklyRate?: number | null;
@@ -224,7 +225,7 @@ export interface OwnerVehicleItem {
   hasAbs?: boolean | null;
   hasTopCase?: boolean | null;
   hasInsurance?: boolean | null;
-  mechanicsCondition?: string | null;
+  mechanicsCondition?: MechanicsCondition | null;
   hasDetranIssues?: boolean | null;
   trunkSize?: number | null;
   weeklyRate?: number | null;
@@ -305,7 +306,7 @@ export interface CreateVehiclePayload {
   hasAbs?: boolean;
   hasTopCase?: boolean;
   hasInsurance?: boolean;
-  mechanicsCondition?: string;
+  mechanicsCondition?: MechanicsCondition;
   hasDetranIssues?: boolean;
   trunkSize?: number;
   weeklyRate?: number;
