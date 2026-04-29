@@ -10,7 +10,8 @@
       <div class="web-header__links">
         <button
           type="button"
-          class="web-header__link web-header__link--active"
+          class="web-header__link"
+          [class.web-header__link--active]="isRouteActive('/search')"
           (click)="goToSearch({})"
         >
           Catálogo
@@ -18,6 +19,9 @@
         <button
           type="button"
           class="web-header__link"
+          [class.web-header__link--active]="
+            isRouteActive('/anunciar-carro') || isRouteActive('/owner-dashboard')
+          "
           routerLink="/anunciar-carro"
         >
           Meus Anúncios
@@ -25,6 +29,7 @@
         <button
           type="button"
           class="web-header__link"
+          [class.web-header__link--active]="isRouteActive('/favorites')"
           (click)="openProtected('/favorites')"
         >
           Meus Favoritos
@@ -32,6 +37,7 @@
         <button
           type="button"
           class="web-header__link"
+          [class.web-header__link--active]="isRouteActive('/profile')"
           (click)="openProtected('/profile')"
         >
           Meu Perfil

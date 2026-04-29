@@ -62,7 +62,9 @@
   line-height: 1.2;
   padding: 8px 0;
   text-decoration: none;
-  transition: color 180ms ease;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
 }
 
 .web-header__link:hover,
@@ -70,11 +72,15 @@
   color: #006d37;
 }
 
+.web-header__link:hover {
+  transform: translateY(-1px);
+}
+
 .web-header__link--active {
   font-weight: 700;
 }
 
-.web-header__link--active::after {
+.web-header__link::after {
   content: '';
   position: absolute;
   right: 0;
@@ -83,6 +89,14 @@
   height: 3px;
   border-radius: 999px;
   background: #006d37;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms ease;
+}
+
+.web-header__link:hover::after,
+.web-header__link--active::after {
+  transform: scaleX(1);
 }
 
 .web-header__actions {

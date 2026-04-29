@@ -63,6 +63,11 @@ export class WebHeaderComponent {
     this.router.navigate([path]);
   }
 
+  protected isRouteActive(path: string) {
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  }
+
   protected get unreadChatCount() {
     return this.chatInboxService.unreadCount();
   }
