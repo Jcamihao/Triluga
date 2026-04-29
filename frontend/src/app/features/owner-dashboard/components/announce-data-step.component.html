@@ -41,17 +41,66 @@
                     <span class="material-symbols-outlined">motorcycle</span>
                     <span class="text-sm font-bold">Moto</span>
                   </button>
-                  <button
-                    class="hidden sm:flex flex-1 py-4 px-6 rounded-xl bg-surface-container-high text-on-surface-variant/60 flex-col items-center gap-2 cursor-not-allowed"
-                    type="button"
-                    disabled
-                    title="Categoria ainda não disponível"
-                  >
-                    <span class="material-symbols-outlined">local_shipping</span>
-                    <span class="text-sm font-bold">Caminhão</span>
-                  </button>
                 </div>
               </div>
+
+              <section class="space-y-8">
+                <div class="space-y-4">
+                  <label class="block text-sm font-semibold mb-3 text-on-surface-variant">
+                    Transmissão
+                  </label>
+                  <div class="flex gap-4">
+                    <button
+                      class="flex-1 py-4 px-6 rounded-xl flex flex-col items-center gap-2 transition-all"
+                      type="button"
+                      [ngClass]="
+                        owner.vehicleDraft.transmission === 'MANUAL'
+                          ? 'bg-primary text-on-primary shadow-lg shadow-primary/10 ring-2 ring-primary'
+                          : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                      "
+                      (click)="owner.setTransmission('MANUAL')"
+                    >
+                      <span class="material-symbols-outlined">radio_button_unchecked</span>
+                      <span class="text-sm font-bold">Manual</span>
+                    </button>
+                    <button
+                      class="flex-1 py-4 px-6 rounded-xl flex flex-col items-center gap-2 transition-all"
+                      type="button"
+                      [ngClass]="
+                        owner.vehicleDraft.transmission === 'AUTOMATIC' ||
+                        owner.vehicleDraft.transmission === 'CVT'
+                          ? 'bg-primary text-on-primary shadow-lg shadow-primary/10 ring-2 ring-primary'
+                          : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                      "
+                      (click)="owner.setTransmission('AUTOMATIC')"
+                    >
+                      <span class="material-symbols-outlined">precision_manufacturing</span>
+                      <span class="text-sm font-bold">Automática</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <label class="block text-sm font-semibold mb-3 text-on-surface-variant">
+                    Combustível
+                  </label>
+                  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+                    <button
+                      *ngFor="let option of owner.fuelOptions"
+                      type="button"
+                      class="min-h-11 px-4 py-2.5 rounded-full text-sm font-bold transition-all"
+                      [ngClass]="
+                        owner.vehicleDraft.fuelType === option.value
+                          ? 'bg-primary text-on-primary shadow-lg shadow-primary/10 ring-2 ring-primary'
+                          : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                      "
+                      (click)="owner.setFuelType(option.value)"
+                    >
+                      {{ option.label }}
+                    </button>
+                  </div>
+                </div>
+              </section>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
@@ -123,7 +172,7 @@
                     />
                   </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant opacity-70">
                       Categoria
@@ -137,22 +186,18 @@
                       </option>
                     </select>
                   </div>
-                  <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-widest text-on-surface-variant opacity-70">
-                      Título público
-                    </label>
-                    <input
-                      class="w-full bg-surface-container-lowest border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary-container text-on-surface font-medium"
-                      placeholder="Gerado automaticamente"
-                      [(ngModel)]="owner.vehicleDraft.title"
-                    />
-                  </div>
                 </div>
               </div>
 
-              <div class="pt-6 flex justify-end">
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 space-y-6">
+            <div class="sticky top-28">
+              <app-announce-preview-card [owner]="owner"></app-announce-preview-card>
+              <div class="mt-8">
                 <button
-                  class="group flex items-center gap-3 bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  class="group w-full flex items-center justify-center gap-3 bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                   type="button"
                   (click)="owner.nextStep()"
                 >
@@ -161,48 +206,6 @@
                     arrow_forward
                   </span>
                 </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-5 space-y-6">
-            <div class="sticky top-28">
-              <div class="rounded-xl overflow-hidden aspect-[4/3] bg-surface-container-high relative mb-6">
-                <img
-                  alt="Interior premium de carro"
-                  class="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUt-v--KbvAYpn8OqlG5Stn5FxmoEVci9YI8n7Rs6bYAwhnmvbMs2JUOV8Ka7DNgAt7hNK6FuQ8FKrMcxODDoooFQRP72snr9tBb7OtudI9suSwW9V9PcV5QooB-fqflRA08XXNNyXZrdNrHxXHXp6dtWJJkorkOb3y-CSZmUI6r78gXp4N7PnVtfT1UuS_wNPSa1BXlz4Vwb000krNg9mVDO3THYIjGjfkx90dny1BqUtKzHXaMCa0dO1g-tAPrnNJnFG18clJkPm"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-on-surface/60 to-transparent flex items-end p-8">
-                  <p class="text-white font-medium italic">
-                    "Venda seu veículo 2x mais rápido com dados precisos."
-                  </p>
-                </div>
-              </div>
-              <div class="p-8 bg-surface-container-low rounded-xl border-none">
-                <h3 class="text-xl font-bold text-on-surface mb-4">
-                  Por que a placa é necessária?
-                </h3>
-                <ul class="space-y-4">
-                  <li class="flex gap-4">
-                    <span class="material-symbols-outlined text-primary">verified</span>
-                    <p class="text-sm text-on-surface-variant leading-tight">
-                      Preenchimento automático das especificações técnicas.
-                    </p>
-                  </li>
-                  <li class="flex gap-4">
-                    <span class="material-symbols-outlined text-primary">verified</span>
-                    <p class="text-sm text-on-surface-variant leading-tight">
-                      Garante a procedência e segurança para o comprador.
-                    </p>
-                  </li>
-                  <li class="flex gap-4">
-                    <span class="material-symbols-outlined text-primary">verified</span>
-                    <p class="text-sm text-on-surface-variant leading-tight">
-                      Não exibimos sua placa publicamente no anúncio.
-                    </p>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>

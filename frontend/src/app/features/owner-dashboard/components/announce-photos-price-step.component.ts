@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AnnouncePreviewCardComponent } from './announce-preview-card.component';
 
 @Component({
   selector: 'app-announce-photos-price-step',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnnouncePreviewCardComponent],
   templateUrl: './announce-photos-price-step.component.html',
 })
 export class AnnouncePhotosPriceStepComponent {

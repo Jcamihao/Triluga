@@ -218,21 +218,21 @@
                 <p
                   class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider"
                 >
-                  Preço Diário
+                  Preço Semanal
                 </p>
                 <p
                   class="text-base font-black"
                   [ngClass]="
                     !vehicle.isActive
                       ? 'text-slate-400'
-                      : vehicle.dailyRate
+                      : vehicle.weeklyRate
                         ? 'text-emerald-800'
                         : 'text-slate-400'
                   "
                 >
                   {{
-                    vehicle.dailyRate
-                      ? (vehicle.dailyRate
+                    vehicle.weeklyRate
+                      ? (vehicle.weeklyRate
                         | currency: 'BRL' : 'symbol' : '1.2-2')
                       : 'Pendente'
                   }}
@@ -252,18 +252,14 @@
                   <span class="material-symbols-outlined text-lg">edit</span>
                 </button>
                 <button
-                  class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors active:scale-95 disabled:opacity-40"
+                  class="p-2 rounded-full hover:bg-red-50 hover:text-red-600 text-on-surface-variant transition-colors active:scale-95 disabled:opacity-40"
                   [disabled]="
                     owner.vehicleActionId === vehicle.id || !vehicle.isActive
                   "
-                  (click)="owner.toggleVehiclePublication(vehicle)"
-                  [attr.aria-label]="
-                    vehicle.isPublished ? 'Despublicar' : 'Publicar'
-                  "
+                  (click)="owner.deactivateVehicle(vehicle)"
+                  aria-label="Excluir"
                 >
-                  <span class="material-symbols-outlined text-lg">{{
-                    vehicle.isPublished ? 'visibility_off' : 'visibility'
-                  }}</span>
+                  <span class="material-symbols-outlined text-lg">delete</span>
                 </button>
               </div>
             </div>
@@ -426,21 +422,21 @@
 
             <div class="text-left md:text-right md:px-6 md:border-l md:border-surface-container-high">
               <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">
-                Preço Diário
+                Preço Semanal
               </p>
               <p
                 class="text-lg font-black"
                 [ngClass]="
                   !vehicle.isActive
                     ? 'text-slate-400'
-                    : vehicle.dailyRate
+                    : vehicle.weeklyRate
                       ? 'text-emerald-800'
                       : 'text-slate-400'
                 "
               >
                 {{
-                  vehicle.dailyRate
-                    ? (vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2')
+                  vehicle.weeklyRate
+                    ? (vehicle.weeklyRate | currency: 'BRL' : 'symbol' : '1.2-2')
                     : 'Pendente'
                 }}
               </p>
@@ -457,14 +453,14 @@
                 <span class="material-symbols-outlined">edit</span>
               </button>
               <button
-                class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors disabled:opacity-40"
+                class="p-2 rounded-full hover:bg-red-50 hover:text-red-600 text-on-surface-variant transition-colors disabled:opacity-40"
                 type="button"
                 [disabled]="owner.vehicleActionId === vehicle.id || !vehicle.isActive"
-                (click)="owner.toggleVehiclePublication(vehicle)"
-                [attr.aria-label]="vehicle.isPublished ? 'Despublicar' : 'Publicar'"
+                (click)="owner.deactivateVehicle(vehicle)"
+                aria-label="Excluir"
               >
                 <span class="material-symbols-outlined">
-                  {{ vehicle.isPublished ? 'visibility_off' : 'visibility' }}
+                  delete
                 </span>
               </button>
             </div>

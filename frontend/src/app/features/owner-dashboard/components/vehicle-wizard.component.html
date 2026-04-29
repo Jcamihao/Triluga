@@ -1,13 +1,13 @@
 <div
     class="announce-stitch bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col"
   >
-    <app-web-header [fixed]="true"></app-web-header>
+    <app-web-header class="hidden md:block" [fixed]="true"></app-web-header>
 
-    <div class="fixed top-[64px] left-0 w-full h-1 bg-surface-container-highest z-50">
+    <div class="fixed top-0 md:top-[80px] left-0 w-full h-1 bg-surface-container-highest z-40">
       <div class="h-full bg-primary transition-all duration-500" [style.width]="owner.stepProgressWidth"></div>
     </div>
 
-    <main class="flex-grow pt-24 pb-20 px-6 max-w-5xl mx-auto w-full">
+    <main class="flex-grow pt-8 md:pt-24 pb-36 md:pb-20 px-6 max-w-5xl mx-auto w-full">
       <div class="mb-12">
         <div class="flex justify-between items-center mb-4 px-2">
           <button
