@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -202,6 +203,7 @@ export class VehiclesService {
     const vehicles = await this.prisma.vehicle.findMany({
       where: {
         ownerId,
+        isActive: true,
       },
       include: {
         images: {
@@ -257,10 +259,16 @@ export class VehiclesService {
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
       dailyRate: Number(vehicle.dailyRate),
+      weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+      kmPolicy: vehicle.kmPolicy,
       motorcycleStyle: vehicle.motorcycleStyle,
       engineCc: vehicle.engineCc,
       hasAbs: vehicle.hasAbs,
       hasTopCase: vehicle.hasTopCase,
+      hasInsurance: vehicle.hasInsurance,
+      mechanicsCondition: vehicle.mechanicsCondition,
+      hasDetranIssues: vehicle.hasDetranIssues,
+      trunkSize: vehicle.trunkSize,
       latitude: vehicle.latitude ? Number(vehicle.latitude) : null,
       longitude: vehicle.longitude ? Number(vehicle.longitude) : null,
       description: vehicle.description,
@@ -379,88 +387,108 @@ export class VehiclesService {
   }
 
   async create(ownerId: string, dto: CreateVehicleDto) {
-    const vehicle = await this.prisma.vehicle.create({
-      data: {
-        ownerId,
-        title: dto.title,
-        brand: dto.brand,
-        model: dto.model,
-        year: dto.year,
-        plate: dto.plate.toUpperCase(),
-        city: dto.city,
-        state: dto.state.toUpperCase(),
-        vehicleType: dto.vehicleType ?? VehicleType.CAR,
-        category: dto.category,
-        transmission: dto.transmission,
-        fuelType: dto.fuelType,
-        seats: dto.seats,
-        dailyRate: dto.dailyRate,
-        motorcycleStyle: dto.motorcycleStyle,
-        engineCc: dto.engineCc,
-        hasAbs: dto.hasAbs,
-        hasTopCase: dto.hasTopCase,
-        description: dto.description,
-        addressLine: dto.addressLine,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        isPublished: dto.isPublished ?? true,
-      },
-      include: {
-        images: true,
-        owner: {
-          include: {
-            profile: true,
-            userReviewsReceived: {
-              select: {
-                rating: true,
+    try {
+      const vehicle = await this.prisma.vehicle.create({
+        data: {
+          ownerId,
+          title: dto.title,
+          brand: dto.brand,
+          model: dto.model,
+          year: dto.year,
+          plate: dto.plate.toUpperCase(),
+          city: dto.city,
+          state: dto.state.toUpperCase(),
+          vehicleType: dto.vehicleType ?? VehicleType.CAR,
+          category: dto.category,
+          transmission: dto.transmission,
+          fuelType: dto.fuelType,
+          seats: dto.seats,
+          dailyRate: dto.dailyRate,
+          weeklyRate: dto.weeklyRate,
+          kmPolicy: dto.kmPolicy,
+          motorcycleStyle: dto.motorcycleStyle,
+          engineCc: dto.engineCc,
+          hasAbs: dto.hasAbs,
+          hasTopCase: dto.hasTopCase,
+          hasInsurance: dto.hasInsurance,
+          mechanicsCondition: dto.mechanicsCondition,
+          hasDetranIssues: dto.hasDetranIssues,
+          trunkSize: dto.trunkSize,
+          description: dto.description,
+          addressLine: dto.addressLine,
+          latitude: dto.latitude,
+          longitude: dto.longitude,
+          isPublished: dto.isPublished ?? true,
+        },
+        include: {
+          images: true,
+          owner: {
+            include: {
+              profile: true,
+              userReviewsReceived: {
+                select: {
+                  rating: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    await this.cacheQueueService.invalidateByPrefix('vehicles:list:');
-    if (vehicle.isActive && vehicle.isPublished) {
-      await this.searchAlertsService.notifyMatchingUsers(vehicle.id);
+      await this.cacheQueueService.invalidateByPrefix('vehicles:list:');
+      if (vehicle.isActive && vehicle.isPublished) {
+        await this.searchAlertsService.notifyMatchingUsers(vehicle.id);
+      }
+      return this.mapVehicleDetail(vehicle);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Já existe um veículo cadastrado com esta placa.');
+      }
+      throw error;
     }
-    return this.mapVehicleDetail(vehicle);
   }
 
   async update(ownerId: string, vehicleId: string, dto: UpdateVehicleDto) {
     await this.ensureVehicleOwnership(ownerId, vehicleId);
 
-    const vehicle = await this.prisma.vehicle.update({
-      where: { id: vehicleId },
-      data: {
-        ...dto,
-        plate: dto.plate ? dto.plate.toUpperCase() : undefined,
-        state: dto.state ? dto.state.toUpperCase() : undefined,
-      },
-      include: {
-        images: {
-          orderBy: {
-            position: 'asc',
-          },
+    try {
+      const vehicle = await this.prisma.vehicle.update({
+        where: { id: vehicleId },
+        data: {
+          ...dto,
+          plate: dto.plate ? dto.plate.toUpperCase() : undefined,
+          state: dto.state ? dto.state.toUpperCase() : undefined,
         },
-        owner: {
-          include: {
-            profile: true,
-            userReviewsReceived: {
-              select: {
-                rating: true,
+        include: {
+          images: {
+            orderBy: {
+              position: 'asc',
+            },
+          },
+          owner: {
+            include: {
+              profile: true,
+              userReviewsReceived: {
+                select: {
+                  rating: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    await this.invalidateVehicleCache(vehicleId);
-    if (vehicle.isActive && vehicle.isPublished) {
-      await this.searchAlertsService.notifyMatchingUsers(vehicle.id);
+      await this.invalidateVehicleCache(vehicleId);
+      if (vehicle.isActive && vehicle.isPublished) {
+        await this.searchAlertsService.notifyMatchingUsers(vehicle.id);
+      }
+      return this.mapVehicleDetail(vehicle);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Já existe um veículo cadastrado com esta placa.');
+      }
+      throw error;
     }
-    return this.mapVehicleDetail(vehicle);
   }
 
   async remove(ownerId: string, vehicleId: string) {
@@ -533,10 +561,16 @@ export class VehiclesService {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       dailyRate: Number(vehicle.dailyRate),
+      weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+      kmPolicy: vehicle.kmPolicy,
       motorcycleStyle: vehicle.motorcycleStyle,
       engineCc: vehicle.engineCc,
       hasAbs: vehicle.hasAbs,
       hasTopCase: vehicle.hasTopCase,
+      hasInsurance: vehicle.hasInsurance,
+      mechanicsCondition: vehicle.mechanicsCondition,
+      hasDetranIssues: vehicle.hasDetranIssues,
+      trunkSize: vehicle.trunkSize,
       latitude: vehicle.latitude ? Number(vehicle.latitude) : null,
       longitude: vehicle.longitude ? Number(vehicle.longitude) : null,
       ratingAverage: Number(vehicle.ratingAverage),

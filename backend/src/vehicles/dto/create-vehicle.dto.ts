@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   FuelType,
+  KmPolicy,
+  MechanicsCondition,
   MotorcycleStyle,
   Transmission,
   VehicleCategory,
@@ -83,6 +85,17 @@ export class CreateVehicleDto {
   @Min(1)
   dailyRate: number;
 
+  @ApiPropertyOptional({ example: 999.9 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  weeklyRate?: number;
+
+  @ApiPropertyOptional({ enum: KmPolicy, default: KmPolicy.FREE })
+  @IsOptional()
+  @IsEnum(KmPolicy)
+  kmPolicy?: KmPolicy;
+
   @ApiPropertyOptional({ enum: MotorcycleStyle })
   @IsOptional()
   @IsEnum(MotorcycleStyle)
@@ -104,6 +117,28 @@ export class CreateVehicleDto {
   @IsOptional()
   @IsBoolean()
   hasTopCase?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hasInsurance?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(MechanicsCondition)
+  mechanicsCondition?: MechanicsCondition;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hasDetranIssues?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2000)
+  trunkSize?: number;
 
   @ApiProperty()
   @IsString()

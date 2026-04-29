@@ -65,6 +65,17 @@ enum Transmission {
   CVT
 }
 
+enum KmPolicy {
+  FREE
+  FIXED
+}
+
+enum MechanicsCondition {
+  REVIEW
+  GOOD
+  EXCELLENT
+}
+
 enum PrivacyRequestType {
   ACCESS
   PORTABILITY
@@ -177,10 +188,16 @@ model Vehicle {
   fuelType           FuelType
   seats              Int
   dailyRate          Decimal            @db.Decimal(10, 2)
+  weeklyRate         Decimal?           @db.Decimal(10, 2)
+  kmPolicy           KmPolicy           @default(FREE)
   motorcycleStyle    MotorcycleStyle?
   engineCc           Int?
   hasAbs             Boolean?
   hasTopCase         Boolean?
+  hasInsurance       Boolean            @default(false)
+  mechanicsCondition MechanicsCondition?
+  hasDetranIssues    Boolean            @default(false)
+  trunkSize          Int?
   description        String
   addressLine        String?
   latitude           Decimal?           @db.Decimal(10, 7)
