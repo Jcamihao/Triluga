@@ -248,6 +248,34 @@
           </div>
 
           <div class="space-y-3 mb-8">
+            <label class="text-xs font-bold uppercase tracking-widest text-outline">
+              Cidade
+            </label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-outline">location_on</span>
+              <input
+                #cityFilter
+                class="w-full bg-surface-container-low border-none rounded-lg pl-9 text-xs py-2 focus:ring-primary/20"
+                placeholder="Escolher cidade"
+                type="text"
+                list="web-city-options"
+                [value]="query.city"
+                (keydown.enter)="applyFilters({ city: $any($event.target).value })"
+              />
+              <datalist id="web-city-options">
+                <option value="São Paulo"></option>
+                <option value="Rio de Janeiro"></option>
+                <option value="Belo Horizonte"></option>
+                <option value="Curitiba"></option>
+                <option value="Porto Alegre"></option>
+                <option value="Brasília"></option>
+                <option value="Salvador"></option>
+                <option value="Fortaleza"></option>
+              </datalist>
+            </div>
+          </div>
+
+          <div class="space-y-3 mb-8">
             <label class="text-xs font-bold uppercase tracking-widest text-outline">Marcas</label>
             <div class="space-y-2">
               <div class="relative">
@@ -311,7 +339,7 @@
           <button
             class="w-full mt-8 py-4 bg-primary-container text-on-primary-container rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             type="button"
-            (click)="applyFilters({ vehicleType: query.vehicleType, q: query.q, maxPrice: query.maxPrice })"
+            (click)="applyFilters({ vehicleType: query.vehicleType, city: cityFilter.value, q: query.q, maxPrice: query.maxPrice })"
           >
             Aplicar Filtros
           </button>
