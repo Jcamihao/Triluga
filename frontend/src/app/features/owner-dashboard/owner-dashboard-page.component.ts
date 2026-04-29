@@ -11,6 +11,7 @@ import { VehicleWizardComponent } from './components/vehicle-wizard.component';
 import {
   CreateVehiclePayload,
   FuelType,
+  MechanicsCondition,
   MotorcycleStyle,
   OwnerVehicleItem,
   TransmissionType,
@@ -104,6 +105,12 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     { label: 'Custom', value: 'CUSTOM' },
     { label: 'Touring', value: 'TOURING' },
   ];
+  protected readonly mechanicsConditionOptions: SelectOption<MechanicsCondition>[] =
+    [
+      { label: 'Revisar', value: 'REVIEW' },
+      { label: 'Bom', value: 'GOOD' },
+      { label: 'Impecável', value: 'EXCELLENT' },
+    ];
   protected vehicles: OwnerVehicleItem[] = [];
   protected loading = true;
   protected vehicleFeedback = '';
@@ -121,10 +128,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected pendingVehicleFiles: File[] = [];
   protected pendingVehiclePreviews: Array<{ name: string; url: string }> = [];
   protected vehicleDraft = this.createVehicleDraft();
-  protected readonly photoSlots = Array.from(
-    { length: 6 },
-    (_, index) => index,
-  );
+  protected readonly photoSlots = Array.from({ length: 4 }, (_, index) => index);
 
   constructor() {
     this.createMode =
@@ -301,6 +305,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     this.vehicleDraft.hasDetranIssues = status === 'ISSUES';
   }
 
+  protected setMechanicsCondition(condition: MechanicsCondition) {
+    this.vehicleDraft.mechanicsCondition = condition;
+  }
+
   protected get detranStatus() {
     return this.vehicleDraft.hasDetranIssues ? 'ISSUES' : 'OK';
   }
@@ -312,12 +320,11 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected get estimatedDraftMonthlyRevenue() {
-    return Number(this.vehicleDraft.dailyRate || 0) * 20;
+    return Number(this.vehicleDraft.weeklyRate || 0) * 4;
   }
 
   protected get generatedVehicleTitle() {
     return (
-      this.vehicleDraft.title.trim() ||
       [
         this.vehicleDraft.brand.trim(),
         this.vehicleDraft.model.trim(),
@@ -357,9 +364,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     const descriptionLength = this.vehicleDraft.description.trim().length;
     const hasPickupPoint = !!this.vehicleDraft.addressLine?.trim();
     const hasTitleContext =
-      this.vehicleDraft.title.trim().length >= 12 &&
       !!this.vehicleDraft.brand.trim() &&
-      !!this.vehicleDraft.model.trim();
+      !!this.vehicleDraft.model.trim() &&
+      !!this.vehicleDraft.year;
     const checklistCacheKey = [
       totalPhotos,
       descriptionLength,
@@ -410,8 +417,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
               ? 'Estilo e cilindrada ajudam a filtrar melhor a moto.'
               : 'Informe estilo e cilindrada para melhorar a descoberta da moto.'
             : hasTitleContext
-              ? 'Título claro com marca e modelo aumenta a confiança.'
-              : 'Use um título mais específico com marca, modelo e diferencial.',
+              ? 'O título será gerado com marca, modelo e ano.'
+              : 'Informe marca, modelo e ano para gerar um título claro.',
         done:
           this.vehicleDraft.vehicleType === 'MOTORCYCLE'
             ? !!this.vehicleDraft.motorcycleStyle &&
@@ -487,7 +494,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
           ? !!(d.motorcycleStyle && Number(d.engineCc))
           : true;
       return !!(
-        d.mechanicsCondition?.trim() &&
+        d.mechanicsCondition &&
         Number(d.seats) > 0 &&
         isMotoComplete
       );
@@ -601,7 +608,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
-      dailyRate: vehicle.dailyRate,
+      dailyRate: vehicle.dailyRate || Math.max(1, Math.round((vehicle.weeklyRate || 7) / 7)),
       weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
       kmPolicy: vehicle.kmPolicy || 'FREE',
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
@@ -609,7 +616,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       hasAbs: !!vehicle.hasAbs,
       hasTopCase: !!vehicle.hasTopCase,
       hasInsurance: !!vehicle.hasInsurance,
-      mechanicsCondition: vehicle.mechanicsCondition || '',
+      mechanicsCondition: vehicle.mechanicsCondition || undefined,
       hasDetranIssues: !!vehicle.hasDetranIssues,
       trunkSize: vehicle.trunkSize || undefined,
       description: vehicle.description,
@@ -749,8 +756,8 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       });
   }
 
-  protected deactivateVehicle(vehicle: OwnerVehicleItem) {
-    if (!globalThis.confirm(`Deseja desativar o anúncio "${vehicle.title}"?`)) {
+  public deactivateVehicle(vehicle: OwnerVehicleItem) {
+    if (!globalThis.confirm(`Tem certeza que deseja excluir o anúncio "${vehicle.title}"?`)) {
       return;
     }
 
@@ -765,7 +772,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
           this.cancelEditingVehicle();
         }
 
-        this.vehicleFeedback = 'Anúncio desativado com sucesso.';
+        this.vehicleFeedback = 'Anúncio excluído com sucesso.';
         this.loadData();
       },
       error: (error) => {
@@ -773,7 +780,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         this.vehicleFeedback = '';
         this.vehicleError =
           error?.error?.message ||
-          'Não foi possível desativar o anúncio agora.';
+          'Não foi possível excluir o anúncio agora.';
       },
     });
   }
@@ -796,6 +803,13 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     return (
       this.transmissionOptions.find((option) => option.value === transmission)
         ?.label ?? transmission
+    );
+  }
+
+  protected fuelTypeLabel(fuelType: FuelType) {
+    return (
+      this.fuelOptions.find((option) => option.value === fuelType)?.label ??
+      fuelType
     );
   }
 
@@ -952,7 +966,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       hasAbs: false,
       hasTopCase: false,
       hasInsurance: false,
-      mechanicsCondition: '',
+      mechanicsCondition: undefined,
       hasDetranIssues: false,
       trunkSize: undefined,
       description: '',
@@ -973,18 +987,20 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       addressLine: this.vehicleDraft.addressLine?.trim() || '',
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
-      dailyRate: Number(this.vehicleDraft.dailyRate),
       weeklyRate: Number(this.vehicleDraft.weeklyRate),
+      dailyRate: Math.max(
+        1,
+        Math.round(Number(this.vehicleDraft.weeklyRate || 0) / 7),
+      ),
       kmPolicy: this.vehicleDraft.kmPolicy || 'FREE',
       hasInsurance: !!this.vehicleDraft.hasInsurance,
-      mechanicsCondition: this.vehicleDraft.mechanicsCondition?.trim() || '',
+      mechanicsCondition: this.vehicleDraft.mechanicsCondition || undefined,
       hasDetranIssues: !!this.vehicleDraft.hasDetranIssues,
       trunkSize: this.parseOptionalNumber(this.vehicleDraft.trunkSize),
       engineCc: this.parseOptionalNumber(this.vehicleDraft.engineCc),
     };
 
     payload.title =
-      this.vehicleDraft.title.trim() ||
       [payload.brand, payload.model, payload.year].filter(Boolean).join(' ');
 
     if (
@@ -998,7 +1014,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       !payload.description ||
       Number.isNaN(payload.year) ||
       Number.isNaN(payload.seats) ||
+      !payload.weeklyRate ||
       Number.isNaN(payload.weeklyRate) ||
+      payload.weeklyRate < 1 ||
       (payload.trunkSize !== undefined && Number.isNaN(payload.trunkSize)) ||
       (payload.engineCc !== undefined && Number.isNaN(payload.engineCc))
     ) {
@@ -1052,7 +1070,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       missingFields.push('assentos');
     }
 
-    if (!Number(this.vehicleDraft.weeklyRate)) {
+    if (Number(this.vehicleDraft.weeklyRate) < 1) {
       missingFields.push('preço por semana');
     }
 
