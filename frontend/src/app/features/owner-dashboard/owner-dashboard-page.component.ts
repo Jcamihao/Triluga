@@ -128,7 +128,11 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   protected pendingVehicleFiles: File[] = [];
   protected pendingVehiclePreviews: Array<{ name: string; url: string }> = [];
   protected vehicleDraft = this.createVehicleDraft();
-  protected readonly photoSlots = Array.from({ length: 4 }, (_, index) => index);
+  protected readonly photoSlots = Array.from(
+    { length: 4 },
+    (_, index) => index,
+  );
+  protected readonly minimumVehiclePhotoCount = 3;
 
   constructor() {
     this.createMode =
@@ -315,8 +319,13 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   protected get selectedPhotoCount() {
     return (
-      (this.editingVehicle?.images.length ?? 0) + this.pendingVehicleFiles.length
+      (this.editingVehicle?.images.length ?? 0) +
+      this.pendingVehicleFiles.length
     );
+  }
+
+  protected get hasMinimumVehiclePhotos() {
+    return this.selectedPhotoCount >= this.minimumVehiclePhotoCount;
   }
 
   protected get estimatedDraftMonthlyRevenue() {
@@ -331,8 +340,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         this.vehicleDraft.year || null,
       ]
         .filter(Boolean)
-        .join(' ') ||
-      'Seu veículo'
+        .join(' ') || 'Seu veículo'
     );
   }
 
@@ -447,6 +455,11 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected nextStep() {
+    if (this.currentStep === 2 && !this.hasMinimumVehiclePhotos) {
+      this.mediaError = `Adicione pelo menos ${this.minimumVehiclePhotoCount} fotos para continuar.`;
+      return;
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.currentStep = Math.min(3, this.currentStep + 1);
   }
@@ -480,7 +493,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       return !!(
         (this.editingVehicle?.images?.length ?? 0) +
           this.pendingVehicleFiles.length >
-          0 &&
+          2 &&
         Number(d.weeklyRate) > 0 &&
         d.city?.trim() &&
         d.state?.trim().length === 2 &&
@@ -493,11 +506,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         d.vehicleType === 'MOTORCYCLE'
           ? !!(d.motorcycleStyle && Number(d.engineCc))
           : true;
-      return !!(
-        d.mechanicsCondition &&
-        Number(d.seats) > 0 &&
-        isMotoComplete
-      );
+      return !!(d.mechanicsCondition && Number(d.seats) > 0 && isMotoComplete);
     }
     return false;
   }
@@ -521,6 +530,14 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected saveVehicle() {
+    if (!this.hasMinimumVehiclePhotos) {
+      this.vehicleFeedback = '';
+      this.vehicleError = `O anúncio precisa ter no mínimo ${this.minimumVehiclePhotoCount} fotos.`;
+      this.mediaError = `Adicione pelo menos ${this.minimumVehiclePhotoCount} fotos reais do veículo.`;
+      this.goToStep(2);
+      return;
+    }
+
     const payload = this.normalizeVehicleDraft();
 
     if (!payload) {
@@ -608,7 +625,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
-      dailyRate: vehicle.dailyRate || Math.max(1, Math.round((vehicle.weeklyRate || 7) / 7)),
+      dailyRate:
+        vehicle.dailyRate ||
+        Math.max(1, Math.round((vehicle.weeklyRate || 7) / 7)),
       weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
       kmPolicy: vehicle.kmPolicy || 'FREE',
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
@@ -757,7 +776,11 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   public deactivateVehicle(vehicle: OwnerVehicleItem) {
-    if (!globalThis.confirm(`Tem certeza que deseja excluir o anúncio "${vehicle.title}"?`)) {
+    if (
+      !globalThis.confirm(
+        `Tem certeza que deseja excluir o anúncio "${vehicle.title}"?`,
+      )
+    ) {
       return;
     }
 
@@ -779,8 +802,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         this.vehicleActionId = null;
         this.vehicleFeedback = '';
         this.vehicleError =
-          error?.error?.message ||
-          'Não foi possível excluir o anúncio agora.';
+          error?.error?.message || 'Não foi possível excluir o anúncio agora.';
       },
     });
   }
@@ -1000,8 +1022,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       engineCc: this.parseOptionalNumber(this.vehicleDraft.engineCc),
     };
 
-    payload.title =
-      [payload.brand, payload.model, payload.year].filter(Boolean).join(' ');
+    payload.title = [payload.brand, payload.model, payload.year]
+      .filter(Boolean)
+      .join(' ');
 
     if (
       !payload.title ||
@@ -1076,6 +1099,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
     if (!this.vehicleDraft.description.trim()) {
       missingFields.push('descrição');
+    }
+
+    if (!this.hasMinimumVehiclePhotos) {
+      missingFields.push('mínimo de 3 fotos');
     }
 
     return missingFields;
