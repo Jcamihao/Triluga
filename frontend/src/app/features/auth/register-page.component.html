@@ -635,7 +635,15 @@
 
           <label class="signup-web__field">
             <span>CEP</span>
-            <div class="signup-web__field-icon">
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowZipCodeValidation && zipCodeIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowZipCodeValidation && !zipCodeIsValid
+              "
+            >
               <input
                 name="webZipCode"
                 [ngModel]="zipCode"
@@ -644,11 +652,34 @@
                 type="text"
                 inputmode="numeric"
                 maxlength="9"
+                (focus)="zipCodeTouched = true"
+                (blur)="zipCodeTouched = true; onZipCodeChange(zipCode)"
                 [disabled]="loading"
                 required
               />
-              <span class="material-symbols-outlined">location_on</span>
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowZipCodeValidation"
+              >
+                {{ zipCodeIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+              <span
+                class="material-symbols-outlined"
+                *ngIf="!shouldShowZipCodeValidation"
+              >
+                location_on
+              </span>
             </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="
+                shouldShowZipCodeValidation && !zipCodeHint && !zipCodeError
+              "
+              [class.signup-web__input-message--valid]="zipCodeIsValid"
+              [class.signup-web__input-message--invalid]="!zipCodeIsValid"
+            >
+              {{ zipCodeIsValid ? 'CEP válido' : 'Digite um CEP válido' }}
+            </p>
           </label>
 
           <label class="signup-web__field signup-web__field--full">

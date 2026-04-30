@@ -40,6 +40,7 @@ export class RegisterPageComponent implements OnDestroy {
   protected emailTouched = false;
   protected cpfTouched = false;
   protected phoneTouched = false;
+  protected zipCodeTouched = false;
   protected passwordTouched = false;
   protected loading = false;
   protected feedback = '';
@@ -183,6 +184,21 @@ export class RegisterPageComponent implements OnDestroy {
 
   protected get shouldShowPhoneValidation() {
     return this.phoneTouched && !!this.phone.trim();
+  }
+
+  protected get zipCodeIsValid() {
+    const digits = this.zipCode.replace(/\D/g, '');
+
+    return (
+      digits.length === 8 &&
+      !this.zipCodeError &&
+      this.lastRequestedZipCode === digits &&
+      this.zipCodeHint !== 'Buscando endereço pelo CEP...'
+    );
+  }
+
+  protected get shouldShowZipCodeValidation() {
+    return this.zipCodeTouched && !!this.zipCode.trim();
   }
 
   protected get passwordsMatch() {
