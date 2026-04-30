@@ -1,14 +1,14 @@
-# Triluga 2.1.0
+# Triluga 2.2.0
 
 Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e experiência visual orientada ao marketplace para web e mobile.
 
 ## Destaques da versão
 
-- **Experiência 2.1**: home, perfis, privacidade, comparação, filtros e navegação mobile refinados sobre a base do redesign 2.0.
-- **Serviços mais resilientes**: auth, chat, favoritos, notificações, privacidade, storage, analytics e APIs de veículos revisados para fluxos reais de uso.
-- **Operação e deploy**: Docker, Render, runtime config e documentação de QA ajustados para ambientes gerenciados.
-- **Backend defensivo**: controllers e services reforçados em autenticação, preferências, busca, avaliações e imagens.
-- **Frontend funcional**: as telas continuam conectadas aos serviços Angular existentes, com rotas, busca, favoritos, comparação, chat e ações principais preservadas.
+- **Experiência web 2.2**: favoritos, comparação, perfil público e detalhe de veículo ganharam versões desktop mantendo o mobile isolado.
+- **Classificado mais completo**: detalhe do veículo exibe descrição do anunciante, seguro, condição mecânica, status Detran, Google Maps e preview de imagens.
+- **Comparação funcional**: veículos selecionados podem ser avaliados lado a lado com preço semanal, especificações, localização e reputação do anunciante.
+- **Publicação mais segura**: anúncio exige no mínimo 3 fotos, título automático e ações de publicar, despublicar e excluir.
+- **Backend evoluído**: estatísticas da home, visualizações por anúncio, novos filtros de busca e tempo médio de resposta em perfil público.
 
 ## Arquitetura
 
@@ -65,7 +65,9 @@ Regras centrais já refletidas no schema e nos serviços:
 
 - múltiplos veículos por proprietário
 - busca por cidade, tipo, categoria, preço e localização
+- busca por câmbio, combustível, ano e ordenação por relevância/preço/data
 - anúncios com fotos, descrição, reputação e contato por chat
+- anúncios com visualizações, seguro, condição mecânica e status Detran
 - favoritos e alertas de busca
 - avaliações públicas de anúncios e usuários
 
@@ -85,6 +87,7 @@ Endpoints principais implementados:
 - `GET /privacy/me/requests`
 - `POST /privacy/me/requests`
 - `GET /vehicles`
+- `GET /vehicles/stats`
 - `GET /vehicles/me`
 - `GET /vehicles/:id`
 - `POST /vehicles`
@@ -109,13 +112,12 @@ No Docker Compose padrão, Swagger fica disponível em `http://localhost:3002/ap
 Fluxos disponíveis no Angular:
 
 - home redesenhada com busca rápida e atalhos
-- lista redesenhada com filtros e carregamento progressivo
+- lista redesenhada com filtros, cidade, faixa de preço mínima/máxima e carregamento progressivo
 - alertas de busca salvos para usuários autenticados
-- detalhe do veículo redesenhado com galeria e reviews
-- mapa de localização no detalhe do veículo quando o anúncio possui coordenadas
+- detalhe do veículo redesenhado com galeria, preview de imagens, Google Maps e informações de procedência
 - login e cadastro redesenhados
-- perfil e perfil público redesenhados
-- favoritos, comparação e chat redesenhados
+- perfil e perfil público redesenhados, incluindo tempo médio de resposta por mensagens
+- favoritos, comparação e chat redesenhados, com versões web dedicadas
 - política de privacidade pública
 - central de privacidade autenticada
 - painel do proprietário redesenhado
@@ -213,6 +215,7 @@ Guia alternativo para frontend no Vercel e backend no Railway em [docs/deploy-ve
 
 ## Releases
 
+- release notes 2.2.0: [docs/releases/v2.2.0.md](./docs/releases/v2.2.0.md)
 - release notes 2.1.0: [docs/releases/v2.1.0.md](./docs/releases/v2.1.0.md)
 - release notes 2.0.0: [docs/releases/v2.0.0.md](./docs/releases/v2.0.0.md)
 - release notes 0.7.0: [docs/releases/v0.7.0.md](./docs/releases/v0.7.0.md)
