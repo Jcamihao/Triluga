@@ -7,11 +7,12 @@ import { catchError, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { CepLookupService } from '../../core/services/cep-lookup.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent],
   templateUrl: './register-page.component.html',
   styleUrls: ['./register-page.component.scss'],
 })

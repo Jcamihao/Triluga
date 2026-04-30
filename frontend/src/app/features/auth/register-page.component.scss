@@ -244,36 +244,6 @@
     text-decoration: none;
   }
 
-  .signup-web__topbar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 68px;
-    padding: 0 26px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 12px 42px rgba(9, 29, 46, 0.06);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-
-  .signup-web__brand {
-    color: #006d37;
-    font-size: 24px;
-    font-style: italic;
-    font-weight: 900;
-    letter-spacing: -0.06em;
-    line-height: 1;
-  }
-
-  .signup-web__home-link {
-    color: #006d37;
-    font-size: 14px;
-    font-weight: 700;
-  }
-
   .signup-web__main {
     display: flex;
     align-items: center;
