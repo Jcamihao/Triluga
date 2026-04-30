@@ -13,6 +13,7 @@ import { FilterModalComponent } from '../../shared/components/filter-modal/filte
 import { VehicleCardItem, VehicleType } from '../../core/models/domain.models';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
+import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 
 type SearchQuery = {
   q: string;
@@ -27,12 +28,23 @@ type SearchQuery = {
   latitude: string;
   longitude: string;
   radiusKm: string;
+  sort: string;
+  transmission: string;
+  fuelType: string;
+  minYear: string;
+  maxYear: string;
 };
 
 @Component({
   selector: 'app-search-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FilterModalComponent, WebHeaderComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FilterModalComponent,
+    WebHeaderComponent,
+    VehicleCardComponent,
+  ],
   templateUrl: './search-page.component.html',
   styleUrls: ['./search-page.component.scss'],
 })
@@ -58,6 +70,10 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   protected hasNextPage = false;
   protected totalItems = 0;
   protected filtersOpen = false;
+  protected accordions: Record<string, boolean> = {
+    year: false,
+    fuel: false,
+  };
   protected query: SearchQuery = {
     q: '',
     city: '',
@@ -71,10 +87,19 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     latitude: '',
     longitude: '',
     radiusKm: '',
+    sort: 'relevance',
+    transmission: '',
+    fuelType: '',
+    minYear: '',
+    maxYear: '',
   };
 
-  private currentPage = 1;
+  protected currentPage = 1;
   private observer?: IntersectionObserver;
+
+  protected get totalPages() {
+    return Math.ceil(this.totalItems / 21);
+  }
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -91,6 +116,11 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
         latitude: params.get('latitude') || '',
         longitude: params.get('longitude') || '',
         radiusKm: params.get('radiusKm') || '',
+        sort: params.get('sort') || 'relevance',
+        transmission: params.get('transmission') || '',
+        fuelType: params.get('fuelType') || '',
+        minYear: params.get('minYear') || '',
+        maxYear: params.get('maxYear') || '',
       };
       this.currentPage = 1;
       this.vehicles = [];
@@ -127,7 +157,7 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  protected applyFilters(filters: Record<string, string>) {
+  protected applyFilters(filters: any) {
     this.filtersOpen = false;
     this.router.navigate(['/search'], {
       queryParams: {
@@ -198,22 +228,78 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  protected toggleVehicleTypeFilter(type: VehicleType) {
+    this.router.navigate(['/search'], {
+      queryParams: {
+        ...this.query,
+        vehicleType: this.query.vehicleType === type ? '' : type,
+      },
+    });
+  }
+
   protected goToPublish() {
     this.router.navigate(['/anunciar-carro']);
   }
 
-  private fetchVehicles() {
+  protected setWebPrice(changed: 'min' | 'max', value: string) {
+    const normalizedValue = String(
+      Math.max(0, Math.min(2000, Number(value) || 0)),
+    );
+    const currentMin = Number(this.query.minPrice || 0);
+    const currentMax = Number(this.query.maxPrice || 2000);
+
+    if (changed === 'min') {
+      const nextMin = Math.min(Number(normalizedValue), currentMax);
+      this.query.minPrice = nextMin > 0 ? String(nextMin) : '';
+      return;
+    }
+
+    const nextMax = Math.max(Number(normalizedValue), currentMin);
+    this.query.maxPrice = nextMax < 2000 ? String(nextMax) : '';
+  }
+
+  protected get webPriceTrackLeft() {
+    return (Number(this.query.minPrice || 0) / 2000) * 100;
+  }
+
+  protected get webPriceTrackWidth() {
+    const min = Number(this.query.minPrice || 0);
+    const max = Number(this.query.maxPrice || 2000);
+    return ((max - min) / 2000) * 100;
+  }
+
+  protected loadMore() {
+    if (this.loading || !this.hasNextPage) return;
+    this.currentPage += 1;
+    this.fetchVehicles(true);
+  }
+
+  protected goToPage(page: number) {
+    if (this.loading || page === this.currentPage) return;
+    this.currentPage = page;
+    this.vehicles = [];
+    this.fetchVehicles(false);
+  }
+
+  private fetchVehicles(append = true) {
     this.loading = true;
 
     this.vehiclesApiService
       .search({
         ...this.query,
         page: this.currentPage,
-        limit: 8,
+        limit: 21,
+        sort: this.query.sort,
+        transmission: this.query.transmission,
+        fuelType: this.query.fuelType,
+        minYear: this.query.minYear ? Number(this.query.minYear) : undefined,
+        maxYear: this.query.maxYear ? Number(this.query.maxYear) : undefined,
       })
       .subscribe({
         next: (response) => {
-          this.vehicles = [...this.vehicles, ...response.items];
+          this.vehicles = append
+            ? [...this.vehicles, ...response.items]
+            : response.items;
           this.hasNextPage = response.meta.hasNextPage;
           this.totalItems = response.meta.total;
           this.loading = false;
@@ -378,5 +464,25 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     return this.query.vehicleType === 'MOTORCYCLE'
       ? 'Tente mudar a cidade ou ampliar a faixa de preço para ver mais motos.'
       : 'Tente mudar a cidade, o tipo de veículo ou ampliar a faixa de preço.';
+  }
+  protected transmissionLabel(transmission: string) {
+    const labels: Record<string, string> = {
+      AUTOMATIC: 'Automático',
+      MANUAL: 'Manual',
+      CVT: 'CVT',
+    };
+    return labels[transmission] || transmission;
+  }
+
+  protected fuelTypeLabel(fuelType: string) {
+    const labels: Record<string, string> = {
+      FLEX: 'Flex',
+      GASOLINE: 'Gasolina',
+      ETHANOL: 'Etanol',
+      DIESEL: 'Diesel',
+      ELECTRIC: 'Elétrico',
+      HYBRID: 'Híbrido',
+    };
+    return labels[fuelType] || fuelType;
   }
 }

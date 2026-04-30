@@ -25,6 +25,7 @@ type CollectionCard = {
   count: string;
   icon: string;
   params: Record<string, string>;
+  fallbackImage: string;
 };
 
 type TrustCard = {
@@ -45,26 +46,22 @@ const FEATURED_CATEGORY_CARDS: CategoryCard[] = [
   {
     label: 'Luxo & Executivos',
     value: 'LUXURY',
-    image:
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop',
+    image: 'assets/categories/luxury_exec.png',
   },
   {
     label: 'Econômicos',
     value: 'ECONOMY',
-    image:
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0afa?w=400&h=300&fit=crop',
+    image: 'assets/categories/economy.png',
   },
   {
     label: 'Para Viagem',
     value: 'TRAVEL',
-    image:
-      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=300&fit=crop',
+    image: 'assets/categories/travel.png',
   },
   {
     label: 'Clássicos',
     value: 'CLASSIC',
-    image:
-      'https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?w=400&h=300&fit=crop',
+    image: 'assets/categories/classic.png',
   },
 ];
 
@@ -74,24 +71,28 @@ const COLLECTIONS: CollectionCard[] = [
     count: '420 veículos',
     icon: 'directions_car',
     params: { category: 'LUXURY' },
+    fallbackImage: 'assets/categories/luxury.png',
   },
   {
     label: 'Elétricos',
     count: '185 veículos',
     icon: 'electric_car',
     params: { fuelType: 'ELECTRIC' },
+    fallbackImage: 'assets/categories/electric.png',
   },
   {
     label: 'Motos Premium',
     count: '310 veículos',
     icon: 'two_wheeler',
     params: { vehicleType: 'MOTORCYCLE' },
+    fallbackImage: 'assets/categories/motorcycle.png',
   },
   {
     label: 'SUVs & Pickups',
     count: '890 veículos',
     icon: 'airport_shuttle',
     params: { category: 'SUV' },
+    fallbackImage: 'assets/categories/suv.png',
   },
 ];
 
@@ -143,7 +144,7 @@ export class HomePageComponent {
 
   protected readonly quickShortcuts = QUICK_SHORTCUTS;
   protected readonly featuredCategoryCards = FEATURED_CATEGORY_CARDS;
-  protected readonly collections = COLLECTIONS;
+  protected collections = [...COLLECTIONS];
   protected readonly trustCards = TRUST_CARDS;
   protected readonly heroImage =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuCgWEXo-PCnbATRalSZAC7Zj9P8GnKTtyRSE8rWW8yQotJ2qZeVm_fzauK3EygoN6IMFvAN8yf-AR-m3cnNlVPGp3LvCSm9ku71aX59NmmyHm9wp4OGXl7cS308DeNKHIj6Va5KV37-S-TBxL_5Nhg5qElOj7Iw8vce_julRHCAqjO_ZSar6vorrD06NnlwoWA3N4zsqUBPpv_28-zK4bBwYP7w8idQ3OzJZcHijUBZl5VggASi9SavL4Bxp7acvNbvCRSvCX1N9NMK';
@@ -162,6 +163,7 @@ export class HomePageComponent {
   constructor() {
     this.loadFeaturedVehicles();
     this.loadMoreCars();
+    this.loadCollectionStats();
   }
 
   protected goToSearch(params: Record<string, string | undefined>) {
@@ -189,11 +191,36 @@ export class HomePageComponent {
   }
 
   protected vehicleSubtitle(vehicle: VehicleCardItem) {
-    const descriptors = [vehicle.year, vehicle.transmission, vehicle.fuelType]
+    const descriptors = [
+      vehicle.year,
+      this.transmissionLabel(vehicle.transmission),
+      this.fuelTypeLabel(vehicle.fuelType),
+    ]
       .filter(Boolean)
       .join(' • ');
 
     return descriptors || `${vehicle.brand} ${vehicle.model}`;
+  }
+
+  protected transmissionLabel(transmission: string) {
+    const labels: Record<string, string> = {
+      AUTOMATIC: 'Automático',
+      MANUAL: 'Manual',
+      CVT: 'CVT',
+    };
+    return labels[transmission] || transmission;
+  }
+
+  protected fuelTypeLabel(fuelType: string) {
+    const labels: Record<string, string> = {
+      FLEX: 'Flex',
+      GASOLINE: 'Gasolina',
+      ETHANOL: 'Etanol',
+      DIESEL: 'Diesel',
+      ELECTRIC: 'Elétrico',
+      HYBRID: 'Híbrido',
+    };
+    return labels[fuelType] || fuelType;
   }
 
   protected toggleFavorite(event: Event, vehicle: VehicleCardItem) {
@@ -236,6 +263,17 @@ export class HomePageComponent {
       error: () => {
         this.featuredVehicles = [];
         this.featuredLoading = false;
+      },
+    });
+  }
+
+  private loadCollectionStats() {
+    this.vehiclesApiService.getStats().subscribe({
+      next: (stats) => {
+        this.collections[0].count = `${stats.luxury} veículos`;
+        this.collections[1].count = `${stats.electric} veículos`;
+        this.collections[2].count = `${stats.motorcycle} veículos`;
+        this.collections[3].count = `${stats.suvPickup} veículos`;
       },
     });
   }

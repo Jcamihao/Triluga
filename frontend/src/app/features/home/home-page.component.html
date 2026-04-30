@@ -311,6 +311,13 @@
           class="home-web__collection"
           (click)="goToSearch(collection.params)"
         >
+          <img
+            [src]="collection.fallbackImage"
+            alt=""
+            class="home-web__collection-bg"
+          />
+          <div class="home-web__collection-overlay"></div>
+
           <span class="home-web__collection-icon">
             <span class="material-symbols-outlined">{{ collection.icon }}</span>
           </span>
@@ -346,45 +353,10 @@
       </div>
 
       <div class="home-web__vehicle-grid" *ngIf="!featuredLoading">
-        <article
+        <app-vehicle-card
           *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
-          class="home-web__vehicle"
-          [routerLink]="['/vehicles', vehicle.id]"
-          tabindex="0"
-          role="link"
-        >
-          <div class="home-web__vehicle-image">
-            <img
-              [src]="vehicle.coverImage || vehicleFallback"
-              [alt]="vehicle.title"
-              loading="lazy"
-            />
-            <button
-              type="button"
-              aria-label="Salvar nos favoritos"
-              (click)="toggleFavorite($event, vehicle)"
-              [class.is-active]="favoritesService.isFavorite(vehicle.id)"
-              [disabled]="favoritesService.isPending(vehicle.id)"
-            >
-              <span class="material-symbols-outlined">favorite</span>
-            </button>
-          </div>
-
-          <div class="home-web__vehicle-body">
-            <div>
-              <h3>{{ vehicle.title }}</h3>
-              <p>{{ vehicleSubtitle(vehicle) }}</p>
-            </div>
-
-            <div class="home-web__vehicle-meta">
-              <span>
-                <span class="material-symbols-outlined">location_on</span>
-                {{ vehicle.city }}, {{ vehicle.state }}
-              </span>
-              <strong>R$ {{ vehicle.dailyRate | number: '1.0-0' }}</strong>
-            </div>
-          </div>
-        </article>
+          [vehicle]="vehicle"
+        ></app-vehicle-card>
       </div>
 
       <p

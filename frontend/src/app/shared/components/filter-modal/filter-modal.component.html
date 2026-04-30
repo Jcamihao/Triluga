@@ -339,7 +339,7 @@
         <div class="flex flex-wrap gap-3">
           <label class="relative flex items-center flex-1 min-w-[80px]">
             <input
-              [checked]="draft.fuel === 'FLEX'"
+              [checked]="draft.fuelType === 'FLEX'"
               (change)="setFuel('FLEX')"
               name="fuelSelector"
               class="peer sr-only"
@@ -353,7 +353,7 @@
           </label>
           <label class="relative flex items-center flex-1 min-w-[80px]">
             <input
-              [checked]="draft.fuel === 'DIESEL'"
+              [checked]="draft.fuelType === 'DIESEL'"
               (change)="setFuel('DIESEL')"
               name="fuelSelector"
               class="peer sr-only"
@@ -367,7 +367,7 @@
           </label>
           <label class="relative flex items-center flex-1 min-w-[80px]">
             <input
-              [checked]="draft.fuel === 'ELECTRIC'"
+              [checked]="draft.fuelType === 'ELECTRIC'"
               (change)="setFuel('ELECTRIC')"
               name="fuelSelector"
               class="peer sr-only"

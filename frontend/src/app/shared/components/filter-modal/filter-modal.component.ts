@@ -13,7 +13,7 @@ type FilterDraft = {
   category: string;
   motorcycleStyle: string;
   transmission: string;
-  fuel: string;
+  fuelType: string;
   minEngineCc: string;
   maxEngineCc: string;
   minPrice: string;
@@ -78,7 +78,7 @@ export class FilterModalComponent implements OnDestroy {
       category: '',
       motorcycleStyle: '',
       transmission: '',
-      fuel: '',
+      fuelType: '',
       minEngineCc: '',
       maxEngineCc: '',
       minPrice: '',
@@ -128,10 +128,10 @@ export class FilterModalComponent implements OnDestroy {
   }
 
   protected setFuel(fuel: string) {
-    if (this.draft.fuel === fuel) {
-      this.draft.fuel = '';
+    if (this.draft.fuelType === fuel) {
+      this.draft.fuelType = '';
     } else {
-      this.draft.fuel = fuel;
+      this.draft.fuelType = fuel;
     }
   }
 
@@ -165,7 +165,7 @@ export class FilterModalComponent implements OnDestroy {
       category: '',
       motorcycleStyle: '',
       transmission: '',
-      fuel: '',
+      fuelType: '',
       minEngineCc: '',
       maxEngineCc: '',
       minPrice: '50',

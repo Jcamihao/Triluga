@@ -24,13 +24,15 @@ export class VehicleCardComponent {
 
   protected categoryLabel(category: string) {
     const labels: Record<string, string> = {
-      ECONOMY: 'Econ.',
+      ECONOMY: 'Econômico',
       HATCH: 'Hatch',
       SEDAN: 'Sedan',
       SUV: 'SUV',
       PICKUP: 'Pickup',
       VAN: 'Van',
-      LUXURY: 'Luxo',
+      LUXURY: 'Premium',
+      TRAVEL: 'Viagem',
+      CLASSIC: 'Clássico',
     };
 
     return labels[category] || category;
@@ -44,12 +46,24 @@ export class VehicleCardComponent {
 
   protected transmissionLabel(transmission: string) {
     const labels: Record<string, string> = {
-      AUTOMATIC: 'Auto',
+      AUTOMATIC: 'Automático',
       MANUAL: 'Manual',
       CVT: 'CVT',
     };
 
     return labels[transmission] || transmission;
+  }
+
+  protected fuelTypeLabel(fuelType: string) {
+    const labels: Record<string, string> = {
+      FLEX: 'Flex',
+      GASOLINE: 'Gasolina',
+      ETHANOL: 'Etanol',
+      DIESEL: 'Diesel',
+      ELECTRIC: 'Elétrico',
+      HYBRID: 'Híbrido',
+    };
+    return labels[fuelType] || fuelType;
   }
 
   protected get ownerName() {
