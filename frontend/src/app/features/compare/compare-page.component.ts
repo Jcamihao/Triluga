@@ -4,19 +4,12 @@ import { RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../core/models/domain.models';
 import { CompareService } from '../../core/services/compare.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import { WebFooterComponent } from '../../shared/components/web-footer/web-footer.component';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-compare-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    CurrencyPipe,
-    WebHeaderComponent,
-    WebFooterComponent,
-  ],
+  imports: [CommonModule, RouterLink, CurrencyPipe, WebHeaderComponent],
   templateUrl: './compare-page.component.html',
   styleUrls: ['./compare-page.component.scss'],
 })
