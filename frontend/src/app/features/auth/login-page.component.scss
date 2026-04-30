@@ -136,13 +136,13 @@
   .login-web {
     position: relative;
     display: flex;
-    min-height: 100dvh;
+    min-height: calc(100dvh - 260px);
     align-items: center;
     justify-content: center;
     overflow: hidden;
     background: #f7f9ff;
     color: #091d2e;
-    padding: 6rem 2rem;
+    padding: 9rem 2rem 5rem;
     font-family: 'Inter', sans-serif;
   }
 
@@ -161,19 +161,6 @@
   .login-web a {
     font: inherit;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  .login-web__brand {
-    position: absolute;
-    top: 2rem;
-    left: 2.5rem;
-    z-index: 2;
-    color: #091d2e;
-    font-size: 1.7rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    text-decoration: none;
   }
 
   .login-web__ambient {
@@ -464,16 +451,12 @@
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .login-web {
-    padding: 6rem 1.5rem 3rem;
+    padding: 8rem 1.5rem 3rem;
   }
 
   .login-web__card {
     max-width: 540px;
     padding: 3rem 2.25rem;
-  }
-
-  .login-web__brand {
-    left: 1.5rem;
   }
 }
 

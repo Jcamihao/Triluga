@@ -183,10 +183,6 @@ export class AppComponent {
     return false;
   }
 
-  protected get showWebFooter() {
-    return !this.currentUrl().startsWith('/auth/login');
-  }
-
   readonly showBottomNav = () => {
     const url = this.currentUrl();
 
