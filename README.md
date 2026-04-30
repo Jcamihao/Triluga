@@ -1,10 +1,10 @@
-# Triluga 2.2.0
+# Triluga 2.3.8
 
 Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e experiência visual orientada ao marketplace para web e mobile.
 
 ## Destaques da versão
 
-- **Experiência web 2.2**: favoritos, comparação, perfil público e detalhe de veículo ganharam versões desktop mantendo o mobile isolado.
+- **Experiência web 2.3.8**: favoritos, comparação, perfil público, autenticação e detalhe de veículo ganharam versões desktop mantendo o mobile isolado.
 - **Classificado mais completo**: detalhe do veículo exibe descrição do anunciante, seguro, condição mecânica, status Detran, Google Maps e preview de imagens.
 - **Comparação funcional**: veículos selecionados podem ser avaliados lado a lado com preço semanal, especificações, localização e reputação do anunciante.
 - **Publicação mais segura**: anúncio exige no mínimo 3 fotos, título automático e ações de publicar, despublicar e excluir.
@@ -215,6 +215,7 @@ Guia alternativo para frontend no Vercel e backend no Railway em [docs/deploy-ve
 
 ## Releases
 
+- release notes 2.3.8: [docs/releases/v2.3.8.md](./docs/releases/v2.3.8.md)
 - release notes 2.2.0: [docs/releases/v2.2.0.md](./docs/releases/v2.2.0.md)
 - release notes 2.1.0: [docs/releases/v2.1.0.md](./docs/releases/v2.1.0.md)
 - release notes 2.0.0: [docs/releases/v2.0.0.md](./docs/releases/v2.0.0.md)
