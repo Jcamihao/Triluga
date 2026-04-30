@@ -629,20 +629,73 @@
                 [class.signup-web__strength-segment--active]="item.valid"
               ></span>
             </div>
-            <small>A senha deve ter pelo menos 8 caracteres.</small>
+            <div class="signup-web__password-panel" *ngIf="passwordTouched">
+              <p [class]="password ? passwordStrengthTextClass : ''">
+                {{ passwordStrengthLabel }}
+              </p>
+              <div class="signup-web__password-rules">
+                <div
+                  *ngFor="let item of passwordStrengthChecklist"
+                  [class.signup-web__password-rule--complete]="item.valid"
+                >
+                  <span class="material-symbols-outlined">
+                    {{ item.valid ? 'check_circle' : 'radio_button_unchecked' }}
+                  </span>
+                  <span>{{ item.label }}</span>
+                </div>
+              </div>
+            </div>
+            <small *ngIf="!passwordTouched">
+              A senha deve ter pelo menos 8 caracteres.
+            </small>
           </label>
 
           <label class="signup-web__field signup-web__field--full">
             <span>Confirmar Senha</span>
-            <input
-              name="webConfirmPassword"
-              [(ngModel)]="confirmPassword"
-              placeholder="••••••••"
-              [type]="showConfirmPassword ? 'text' : 'password'"
-              autocomplete="new-password"
-              [disabled]="loading"
-              required
-            />
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                confirmPasswordTouched && passwordsMatch
+              "
+              [class.signup-web__field-icon--invalid]="
+                confirmPasswordTouched && !passwordsMatch
+              "
+            >
+              <input
+                name="webConfirmPassword"
+                [(ngModel)]="confirmPassword"
+                placeholder="••••••••"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__confirm-status"
+                *ngIf="confirmPasswordTouched"
+              >
+                {{ passwordsMatch ? 'check_circle' : 'cancel' }}
+              </span>
+              <button
+                type="button"
+                aria-label="Alternar visibilidade da confirmação de senha"
+                (click)="showConfirmPassword = !showConfirmPassword"
+              >
+                <span class="material-symbols-outlined">
+                  {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+            <p
+              class="signup-web__confirm-message"
+              *ngIf="confirmPasswordTouched"
+              [class.signup-web__confirm-message--valid]="passwordsMatch"
+              [class.signup-web__confirm-message--invalid]="!passwordsMatch"
+            >
+              {{
+                passwordsMatch ? 'As senhas conferem' : 'As senhas não conferem'
+              }}
+            </p>
           </label>
 
           <label class="signup-web__terms signup-web__field--full">
