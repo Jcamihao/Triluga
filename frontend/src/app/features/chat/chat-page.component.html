@@ -10,7 +10,9 @@
           class="chat-web__sidebar w-[400px] xl:w-[430px] flex-shrink-0 bg-white border-r border-outline-variant/20 flex flex-col"
         >
           <div class="p-7">
-            <h1 class="text-[30px] font-black text-on-surface tracking-tight mb-8">
+            <h1
+              class="text-[30px] font-black text-on-surface tracking-tight mb-8"
+            >
               Mensagens
             </h1>
 
@@ -125,16 +127,24 @@
           </div>
         </aside>
 
-        <ng-container *ngIf="selectedConversation as conversation; else desktopSelectState">
-          <section class="chat-web__conversation flex-1 flex flex-col bg-surface relative">
+        <ng-container
+          *ngIf="selectedConversation as conversation; else desktopSelectState"
+        >
+          <section
+            class="chat-web__conversation flex-1 flex flex-col bg-surface relative"
+          >
             <header
               class="h-24 bg-white/70 backdrop-blur-lg flex items-center justify-between px-10 border-b border-outline-variant/10 z-10"
             >
               <div class="flex items-center gap-4 min-w-0">
-                <div class="w-14 h-14 rounded-xl bg-surface-container overflow-hidden flex-shrink-0">
+                <div
+                  class="w-14 h-14 rounded-xl bg-surface-container overflow-hidden flex-shrink-0"
+                >
                   <img
                     class="w-full h-full object-cover"
-                    [src]="conversation.vehicle.coverImage || vehicleFallbackImage"
+                    [src]="
+                      conversation.vehicle.coverImage || vehicleFallbackImage
+                    "
                     [alt]="conversation.vehicle.title"
                   />
                 </div>
@@ -177,8 +187,15 @@
                 Hoje
               </div>
 
-              <ng-container *ngIf="desktopConversationMessages.length; else desktopNoMessages">
-                <ng-container *ngFor="let message of desktopConversationMessages">
+              <ng-container
+                *ngIf="
+                  desktopConversationMessages.length;
+                  else desktopNoMessages
+                "
+              >
+                <ng-container
+                  *ngFor="let message of desktopConversationMessages"
+                >
                   <div
                     class="flex gap-4 max-w-[70%]"
                     *ngIf="message.sender.id !== currentUserId"
@@ -194,7 +211,9 @@
                     <div
                       class="bg-white p-4 rounded-2xl rounded-bl-none shadow-sm border border-outline-variant/10"
                     >
-                      <p class="text-base leading-relaxed text-on-surface whitespace-pre-wrap">
+                      <p
+                        class="text-base leading-relaxed text-on-surface whitespace-pre-wrap"
+                      >
                         {{ message.content }}
                       </p>
                       <span
@@ -212,13 +231,21 @@
                     <div
                       class="bg-primary p-4 rounded-2xl rounded-br-none shadow-lg shadow-primary/10"
                     >
-                      <p class="text-base leading-relaxed text-white whitespace-pre-wrap">
+                      <p
+                        class="text-base leading-relaxed text-white whitespace-pre-wrap"
+                      >
                         {{ message.content }}
                       </p>
-                      <span class="text-[10px] text-emerald-100 mt-2 flex items-center justify-end gap-1">
+                      <span
+                        class="text-[10px] text-emerald-100 mt-2 flex items-center justify-end gap-1"
+                      >
                         {{ message.createdAt | date: 'HH:mm' }}
                         <span class="material-symbols-outlined text-[14px]">
-                          {{ isMessageReadByRecipient(message) ? 'done_all' : 'done' }}
+                          {{
+                            isMessageReadByRecipient(message)
+                              ? 'done_all'
+                              : 'done'
+                          }}
                         </span>
                         {{ messageReceiptLabel(message) }}
                       </span>
@@ -244,7 +271,9 @@
               </ng-template>
             </div>
 
-            <footer class="p-6 bg-white/80 backdrop-blur-xl border-t border-outline-variant/10">
+            <footer
+              class="p-6 bg-white/80 backdrop-blur-xl border-t border-outline-variant/10"
+            >
               <input
                 #photoInput
                 class="hidden"
@@ -288,11 +317,16 @@
                   (click)="clearPendingAttachment()"
                   aria-label="Remover foto"
                 >
-                  <span class="material-symbols-outlined text-[20px]">close</span>
+                  <span class="material-symbols-outlined text-[20px]"
+                    >close</span
+                  >
                 </button>
               </div>
 
-              <form class="flex items-end gap-4 max-w-5xl mx-auto" (ngSubmit)="sendMessage()">
+              <form
+                class="flex items-end gap-4 max-w-5xl mx-auto"
+                (ngSubmit)="sendMessage()"
+              >
                 <div class="relative flex-shrink-0">
                   <button
                     class="p-3 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors flex-shrink-0"
@@ -379,7 +413,9 @@
               <div class="h-40 overflow-hidden bg-surface-container">
                 <img
                   class="w-full h-full object-cover"
-                  [src]="conversation.vehicle.coverImage || vehicleFallbackImage"
+                  [src]="
+                    conversation.vehicle.coverImage || vehicleFallbackImage
+                  "
                   [alt]="conversation.vehicle.title"
                 />
               </div>
@@ -400,24 +436,26 @@
                       {{ conversation.vehicle.dailyRate | number: '1.0-0' }}
                     </span>
                   </div>
-                  <div class="flex justify-between text-sm">
+                  <!-- <div class="flex justify-between text-sm">
                     <span class="text-on-surface-variant">Taxa Triluga</span>
                     <span class="font-bold text-primary">Grátis</span>
-                  </div>
-                  <div class="border-t border-outline-variant/10 pt-3 flex justify-between">
-                    <span class="font-bold text-on-surface">Total (3 dias)</span>
+                  </div> -->
+                  <div
+                    class="border-t border-outline-variant/10 pt-3 flex justify-between"
+                  >
+                    <!-- <span class="font-bold text-on-surface">Total (3 dias)</span> -->
                     <span class="font-black text-primary">
                       R$
-                      {{
-                        conversation.vehicle.dailyRate * 3 | number: '1.0-0'
-                      }}
+                      {{ conversation.vehicle.dailyRate * 3 | number: '1.0-0' }}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-outline-variant/5 mb-7">
+            <div
+              class="bg-white p-5 rounded-2xl shadow-sm border border-outline-variant/5 mb-7"
+            >
               <h4
                 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5"
               >
@@ -469,7 +507,9 @@
           <section
             class="flex-1 flex flex-col items-center justify-center text-center px-8"
           >
-            <span class="material-symbols-outlined text-5xl text-primary/30 mb-4">
+            <span
+              class="material-symbols-outlined text-5xl text-primary/30 mb-4"
+            >
               chat_bubble
             </span>
             <h2 class="text-2xl font-black text-on-surface mb-2">
@@ -484,474 +524,483 @@
     </section>
 
     <div class="md:hidden contents">
-    <ng-container *ngIf="!isConversationRoute; else conversationView">
-      <header
-        class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
-      >
-        <div class="flex items-center gap-3">
-          <span
-            class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
-            >menu</span
-          >
-          <h1
-            class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0"
-          >
-            Triluga
-          </h1>
-        </div>
+      <ng-container *ngIf="!isConversationRoute; else conversationView">
+        <header
+          class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+              >menu</span
+            >
+            <h1
+              class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0"
+            >
+              Triluga
+            </h1>
+          </div>
 
-        <div class="flex items-center gap-4">
-          <span
-            class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
-            >notifications</span
-          >
-        </div>
-      </header>
+          <div class="flex items-center gap-4">
+            <span
+              class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+              >notifications</span
+            >
+          </div>
+        </header>
 
-      <section class="pt-4 pb-32 px-6 max-w-2xl mx-auto min-h-screen w-full">
-        <div class="mb-8 relative group">
-          <span
-            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60"
-          >
-            search
-          </span>
-          <input
-            class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
-            placeholder="Pesquisar mensagens ou veículos..."
-            type="text"
-            name="conversationSearchTerm"
-            [(ngModel)]="conversationSearchTerm"
-          />
-        </div>
+        <section class="pt-4 pb-32 px-6 max-w-2xl mx-auto min-h-screen w-full">
+          <div class="mb-8 relative group">
+            <span
+              class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60"
+            >
+              search
+            </span>
+            <input
+              class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
+              placeholder="Pesquisar mensagens ou veículos..."
+              type="text"
+              name="conversationSearchTerm"
+              [(ngModel)]="conversationSearchTerm"
+            />
+          </div>
 
-        <section class="space-y-4">
+          <section class="space-y-4">
+            <div
+              class="flex flex-col items-center justify-center py-20 text-center opacity-40"
+              *ngIf="!filteredConversations.length"
+            >
+              <span
+                class="material-symbols-outlined text-4xl mb-4"
+                [class.animate-spin]="isLoadingConversations"
+              >
+                {{ isLoadingConversations ? 'refresh' : 'question_answer' }}
+              </span>
+              <p class="text-[11px] font-bold uppercase tracking-widest">
+                {{
+                  isLoadingConversations
+                    ? 'Carregando...'
+                    : 'Caixa de entrada vazia'
+                }}
+              </p>
+              <p
+                class="text-[12px] font-medium lowercase tracking-wide mt-2"
+                *ngIf="!isLoadingConversations"
+              >
+                Nenhuma conversa encontrada.
+              </p>
+            </div>
+
+            <article
+              *ngFor="
+                let conversation of filteredConversations;
+                trackBy: trackByConversationId
+              "
+              class="p-4 rounded-xl flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden"
+              [ngClass]="conversationItemClasses(conversation)"
+              (click)="openConversation(conversation.id)"
+            >
+              <div
+                class="absolute left-0 top-0 bottom-0 w-1 bg-primary transform transition-transform duration-300"
+                [ngClass]="
+                  conversation.unreadCount
+                    ? 'scale-y-100'
+                    : 'scale-y-0 group-hover:scale-y-100'
+                "
+              ></div>
+
+              <div class="relative flex-shrink-0">
+                <div class="w-14 h-14 rounded-full overflow-hidden">
+                  <img
+                    class="w-full h-full object-cover"
+                    [alt]="conversationParticipantName(conversation)"
+                    [src]="
+                      conversation.otherParticipant.avatarUrl ||
+                      fallbackAvatarImage
+                    "
+                  />
+                </div>
+                <div
+                  class="absolute bottom-0 right-0 w-4 h-4 bg-primary-container border-2 rounded-full"
+                  [ngClass]="
+                    conversation.unreadCount
+                      ? 'border-surface-container-lowest'
+                      : 'border-surface'
+                  "
+                  *ngIf="conversation.otherParticipant.isOnline"
+                ></div>
+              </div>
+
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-baseline">
+                  <h3 class="text-on-surface font-bold truncate">
+                    {{ conversationParticipantName(conversation) }}
+                  </h3>
+                  <span
+                    class="text-[11px] font-medium uppercase tracking-widest"
+                    [ngClass]="conversationTimeClasses(conversation)"
+                  >
+                    {{ conversationTimeLabel(conversation) }}
+                  </span>
+                </div>
+                <p
+                  class="text-[12px] font-semibold text-secondary mb-1 truncate"
+                >
+                  {{ conversation.vehicle.title }}
+                </p>
+                <p
+                  class="text-sm truncate"
+                  [ngClass]="conversationPreviewClasses(conversation)"
+                >
+                  {{
+                    conversation.lastMessage?.content ||
+                      'Conversa iniciada. Envie sua primeira mensagem.'
+                  }}
+                </p>
+              </div>
+            </article>
+          </section>
+
           <div
-            class="flex flex-col items-center justify-center py-20 text-center opacity-40"
-            *ngIf="!filteredConversations.length"
+            class="mt-12 text-center opacity-40"
+            *ngIf="conversations.length"
+          >
+            <span class="material-symbols-outlined text-4xl mb-2">lock</span>
+            <p class="text-xs font-medium uppercase tracking-widest">
+              End-to-end encrypted
+            </p>
+          </div>
+        </section>
+      </ng-container>
+
+      <ng-template #conversationView>
+        <ng-container *ngIf="selectedConversation; else conversationFallback">
+          <!-- TopAppBar -->
+          <header
+            class="flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50 bg-[#f7f9ff]/80 backdrop-blur-lg dark:bg-[#091d2e]/80 shadow-[0_8px_32px_0_rgba(9,29,46,0.06)]"
+          >
+            <div class="flex items-center gap-4">
+              <button
+                class="text-on-background active:scale-95 duration-200"
+                routerLink="/chat"
+                type="button"
+              >
+                <span class="material-symbols-outlined">arrow_back</span>
+              </button>
+              <div
+                class="flex flex-col"
+                [routerLink]="[
+                  '/users',
+                  selectedConversation.otherParticipant.id,
+                ]"
+              >
+                <span
+                  class="font-['Inter'] font-bold tracking-tight text-[#091d2e] dark:text-[#f7f9ff] truncate"
+                >
+                  {{
+                    selectedConversation.otherParticipant.fullName ||
+                      selectedConversation.otherParticipant.email
+                  }}
+                </span>
+                <span
+                  class="text-xs text-primary flex items-center gap-1"
+                  [ngClass]="
+                    selectedConversation.otherParticipant.isOnline
+                      ? 'text-primary'
+                      : 'text-on-surface-variant/50'
+                  "
+                >
+                  <span
+                    class="w-1.5 h-1.5 rounded-full"
+                    [ngClass]="
+                      selectedConversation.otherParticipant.isOnline
+                        ? 'bg-primary-container'
+                        : 'bg-on-surface-variant/30'
+                    "
+                  ></span>
+                  {{
+                    selectedConversation.otherParticipant.isOnline
+                      ? 'Online'
+                      : 'Offline'
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-surface-container overflow-hidden cursor-pointer flex-shrink-0"
+                [routerLink]="[
+                  '/users',
+                  selectedConversation.otherParticipant.id,
+                ]"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  [src]="
+                    selectedConversation.otherParticipant.avatarUrl ||
+                    fallbackAvatarImage
+                  "
+                />
+              </div>
+            </div>
+          </header>
+
+          <main
+            class="flex-1 pt-20 pb-24 px-4 flex flex-col gap-6"
+            #messagesContainer
+          >
+            <!-- Context Card (Sticky-style) -->
+            <div class="sticky top-20 z-40">
+              <div
+                class="bg-surface-container-lowest rounded-xl p-3 flex items-center gap-4 shadow-[0_4px_20px_rgba(9,29,46,0.04)] border border-outline-variant/10"
+              >
+                <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    class="w-full h-full object-cover"
+                    [src]="
+                      selectedConversation.vehicle.coverImage ||
+                      vehicleFallbackImage
+                    "
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-on-background font-bold truncate text-sm">
+                    {{ selectedConversation.vehicle.title }}
+                  </h3>
+                  <p class="text-primary font-bold text-base">
+                    R$
+                    {{
+                      selectedConversation.vehicle.dailyRate | number: '1.0-0'
+                    }}
+                  </p>
+                </div>
+                <button
+                  class="bg-surface-container-low text-on-background px-3 py-2 rounded-full text-xs font-bold hover:bg-surface-container-high transition-colors"
+                  type="button"
+                  [routerLink]="['/vehicles', selectedConversation.vehicle.id]"
+                >
+                  Ver detalhes
+                </button>
+              </div>
+            </div>
+
+            <!-- Chat Timeline -->
+            <div class="flex flex-col gap-6">
+              <!-- Date Separator -->
+              <div class="flex justify-center">
+                <span
+                  class="text-[10px] uppercase tracking-[0.2em] font-bold text-on-background/40 bg-surface-container-low px-3 py-1 rounded-full"
+                >
+                  Hoje
+                </span>
+              </div>
+
+              <ng-container *ngFor="let message of messages">
+                <!-- Receiver Message -->
+                <div
+                  class="flex flex-col items-start max-w-[85%] group"
+                  *ngIf="message.sender.id !== currentUserId"
+                >
+                  <div
+                    class="bg-surface-container text-on-background px-4 py-3 rounded-2xl rounded-tl-none shadow-sm"
+                  >
+                    <p class="text-base leading-relaxed whitespace-pre-wrap">
+                      {{ message.content }}
+                    </p>
+                  </div>
+                  <span
+                    class="text-[10px] mt-1.5 ml-1 text-on-background/40 font-medium"
+                  >
+                    {{ message.createdAt | date: 'HH:mm' }}
+                  </span>
+                </div>
+
+                <!-- Sender Message -->
+                <div
+                  class="flex flex-col items-end self-end max-w-[85%] group"
+                  *ngIf="message.sender.id === currentUserId"
+                >
+                  <div
+                    class="bg-gradient-to-br from-primary to-primary-container text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md shadow-primary/10"
+                  >
+                    <p class="text-base leading-relaxed whitespace-pre-wrap">
+                      {{ message.content }}
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-1 mt-1.5 mr-1">
+                    <span class="text-[10px] text-on-background/40 font-medium">
+                      {{ message.createdAt | date: 'HH:mm' }}
+                    </span>
+                    <span
+                      class="material-symbols-outlined text-[14px] text-primary"
+                      style="font-variation-settings: 'FILL' 1"
+                    >
+                      {{
+                        isMessageReadByRecipient(message) ? 'done_all' : 'done'
+                      }}
+                    </span>
+                    <span class="text-[10px] text-on-background/40 font-medium">
+                      {{ messageReceiptLabel(message) }}
+                    </span>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </main>
+
+          <!-- Fixed Input Area -->
+          <footer
+            class="fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-3 glass-panel bg-surface/90"
+          >
+            <input
+              #photoInput
+              class="hidden"
+              type="file"
+              accept="image/*"
+              (change)="handleAttachmentSelected($event, 'library')"
+            />
+            <input
+              #cameraInput
+              class="hidden"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              (change)="handleAttachmentSelected($event, 'camera')"
+            />
+
+            <div
+              class="max-w-screen-md mx-auto mb-3 bg-surface-container-lowest border border-outline-variant/10 rounded-2xl p-2 flex items-center gap-3 shadow-sm"
+              *ngIf="pendingAttachment"
+            >
+              <img
+                class="w-12 h-12 rounded-xl object-cover"
+                [src]="pendingAttachment.previewUrl"
+                [alt]="pendingAttachment.file.name"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-on-background">
+                  {{
+                    pendingAttachment.source === 'camera'
+                      ? 'Foto da câmera'
+                      : 'Foto selecionada'
+                  }}
+                </p>
+                <p class="text-[11px] text-on-background/60 truncate">
+                  {{ pendingAttachment.file.name }}
+                </p>
+              </div>
+              <button
+                class="w-9 h-9 rounded-full flex items-center justify-center text-on-background/60 hover:text-primary bg-surface-container-low"
+                type="button"
+                (click)="clearPendingAttachment()"
+                aria-label="Remover foto"
+              >
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form
+              class="max-w-screen-md mx-auto flex items-center gap-3"
+              (ngSubmit)="sendMessage()"
+            >
+              <div class="relative flex-shrink-0">
+                <button
+                  class="w-12 h-12 flex items-center justify-center text-on-background/60 hover:text-primary transition-colors bg-surface-container-low rounded-full"
+                  type="button"
+                  (click)="toggleAttachmentMenu()"
+                  [attr.aria-expanded]="attachmentMenuOpen"
+                  aria-label="Adicionar anexo"
+                >
+                  <span class="material-symbols-outlined">add</span>
+                </button>
+
+                <div
+                  class="attachment-menu absolute bottom-14 left-0 w-56 rounded-2xl bg-surface-container-lowest border border-outline-variant/10 shadow-xl shadow-[#091d2e]/10 p-2 z-50"
+                  *ngIf="attachmentMenuOpen"
+                >
+                  <button
+                    class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-on-background hover:bg-surface-container-low transition-colors"
+                    type="button"
+                    (click)="openPhotoPicker()"
+                  >
+                    <span class="material-symbols-outlined text-primary"
+                      >photo_library</span
+                    >
+                    <span class="text-sm font-bold">Enviar foto</span>
+                  </button>
+                  <button
+                    class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-on-background hover:bg-surface-container-low transition-colors"
+                    type="button"
+                    (click)="openCameraPicker()"
+                  >
+                    <span class="material-symbols-outlined text-primary"
+                      >photo_camera</span
+                    >
+                    <span class="text-sm font-bold">Tirar foto</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex-1 relative">
+                <input
+                  name="draftMessage"
+                  [(ngModel)]="draftMessage"
+                  class="w-full bg-surface-container border-none rounded-full py-3.5 px-6 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-background/30 text-on-background"
+                  placeholder="Escreva sua mensagem..."
+                  type="text"
+                  [disabled]="isSending || isLoadingMessages"
+                />
+                <button
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-on-background/40 hover:text-primary"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined">mood</span>
+                </button>
+              </div>
+              <button
+                type="submit"
+                class="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-lg shadow-primary/20 active:scale-90 transition-transform disabled:opacity-50 disabled:grayscale"
+                [disabled]="!canSendMessage"
+              >
+                <span
+                  class="material-symbols-outlined"
+                  style="font-variation-settings: 'FILL' 1"
+                >
+                  {{ isSending ? 'hourglass_top' : 'send' }}
+                </span>
+              </button>
+            </form>
+          </footer>
+        </ng-container>
+
+        <ng-template #conversationFallback>
+          <section
+            class="flex flex-col items-center justify-center w-full flex-1 min-h-[70vh] opacity-40"
           >
             <span
               class="material-symbols-outlined text-4xl mb-4"
               [class.animate-spin]="isLoadingConversations"
             >
-              {{ isLoadingConversations ? 'refresh' : 'question_answer' }}
+              {{ isLoadingConversations ? 'refresh' : 'chat_bubble_outline' }}
             </span>
-            <p class="text-[11px] font-bold uppercase tracking-widest">
+            <p class="text-[11px] uppercase tracking-widest font-bold">
               {{
                 isLoadingConversations
-                  ? 'Carregando...'
-                  : 'Caixa de entrada vazia'
+                  ? 'Carregando Chat...'
+                  : 'Conversa não encontrada'
               }}
             </p>
-            <p
-              class="text-[12px] font-medium lowercase tracking-wide mt-2"
-              *ngIf="!isLoadingConversations"
-            >
-              Nenhuma conversa encontrada.
-            </p>
-          </div>
-
-          <article
-            *ngFor="
-              let conversation of filteredConversations;
-              trackBy: trackByConversationId
-            "
-            class="p-4 rounded-xl flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden"
-            [ngClass]="conversationItemClasses(conversation)"
-            (click)="openConversation(conversation.id)"
-          >
-            <div
-              class="absolute left-0 top-0 bottom-0 w-1 bg-primary transform transition-transform duration-300"
-              [ngClass]="
-                conversation.unreadCount
-                  ? 'scale-y-100'
-                  : 'scale-y-0 group-hover:scale-y-100'
-              "
-            ></div>
-
-            <div class="relative flex-shrink-0">
-              <div class="w-14 h-14 rounded-full overflow-hidden">
-                <img
-                  class="w-full h-full object-cover"
-                  [alt]="conversationParticipantName(conversation)"
-                  [src]="
-                    conversation.otherParticipant.avatarUrl ||
-                    fallbackAvatarImage
-                  "
-                />
-              </div>
-              <div
-                class="absolute bottom-0 right-0 w-4 h-4 bg-primary-container border-2 rounded-full"
-                [ngClass]="
-                  conversation.unreadCount
-                    ? 'border-surface-container-lowest'
-                    : 'border-surface'
-                "
-                *ngIf="conversation.otherParticipant.isOnline"
-              ></div>
-            </div>
-
-            <div class="flex-grow min-w-0">
-              <div class="flex justify-between items-baseline">
-                <h3 class="text-on-surface font-bold truncate">
-                  {{ conversationParticipantName(conversation) }}
-                </h3>
-                <span
-                  class="text-[11px] font-medium uppercase tracking-widest"
-                  [ngClass]="conversationTimeClasses(conversation)"
-                >
-                  {{ conversationTimeLabel(conversation) }}
-                </span>
-              </div>
-              <p class="text-[12px] font-semibold text-secondary mb-1 truncate">
-                {{ conversation.vehicle.title }}
-              </p>
-              <p
-                class="text-sm truncate"
-                [ngClass]="conversationPreviewClasses(conversation)"
-              >
-                {{
-                  conversation.lastMessage?.content ||
-                    'Conversa iniciada. Envie sua primeira mensagem.'
-                }}
-              </p>
-            </div>
-          </article>
-        </section>
-
-        <div class="mt-12 text-center opacity-40" *ngIf="conversations.length">
-          <span class="material-symbols-outlined text-4xl mb-2">lock</span>
-          <p class="text-xs font-medium uppercase tracking-widest">
-            End-to-end encrypted
-          </p>
-        </div>
-      </section>
-    </ng-container>
-
-    <ng-template #conversationView>
-      <ng-container *ngIf="selectedConversation; else conversationFallback">
-        <!-- TopAppBar -->
-        <header
-          class="flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50 bg-[#f7f9ff]/80 backdrop-blur-lg dark:bg-[#091d2e]/80 shadow-[0_8px_32px_0_rgba(9,29,46,0.06)]"
-        >
-          <div class="flex items-center gap-4">
             <button
-              class="text-on-background active:scale-95 duration-200"
+              class="mt-8 bg-surface-container-high text-on-background px-6 py-3 rounded-full font-bold text-sm tracking-wide active:scale-95 transition-transform"
+              *ngIf="!isLoadingConversations"
               routerLink="/chat"
               type="button"
             >
-              <span class="material-symbols-outlined">arrow_back</span>
+              Sair
             </button>
-            <div
-              class="flex flex-col"
-              [routerLink]="[
-                '/users',
-                selectedConversation.otherParticipant.id,
-              ]"
-            >
-              <span
-                class="font-['Inter'] font-bold tracking-tight text-[#091d2e] dark:text-[#f7f9ff] truncate"
-              >
-                {{
-                  selectedConversation.otherParticipant.fullName ||
-                    selectedConversation.otherParticipant.email
-                }}
-              </span>
-              <span
-                class="text-xs text-primary flex items-center gap-1"
-                [ngClass]="
-                  selectedConversation.otherParticipant.isOnline
-                    ? 'text-primary'
-                    : 'text-on-surface-variant/50'
-                "
-              >
-                <span
-                  class="w-1.5 h-1.5 rounded-full"
-                  [ngClass]="
-                    selectedConversation.otherParticipant.isOnline
-                      ? 'bg-primary-container'
-                      : 'bg-on-surface-variant/30'
-                  "
-                ></span>
-                {{
-                  selectedConversation.otherParticipant.isOnline
-                    ? 'Online'
-                    : 'Offline'
-                }}
-              </span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-full bg-surface-container overflow-hidden cursor-pointer flex-shrink-0"
-              [routerLink]="[
-                '/users',
-                selectedConversation.otherParticipant.id,
-              ]"
-            >
-              <img
-                class="w-full h-full object-cover"
-                [src]="
-                  selectedConversation.otherParticipant.avatarUrl ||
-                  fallbackAvatarImage
-                "
-              />
-            </div>
-          </div>
-        </header>
-
-        <main
-          class="flex-1 pt-20 pb-24 px-4 flex flex-col gap-6"
-          #messagesContainer
-        >
-          <!-- Context Card (Sticky-style) -->
-          <div class="sticky top-20 z-40">
-            <div
-              class="bg-surface-container-lowest rounded-xl p-3 flex items-center gap-4 shadow-[0_4px_20px_rgba(9,29,46,0.04)] border border-outline-variant/10"
-            >
-              <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  class="w-full h-full object-cover"
-                  [src]="
-                    selectedConversation.vehicle.coverImage ||
-                    vehicleFallbackImage
-                  "
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-on-background font-bold truncate text-sm">
-                  {{ selectedConversation.vehicle.title }}
-                </h3>
-                <p class="text-primary font-bold text-base">
-                  R$
-                  {{ selectedConversation.vehicle.dailyRate | number: '1.0-0' }}
-                </p>
-              </div>
-              <button
-                class="bg-surface-container-low text-on-background px-3 py-2 rounded-full text-xs font-bold hover:bg-surface-container-high transition-colors"
-                type="button"
-                [routerLink]="['/vehicles', selectedConversation.vehicle.id]"
-              >
-                Ver detalhes
-              </button>
-            </div>
-          </div>
-
-          <!-- Chat Timeline -->
-          <div class="flex flex-col gap-6">
-            <!-- Date Separator -->
-            <div class="flex justify-center">
-              <span
-                class="text-[10px] uppercase tracking-[0.2em] font-bold text-on-background/40 bg-surface-container-low px-3 py-1 rounded-full"
-              >
-                Hoje
-              </span>
-            </div>
-
-            <ng-container *ngFor="let message of messages">
-              <!-- Receiver Message -->
-              <div
-                class="flex flex-col items-start max-w-[85%] group"
-                *ngIf="message.sender.id !== currentUserId"
-              >
-                <div
-                  class="bg-surface-container text-on-background px-4 py-3 rounded-2xl rounded-tl-none shadow-sm"
-                >
-                    <p class="text-base leading-relaxed whitespace-pre-wrap">
-                    {{ message.content }}
-                  </p>
-                </div>
-                <span
-                  class="text-[10px] mt-1.5 ml-1 text-on-background/40 font-medium"
-                >
-                  {{ message.createdAt | date: 'HH:mm' }}
-                </span>
-              </div>
-
-              <!-- Sender Message -->
-              <div
-                class="flex flex-col items-end self-end max-w-[85%] group"
-                *ngIf="message.sender.id === currentUserId"
-              >
-                <div
-                  class="bg-gradient-to-br from-primary to-primary-container text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md shadow-primary/10"
-                >
-                    <p class="text-base leading-relaxed whitespace-pre-wrap">
-                    {{ message.content }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-1 mt-1.5 mr-1">
-                  <span class="text-[10px] text-on-background/40 font-medium">
-                    {{ message.createdAt | date: 'HH:mm' }}
-                  </span>
-                  <span
-                    class="material-symbols-outlined text-[14px] text-primary"
-                    style="font-variation-settings: 'FILL' 1"
-                  >
-                    {{ isMessageReadByRecipient(message) ? 'done_all' : 'done' }}
-                  </span>
-                  <span class="text-[10px] text-on-background/40 font-medium">
-                    {{ messageReceiptLabel(message) }}
-                  </span>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </main>
-
-        <!-- Fixed Input Area -->
-        <footer
-          class="fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-3 glass-panel bg-surface/90"
-        >
-          <input
-            #photoInput
-            class="hidden"
-            type="file"
-            accept="image/*"
-            (change)="handleAttachmentSelected($event, 'library')"
-          />
-          <input
-            #cameraInput
-            class="hidden"
-            type="file"
-            accept="image/*"
-            capture="environment"
-            (change)="handleAttachmentSelected($event, 'camera')"
-          />
-
-          <div
-            class="max-w-screen-md mx-auto mb-3 bg-surface-container-lowest border border-outline-variant/10 rounded-2xl p-2 flex items-center gap-3 shadow-sm"
-            *ngIf="pendingAttachment"
-          >
-            <img
-              class="w-12 h-12 rounded-xl object-cover"
-              [src]="pendingAttachment.previewUrl"
-              [alt]="pendingAttachment.file.name"
-            />
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-on-background">
-                {{
-                  pendingAttachment.source === 'camera'
-                    ? 'Foto da câmera'
-                    : 'Foto selecionada'
-                }}
-              </p>
-              <p class="text-[11px] text-on-background/60 truncate">
-                {{ pendingAttachment.file.name }}
-              </p>
-            </div>
-            <button
-              class="w-9 h-9 rounded-full flex items-center justify-center text-on-background/60 hover:text-primary bg-surface-container-low"
-              type="button"
-              (click)="clearPendingAttachment()"
-              aria-label="Remover foto"
-            >
-              <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
-
-          <form
-            class="max-w-screen-md mx-auto flex items-center gap-3"
-            (ngSubmit)="sendMessage()"
-          >
-            <div class="relative flex-shrink-0">
-              <button
-                class="w-12 h-12 flex items-center justify-center text-on-background/60 hover:text-primary transition-colors bg-surface-container-low rounded-full"
-                type="button"
-                (click)="toggleAttachmentMenu()"
-                [attr.aria-expanded]="attachmentMenuOpen"
-                aria-label="Adicionar anexo"
-              >
-                <span class="material-symbols-outlined">add</span>
-              </button>
-
-              <div
-                class="attachment-menu absolute bottom-14 left-0 w-56 rounded-2xl bg-surface-container-lowest border border-outline-variant/10 shadow-xl shadow-[#091d2e]/10 p-2 z-50"
-                *ngIf="attachmentMenuOpen"
-              >
-                <button
-                  class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-on-background hover:bg-surface-container-low transition-colors"
-                  type="button"
-                  (click)="openPhotoPicker()"
-                >
-                  <span class="material-symbols-outlined text-primary"
-                    >photo_library</span
-                  >
-                  <span class="text-sm font-bold">Enviar foto</span>
-                </button>
-                <button
-                  class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-on-background hover:bg-surface-container-low transition-colors"
-                  type="button"
-                  (click)="openCameraPicker()"
-                >
-                  <span class="material-symbols-outlined text-primary"
-                    >photo_camera</span
-                  >
-                  <span class="text-sm font-bold">Tirar foto</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="flex-1 relative">
-              <input
-                name="draftMessage"
-                [(ngModel)]="draftMessage"
-                class="w-full bg-surface-container border-none rounded-full py-3.5 px-6 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-background/30 text-on-background"
-                placeholder="Escreva sua mensagem..."
-                type="text"
-                [disabled]="isSending || isLoadingMessages"
-              />
-              <button
-                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-on-background/40 hover:text-primary"
-                type="button"
-              >
-                <span class="material-symbols-outlined">mood</span>
-              </button>
-            </div>
-            <button
-              type="submit"
-              class="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-lg shadow-primary/20 active:scale-90 transition-transform disabled:opacity-50 disabled:grayscale"
-              [disabled]="!canSendMessage"
-            >
-              <span
-                class="material-symbols-outlined"
-                style="font-variation-settings: 'FILL' 1"
-              >
-                {{ isSending ? 'hourglass_top' : 'send' }}
-              </span>
-            </button>
-          </form>
-        </footer>
-      </ng-container>
-
-      <ng-template #conversationFallback>
-        <section
-          class="flex flex-col items-center justify-center w-full flex-1 min-h-[70vh] opacity-40"
-        >
-          <span
-            class="material-symbols-outlined text-4xl mb-4"
-            [class.animate-spin]="isLoadingConversations"
-          >
-            {{ isLoadingConversations ? 'refresh' : 'chat_bubble_outline' }}
-          </span>
-          <p class="text-[11px] uppercase tracking-widest font-bold">
-            {{
-              isLoadingConversations
-                ? 'Carregando Chat...'
-                : 'Conversa não encontrada'
-            }}
-          </p>
-          <button
-            class="mt-8 bg-surface-container-high text-on-background px-6 py-3 rounded-full font-bold text-sm tracking-wide active:scale-95 transition-transform"
-            *ngIf="!isLoadingConversations"
-            routerLink="/chat"
-            type="button"
-          >
-            Sair
-          </button>
-        </section>
+          </section>
+        </ng-template>
       </ng-template>
-    </ng-template>
     </div>
   </ng-container>
 
