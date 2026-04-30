@@ -25,7 +25,7 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: 32px;
-    margin-bottom: 56px;
+    margin-bottom: 48px;
   }
 
   .favorites-web__hero h1 {
@@ -41,6 +41,49 @@
     color: #25322a;
     font-size: 22px;
     line-height: 1.35;
+  }
+
+  .favorites-web__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  .favorites-web__list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .favorites-web__list-head h2,
+  .favorites-web__compare-panel h2 {
+    margin: 0;
+    color: #091d2e;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .favorites-web__list-head span,
+  .favorites-web__compare-panel header span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    border-radius: 999px;
+    background: #d9eaff;
+    color: #3d4a3e;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .favorites-web__cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
   }
 
   .favorites-web__actions {
@@ -115,7 +158,7 @@
 
   .favorite-card {
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 12px;
     background: #fff;
     transition: all 220ms ease;
   }
@@ -126,8 +169,9 @@
 
   .favorite-card__media {
     position: relative;
-    height: clamp(210px, 20vw, 310px);
+    height: clamp(190px, 15vw, 240px);
     overflow: hidden;
+    border-radius: 12px 12px 0 0;
     background: #d1e4fb;
   }
 
@@ -202,38 +246,199 @@
   }
 
   .favorite-card__body {
-    display: flex;
-    min-height: 268px;
-    flex-direction: column;
-    padding: 34px 30px 30px;
+    padding: 20px;
   }
 
   .favorite-card__title-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: 18px;
-    margin-bottom: 10px;
+    gap: 16px;
+    margin-bottom: 18px;
   }
 
-  .favorite-card__title-row h2 {
+  .favorite-card__title-row h3 {
     display: -webkit-box;
     margin: 0;
     overflow: hidden;
     color: #091d2e;
-    font-size: 26px;
+    font-size: 18px;
     font-weight: 900;
-    line-height: 1.08;
+    line-height: 1.15;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
 
+  .favorite-card__title-row p {
+    margin: 4px 0 0;
+    color: #3d4a3e;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
   .favorite-card__title-row strong {
     color: #006d37;
-    font-size: 23px;
+    font-size: 18px;
     font-weight: 900;
     line-height: 1.1;
     white-space: nowrap;
+  }
+
+  .favorite-card__compare {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #091d2e;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .favorite-card__compare input {
+    width: 20px;
+    height: 20px;
+    border-color: #bbcbbb;
+    border-radius: 6px;
+    color: #006d37;
+  }
+
+  .favorite-card__compare input:disabled + span {
+    opacity: 0.45;
+  }
+
+  .favorites-web__compare-panel {
+    position: sticky;
+    top: 112px;
+  }
+
+  .favorites-web__compare-panel section {
+    border-radius: 12px;
+    background: #edf4ff;
+    padding: 24px;
+  }
+
+  .favorites-web__compare-panel header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .favorites-web__compare-panel header span {
+    background: rgba(46, 204, 113, 0.18);
+    color: #006d37;
+    font-size: 12px;
+  }
+
+  .favorites-web__compare-list {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .favorites-web__compare-item,
+  .favorites-web__compare-empty-slot {
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .favorites-web__compare-item {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+  }
+
+  .favorites-web__compare-item img {
+    width: 64px;
+    height: 48px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #d1e4fb;
+  }
+
+  .favorites-web__compare-item h3,
+  .favorites-web__compare-item p {
+    margin: 0;
+  }
+
+  .favorites-web__compare-item h3 {
+    overflow: hidden;
+    color: #091d2e;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .favorites-web__compare-item p {
+    margin-top: 4px;
+    color: #006d37;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .favorites-web__compare-item button {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #3d4a3e;
+    transition:
+      background 180ms ease,
+      color 180ms ease;
+  }
+
+  .favorites-web__compare-item button:hover {
+    background: #ffdad6;
+    color: #ba1a1a;
+  }
+
+  .favorites-web__compare-item button .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .favorites-web__compare-empty-slot {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px dashed rgba(187, 203, 187, 0.75);
+    background: rgba(255, 255, 255, 0.46);
+    color: #3d4a3e;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .favorites-web__compare-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #006d37, #2ecc71);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 0 12px 24px rgba(46, 204, 113, 0.18);
+  }
+
+  .favorites-web__compare-action:hover {
+    color: #ffffff;
+  }
+
+  .favorites-web__compare-action--disabled {
+    pointer-events: none;
+    opacity: 0.5;
   }
 
   .favorite-card__meta {
@@ -330,7 +535,6 @@
     color: #3d4a3e;
     font-size: 18px;
   }
-
 }
 
 @media (min-width: 768px) and (max-width: 1180px) {
@@ -362,5 +566,4 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-
 }

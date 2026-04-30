@@ -110,98 +110,132 @@
   <main class="favorites-web__main">
     <section class="favorites-web__hero">
       <div>
-        <h1>Meus Favoritos</h1>
-        <p>Gerencie sua lista de desejos e compare os melhores veículos.</p>
-      </div>
-
-      <div class="favorites-web__actions" *ngIf="favoriteItems.length">
-        <button
-          type="button"
-          class="favorites-web__sort"
-          (click)="cycleSortMode()"
-        >
-          <span class="material-symbols-outlined">sort</span>
-          {{ sortLabel() }}
-        </button>
-        <a
-          routerLink="/compare"
-          class="favorites-web__compare"
-          [class.favorites-web__compare--disabled]="!compareFavoritesCount"
-          (click)="compareFavorites()"
-        >
-          <span class="material-symbols-outlined">compare_arrows</span>
-          Comparar Selecionados ({{ compareFavoritesCount }})
-        </a>
+        <h1>Favoritos e Comparação</h1>
+        <p>Gerencie seus veículos salvos e compare até 3 lado a lado.</p>
       </div>
     </section>
 
-    <section
-      class="favorites-web__grid"
+    <div
+      class="favorites-web__layout"
       *ngIf="favoriteItems.length; else desktopEmptyState"
     >
-      <article
-        class="favorite-card"
-        *ngFor="let vehicle of sortedFavoriteItems; trackBy: trackById"
-      >
-        <div class="favorite-card__media">
-          <a [routerLink]="['/vehicles', vehicle.id]" aria-label="Ver detalhes">
-            <img
-              [src]="vehicle.coverImage || fallbackImage"
-              [alt]="vehicle.title"
-              loading="lazy"
-            />
-          </a>
+      <section class="favorites-web__list">
+        <header class="favorites-web__list-head">
+          <h2>Veículos Salvos</h2>
+          <span>{{ favoriteItems.length }} itens</span>
+        </header>
 
-          <button
-            type="button"
-            class="favorite-card__remove"
-            aria-label="Remover dos favoritos"
-            [disabled]="favoritesService.isPending(vehicle.id)"
-            (click)="removeFavorite(vehicle)"
+        <div class="favorites-web__cards">
+          <article
+            class="favorite-card"
+            *ngFor="let vehicle of sortedFavoriteItems; trackBy: trackById"
           >
-            <span class="material-symbols-outlined">delete</span>
-          </button>
+            <div class="favorite-card__media">
+              <a [routerLink]="['/vehicles', vehicle.id]">
+                <img
+                  [src]="vehicle.coverImage || fallbackImage"
+                  [alt]="vehicle.title"
+                />
+              </a>
 
-          <span class="favorite-card__badge">{{ categoryLabel(vehicle) }}</span>
+              <button
+                type="button"
+                class="favorite-card__remove"
+                [disabled]="favoritesService.isPending(vehicle.id)"
+                (click)="removeFavorite(vehicle)"
+                aria-label="Remover dos favoritos"
+              >
+                <span class="material-symbols-outlined">favorite</span>
+              </button>
+            </div>
+
+            <div class="favorite-card__body">
+              <div class="favorite-card__title-row">
+                <div>
+                  <h3>{{ vehicle.title }}</h3>
+                  <p>
+                    {{ fuelTypeLabel(vehicle.fuelType) }} • {{ vehicle.year }}
+                  </p>
+                </div>
+
+                <strong>
+                  {{
+                    vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/dia
+                </strong>
+              </div>
+
+              <label class="favorite-card__compare">
+                <input
+                  type="checkbox"
+                  [checked]="compareService.isSelected(vehicle.id)"
+                  [disabled]="isCompareDisabled(vehicle)"
+                  (change)="toggleFavoriteCompare(vehicle)"
+                />
+                <span>Comparar</span>
+              </label>
+            </div>
+          </article>
         </div>
+      </section>
 
-        <div class="favorite-card__body">
-          <div class="favorite-card__title-row">
-            <h2>{{ vehicle.title }}</h2>
-            <strong>
-              {{
-                vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
-              }}
-            </strong>
+      <aside class="favorites-web__compare-panel">
+        <section>
+          <header>
+            <h2>Comparação</h2>
+            <span>{{ selectedCompareVehicles.length }}/3 selecionados</span>
+          </header>
+
+          <div class="favorites-web__compare-list">
+            <article
+              class="favorites-web__compare-item"
+              *ngFor="
+                let vehicle of selectedCompareVehicles;
+                trackBy: trackById
+              "
+            >
+              <img
+                [src]="vehicle.coverImage || fallbackImage"
+                [alt]="vehicle.title"
+              />
+              <div>
+                <h3>{{ vehicle.title }}</h3>
+                <p>
+                  {{
+                    vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/dia
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Remover da comparação"
+                (click)="compareService.remove(vehicle.id)"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </article>
+
+            <div
+              class="favorites-web__compare-empty-slot"
+              *ngFor="let slot of compareEmptySlots; trackBy: trackByIndex"
+            >
+              <span class="material-symbols-outlined">add</span>
+              <span>Adicionar para comparar</span>
+            </div>
           </div>
 
-          <p class="favorite-card__meta">
-            {{ vehicle.year }} • {{ vehicle.city }}, {{ vehicle.state }}
-          </p>
-
-          <div class="favorite-card__specs">
-            <span>
-              <span class="material-symbols-outlined">speed</span>
-              {{ rangeLabel(vehicle) }}
-            </span>
-            <span>
-              <span class="material-symbols-outlined">{{
-                vehicle.fuelType === 'ELECTRIC' ? 'bolt' : 'local_gas_station'
-              }}</span>
-              {{ fuelTypeLabel(vehicle.fuelType) }}
-            </span>
-            <span>
-              <span class="material-symbols-outlined">settings</span>
-              {{ transmissionLabel(vehicle.transmission) }}
-            </span>
-          </div>
-
-          <a class="favorite-card__details" [routerLink]="['/vehicles', vehicle.id]">
-            Ver Detalhes
+          <a
+            routerLink="/compare"
+            class="favorites-web__compare-action"
+            [class.favorites-web__compare-action--disabled]="
+              selectedCompareVehicles.length < 2
+            "
+          >
+            Ver Comparação Completa
           </a>
-        </div>
-      </article>
-    </section>
+        </section>
+      </aside>
+    </div>
 
     <ng-template #desktopEmptyState>
       <section class="favorites-web__empty">
@@ -217,5 +251,4 @@
       </section>
     </ng-template>
   </main>
-
 </div>

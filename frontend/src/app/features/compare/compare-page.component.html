@@ -1,4 +1,4 @@
-<main class="bg-surface text-on-surface pb-4 font-body antialiased">
+<main class="bg-surface text-on-surface pb-4 font-body antialiased md:hidden">
   <!-- TopAppBar -->
   <header
     class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
@@ -276,3 +276,339 @@
     </div>
   </div>
 </main>
+
+<div class="compare-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="compare-web__main">
+    <header class="compare-web__hero">
+      <div>
+        <h1>Comparativo de Veículos</h1>
+        <p>
+          Analise as especificações técnicas lado a lado para encontrar o
+          veículo perfeito para sua rotina.
+        </p>
+      </div>
+
+      <div class="compare-web__hero-actions" *ngIf="compareService.count()">
+        <a routerLink="/search">
+          <span class="material-symbols-outlined">add</span>
+          Adicionar mais
+        </a>
+        <button type="button" (click)="compareService.clear()">
+          <span class="material-symbols-outlined">delete_sweep</span>
+          Limpar seleção
+        </button>
+      </div>
+    </header>
+
+    <section class="compare-web__empty" *ngIf="!compareService.count()">
+      <span class="material-symbols-outlined">compare_arrows</span>
+      <h2>Nenhum veículo selecionado</h2>
+      <p>
+        Vá para a busca, favoritos ou perfil público e selecione os anúncios que
+        deseja comparar.
+      </p>
+      <a routerLink="/search">Ir para o Catálogo</a>
+    </section>
+
+    <section class="compare-web__hint" *ngIf="compareService.count() === 1">
+      <span class="material-symbols-outlined">info</span>
+      <div>
+        <strong>Falta mais um veículo</strong>
+        <p>A comparação fica mais útil com pelo menos dois anúncios na mesa.</p>
+      </div>
+    </section>
+
+    <section class="compare-web__table-card" *ngIf="compareService.count()">
+      <div class="compare-web__scroll">
+        <table class="compare-web__table">
+          <thead>
+            <tr>
+              <th class="compare-web__spec-head">
+                <span>Especificações</span>
+              </th>
+              <th
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                <article class="compare-web__vehicle-head">
+                  <button
+                    type="button"
+                    aria-label="Remover da comparação"
+                    (click)="compareService.remove(vehicle.id)"
+                  >
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+
+                  <img
+                    [src]="vehicle.coverImage || fallbackImage"
+                    [alt]="vehicle.title"
+                    loading="lazy"
+                  />
+                  <h2>{{ vehicle.title }}</h2>
+                  <strong>
+                    {{
+                      weeklyPrice(vehicle)
+                        | currency: 'BRL' : 'symbol' : '1.0-0'
+                    }}
+                  </strong>
+                  <small>por semana</small>
+                </article>
+              </th>
+              <th
+                class="compare-web__add-head"
+                *ngIf="compareService.count() < 4"
+              >
+                <a routerLink="/search">
+                  <span class="material-symbols-outlined">add</span>
+                  Adicionar veículo
+                </a>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="compare-web__group">
+              <td
+                [attr.colspan]="
+                  compareService.count() + (compareService.count() < 4 ? 2 : 1)
+                "
+              >
+                Dados do anúncio
+              </td>
+            </tr>
+            <tr>
+              <td>Preço semanal</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                <strong class="compare-web__price">
+                  {{
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}
+                </strong>
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Ano</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ vehicle.year }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Tipo de veículo</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ vehicleTypeLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Categoria</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ categoryLabel(vehicle.category) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+
+            <tr class="compare-web__group">
+              <td
+                [attr.colspan]="
+                  compareService.count() + (compareService.count() < 4 ? 2 : 1)
+                "
+              >
+                Especificações técnicas
+              </td>
+            </tr>
+            <tr>
+              <td>Câmbio</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ transmissionLabel(vehicle.transmission) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Combustível</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ fuelTypeLabel(vehicle.fuelType) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Assentos / baú</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ seatsLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Política de KM</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ kmPolicyLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+
+            <tr class="compare-web__group">
+              <td
+                [attr.colspan]="
+                  compareService.count() + (compareService.count() < 4 ? 2 : 1)
+                "
+              >
+                Segurança e procedência
+              </td>
+            </tr>
+            <tr>
+              <td>Seguro</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ insuranceLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Condição mecânica</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ mechanicsConditionLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Status Detran</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ detranStatusLabel(vehicle) }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+
+            <tr class="compare-web__group">
+              <td
+                [attr.colspan]="
+                  compareService.count() + (compareService.count() < 4 ? 2 : 1)
+                "
+              >
+                Anunciante e localização
+              </td>
+            </tr>
+            <tr>
+              <td>Localização</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                <span class="compare-web__location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  {{ locationLabel(vehicle) }}
+                </span>
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Avaliação do proprietário</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                <span class="compare-web__rating">
+                  <span class="material-symbols-outlined">star</span>
+                  <strong>{{ ownerRatingValue(vehicle) }}</strong>
+                  <small>({{ ownerReviewsLabel(vehicle) }})</small>
+                </span>
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+
+            <tr class="compare-web__cta-row">
+              <td></td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                <a [routerLink]="['/vehicles', vehicle.id]">Ver anúncio</a>
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="compare-web__support" *ngIf="compareService.count()">
+      <div>
+        <span class="material-symbols-outlined">compare_arrows</span>
+        <div>
+          <h2>Dúvida entre as opções?</h2>
+          <p>
+            Compare preço, procedência, localização e perfil do anunciante antes
+            de iniciar a conversa.
+          </p>
+        </div>
+      </div>
+      <a routerLink="/search">Ver mais veículos</a>
+    </section>
+  </main>
+
+  <app-web-footer></app-web-footer>
+</div>

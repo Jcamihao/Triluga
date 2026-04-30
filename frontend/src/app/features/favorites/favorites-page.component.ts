@@ -53,6 +53,23 @@ export class FavoritesPageComponent {
     return Math.min(this.favoriteItems.length, 4);
   }
 
+  protected get selectedCompareVehicles() {
+    const favoriteIds = new Set(
+      this.favoriteItems.map((vehicle) => vehicle.id),
+    );
+    return this.compareService
+      .items()
+      .filter((vehicle) => favoriteIds.has(vehicle.id))
+      .slice(0, 3);
+  }
+
+  protected get compareEmptySlots() {
+    return Array.from(
+      { length: Math.max(0, 3 - this.selectedCompareVehicles.length) },
+      (_, index) => index,
+    );
+  }
+
   protected cycleSortMode() {
     const nextMode: Record<typeof this.sortMode, typeof this.sortMode> = {
       recent: 'priceAsc',
@@ -80,6 +97,24 @@ export class FavoritesPageComponent {
     selected.forEach((vehicle) => this.compareService.toggle(vehicle));
   }
 
+  protected toggleFavoriteCompare(vehicle: VehicleCardItem) {
+    if (
+      !this.compareService.isSelected(vehicle.id) &&
+      this.selectedCompareVehicles.length >= 3
+    ) {
+      return;
+    }
+
+    this.compareService.toggle(vehicle);
+  }
+
+  protected isCompareDisabled(vehicle: VehicleCardItem) {
+    return (
+      !this.compareService.isSelected(vehicle.id) &&
+      this.selectedCompareVehicles.length >= 3
+    );
+  }
+
   protected removeFavorite(vehicle: VehicleCardItem) {
     this.favoritesService.toggleFavorite(vehicle);
     if (this.compareService.isSelected(vehicle.id)) {
@@ -89,6 +124,10 @@ export class FavoritesPageComponent {
 
   protected trackById(_index: number, vehicle: VehicleCardItem) {
     return vehicle.id;
+  }
+
+  protected trackByIndex(index: number) {
+    return index;
   }
 
   protected categoryLabel(vehicle: VehicleCardItem) {

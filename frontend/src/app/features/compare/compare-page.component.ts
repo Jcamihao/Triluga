@@ -1,13 +1,22 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { VehicleCardItem } from '../../core/models/domain.models';
 import { CompareService } from '../../core/services/compare.service';
 import { UiStateService } from '../../core/services/ui-state.service';
+import { WebFooterComponent } from '../../shared/components/web-footer/web-footer.component';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-compare-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe],
+  imports: [
+    CommonModule,
+    RouterLink,
+    CurrencyPipe,
+    WebHeaderComponent,
+    WebFooterComponent,
+  ],
   templateUrl: './compare-page.component.html',
   styleUrls: ['./compare-page.component.scss'],
 })
@@ -70,5 +79,84 @@ export class ComparePageComponent {
     return `${(ratingAverage ?? 0).toFixed(1)} em ${reviewsCount} avaliação${
       reviewsCount > 1 ? 'ões' : ''
     }`;
+  }
+
+  protected weeklyPrice(vehicle: VehicleCardItem) {
+    return vehicle.weeklyRate ?? vehicle.dailyRate * 7;
+  }
+
+  protected vehicleTypeLabel(vehicle: VehicleCardItem) {
+    return vehicle.vehicleType === 'MOTORCYCLE' ? 'Moto' : 'Carro';
+  }
+
+  protected locationLabel(vehicle: VehicleCardItem) {
+    return `${vehicle.city}, ${vehicle.state}`;
+  }
+
+  protected seatsLabel(vehicle: VehicleCardItem) {
+    if (vehicle.vehicleType === 'MOTORCYCLE') {
+      return vehicle.hasTopCase ? 'Baú incluso' : 'Sem baú';
+    }
+
+    return `${vehicle.seats} lugares`;
+  }
+
+  protected insuranceLabel(vehicle: VehicleCardItem) {
+    if (vehicle.hasInsurance === null || vehicle.hasInsurance === undefined) {
+      return 'Não informado';
+    }
+
+    return vehicle.hasInsurance ? 'Possui seguro' : 'Sem seguro informado';
+  }
+
+  protected mechanicsConditionLabel(vehicle: VehicleCardItem) {
+    const labels: Record<string, string> = {
+      REVIEW: 'Revisar',
+      GOOD: 'Bom',
+      EXCELLENT: 'Impecável',
+    };
+
+    return vehicle.mechanicsCondition
+      ? labels[vehicle.mechanicsCondition] || vehicle.mechanicsCondition
+      : 'Não informado';
+  }
+
+  protected detranStatusLabel(vehicle: VehicleCardItem) {
+    if (
+      vehicle.hasDetranIssues === null ||
+      vehicle.hasDetranIssues === undefined
+    ) {
+      return 'Não informado';
+    }
+
+    return vehicle.hasDetranIssues ? 'Pendências informadas' : 'Regularizado';
+  }
+
+  protected kmPolicyLabel(vehicle: VehicleCardItem) {
+    if (vehicle.kmPolicy === 'FREE') {
+      return 'Km livre';
+    }
+
+    if (vehicle.kmPolicy === 'FIXED') {
+      return 'Km fixo';
+    }
+
+    return 'Não informado';
+  }
+
+  protected ownerRatingValue(vehicle: VehicleCardItem) {
+    return vehicle.owner?.reviewsCount
+      ? (vehicle.owner.ratingAverage ?? 0).toFixed(1)
+      : 'Novo';
+  }
+
+  protected ownerReviewsLabel(vehicle: VehicleCardItem) {
+    const reviewsCount = vehicle.owner?.reviewsCount ?? 0;
+
+    if (!reviewsCount) {
+      return 'sem avaliações';
+    }
+
+    return `${reviewsCount} avaliação${reviewsCount > 1 ? 'ões' : ''}`;
   }
 }
