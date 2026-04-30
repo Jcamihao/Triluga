@@ -341,12 +341,17 @@ export class RegisterPageComponent implements OnDestroy {
     const normalizedState = this.formatState(this.state);
     const normalizedEmail = this.email.trim();
     const normalizedCpf = this.cpf.replace(/\D/g, '');
+    const normalizedAddressComplement = this.addressComplement.trim();
 
     if (
       !normalizedFullName ||
+      !this.pendingAvatarFile ||
+      !normalizedCpf ||
       !this.phone ||
+      !this.birthDate ||
       !this.zipCode ||
       !normalizedAddressLine ||
+      !normalizedAddressComplement ||
       !normalizedCity ||
       !normalizedState ||
       !normalizedEmail
@@ -361,7 +366,7 @@ export class RegisterPageComponent implements OnDestroy {
       return;
     }
 
-    if (normalizedCpf && !this.cpfIsValid) {
+    if (!this.cpfIsValid) {
       this.feedback = 'Digite um CPF válido.';
       this.cpfTouched = true;
       return;
@@ -406,9 +411,10 @@ export class RegisterPageComponent implements OnDestroy {
       .register({
         fullName: normalizedFullName,
         phone: this.phone,
+        documentNumber: normalizedCpf,
         zipCode: this.zipCode,
         addressLine: normalizedAddressLine,
-        addressComplement: this.addressComplement.trim() || undefined,
+        addressComplement: normalizedAddressComplement,
         city: normalizedCity,
         state: normalizedState,
         email: normalizedEmail,
@@ -416,24 +422,6 @@ export class RegisterPageComponent implements OnDestroy {
       })
       .pipe(
         switchMap(() => {
-          if (!normalizedCpf) {
-            return of(null);
-          }
-
-          return this.profileApiService
-            .updateMyProfile({ documentNumber: normalizedCpf })
-            .pipe(
-              tap((profile) => {
-                this.authService.syncProfile(profile);
-              }),
-              catchError(() => of(null)),
-            );
-        }),
-        switchMap(() => {
-          if (!pendingAvatarFile) {
-            return of(null);
-          }
-
           return this.profileApiService.uploadMyAvatar(pendingAvatarFile).pipe(
             tap((profile) => {
               this.authService.syncProfile(profile);

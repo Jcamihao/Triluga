@@ -109,6 +109,7 @@
             type="text"
             name="fullName"
             [(ngModel)]="fullName"
+            required
           />
         </div>
       </div>
@@ -135,6 +136,7 @@
             [(ngModel)]="email"
             (focus)="emailTouched = true"
             (blur)="emailTouched = true"
+            required
           />
           <span
             class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
@@ -179,6 +181,7 @@
             (blur)="cpfTouched = true"
             inputmode="numeric"
             maxlength="14"
+            required
           />
           <span
             class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
@@ -223,6 +226,7 @@
             (blur)="phoneTouched = true"
             inputmode="tel"
             maxlength="19"
+            required
           />
           <span
             class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
@@ -253,6 +257,7 @@
           name="birthDate"
           [(ngModel)]="birthDate"
           type="date"
+          required
         />
       </div>
 
@@ -280,6 +285,7 @@
             (blur)="zipCodeTouched = true; onZipCodeChange(zipCode)"
             inputmode="numeric"
             maxlength="9"
+            required
           />
           <span
             class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
@@ -311,6 +317,7 @@
           class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
           name="city"
           [(ngModel)]="city"
+          required
         />
       </div>
 
@@ -324,6 +331,7 @@
           placeholder="Rua, avenida ou praça"
           name="addressLine"
           [(ngModel)]="addressLine"
+          required
         />
       </div>
 
@@ -337,6 +345,7 @@
           placeholder="Apto, bloco, referência"
           name="addressComplement"
           [(ngModel)]="addressComplement"
+          required
         />
       </div>
 
@@ -352,6 +361,7 @@
           [ngModel]="state"
           (ngModelChange)="state = formatState($event)"
           maxlength="2"
+          required
         />
       </div>
 
@@ -370,6 +380,7 @@
             [(ngModel)]="password"
             (focus)="passwordTouched = true"
             (blur)="passwordTouched = true"
+            required
           />
           <button
             class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
@@ -449,6 +460,7 @@
             [type]="showConfirmPassword ? 'text' : 'password'"
             name="confirmPassword"
             [(ngModel)]="confirmPassword"
+            required
           />
           <div
             class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
@@ -668,6 +680,7 @@
                 (focus)="cpfTouched = true"
                 (blur)="cpfTouched = true"
                 [disabled]="loading"
+                required
               />
               <span
                 class="material-symbols-outlined signup-web__input-status"
@@ -736,6 +749,7 @@
               [(ngModel)]="birthDate"
               type="date"
               [disabled]="loading"
+              required
             />
           </label>
 
@@ -835,6 +849,7 @@
               placeholder="Apto, bloco, referência"
               type="text"
               [disabled]="loading"
+              required
             />
           </label>
 

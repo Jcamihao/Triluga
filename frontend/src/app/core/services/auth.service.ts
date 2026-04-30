@@ -28,9 +28,10 @@ type LoginPayload = {
 type RegisterPayload = LoginPayload & {
   fullName: string;
   phone: string;
+  documentNumber: string;
   zipCode: string;
   addressLine: string;
-  addressComplement?: string;
+  addressComplement: string;
   city: string;
   state: string;
 };

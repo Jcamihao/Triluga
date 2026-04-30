@@ -42,6 +42,7 @@ export class AuthService {
         addressComplement: dto.addressComplement,
         city: dto.city,
         state: dto.state,
+        documentNumber: dto.documentNumber,
       },
     });
 

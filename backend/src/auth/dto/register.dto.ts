@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -23,6 +22,12 @@ export class RegisterDto {
       'A senha deve conter pelo menos uma letra, um número e um caractere especial.',
   })
   password: string;
+
+  @ApiProperty({ example: '12345678909' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(14)
+  documentNumber: string;
 
   @ApiProperty({ example: 'Lucas Almeida' })
   @IsString()
@@ -49,10 +54,10 @@ export class RegisterDto {
   addressLine: string;
 
   @ApiProperty({ example: 'Apto 42' })
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(120)
-  addressComplement?: string;
+  addressComplement: string;
 
   @ApiProperty({ example: 'Campinas' })
   @IsString()

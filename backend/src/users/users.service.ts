@@ -19,6 +19,7 @@ type CreateUserInput = {
     addressComplement?: string;
     city: string;
     state: string;
+    documentNumber: string;
   };
 };
 
@@ -55,6 +56,7 @@ export class UsersService {
             addressComplement: input.profile.addressComplement,
             city: input.profile.city,
             state: input.profile.state,
+            documentNumber: input.profile.documentNumber,
           },
         },
       },
