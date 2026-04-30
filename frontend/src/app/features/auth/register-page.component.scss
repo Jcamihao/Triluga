@@ -655,16 +655,35 @@
     color: #006d37;
   }
 
-  .signup-web__confirm-message {
+  .signup-web__email-status {
+    color: #ba1a1a;
+    font-size: 20px;
+    animation: email-validation-icon-pop 240ms cubic-bezier(0.2, 0.9, 0.2, 1)
+      both;
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 700,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+
+  .signup-web__field-icon--valid .signup-web__email-status {
+    color: #006d37;
+  }
+
+  .signup-web__confirm-message,
+  .signup-web__email-message {
     color: #ba1a1a;
     animation: password-rule-icon-pop 240ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
   }
 
-  .signup-web__confirm-message--valid {
+  .signup-web__confirm-message--valid,
+  .signup-web__email-message--valid {
     color: #006d37;
   }
 
-  .signup-web__confirm-message--invalid {
+  .signup-web__confirm-message--invalid,
+  .signup-web__email-message--invalid {
     color: #ba1a1a;
   }
 

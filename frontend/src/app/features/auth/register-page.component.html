@@ -503,17 +503,41 @@
 
           <label class="signup-web__field signup-web__field--full">
             <span>E-mail</span>
-            <input
-              name="webEmail"
-              [(ngModel)]="email"
-              placeholder="seu@email.com"
-              type="email"
-              autocomplete="email"
-              (focus)="emailTouched = true"
-              (blur)="emailTouched = true"
-              [disabled]="loading"
-              required
-            />
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowEmailValidation && emailIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowEmailValidation && !emailIsValid
+              "
+            >
+              <input
+                name="webEmail"
+                [(ngModel)]="email"
+                placeholder="seu@email.com"
+                type="email"
+                autocomplete="email"
+                (focus)="emailTouched = true"
+                (blur)="emailTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__email-status"
+                *ngIf="shouldShowEmailValidation"
+              >
+                {{ emailIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__email-message"
+              *ngIf="shouldShowEmailValidation"
+              [class.signup-web__email-message--valid]="emailIsValid"
+              [class.signup-web__email-message--invalid]="!emailIsValid"
+            >
+              {{ emailIsValid ? 'E-mail válido' : 'Digite um e-mail válido' }}
+            </p>
           </label>
 
           <label class="signup-web__field">
