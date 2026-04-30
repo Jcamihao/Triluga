@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { MotorcycleStyle, VehicleCategory, VehicleType } from '@prisma/client';
+import {
+  FuelType,
+  MotorcycleStyle,
+  Transmission,
+  VehicleCategory,
+  VehicleType,
+} from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
@@ -36,6 +42,28 @@ export class ListVehiclesQueryDto {
   @IsOptional()
   @IsEnum(MotorcycleStyle)
   motorcycleStyle?: MotorcycleStyle;
+
+  @ApiPropertyOptional({ enum: Transmission })
+  @IsOptional()
+  @IsEnum(Transmission)
+  transmission?: Transmission;
+
+  @ApiPropertyOptional({ enum: FuelType })
+  @IsOptional()
+  @IsEnum(FuelType)
+  fuelType?: FuelType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  minYear?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  maxYear?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -95,4 +123,11 @@ export class ListVehiclesQueryDto {
   @Min(1)
   @Max(50)
   limit?: number = 10;
+
+  @ApiPropertyOptional({
+    enum: ['relevance', 'newest', 'oldest', 'price_asc', 'price_desc'],
+  })
+  @IsOptional()
+  @IsString()
+  sort?: string = 'relevance';
 }

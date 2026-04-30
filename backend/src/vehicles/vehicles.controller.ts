@@ -29,6 +29,13 @@ export class VehiclesController {
     return this.vehiclesService.findAll(query);
   }
 
+  @Public()
+  @Get('stats')
+  @ApiOperation({ summary: 'Retorna contagens de veículos para a home' })
+  getHomeStats() {
+    return this.vehiclesService.getHomeStats();
+  }
+
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Lista veículos do usuário autenticado' })

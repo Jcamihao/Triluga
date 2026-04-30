@@ -206,6 +206,7 @@ model Vehicle {
   isPublished        Boolean            @default(true)
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
   reviewsCount       Int                @default(0)
+  viewsCount         Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   owner              User               @relation("VehicleOwner", fields: [ownerId], references: [id], onDelete: Cascade)

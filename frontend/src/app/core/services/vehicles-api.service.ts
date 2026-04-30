@@ -44,6 +44,15 @@ export class VehiclesApiService {
       .pipe(map((vehicles) => normalizeApiPayloadUrls(vehicles)));
   }
 
+  getStats() {
+    return this.http.get<{
+      luxury: number;
+      electric: number;
+      motorcycle: number;
+      suvPickup: number;
+    }>(`${environment.apiBaseUrl}/vehicles/stats`);
+  }
+
   create(payload: CreateVehiclePayload) {
     return this.http
       .post<VehicleDetail>(

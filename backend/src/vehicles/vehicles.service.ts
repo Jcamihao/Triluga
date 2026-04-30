@@ -5,9 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  FuelType,
   MotorcycleStyle,
   Prisma,
   Role,
+  Transmission,
   VehicleCategory,
   VehicleType,
 } from '@prisma/client';
@@ -98,6 +100,30 @@ export class VehiclesService {
       });
     }
 
+    if (query.transmission) {
+      andFilters.push({
+        transmission: query.transmission as Transmission,
+      });
+    }
+
+    if (query.fuelType) {
+      andFilters.push({
+        fuelType: query.fuelType as FuelType,
+      });
+    }
+
+    if (query.minYear) {
+      andFilters.push({
+        year: { gte: query.minYear },
+      });
+    }
+
+    if (query.maxYear) {
+      andFilters.push({
+        year: { lte: query.maxYear },
+      });
+    }
+
     if (query.vehicleType) {
       andFilters.push({
         vehicleType: query.vehicleType as VehicleType,
@@ -155,6 +181,22 @@ export class VehiclesService {
       AND: andFilters,
     };
 
+    let orderBy: Prisma.VehicleOrderByWithRelationInput = {
+      createdAt: 'desc',
+    };
+
+    if (query.sort === 'price_asc') {
+      orderBy = { dailyRate: 'asc' };
+    } else if (query.sort === 'price_desc') {
+      orderBy = { dailyRate: 'desc' };
+    } else if (query.sort === 'oldest') {
+      orderBy = { createdAt: 'asc' };
+    } else if (query.sort === 'relevance') {
+      orderBy = { viewsCount: 'desc' };
+    } else if (query.sort === 'newest') {
+      orderBy = { createdAt: 'desc' };
+    }
+
     const [items, total] = await this.prisma.$transaction([
       this.prisma.vehicle.findMany({
         where,
@@ -176,9 +218,7 @@ export class VehiclesService {
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -379,6 +419,14 @@ export class VehiclesService {
     if (!vehicle) {
       throw new NotFoundException('Veículo não encontrado.');
     }
+
+    // Increment views async
+    this.prisma.vehicle
+      .update({
+        where: { id: vehicleId },
+        data: { viewsCount: { increment: 1 } },
+      })
+      .catch((err) => console.error('Failed to increment views:', err));
 
     const payload = this.mapVehicleDetail(vehicle);
     await this.cacheQueueService.setJson(cacheKey, payload);
@@ -607,6 +655,35 @@ export class VehiclesService {
           fullName: review.author.profile?.fullName ?? null,
         },
       })),
+    };
+  }
+
+  async getHomeStats() {
+    const [luxuryCount, electricCount, motorcycleCount, suvPickupCount] =
+      await Promise.all([
+        this.prisma.vehicle.count({
+          where: { category: 'LUXURY', isActive: true, isPublished: true },
+        }),
+        this.prisma.vehicle.count({
+          where: { fuelType: 'ELECTRIC', isActive: true, isPublished: true },
+        }),
+        this.prisma.vehicle.count({
+          where: { vehicleType: 'MOTORCYCLE', isActive: true, isPublished: true },
+        }),
+        this.prisma.vehicle.count({
+          where: {
+            category: { in: ['SUV', 'PICKUP'] },
+            isActive: true,
+            isPublished: true,
+          },
+        }),
+      ]);
+
+    return {
+      luxury: luxuryCount,
+      electric: electricCount,
+      motorcycle: motorcycleCount,
+      suvPickup: suvPickupCount,
     };
   }
 
