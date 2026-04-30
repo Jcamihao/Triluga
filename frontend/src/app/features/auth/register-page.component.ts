@@ -29,6 +29,8 @@ export class RegisterPageComponent implements OnDestroy {
   protected addressComplement = '';
   protected city = 'São Paulo';
   protected state = 'SP';
+  protected cpf = '';
+  protected birthDate = '';
   protected email = '';
   protected password = '';
   protected confirmPassword = '';
@@ -66,8 +68,8 @@ export class RegisterPageComponent implements OnDestroy {
   protected get passwordStrengthChecklist() {
     return [
       {
-        label: 'Mínimo de 6 caracteres',
-        valid: this.password.length >= 6,
+        label: 'Mínimo de 8 caracteres',
+        valid: this.password.length >= 8,
       },
       {
         label: 'Letra maiúscula',
@@ -250,12 +252,29 @@ export class RegisterPageComponent implements OnDestroy {
       .slice(0, 2);
   }
 
+  protected formatCpf(value: string) {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    const parts = [
+      digits.slice(0, 3),
+      digits.slice(3, 6),
+      digits.slice(6, 9),
+      digits.slice(9, 11),
+    ].filter(Boolean);
+
+    if (parts.length <= 1) {
+      return parts[0] ?? '';
+    }
+
+    return `${parts.slice(0, 3).join('.')}${parts[3] ? `-${parts[3]}` : ''}`;
+  }
+
   protected register() {
     const normalizedFullName = this.fullName.trim();
     const normalizedAddressLine = this.addressLine.trim();
     const normalizedCity = this.city.trim();
     const normalizedState = this.formatState(this.state);
     const normalizedEmail = this.email.trim();
+    const normalizedCpf = this.cpf.replace(/\D/g, '');
 
     if (
       !normalizedFullName ||
@@ -267,11 +286,6 @@ export class RegisterPageComponent implements OnDestroy {
       !normalizedEmail
     ) {
       this.feedback = 'Preencha os campos obrigatórios para criar sua conta.';
-      return;
-    }
-
-    if (!this.pendingAvatarFile && !this.resolvedAvatarUrl) {
-      this.feedback = 'Adicione uma foto de perfil para criar sua conta.';
       return;
     }
 
@@ -289,7 +303,7 @@ export class RegisterPageComponent implements OnDestroy {
 
     if (this.passwordStrengthCount < 4) {
       this.feedback =
-        'A senha precisa ter no mínimo 6 caracteres, letra maiúscula, número e caractere especial.';
+        'A senha precisa ter no mínimo 8 caracteres, letra maiúscula, número e caractere especial.';
       return;
     }
 
@@ -317,6 +331,20 @@ export class RegisterPageComponent implements OnDestroy {
         password: this.password,
       })
       .pipe(
+        switchMap(() => {
+          if (!normalizedCpf) {
+            return of(null);
+          }
+
+          return this.profileApiService
+            .updateMyProfile({ documentNumber: normalizedCpf })
+            .pipe(
+              tap((profile) => {
+                this.authService.syncProfile(profile);
+              }),
+              catchError(() => of(null)),
+            );
+        }),
         switchMap(() => {
           if (!pendingAvatarFile) {
             return of(null);
