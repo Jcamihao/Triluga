@@ -38,6 +38,8 @@ export class RegisterPageComponent implements OnDestroy {
   protected showPassword = false;
   protected showConfirmPassword = false;
   protected emailTouched = false;
+  protected cpfTouched = false;
+  protected phoneTouched = false;
   protected passwordTouched = false;
   protected loading = false;
   protected feedback = '';
@@ -145,6 +147,42 @@ export class RegisterPageComponent implements OnDestroy {
 
   protected get shouldShowEmailValidation() {
     return this.emailTouched && !!this.email.trim();
+  }
+
+  protected get cpfIsValid() {
+    const digits = this.cpf.replace(/\D/g, '');
+
+    if (!digits) {
+      return false;
+    }
+
+    if (digits.length !== 11 || /^(\d)\1+$/.test(digits)) {
+      return false;
+    }
+
+    const numbers = digits.split('').map(Number);
+    const firstDigit = this.calculateCpfDigit(numbers.slice(0, 9));
+    const secondDigit = this.calculateCpfDigit([
+      ...numbers.slice(0, 9),
+      firstDigit,
+    ]);
+
+    return firstDigit === numbers[9] && secondDigit === numbers[10];
+  }
+
+  protected get shouldShowCpfValidation() {
+    return this.cpfTouched && !!this.cpf.trim();
+  }
+
+  protected get phoneIsValid() {
+    const digits = this.phone.replace(/\D/g, '');
+    const normalized = digits.startsWith('55') ? digits.slice(2) : digits;
+
+    return normalized.length === 10 || normalized.length === 11;
+  }
+
+  protected get shouldShowPhoneValidation() {
+    return this.phoneTouched && !!this.phone.trim();
   }
 
   protected get passwordsMatch() {
@@ -267,6 +305,17 @@ export class RegisterPageComponent implements OnDestroy {
     }
 
     return `${parts.slice(0, 3).join('.')}${parts[3] ? `-${parts[3]}` : ''}`;
+  }
+
+  private calculateCpfDigit(numbers: number[]) {
+    const factorStart = numbers.length + 1;
+    const sum = numbers.reduce(
+      (total, number, index) => total + number * (factorStart - index),
+      0,
+    );
+    const rest = (sum * 10) % 11;
+
+    return rest === 10 ? 0 : rest;
   }
 
   protected register() {

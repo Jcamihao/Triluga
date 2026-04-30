@@ -542,31 +542,85 @@
 
           <label class="signup-web__field">
             <span>CPF</span>
-            <input
-              name="webCpf"
-              [ngModel]="cpf"
-              (ngModelChange)="cpf = formatCpf($event)"
-              placeholder="000.000.000-00"
-              type="text"
-              inputmode="numeric"
-              maxlength="14"
-              [disabled]="loading"
-            />
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowCpfValidation && cpfIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowCpfValidation && !cpfIsValid
+              "
+            >
+              <input
+                name="webCpf"
+                [ngModel]="cpf"
+                (ngModelChange)="cpf = formatCpf($event)"
+                placeholder="000.000.000-00"
+                type="text"
+                inputmode="numeric"
+                maxlength="14"
+                (focus)="cpfTouched = true"
+                (blur)="cpfTouched = true"
+                [disabled]="loading"
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowCpfValidation"
+              >
+                {{ cpfIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowCpfValidation"
+              [class.signup-web__input-message--valid]="cpfIsValid"
+              [class.signup-web__input-message--invalid]="!cpfIsValid"
+            >
+              {{ cpfIsValid ? 'CPF válido' : 'Digite um CPF válido' }}
+            </p>
           </label>
 
           <label class="signup-web__field">
             <span>Telefone/Celular</span>
-            <input
-              name="webPhone"
-              [ngModel]="phone"
-              (ngModelChange)="phone = formatPhone($event)"
-              placeholder="(00) 00000-0000"
-              type="tel"
-              autocomplete="tel"
-              maxlength="19"
-              [disabled]="loading"
-              required
-            />
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowPhoneValidation && phoneIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowPhoneValidation && !phoneIsValid
+              "
+            >
+              <input
+                name="webPhone"
+                [ngModel]="phone"
+                (ngModelChange)="phone = formatPhone($event)"
+                placeholder="(00) 00000-0000"
+                type="tel"
+                autocomplete="tel"
+                maxlength="19"
+                (focus)="phoneTouched = true"
+                (blur)="phoneTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowPhoneValidation"
+              >
+                {{ phoneIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowPhoneValidation"
+              [class.signup-web__input-message--valid]="phoneIsValid"
+              [class.signup-web__input-message--invalid]="!phoneIsValid"
+            >
+              {{
+                phoneIsValid ? 'Telefone válido' : 'Digite um telefone válido'
+              }}
+            </p>
           </label>
 
           <label class="signup-web__field">
