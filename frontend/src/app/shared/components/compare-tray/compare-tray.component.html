@@ -1,4 +1,4 @@
-<ng-container *ngIf="compareService.count()">
+<ng-container *ngIf="compareService.count() && !shouldHideTray">
   <!-- Collapsed FAB (on /compare page or manually collapsed) -->
   <button
     *ngIf="collapsed"

@@ -27,6 +27,8 @@ export class WebHeaderComponent {
 
   protected readonly avatarFallback =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuDVVPsQebFXSU8SAlguZUvq2_i2z1jIfEJqpAThFnCSc2ft_oNkdEoNzAIYc0rX3hHIb8cYJe4JAwzItbHvpYpzYRddssJLYqPLOXXxIH2AIsyANlVZXBdEzpM45Hlm3-2SzIm3G6rhbcRAv7fUDnaZqDPy6A90YSb8PEg0vb6DyZOw0UTiBKcVBUos-ycRHw0iJ_yJHffmCZfHjUTODmg4V6ZaRIgOKeFUwUsURc-JAzRR9PQwPZYXfwLNxSVks59Du_yrwoaAU6a1';
+  protected readonly blankAvatar =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='60' fill='%23edf4ff'/%3E%3Ccircle cx='60' cy='48' r='20' fill='%23bbcbbb'/%3E%3Cpath d='M27 100c6-24 24-37 33-37s27 13 33 37' fill='%23bbcbbb'/%3E%3C/svg%3E";
 
   constructor() {
     effect(() => {
@@ -63,9 +65,26 @@ export class WebHeaderComponent {
     this.router.navigate([path]);
   }
 
+  protected openPublicProfile() {
+    const userId = this.authService.currentUser()?.id;
+
+    if (!this.authService.hasSession() || !userId) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    this.router.navigate(['/users', userId]);
+  }
+
   protected isRouteActive(path: string) {
     const currentPath = this.router.url.split('?')[0].split('#')[0];
     return currentPath === path || currentPath.startsWith(`${path}/`);
+  }
+
+  protected get isPublicProfileActive() {
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+    const userId = this.authService.currentUser()?.id;
+    return !!userId && currentPath === `/users/${userId}`;
   }
 
   protected get unreadChatCount() {
@@ -93,6 +112,10 @@ export class WebHeaderComponent {
     this.notificationsOpen = false;
   }
 
+  protected logout() {
+    this.authService.logout();
+  }
+
   protected markNotificationRead(notificationId: string) {
     this.notificationsService.markRead(notificationId).subscribe();
   }
@@ -108,6 +131,10 @@ export class WebHeaderComponent {
   }
 
   protected get avatarUrl() {
+    if (!this.authService.currentUser()) {
+      return this.blankAvatar;
+    }
+
     return (
       this.authService.currentUser()?.profile?.avatarUrl || this.avatarFallback
     );

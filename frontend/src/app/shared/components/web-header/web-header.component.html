@@ -20,7 +20,8 @@
           type="button"
           class="web-header__link"
           [class.web-header__link--active]="
-            isRouteActive('/anunciar-carro') || isRouteActive('/owner-dashboard')
+            isRouteActive('/anunciar-carro') ||
+            isRouteActive('/owner-dashboard')
           "
           routerLink="/anunciar-carro"
         >
@@ -37,8 +38,8 @@
         <button
           type="button"
           class="web-header__link"
-          [class.web-header__link--active]="isRouteActive('/profile')"
-          (click)="openProtected('/profile')"
+          [class.web-header__link--active]="isPublicProfileActive"
+          (click)="openPublicProfile()"
         >
           Meu Perfil
         </button>
@@ -59,6 +60,14 @@
       </button>
       <button
         type="button"
+        class="web-header__icon"
+        aria-label="Configurações do perfil"
+        (click)="openProtected('/profile')"
+      >
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+      <button
+        type="button"
         class="web-header__icon web-header__icon--with-badge"
         aria-label="Notificações"
         (click)="toggleNotifications()"
@@ -76,10 +85,18 @@
         Anunciar Grátis
       </button>
       <button
+        *ngIf="authService.hasSession()"
+        type="button"
+        class="web-header__logout"
+        (click)="logout()"
+      >
+        Sair
+      </button>
+      <button
         type="button"
         class="web-header__avatar"
         aria-label="Abrir perfil"
-        (click)="openProtected('/profile')"
+        (click)="openPublicProfile()"
       >
         <img [src]="avatarUrl" alt="Avatar do usuário" />
       </button>

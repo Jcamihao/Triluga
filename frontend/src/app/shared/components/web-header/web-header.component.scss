@@ -131,6 +131,7 @@
 
 .web-header__icon:active,
 .web-header__announce:active,
+.web-header__logout:active,
 .web-header__avatar:active {
   transform: scale(0.95);
 }
@@ -300,7 +301,24 @@
     transform 180ms ease;
 }
 
-.web-header__announce:hover {
+.web-header__logout {
+  min-height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
+  color: #fff;
+  padding: 0 24px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.18);
+  transition:
+    filter 180ms ease,
+    transform 180ms ease;
+}
+
+.web-header__announce:hover,
+.web-header__logout:hover {
   filter: brightness(1.08) saturate(1.18);
 }
 

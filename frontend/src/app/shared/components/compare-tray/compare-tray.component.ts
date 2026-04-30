@@ -17,6 +17,7 @@ export class CompareTrayComponent {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected currentUrl = this.router.url;
   protected collapsed = this.router.url.startsWith('/compare');
 
   constructor() {
@@ -26,11 +27,14 @@ export class CompareTrayComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((e) => {
+        this.currentUrl = (e as NavigationEnd).urlAfterRedirects;
         // Auto-collapse when entering /compare, auto-expand when leaving
-        this.collapsed = (e as NavigationEnd).urlAfterRedirects.startsWith(
-          '/compare',
-        );
+        this.collapsed = this.currentUrl.startsWith('/compare');
       });
+  }
+
+  protected get shouldHideTray() {
+    return this.currentUrl.startsWith('/favorites');
   }
 
   protected toggleCollapsed() {

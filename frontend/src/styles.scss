@@ -820,3 +820,59 @@ label > span:first-child {
 body.hide-bottom-nav app-bottom-nav {
   display: none !important;
 }
+
+@media (min-width: 768px) {
+  .vehicle-detail-web__preview {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background: rgba(9, 29, 46, 0.84);
+    backdrop-filter: blur(16px);
+  }
+
+  .vehicle-detail-web__preview img {
+    max-width: min(1180px, 92vw);
+    max-height: 88vh;
+    border-radius: 1rem;
+    object-fit: contain;
+    box-shadow: 0 36px 92px rgba(0, 0, 0, 0.38);
+  }
+
+  .vehicle-detail-web__preview-close,
+  .vehicle-detail-web__preview-nav {
+    position: absolute;
+    width: 3rem;
+    height: 3rem;
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #091d2e;
+  }
+
+  .vehicle-detail-web__preview-close {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .vehicle-detail-web__preview-nav {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .vehicle-detail-web__preview-nav--prev {
+    left: 1.5rem;
+  }
+
+  .vehicle-detail-web__preview-nav--next {
+    right: 1.5rem;
+  }
+
+  .vehicle-detail-web__preview-nav .material-symbols-outlined {
+    font-size: 2rem;
+  }
+}
