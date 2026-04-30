@@ -5,15 +5,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
 import {
   PublicUserProfile,
+  VehicleCardItem,
   VerificationStatus,
 } from '../../core/models/domain.models';
 import { ProfileApiService } from '../../core/services/profile-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-user-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, VehicleCardComponent],
+  imports: [CommonModule, RouterLink, VehicleCardComponent, WebHeaderComponent],
   templateUrl: './user-profile-page.component.html',
   styleUrls: ['./user-profile-page.component.scss'],
 })
@@ -82,6 +84,83 @@ export class UserProfilePageComponent {
     if (firstVehicle) {
       this.router.navigate(['/vehicles', firstVehicle.id]);
     }
+  }
+
+  protected vehicleTag(vehicle: VehicleCardItem) {
+    if (vehicle.vehicleType === 'MOTORCYCLE') {
+      return vehicle.motorcycleStyle
+        ? this.motorcycleStyleLabel(vehicle.motorcycleStyle)
+        : 'Moto';
+    }
+
+    if (vehicle.fuelType === 'ELECTRIC') {
+      return 'Elétrico';
+    }
+
+    if (vehicle.category === 'LUXURY') {
+      return 'Premium';
+    }
+
+    const labels: Record<string, string> = {
+      ECONOMY: 'Econômico',
+      HATCH: 'Hatch',
+      SEDAN: 'Sedan',
+      SUV: 'SUV',
+      PICKUP: 'Pickup',
+      VAN: 'Van',
+    };
+
+    return labels[vehicle.category] || vehicle.category;
+  }
+
+  protected vehicleRangeLabel(vehicle: VehicleCardItem) {
+    if (vehicle.vehicleType === 'MOTORCYCLE' && vehicle.engineCc) {
+      return `${vehicle.engineCc} cc`;
+    }
+
+    if (vehicle.fuelType === 'ELECTRIC') {
+      return 'Elétrico';
+    }
+
+    return vehicle.transmission === 'AUTOMATIC' ? 'Automático' : 'Manual';
+  }
+
+  protected motorcycleStyleLabel(style: string) {
+    const labels: Record<string, string> = {
+      SCOOTER: 'Scooter',
+      STREET: 'Street',
+      SPORT: 'Sport',
+      TRAIL: 'Trail',
+      CUSTOM: 'Custom',
+      TOURING: 'Touring',
+    };
+
+    return labels[style] || style;
+  }
+
+  protected responseTimeShortLabel(profile: PublicUserProfile) {
+    return profile.responseTimeLabel || 'Sem histórico';
+  }
+
+  protected reputationReviewLabel(profile: PublicUserProfile) {
+    if (!profile.reviewsCount) {
+      return 'Sem avaliações';
+    }
+
+    return `${profile.reviewsCount} avaliação${profile.reviewsCount > 1 ? 'ões' : ''}`;
+  }
+
+  protected ratingPercentage(stars: number) {
+    if (!this.profile?.reviews.length) {
+      return stars === 5 && this.profile?.ratingAverage ? 100 : 0;
+    }
+
+    const total = this.profile.reviews.length;
+    const count = this.profile.reviews.filter(
+      (review) => review.rating === stars,
+    ).length;
+
+    return Math.round((count / total) * 100);
   }
 
   protected memberSinceLabel(value: string) {

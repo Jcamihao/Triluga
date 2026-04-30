@@ -1,4 +1,4 @@
-<main class="bg-surface text-on-surface pb-24 font-body antialiased">
+<main class="bg-surface text-on-surface pb-24 font-body antialiased md:hidden">
   <!-- TopAppBar -->
   <header
     class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
@@ -483,3 +483,259 @@
     </ng-container>
   </div>
 </main>
+
+<div class="public-profile-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="public-profile-web__main">
+    <section class="public-profile-web__loading" *ngIf="isLoading">
+      <div></div>
+      <span></span>
+      <span></span>
+    </section>
+
+    <section
+      class="public-profile-web__error"
+      *ngIf="!isLoading && errorMessage"
+    >
+      <span class="material-symbols-outlined">error</span>
+      <h1>Perfil indisponível</h1>
+      <p>{{ errorMessage }}</p>
+      <a routerLink="/search">Voltar à busca</a>
+    </section>
+
+    <ng-container *ngIf="!isLoading && profile">
+      <section class="public-profile-web__hero">
+        <div class="public-profile-web__avatar-wrap">
+          <img
+            [src]="profile.avatarUrl || fallbackAvatarImage"
+            [alt]="profile.fullName"
+          />
+          <span
+            class="public-profile-web__verified"
+            *ngIf="profile.verification.profileStatus === 'APPROVED'"
+          >
+            <span class="material-symbols-outlined">verified</span>
+          </span>
+        </div>
+
+        <div class="public-profile-web__identity">
+          <h1>{{ profile.fullName }}</h1>
+          <p>
+            Membro desde {{ memberSinceLabel(profile.memberSince) }}
+            <ng-container *ngIf="locationLabel(profile)">
+              • {{ locationLabel(profile) }}
+            </ng-container>
+          </p>
+
+          <div class="public-profile-web__metrics">
+            <div>
+              <span>Reputação</span>
+              <strong>
+                {{ scoreLabel(profile) }}
+                <span class="public-profile-web__stars">
+                  <span
+                    class="material-symbols-outlined"
+                    *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                  >
+                    {{
+                      star <= roundedScore(profile.ratingAverage)
+                        ? 'star'
+                        : 'star_border'
+                    }}
+                  </span>
+                </span>
+                <small>({{ reputationReviewLabel(profile) }})</small>
+              </strong>
+            </div>
+
+            <div>
+              <span>Locações</span>
+              <strong>
+                {{ profile.trustMetrics.completedRentalsCount }}
+                <small>concluídas</small>
+              </strong>
+            </div>
+
+            <div>
+              <span>Tempo de Resposta</span>
+              <strong>{{ responseTimeShortLabel(profile) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="public-profile-web__actions">
+          <button type="button" (click)="contactUser()">Mensagem</button>
+          <button type="button" (click)="copyProfileLink()">
+            {{ linkCopied ? 'Link copiado' : 'Seguir' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="public-profile-web__vehicles">
+        <div class="public-profile-web__section-head">
+          <div>
+            <h2>Veículos Ativos</h2>
+            <p>A frota de {{ profile.fullName }} disponível agora.</p>
+          </div>
+
+          <button type="button" aria-label="Filtrar veículos">
+            <span class="material-symbols-outlined">filter_list</span>
+          </button>
+        </div>
+
+        <div
+          class="public-profile-web__vehicle-grid"
+          *ngIf="profile.vehicles.length; else webEmptyListings"
+        >
+          <article
+            class="public-profile-web__vehicle"
+            *ngFor="let vehicle of profile.vehicles; trackBy: trackById"
+          >
+            <a [routerLink]="['/vehicles', vehicle.id]">
+              <div class="public-profile-web__vehicle-media">
+                <img
+                  [src]="vehicle.coverImage || fallbackAvatarImage"
+                  [alt]="vehicle.brand + ' ' + vehicle.model"
+                />
+                <span>{{ vehicleTag(vehicle) }}</span>
+              </div>
+
+              <div class="public-profile-web__vehicle-body">
+                <div class="public-profile-web__vehicle-title">
+                  <h3>{{ vehicle.title }}</h3>
+                  <strong>
+                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
+                    }}<small>/dia</small>
+                  </strong>
+                </div>
+
+                <div class="public-profile-web__vehicle-specs">
+                  <span>
+                    <span class="material-symbols-outlined">speed</span>
+                    {{ vehicleRangeLabel(vehicle) }}
+                  </span>
+                  <span>
+                    <span class="material-symbols-outlined">
+                      airline_seat_recline_extra
+                    </span>
+                    {{ vehicle.seats }} lugares
+                  </span>
+                </div>
+
+                <span class="public-profile-web__details">Ver Detalhes</span>
+              </div>
+            </a>
+          </article>
+        </div>
+
+        <ng-template #webEmptyListings>
+          <div class="public-profile-web__empty-list">
+            <span class="material-symbols-outlined">directions_car</span>
+            <strong>Nenhum anúncio público</strong>
+            <p>Esse usuário ainda não tem veículos ativos.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="public-profile-web__reviews">
+        <div class="public-profile-web__reviews-head">
+          <div>
+            <h2>Avaliações de Clientes</h2>
+            <p>
+              O que as pessoas dizem sobre a experiência com
+              {{ profile.fullName }}.
+            </p>
+          </div>
+
+          <div class="public-profile-web__rating-card">
+            <div>
+              <strong>{{ scoreLabel(profile) }}</strong>
+              <span class="public-profile-web__stars">
+                <span
+                  class="material-symbols-outlined"
+                  *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                >
+                  {{
+                    star <= roundedScore(profile.ratingAverage)
+                      ? 'star'
+                      : 'star_border'
+                  }}
+                </span>
+              </span>
+            </div>
+
+            <div class="public-profile-web__rating-bars">
+              <div>
+                <span>5 estrelas</span>
+                <i><b [style.width.%]="ratingPercentage(5)"></b></i>
+                <small>{{ ratingPercentage(5) }}%</small>
+              </div>
+              <div>
+                <span>4 estrelas</span>
+                <i><b [style.width.%]="ratingPercentage(4)"></b></i>
+                <small>{{ ratingPercentage(4) }}%</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="public-profile-web__review-list"
+          *ngIf="profile.reviews.length; else webEmptyReviews"
+        >
+          <article
+            class="public-profile-web__review"
+            *ngFor="let review of profile.reviews; trackBy: trackById"
+          >
+            <div class="public-profile-web__review-head">
+              <div>
+                <img
+                  *ngIf="review.author?.avatarUrl; else reviewInitials"
+                  [src]="review.author?.avatarUrl"
+                  [alt]="review.author?.fullName || 'Usuário'"
+                />
+                <ng-template #reviewInitials>
+                  <span class="public-profile-web__review-initials">
+                    {{
+                      (review.author?.fullName || 'U').slice(0, 2).toUpperCase()
+                    }}
+                  </span>
+                </ng-template>
+              </div>
+
+              <div>
+                <h3>{{ review.author?.fullName || 'Usuário' }}</h3>
+                <p>{{ review.createdAt | date: 'dd/MM/yyyy' }}</p>
+              </div>
+
+              <span class="public-profile-web__stars">
+                <span
+                  class="material-symbols-outlined"
+                  *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                >
+                  {{ star <= review.rating ? 'star' : 'star_border' }}
+                </span>
+              </span>
+            </div>
+
+            <p>
+              {{
+                review.comment ||
+                  'O usuário deixou a nota sem comentário adicional.'
+              }}
+            </p>
+          </article>
+        </div>
+
+        <ng-template #webEmptyReviews>
+          <div class="public-profile-web__empty-list">
+            <span class="material-symbols-outlined">reviews</span>
+            <strong>Sem avaliações</strong>
+            <p>Esse perfil ainda não recebeu avaliações públicas.</p>
+          </div>
+        </ng-template>
+      </section>
+    </ng-container>
+  </main>
+</div>

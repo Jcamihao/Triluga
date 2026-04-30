@@ -27,7 +27,13 @@ export class ProfilesService {
   }
 
   async getPublicProfile(userId: string) {
-    const [user, reviewsAggregate, reviews, vehicles] = await Promise.all([
+    const [
+      user,
+      reviewsAggregate,
+      reviews,
+      vehicles,
+      averageResponseTimeLabel,
+    ] = await Promise.all([
       this.prisma.user.findFirst({
         where: {
           id: userId,
@@ -84,6 +90,7 @@ export class ProfilesService {
           createdAt: 'desc',
         },
       }),
+      this.resolveAverageChatResponseTimeLabel(userId),
     ]);
 
     if (!user) {
@@ -100,8 +107,6 @@ export class ProfilesService {
       (reviewsAggregate._avg.rating ?? 0).toFixed(1),
     );
 
-    const responseTimeLabel = this.resolveResponseTimeLabel(user.lastLoginAt);
-
     return {
       id: user.id,
       role: user.role,
@@ -115,7 +120,7 @@ export class ProfilesService {
       ratingAverage,
       reviewsCount: reviewsAggregate._count.rating,
       activeListingsCount: vehicles.length,
-      responseTimeLabel,
+      responseTimeLabel: averageResponseTimeLabel,
       trustMetrics: {
         activeListingsCount: vehicles.length,
         reviewsCount: reviewsAggregate._count.rating,
@@ -296,27 +301,95 @@ export class ProfilesService {
     };
   }
 
-  private resolveResponseTimeLabel(lastLoginAt: Date | null): string | null {
-    if (!lastLoginAt) {
+  private async resolveAverageChatResponseTimeLabel(
+    userId: string,
+  ): Promise<string | null> {
+    const conversations = await this.prisma.chatConversation.findMany({
+      where: {
+        participants: {
+          some: {
+            userId,
+          },
+        },
+        messages: {
+          some: {
+            senderId: {
+              not: userId,
+            },
+          },
+        },
+      },
+      select: {
+        messages: {
+          select: {
+            senderId: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+    });
+
+    const responseTimesMs: number[] = [];
+
+    conversations.forEach((conversation) => {
+      let pendingIncomingAt: Date | null = null;
+
+      conversation.messages.forEach((message) => {
+        if (message.senderId === userId) {
+          if (!pendingIncomingAt) {
+            return;
+          }
+
+          const responseTimeMs =
+            message.createdAt.getTime() - pendingIncomingAt.getTime();
+
+          if (responseTimeMs > 0) {
+            responseTimesMs.push(responseTimeMs);
+          }
+
+          pendingIncomingAt = null;
+          return;
+        }
+
+        pendingIncomingAt ??= message.createdAt;
+      });
+    });
+
+    if (!responseTimesMs.length) {
       return null;
     }
 
-    const diffMs = Date.now() - lastLoginAt.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const averageMs =
+      responseTimesMs.reduce((total, time) => total + time, 0) /
+      responseTimesMs.length;
 
-    if (diffDays <= 1) {
-      return 'Responde rápido';
+    return this.formatResponseTimeLabel(averageMs);
+  }
+
+  private formatResponseTimeLabel(milliseconds: number): string {
+    const minuteMs = 1000 * 60;
+    const hourMs = minuteMs * 60;
+    const dayMs = hourMs * 24;
+
+    if (milliseconds < minuteMs) {
+      return 'menos de 1 minuto';
     }
 
-    if (diffDays <= 7) {
-      return 'Ativo recentemente';
+    if (milliseconds < hourMs) {
+      const minutes = Math.max(1, Math.round(milliseconds / minuteMs));
+      return `~${minutes} minuto${minutes > 1 ? 's' : ''}`;
     }
 
-    if (diffDays <= 30) {
-      return 'Ativo este mês';
+    if (milliseconds < dayMs) {
+      const hours = Math.max(1, Math.round(milliseconds / hourMs));
+      return `~${hours} hora${hours > 1 ? 's' : ''}`;
     }
 
-    return null;
+    const days = Math.max(1, Math.round(milliseconds / dayMs));
+    return `~${days} dia${days > 1 ? 's' : ''}`;
   }
 
   private resolveProfileVerificationStatus(

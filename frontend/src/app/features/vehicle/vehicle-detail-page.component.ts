@@ -12,6 +12,7 @@ import { CompareService } from '../../core/services/compare.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleDetail } from '../../core/models/domain.models';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 type DetailFactItem = {
   icon: string;
@@ -30,7 +31,7 @@ type StarIcon = 'star' | 'star_half' | 'star_border';
 @Component({
   selector: 'app-vehicle-detail-page',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, RouterLink],
+  imports: [CommonModule, CurrencyPipe, RouterLink, WebHeaderComponent],
   templateUrl: './vehicle-detail-page.component.html',
   styleUrls: ['./vehicle-detail-page.component.scss'],
 })
@@ -86,6 +87,8 @@ export class VehicleDetailPageComponent {
   protected vehicle?: VehicleDetail;
   protected readonly collapsedDetailCount = 6;
   protected showAllDetails = false;
+  protected previewImageUrl = '';
+  protected previewImageIndex = 0;
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -177,6 +180,60 @@ export class VehicleDetailPageComponent {
     );
   }
 
+  protected get webGalleryImages() {
+    const images = [
+      this.vehicle?.coverImage,
+      ...[...(this.vehicle?.images ?? [])]
+        .sort((left, right) => left.position - right.position)
+        .map((image) => image.url),
+    ].filter((url): url is string => !!url);
+
+    return images.length ? images : [this.detailHeroFallbackImage];
+  }
+
+  protected get webGalleryThumbs() {
+    const images = this.webGalleryImages.slice(1, 4);
+
+    while (images.length < 3) {
+      images.push(this.webGalleryImages[0] ?? this.detailHeroFallbackImage);
+    }
+
+    return images;
+  }
+
+  protected openImagePreview(imageUrl: string) {
+    this.previewImageUrl = imageUrl;
+    this.previewImageIndex = Math.max(
+      0,
+      this.webGalleryImages.findIndex((image) => image === imageUrl),
+    );
+  }
+
+  protected closeImagePreview() {
+    this.previewImageUrl = '';
+  }
+
+  protected showPreviousPreviewImage(event: Event) {
+    event.stopPropagation();
+    this.setPreviewImage(this.previewImageIndex - 1);
+  }
+
+  protected showNextPreviewImage(event: Event) {
+    event.stopPropagation();
+    this.setPreviewImage(this.previewImageIndex + 1);
+  }
+
+  private setPreviewImage(index: number) {
+    const images = this.webGalleryImages;
+
+    if (!images.length) {
+      return;
+    }
+
+    this.previewImageIndex = (index + images.length) % images.length;
+    this.previewImageUrl = images[this.previewImageIndex];
+  }
+
   protected get galleryImageCount() {
     return Math.max(this.vehicle?.images.length ?? 0, 1);
   }
@@ -213,6 +270,32 @@ export class VehicleDetailPageComponent {
     return this.vehicle.weeklyRate ?? this.vehicle.dailyRate * 6;
   }
 
+  protected get bookingDays() {
+    return 3;
+  }
+
+  protected get bookingSubtotal() {
+    return (this.vehicle?.dailyRate ?? 0) * this.bookingDays;
+  }
+
+  protected get bookingInsuranceFee() {
+    if (!this.vehicle?.hasInsurance) {
+      return 0;
+    }
+
+    return Math.round(this.bookingSubtotal * 0.09);
+  }
+
+  protected get bookingServiceFee() {
+    return Math.round(this.bookingSubtotal * 0.04);
+  }
+
+  protected get bookingTotal() {
+    return (
+      this.bookingSubtotal + this.bookingInsuranceFee + this.bookingServiceFee
+    );
+  }
+
   protected get kmPolicyLabel() {
     if (!this.vehicle) {
       return '';
@@ -227,6 +310,22 @@ export class VehicleDetailPageComponent {
 
   protected get insuranceLabel() {
     return this.vehicle?.hasInsurance === false ? 'Sob consulta' : 'Completo';
+  }
+
+  protected get mechanicsConditionLabel() {
+    const labels: Record<string, string> = {
+      REVIEW: 'Precisa revisar',
+      GOOD: 'Bom',
+      EXCELLENT: 'Impecável',
+    };
+
+    return labels[this.vehicle?.mechanicsCondition ?? ''] || 'Não informado';
+  }
+
+  protected get detranStatusLabel() {
+    return this.vehicle?.hasDetranIssues
+      ? 'Pendências informadas'
+      : 'Tudo regularizado';
   }
 
   protected get ownerName() {
@@ -270,12 +369,12 @@ export class VehicleDetailPageComponent {
       {
         icon: 'tune',
         label: 'Transmissão',
-        value: this.transmissionLabel(this.vehicle.transmission).toUpperCase(),
+        value: this.transmissionLabel(this.vehicle.transmission),
       },
       {
         icon: 'local_gas_station',
         label: 'Combustível',
-        value: this.fuelTypeLabel(this.vehicle.fuelType).toUpperCase(),
+        value: this.fuelTypeLabel(this.vehicle.fuelType),
       },
       {
         icon: 'calendar_month',
@@ -456,33 +555,13 @@ export class VehicleDetailPageComponent {
       return this.mapEmbedCacheUrl;
     }
 
-    if (latitude !== null && longitude !== null) {
-      const latitudeDelta = 0.012;
-      const longitudeDelta = 0.018;
-      const url = new URL('https://www.openstreetmap.org/export/embed.html');
-
-      url.searchParams.set(
-        'bbox',
-        [
-          longitude - longitudeDelta,
-          latitude - latitudeDelta,
-          longitude + longitudeDelta,
-          latitude + latitudeDelta,
-        ].join(','),
-      );
-      url.searchParams.set('layer', 'mapnik');
-      url.searchParams.set('marker', `${latitude},${longitude}`);
-
-      this.mapEmbedCacheKey = cacheKey;
-      this.mapEmbedCacheUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-        url.toString(),
-      );
-
-      return this.mapEmbedCacheUrl;
-    }
-
     const url = new URL('https://maps.google.com/maps');
-    url.searchParams.set('q', this.vehicleLocationLabel);
+    url.searchParams.set(
+      'q',
+      latitude !== null && longitude !== null
+        ? `${latitude},${longitude}`
+        : this.vehicleLocationLabel,
+    );
     url.searchParams.set('output', 'embed');
 
     this.mapEmbedCacheKey = cacheKey;
@@ -504,7 +583,10 @@ export class VehicleDetailPageComponent {
       return url.toString();
     }
 
-    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`;
+    const url = new URL('https://www.google.com/maps/search/');
+    url.searchParams.set('api', '1');
+    url.searchParams.set('query', `${latitude},${longitude}`);
+    return url.toString();
   }
 
   protected categoryLabel(category: string) {

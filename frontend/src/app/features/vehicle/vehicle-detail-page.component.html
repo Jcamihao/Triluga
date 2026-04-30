@@ -1,5 +1,5 @@
 <main
-  class="vehicle-detail-stitch bg-surface text-on-surface selection:bg-primary-container/30 pb-[180px]"
+  class="vehicle-detail-stitch md:hidden bg-surface text-on-surface selection:bg-primary-container/30 pb-[180px]"
   *ngIf="vehicle"
 >
   <!-- Hero Section: Full width gallery with overlays -->
@@ -428,3 +428,346 @@
     </div>
   </div>
 </main>
+
+<ng-container *ngIf="vehicle">
+  <app-web-header class="hidden md:block" [fixed]="true"></app-web-header>
+
+  <main class="vehicle-detail-web hidden md:block">
+    <div class="vehicle-detail-web__shell">
+      <section class="vehicle-detail-web__gallery">
+        <div class="vehicle-detail-web__hero">
+          <button
+            type="button"
+            class="vehicle-detail-web__image-trigger"
+            (click)="openImagePreview(webGalleryImages[0])"
+            aria-label="Ampliar foto principal"
+          >
+            <img [src]="webGalleryImages[0]" [alt]="vehicle.title" />
+          </button>
+
+          <div class="vehicle-detail-web__hero-gradient"></div>
+
+          <div class="vehicle-detail-web__hero-actions">
+            <button
+              type="button"
+              class="vehicle-detail-web__round-action"
+              (click)="router.navigate(['/search'])"
+              aria-label="Voltar para busca"
+            >
+              <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+
+            <div class="vehicle-detail-web__round-group">
+              <button
+                type="button"
+                class="vehicle-detail-web__round-action"
+                (click)="shareVehicle()"
+                aria-label="Compartilhar veículo"
+              >
+                <span class="material-symbols-outlined">share</span>
+              </button>
+
+              <button
+                type="button"
+                class="vehicle-detail-web__round-action"
+                [class.vehicle-detail-web__round-action--active]="isFavorite"
+                [disabled]="isFavoritePending"
+                (click)="toggleFavorite()"
+                [attr.aria-label]="
+                  isFavorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'
+                "
+              >
+                <span
+                  class="material-symbols-outlined"
+                  [style.font-variation-settings]="
+                    isFavorite ? '\'FILL\' 1' : '\'FILL\' 0'
+                  "
+                >
+                  {{ isFavorite ? 'favorite' : 'favorite_border' }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="vehicle-detail-web__hero-copy">
+            <span class="vehicle-detail-web__certified">
+              <span class="material-symbols-outlined">verified</span>
+              Triluga verificado
+            </span>
+            <h1>{{ vehicle.title }}</h1>
+            <p>{{ vehicleYearAndFuelLabel }}</p>
+          </div>
+        </div>
+
+        <div class="vehicle-detail-web__thumbs">
+          <button
+            type="button"
+            class="vehicle-detail-web__thumb"
+            *ngFor="let image of webGalleryThumbs; let last = last"
+            (click)="openImagePreview(image)"
+            aria-label="Foto do veículo"
+          >
+            <img [src]="image" [alt]="vehicle.title" />
+            <span class="vehicle-detail-web__thumb-more" *ngIf="last">
+              <span class="material-symbols-outlined">collections</span>
+              {{ galleryImageCount }} fotos
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="vehicle-detail-web__content">
+        <div class="vehicle-detail-web__main-column">
+          <div class="vehicle-detail-web__spec-grid">
+            <article class="vehicle-detail-web__spec">
+              <span class="material-symbols-outlined">settings</span>
+              <small>Câmbio</small>
+              <strong>{{ transmissionLabel(vehicle.transmission) }}</strong>
+            </article>
+
+            <article class="vehicle-detail-web__spec">
+              <span class="material-symbols-outlined">local_gas_station</span>
+              <small>Combustível</small>
+              <strong>{{ fuelTypeLabel(vehicle.fuelType) }}</strong>
+            </article>
+
+            <article class="vehicle-detail-web__spec">
+              <span class="material-symbols-outlined">event_seat</span>
+              <small>Lugares</small>
+              <strong>{{ vehicle.seats }} lugares</strong>
+            </article>
+
+            <article class="vehicle-detail-web__spec">
+              <span class="material-symbols-outlined">speed</span>
+              <small>Franquia KM</small>
+              <strong>{{ kmPolicyLabel }}</strong>
+            </article>
+          </div>
+
+          <section class="vehicle-detail-web__panel">
+            <h2>Sobre este veículo</h2>
+            <p>{{ vehicle.description }}</p>
+
+            <div class="vehicle-detail-web__feature-grid">
+              <div
+                class="vehicle-detail-web__feature"
+                *ngFor="
+                  let item of visibleDetailItems;
+                  trackBy: trackByDetailLabel
+                "
+              >
+                <span class="material-symbols-outlined">{{ item.icon }}</span>
+                <div>
+                  <small>{{ item.label }}</small>
+                  <strong>{{ item.value }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="vehicle-detail-web__text-action"
+              *ngIf="detailItems.length > collapsedDetailCount"
+              (click)="toggleDetails()"
+            >
+              {{
+                showAllDetails ? 'Ver menos detalhes' : 'Ver todos os detalhes'
+              }}
+            </button>
+          </section>
+
+          <section class="vehicle-detail-web__panel">
+            <div class="vehicle-detail-web__section-head">
+              <div>
+                <h2>Localização</h2>
+                <p>{{ pickupSubtitle }}</p>
+              </div>
+
+              <a [href]="mapLink" target="_blank" rel="noreferrer">Ver mapa</a>
+            </div>
+
+            <div class="vehicle-detail-web__map">
+              <iframe
+                title="Mapa de retirada do veículo"
+                [src]="mapEmbedUrl"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+
+              <div class="vehicle-detail-web__map-card">
+                <span class="material-symbols-outlined">location_on</span>
+                <div>
+                  <strong>{{ pickupTitle }}</strong>
+                  <small>Local exato combinado com o anunciante</small>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="vehicle-detail-web__panel">
+            <div class="vehicle-detail-web__section-head">
+              <div>
+                <h2>Avaliações</h2>
+                <p>{{ displayReviewCountLabel }}</p>
+              </div>
+
+              <div class="vehicle-detail-web__rating" *ngIf="totalReviewCount">
+                <span class="material-symbols-outlined">star</span>
+                {{ displayRating | number: '1.1-1' }}
+              </div>
+            </div>
+
+            <div
+              class="vehicle-detail-web__reviews"
+              *ngIf="visibleVehicleReviews.length; else emptyWebReviews"
+            >
+              <article
+                class="vehicle-detail-web__review"
+                *ngFor="let review of visibleVehicleReviews; trackBy: trackById"
+              >
+                <div>
+                  <strong>{{
+                    review.author.fullName || 'Usuário Triluga'
+                  }}</strong>
+                  <small>{{ review.createdAt | date: 'dd/MM/yyyy' }}</small>
+                </div>
+
+                <p>{{ excerptReview(review.comment, 160) }}</p>
+              </article>
+            </div>
+
+            <ng-template #emptyWebReviews>
+              <div class="vehicle-detail-web__empty">
+                Ainda sem avaliações para este veículo.
+              </div>
+            </ng-template>
+          </section>
+        </div>
+
+        <aside class="vehicle-detail-web__side-column">
+          <section class="vehicle-detail-web__booking">
+            <div class="vehicle-detail-web__price-row">
+              <div>
+                <strong>
+                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+                </strong>
+                <span>/dia</span>
+              </div>
+
+              <div class="vehicle-detail-web__rating-pill">
+                <span class="material-symbols-outlined">star</span>
+                {{ displayRating | number: '1.1-1' }}
+              </div>
+            </div>
+
+            <div class="vehicle-detail-web__seller-description">
+              <small>Descrição do anunciante</small>
+              <p>{{ vehicle.description }}</p>
+
+              <div class="vehicle-detail-web__condition-list">
+                <div>
+                  <span>Seguro</span>
+                  <strong>{{ insuranceLabel }}</strong>
+                </div>
+                <div>
+                  <span>Condição mecânica</span>
+                  <strong>{{ mechanicsConditionLabel }}</strong>
+                </div>
+                <div>
+                  <span>Status Detran</span>
+                  <strong>{{ detranStatusLabel }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="vehicle-detail-web__primary"
+              (click)="handlePrimaryAction()"
+            >
+              <span class="material-symbols-outlined">{{ ctaIcon }}</span>
+              {{ ctaLabel }}
+            </button>
+
+            <button
+              type="button"
+              class="vehicle-detail-web__secondary"
+              [class.vehicle-detail-web__secondary--active]="isCompared"
+              [disabled]="compareDisabled"
+              (click)="toggleCompare()"
+            >
+              <span class="material-symbols-outlined">compare_arrows</span>
+              {{ isCompared ? 'Remover da comparação' : 'Comparar veículo' }}
+            </button>
+          </section>
+
+          <section class="vehicle-detail-web__owner">
+            <div class="vehicle-detail-web__owner-head">
+              <img
+                [src]="vehicle.owner?.avatarUrl || fallbackAvatarImage"
+                [alt]="ownerName"
+              />
+              <div>
+                <h3>{{ ownerName }}</h3>
+                <p>{{ ownerRatingLabel }}</p>
+              </div>
+            </div>
+
+            <div class="vehicle-detail-web__owner-badge">
+              <span class="material-symbols-outlined">verified_user</span>
+              Identidade verificada
+            </div>
+
+            <a
+              class="vehicle-detail-web__owner-action"
+              *ngIf="vehicle.owner?.id"
+              [routerLink]="['/users', vehicle.owner?.id]"
+            >
+              <span class="material-symbols-outlined">account_circle</span>
+              Ver perfil público
+            </a>
+          </section>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <div
+    class="vehicle-detail-web__preview"
+    *ngIf="previewImageUrl"
+    (click)="closeImagePreview()"
+  >
+    <button
+      type="button"
+      class="vehicle-detail-web__preview-close"
+      aria-label="Fechar preview"
+      (click)="closeImagePreview()"
+    >
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <button
+      type="button"
+      class="vehicle-detail-web__preview-nav vehicle-detail-web__preview-nav--prev"
+      aria-label="Foto anterior"
+      (click)="showPreviousPreviewImage($event)"
+    >
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+
+    <button
+      type="button"
+      class="vehicle-detail-web__preview-nav vehicle-detail-web__preview-nav--next"
+      aria-label="Próxima foto"
+      (click)="showNextPreviewImage($event)"
+    >
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+
+    <img
+      [src]="previewImageUrl"
+      [alt]="vehicle.title"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+</ng-container>
