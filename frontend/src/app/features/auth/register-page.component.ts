@@ -361,6 +361,24 @@ export class RegisterPageComponent implements OnDestroy {
       return;
     }
 
+    if (normalizedCpf && !this.cpfIsValid) {
+      this.feedback = 'Digite um CPF válido.';
+      this.cpfTouched = true;
+      return;
+    }
+
+    if (!this.phoneIsValid) {
+      this.feedback = 'Digite um telefone válido.';
+      this.phoneTouched = true;
+      return;
+    }
+
+    if (!this.zipCodeIsValid) {
+      this.feedback = 'Digite um CEP válido.';
+      this.zipCodeTouched = true;
+      return;
+    }
+
     if (this.password !== this.confirmPassword) {
       this.feedback =
         'A confirmação de senha precisa ser igual à senha digitada.';

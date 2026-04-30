@@ -154,29 +154,205 @@
         </p>
       </div>
 
-      <!-- Phone Number (Optional) -->
+      <!-- CPF -->
       <div class="space-y-2">
-        <div class="flex justify-between items-center ml-1">
-          <label
-            class="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
-            >Telefone</label
-          >
-          <span class="text-[10px] text-on-surface/40 font-medium"
-            >OPCIONAL</span
-          >
-        </div>
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >CPF</label
+        >
         <div class="relative">
           <input
-            class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+            class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-5 pr-12 focus:ring-2 transition-all placeholder:text-on-surface/30"
+            [ngClass]="
+              !shouldShowCpfValidation
+                ? 'focus:ring-primary-container'
+                : cpfIsValid
+                  ? 'focus:ring-primary-container ring-2 ring-primary/20'
+                  : 'focus:ring-error/20 ring-2 ring-error/20'
+            "
+            placeholder="000.000.000-00"
+            type="text"
+            name="cpf"
+            [ngModel]="cpf"
+            (ngModelChange)="cpf = formatCpf($event)"
+            (focus)="cpfTouched = true"
+            (blur)="cpfTouched = true"
+            inputmode="numeric"
+            maxlength="14"
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
+            *ngIf="shouldShowCpfValidation"
+            [ngClass]="cpfIsValid ? 'text-primary' : 'text-error'"
+            [style.font-variation-settings]="'\'FILL\' 1'"
+          >
+            {{ cpfIsValid ? 'check_circle' : 'cancel' }}
+          </span>
+        </div>
+        <p
+          class="text-[11px] font-medium email-validation-message"
+          *ngIf="shouldShowCpfValidation"
+          [ngClass]="cpfIsValid ? 'text-primary' : 'text-error'"
+        >
+          {{ cpfIsValid ? 'CPF válido' : 'Digite um CPF válido' }}
+        </p>
+      </div>
+
+      <!-- Phone Number -->
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >Telefone</label
+        >
+        <div class="relative">
+          <input
+            class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-5 pr-12 focus:ring-2 transition-all placeholder:text-on-surface/30"
+            [ngClass]="
+              !shouldShowPhoneValidation
+                ? 'focus:ring-primary-container'
+                : phoneIsValid
+                  ? 'focus:ring-primary-container ring-2 ring-primary/20'
+                  : 'focus:ring-error/20 ring-2 ring-error/20'
+            "
             placeholder="(11) 99999-9999"
             type="tel"
             name="phone"
             [ngModel]="phone"
             (ngModelChange)="phone = formatPhone($event)"
+            (focus)="phoneTouched = true"
+            (blur)="phoneTouched = true"
             inputmode="tel"
             maxlength="19"
           />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
+            *ngIf="shouldShowPhoneValidation"
+            [ngClass]="phoneIsValid ? 'text-primary' : 'text-error'"
+            [style.font-variation-settings]="'\'FILL\' 1'"
+          >
+            {{ phoneIsValid ? 'check_circle' : 'cancel' }}
+          </span>
         </div>
+        <p
+          class="text-[11px] font-medium email-validation-message"
+          *ngIf="shouldShowPhoneValidation"
+          [ngClass]="phoneIsValid ? 'text-primary' : 'text-error'"
+        >
+          {{ phoneIsValid ? 'Telefone válido' : 'Digite um telefone válido' }}
+        </p>
+      </div>
+
+      <!-- Birth Date -->
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >Data de nascimento</label
+        >
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+          name="birthDate"
+          [(ngModel)]="birthDate"
+          type="date"
+        />
+      </div>
+
+      <!-- Address data kept for existing signup flow -->
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >CEP</label
+        >
+        <div class="relative">
+          <input
+            class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-5 pr-12 focus:ring-2 transition-all placeholder:text-on-surface/30"
+            [ngClass]="
+              !shouldShowZipCodeValidation
+                ? 'focus:ring-primary-container'
+                : zipCodeIsValid
+                  ? 'focus:ring-primary-container ring-2 ring-primary/20'
+                  : 'focus:ring-error/20 ring-2 ring-error/20'
+            "
+            placeholder="13010-111"
+            name="zipCode"
+            [ngModel]="zipCode"
+            (ngModelChange)="onZipCodeChange($event)"
+            (focus)="zipCodeTouched = true"
+            (blur)="zipCodeTouched = true; onZipCodeChange(zipCode)"
+            inputmode="numeric"
+            maxlength="9"
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
+            *ngIf="shouldShowZipCodeValidation"
+            [ngClass]="zipCodeIsValid ? 'text-primary' : 'text-error'"
+            [style.font-variation-settings]="'\'FILL\' 1'"
+          >
+            {{ zipCodeIsValid ? 'check_circle' : 'cancel' }}
+          </span>
+        </div>
+      </div>
+
+      <p
+        class="text-[11px] font-medium text-primary"
+        *ngIf="zipCodeHint && !zipCodeError"
+      >
+        {{ zipCodeHint }}
+      </p>
+      <p class="text-[11px] font-medium text-error" *ngIf="zipCodeError">
+        {{ zipCodeError }}
+      </p>
+
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >Cidade</label
+        >
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+          name="city"
+          [(ngModel)]="city"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >Endereço</label
+        >
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+          placeholder="Rua, avenida ou praça"
+          name="addressLine"
+          [(ngModel)]="addressLine"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >Complemento</label
+        >
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+          placeholder="Apto, bloco, referência"
+          name="addressComplement"
+          [(ngModel)]="addressComplement"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
+          >UF</label
+        >
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
+          placeholder="SP"
+          name="state"
+          [ngModel]="state"
+          (ngModelChange)="state = formatState($event)"
+          maxlength="2"
+        />
       </div>
 
       <!-- Password with Strength Indicator -->
@@ -209,7 +385,6 @@
           </button>
         </div>
 
-        <!-- Strength Indicator -->
         <div class="password-strength-panel px-1 pt-1" *ngIf="passwordTouched">
           <div
             class="h-1 w-full bg-surface-container-highest rounded-full overflow-hidden"
@@ -307,75 +482,6 @@
         >
           {{ passwordsMatch ? 'As senhas conferem' : 'As senhas não conferem' }}
         </p>
-      </div>
-
-      <!-- Address data kept for existing signup flow -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label
-            class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
-            >CEP</label
-          >
-          <input
-            class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
-            placeholder="13010-111"
-            name="zipCode"
-            [ngModel]="zipCode"
-            (ngModelChange)="onZipCodeChange($event)"
-            inputmode="numeric"
-            maxlength="9"
-          />
-        </div>
-
-        <div class="space-y-2">
-          <label
-            class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
-            >UF</label
-          >
-          <input
-            class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
-            placeholder="SP"
-            name="state"
-            [ngModel]="state"
-            (ngModelChange)="state = formatState($event)"
-            maxlength="2"
-          />
-        </div>
-      </div>
-
-      <p
-        class="text-[11px] font-medium text-primary"
-        *ngIf="zipCodeHint && !zipCodeError"
-      >
-        {{ zipCodeHint }}
-      </p>
-      <p class="text-[11px] font-medium text-error" *ngIf="zipCodeError">
-        {{ zipCodeError }}
-      </p>
-
-      <div class="space-y-2">
-        <label
-          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
-          >Endereço</label
-        >
-        <input
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
-          placeholder="Rua, avenida ou praça"
-          name="addressLine"
-          [(ngModel)]="addressLine"
-        />
-      </div>
-
-      <div class="space-y-2">
-        <label
-          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
-          >Cidade</label
-        >
-        <input
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
-          name="city"
-          [(ngModel)]="city"
-        />
       </div>
 
       <!-- Consent & Privacy -->
@@ -682,19 +788,6 @@
             </p>
           </label>
 
-          <label class="signup-web__field signup-web__field--full">
-            <span>Endereço Completo</span>
-            <input
-              name="webAddressLine"
-              [(ngModel)]="addressLine"
-              placeholder="Rua, número, complemento, bairro"
-              type="text"
-              autocomplete="street-address"
-              [disabled]="loading"
-              required
-            />
-          </label>
-
           <div
             class="signup-web__hint signup-web__hint--success"
             *ngIf="zipCodeHint && !zipCodeError"
@@ -707,6 +800,58 @@
           >
             {{ zipCodeError }}
           </div>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Cidade</span>
+            <input
+              name="webCity"
+              [(ngModel)]="city"
+              placeholder="Cidade"
+              type="text"
+              autocomplete="address-level2"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Endereço</span>
+            <input
+              name="webAddressLine"
+              [(ngModel)]="addressLine"
+              placeholder="Rua, número e bairro"
+              type="text"
+              autocomplete="street-address"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field">
+            <span>Complemento</span>
+            <input
+              name="webAddressComplement"
+              [(ngModel)]="addressComplement"
+              placeholder="Apto, bloco, referência"
+              type="text"
+              [disabled]="loading"
+            />
+          </label>
+
+          <label class="signup-web__field">
+            <span>UF</span>
+            <input
+              name="webState"
+              [ngModel]="state"
+              (ngModelChange)="state = formatState($event)"
+              placeholder="SP"
+              type="text"
+              autocomplete="address-level1"
+              maxlength="2"
+              [disabled]="loading"
+              required
+            />
+          </label>
 
           <label class="signup-web__field signup-web__field--full">
             <span>Senha</span>
