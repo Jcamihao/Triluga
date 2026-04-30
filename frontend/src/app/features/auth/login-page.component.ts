@@ -21,13 +21,18 @@ export class LoginPageComponent {
   protected loading = false;
   protected feedback = '';
   protected showPassword = false;
+  protected rememberMe = false;
 
   protected login() {
     this.loading = true;
     this.feedback = '';
 
     this.authService
-      .login({ email: this.email, password: this.password })
+      .login({
+        email: this.email,
+        password: this.password,
+        rememberMe: this.rememberMe,
+      })
       .subscribe({
         next: () => {
           this.loading = false;

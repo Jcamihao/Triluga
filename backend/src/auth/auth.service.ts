@@ -16,6 +16,7 @@ import { RegisterDto } from './dto/register.dto';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly rememberedRefreshExpiresIn = '30d';
 
   constructor(
     private readonly usersService: UsersService,
@@ -81,7 +82,9 @@ export class AuthService {
       `login_success userId=${user.id} email=${user.email} role=${user.role}`,
     );
 
-    return this.issueTokens(user.id, user.email, user.role, user);
+    return this.issueTokens(user.id, user.email, user.role, user, {
+      rememberMe: dto.rememberMe === true,
+    });
   }
 
   async refresh(refreshToken: string | undefined) {
@@ -123,7 +126,9 @@ export class AuthService {
     }
 
     this.logger.log(`refresh_success userId=${user.id} email=${user.email}`);
-    return this.issueTokens(user.id, user.email, user.role, user);
+    return this.issueTokens(user.id, user.email, user.role, user, {
+      rememberMe: payload.rememberMe === true,
+    });
   }
 
   async logout(refreshToken?: string) {
@@ -163,11 +168,14 @@ export class AuthService {
     email: string,
     role: Role,
     user: Awaited<ReturnType<UsersService['findById']>> | any,
+    options: { rememberMe?: boolean } = {},
   ) {
+    const rememberMe = options.rememberMe === true;
     const payload: JwtPayload = {
       sub: userId,
       email,
       role,
+      rememberMe,
     };
 
     const accessSecret =
@@ -179,8 +187,9 @@ export class AuthService {
 
     const accessExpiresIn =
       this.configService.get<string>('auth.accessExpiresIn') ?? '15m';
-    const refreshExpiresIn =
-      this.configService.get<string>('auth.refreshExpiresIn') ?? '7d';
+    const refreshExpiresIn = rememberMe
+      ? this.rememberedRefreshExpiresIn
+      : (this.configService.get<string>('auth.refreshExpiresIn') ?? '7d');
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -201,6 +210,7 @@ export class AuthService {
       accessToken,
       user: await this.usersService.sanitizeUser(user),
       refreshToken,
+      rememberMe,
     };
   }
 }

@@ -22,6 +22,7 @@ import { PrivacyPreferencesService } from './privacy-preferences.service';
 type LoginPayload = {
   email: string;
   password: string;
+  rememberMe?: boolean;
 };
 
 type RegisterPayload = LoginPayload & {
@@ -55,6 +56,10 @@ export class AuthService {
   private readonly accessTokenKey = 'triluga.accessToken';
   private readonly userKey = 'triluga.user';
   private readonly sessionHintKey = 'triluga.sessionHint';
+  private readonly rememberSessionKey = 'triluga.rememberSession';
+  private readonly rememberSessionExpiresAtKey =
+    'triluga.rememberSessionExpiresAt';
+  private readonly rememberSessionDurationMs = 30 * 24 * 60 * 60 * 1000;
 
   private readonly accessTokenSignal = signal<string | null>(
     this.readStoredValue(this.accessTokenKey),
@@ -93,7 +98,7 @@ export class AuthService {
               userId: response.user.id,
               role: response.user.role,
             });
-            this.setSession(response);
+            this.setSession(response, payload.rememberMe === true);
           },
           error: (error) => {
             this.logger.warn('auth', 'login_failed', {
@@ -120,7 +125,7 @@ export class AuthService {
               userId: response.user.id,
               role: response.user.role,
             });
-            this.setSession(response);
+            this.setSession(response, false);
           },
           error: (error) => {
             this.logger.warn('auth', 'register_failed', {
@@ -198,7 +203,7 @@ export class AuthService {
               userId: response.user.id,
               role: response.user.role,
             });
-            this.setSession(response);
+            this.setSession(response, this.isRememberSessionActive());
           },
           error: (error) => {
             this.logger.warn('auth', 'restore_session_failed', {
@@ -236,7 +241,12 @@ export class AuthService {
     });
     this.storage.removeItem(this.accessTokenKey);
     this.storage.removeItem(this.userKey);
+    this.storage.removeItem(this.sessionHintKey);
+    this.persistentStorage.removeItem(this.accessTokenKey);
+    this.persistentStorage.removeItem(this.userKey);
     this.persistentStorage.removeItem(this.sessionHintKey);
+    this.persistentStorage.removeItem(this.rememberSessionKey);
+    this.persistentStorage.removeItem(this.rememberSessionExpiresAtKey);
     this.accessTokenSignal.set(null);
     this.currentUserSignal.set(null);
     this.sessionHintSignal.set(false);
@@ -319,21 +329,43 @@ export class AuthService {
     });
   }
 
-  private setSession(response: AuthResponse) {
-    this.storage.setItem(this.accessTokenKey, response.accessToken);
+  private setSession(response: AuthResponse, rememberMe: boolean) {
+    const targetStorage = this.getSessionStorage(rememberMe);
+    const inactiveStorage = rememberMe ? this.storage : this.persistentStorage;
+
+    inactiveStorage.removeItem(this.accessTokenKey);
+    inactiveStorage.removeItem(this.userKey);
+    inactiveStorage.removeItem(this.sessionHintKey);
+
+    if (rememberMe) {
+      this.persistentStorage.setItem(this.rememberSessionKey, '1');
+      this.persistentStorage.setItem(
+        this.rememberSessionExpiresAtKey,
+        String(Date.now() + this.rememberSessionDurationMs),
+      );
+    } else {
+      this.persistentStorage.removeItem(this.rememberSessionKey);
+      this.persistentStorage.removeItem(this.rememberSessionExpiresAtKey);
+    }
+
+    targetStorage.setItem(this.accessTokenKey, response.accessToken);
     this.accessTokenSignal.set(response.accessToken);
-    this.persistentStorage.setItem(this.sessionHintKey, '1');
+    targetStorage.setItem(this.sessionHintKey, '1');
     this.sessionHintSignal.set(true);
     this.logger.debug('auth', 'session_updated', {
       userId: response.user.id,
       role: response.user.role,
+      rememberMe,
     });
     this.persistUser(response.user);
   }
 
   private persistUser(user: User) {
     const safeUser = this.toSafeSessionUser(user);
-    this.storage.setItem(this.userKey, JSON.stringify(safeUser));
+    this.getSessionStorage(this.isRememberSessionActive()).setItem(
+      this.userKey,
+      JSON.stringify(safeUser),
+    );
     this.logger.debug('auth', 'user_persisted', {
       userId: safeUser.id,
       role: safeUser.role,
@@ -345,16 +377,50 @@ export class AuthService {
   }
 
   private readStoredUser() {
-    const raw = this.storage.getItem(this.userKey);
+    const raw = this.getSessionStorage(this.isRememberSessionActive()).getItem(
+      this.userKey,
+    );
     return raw ? normalizeApiPayloadUrls(JSON.parse(raw) as User) : null;
   }
 
   private readStoredValue(key: string) {
-    return this.storage.getItem(key);
+    return this.getSessionStorage(this.isRememberSessionActive()).getItem(key);
   }
 
   private readSessionHint() {
-    return this.persistentStorage.getItem(this.sessionHintKey) === '1';
+    if (this.isRememberSessionActive()) {
+      return this.persistentStorage.getItem(this.sessionHintKey) === '1';
+    }
+
+    return (
+      this.storage.getItem(this.sessionHintKey) === '1' ||
+      this.persistentStorage.getItem(this.sessionHintKey) === '1'
+    );
+  }
+
+  private getSessionStorage(rememberMe: boolean) {
+    return rememberMe ? this.persistentStorage : this.storage;
+  }
+
+  private isRememberSessionActive() {
+    if (this.persistentStorage.getItem(this.rememberSessionKey) !== '1') {
+      return false;
+    }
+
+    const expiresAt = Number(
+      this.persistentStorage.getItem(this.rememberSessionExpiresAtKey),
+    );
+
+    if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+      return true;
+    }
+
+    this.persistentStorage.removeItem(this.accessTokenKey);
+    this.persistentStorage.removeItem(this.userKey);
+    this.persistentStorage.removeItem(this.sessionHintKey);
+    this.persistentStorage.removeItem(this.rememberSessionKey);
+    this.persistentStorage.removeItem(this.rememberSessionExpiresAtKey);
+    return false;
   }
 
   private hasValidAccessToken(token: string | null) {

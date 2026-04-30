@@ -26,7 +26,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const session = await this.authService.register(dto);
-    this.setRefreshCookie(response, session.refreshToken);
+    this.setRefreshCookie(response, session.refreshToken, session.rememberMe);
     return this.buildSessionResponse(session);
   }
 
@@ -41,7 +41,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const session = await this.authService.login(dto);
-    this.setRefreshCookie(response, session.refreshToken);
+    this.setRefreshCookie(response, session.refreshToken, session.rememberMe);
     return this.buildSessionResponse(session);
   }
 
@@ -59,7 +59,7 @@ export class AuthController {
     const session = await this.authService.refresh(
       dto.refreshToken ?? this.extractRefreshTokenFromRequest(request),
     );
-    this.setRefreshCookie(response, session.refreshToken);
+    this.setRefreshCookie(response, session.refreshToken, session.rememberMe);
     return this.buildSessionResponse(session);
   }
 
@@ -86,6 +86,7 @@ export class AuthController {
   private buildSessionResponse(session: {
     accessToken: string;
     refreshToken: string;
+    rememberMe: boolean;
     user: Awaited<ReturnType<AuthService['me']>> | Record<string, unknown>;
   }) {
     return {
@@ -94,7 +95,11 @@ export class AuthController {
     };
   }
 
-  private setRefreshCookie(response: Response, refreshToken: string) {
+  private setRefreshCookie(
+    response: Response,
+    refreshToken: string,
+    rememberMe: boolean,
+  ) {
     response.cookie(
       this.configService.get<string>(
         'auth.refreshCookieName',
@@ -111,9 +116,7 @@ export class AuthController {
           this.configService.get<string>('auth.refreshCookieSameSite', 'lax'),
         ),
         path: '/api/v1/auth',
-        maxAge: this.parseDurationToMs(
-          this.configService.get<string>('auth.refreshExpiresIn', '7d'),
-        ),
+        ...(rememberMe ? { maxAge: this.parseDurationToMs('30d') } : {}),
       },
     );
   }

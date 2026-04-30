@@ -218,7 +218,12 @@
       </label>
 
       <label class="login-web__remember">
-        <input type="checkbox" name="rememberMe" />
+        <input
+          type="checkbox"
+          name="rememberMe"
+          [(ngModel)]="rememberMe"
+          [disabled]="loading"
+        />
         <span>Lembrar de mim por 30 dias</span>
       </label>
 
