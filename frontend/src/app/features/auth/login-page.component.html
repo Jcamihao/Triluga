@@ -1,5 +1,5 @@
 <div
-  class="login-stitch bg-surface text-on-surface min-h-screen flex flex-col items-center overflow-x-hidden"
+  class="login-stitch bg-surface text-on-surface min-h-screen flex flex-col items-center overflow-x-hidden md:hidden"
 >
   <!-- TopAppBar -->
   <header
@@ -151,3 +151,110 @@
     </form>
   </main>
 </div>
+
+<main class="login-web">
+  <div class="login-web__glow login-web__glow--top"></div>
+  <div class="login-web__glow login-web__glow--bottom"></div>
+
+  <section class="login-web__card">
+    <div class="login-web__visual">
+      <img
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx6It4L2B-UHMPMIYLBPwyeKA-HWonSOzQ8CJmRshUKkOOA8x2Qs2CfmCQyJF5U090dH6FtLWMKP2Q_3-1DbWYHRx05EVCOUN7uN6n6vQ3p6hqtNjk1TT5Ym-Hu-wJYXlO6t-fhx466f02Ow9NsFazwfmDxFjQ8A0e5JZ8J3dlIHeJCvp3RDyoaSDhBnJNytrL6N9j5dwDIWgDxH6EWGR3i0I1sL1S1qXsn0aXxgQ3rDaBp250jHWa3zkpgrNecRKxpd2qYA41IuwQ"
+        alt="Veículo premium Triluga"
+      />
+      <div class="login-web__visual-copy">
+        <h1>Triluga</h1>
+        <p>
+          Seu Classificado de Automotores. Conectando você ao veículo certo com
+          segurança e agilidade.
+        </p>
+      </div>
+    </div>
+
+    <div class="login-web__form-panel">
+      <div class="login-web__heading">
+        <h2>Bem-vindo de volta</h2>
+        <p>Insira suas credenciais para acessar sua conta.</p>
+      </div>
+
+      <form class="login-web__form" (ngSubmit)="login()">
+        <div class="login-web__feedback" *ngIf="feedback" role="alert">
+          <span class="material-symbols-outlined">error</span>
+          <span>{{ feedback }}</span>
+        </div>
+
+        <label class="login-web__field">
+          <span>E-mail</span>
+          <div>
+            <span class="material-symbols-outlined">mail</span>
+            <input
+              name="webEmail"
+              [(ngModel)]="email"
+              placeholder="nome@exemplo.com"
+              type="email"
+              autocomplete="email"
+              [disabled]="loading"
+            />
+          </div>
+        </label>
+
+        <label class="login-web__field">
+          <span>
+            Senha
+            <a routerLink="/auth/login">Esqueceu a senha?</a>
+          </span>
+          <div>
+            <span class="material-symbols-outlined">lock</span>
+            <input
+              name="webPassword"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              [type]="showPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+              [disabled]="loading"
+            />
+            <button
+              type="button"
+              class="login-web__password-toggle"
+              aria-label="Alternar visibilidade da senha"
+              (click)="showPassword = !showPassword"
+            >
+              <span class="material-symbols-outlined">
+                {{ showPassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+        </label>
+
+        <label class="login-web__remember">
+          <input type="checkbox" name="rememberMe" />
+          <span>Lembrar de mim</span>
+        </label>
+
+        <button class="login-web__submit" type="submit" [disabled]="loading">
+          {{ loading ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+
+      <div class="login-web__signup">
+        Não tem uma conta?
+        <a routerLink="/auth/register">Cadastre-se agora</a>
+      </div>
+
+      <div class="login-web__trust">
+        <div>
+          <span class="material-symbols-outlined">verified_user</span>
+          <strong>Seguro</strong>
+        </div>
+        <div>
+          <span class="material-symbols-outlined">bolt</span>
+          <strong>Rápido</strong>
+        </div>
+        <div>
+          <span class="material-symbols-outlined">star</span>
+          <strong>Premium</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
