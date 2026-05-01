@@ -41,6 +41,7 @@ export class RegisterPageComponent implements OnDestroy {
   protected cpfTouched = false;
   protected phoneTouched = false;
   protected zipCodeTouched = false;
+  protected birthDateTouched = false;
   protected passwordTouched = false;
   protected loading = false;
   protected feedback = '';
@@ -201,6 +202,33 @@ export class RegisterPageComponent implements OnDestroy {
     return this.zipCodeTouched && !!this.zipCode.trim();
   }
 
+  protected get birthDateIsValid() {
+    const birthDate = this.parseBirthDate(this.birthDate);
+
+    if (!birthDate) {
+      return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (birthDate > today) {
+      return false;
+    }
+
+    const minimumDate = new Date(
+      today.getFullYear() - 18,
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    return birthDate <= minimumDate;
+  }
+
+  protected get shouldShowBirthDateValidation() {
+    return this.birthDateTouched && !!this.birthDate.trim();
+  }
+
   protected get passwordsMatch() {
     return !!this.confirmPassword && this.password === this.confirmPassword;
   }
@@ -334,6 +362,43 @@ export class RegisterPageComponent implements OnDestroy {
     return rest === 10 ? 0 : rest;
   }
 
+  private parseBirthDate(value: string) {
+    const normalized = value.trim();
+    const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+    const brMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(normalized);
+
+    const parts = isoMatch
+      ? {
+          year: Number(isoMatch[1]),
+          month: Number(isoMatch[2]),
+          day: Number(isoMatch[3]),
+        }
+      : brMatch
+        ? {
+            year: Number(brMatch[3]),
+            month: Number(brMatch[2]),
+            day: Number(brMatch[1]),
+          }
+        : null;
+
+    if (!parts) {
+      return null;
+    }
+
+    const date = new Date(parts.year, parts.month - 1, parts.day);
+    date.setHours(0, 0, 0, 0);
+
+    if (
+      date.getFullYear() !== parts.year ||
+      date.getMonth() !== parts.month - 1 ||
+      date.getDate() !== parts.day
+    ) {
+      return null;
+    }
+
+    return date;
+  }
+
   protected register() {
     const normalizedFullName = this.fullName.trim();
     const normalizedAddressLine = this.addressLine.trim();
@@ -381,6 +446,13 @@ export class RegisterPageComponent implements OnDestroy {
     if (!this.zipCodeIsValid) {
       this.feedback = 'Digite um CEP válido.';
       this.zipCodeTouched = true;
+      return;
+    }
+
+    if (!this.birthDateIsValid) {
+      this.feedback =
+        'Informe uma data de nascimento válida. Você precisa ter pelo menos 18 anos.';
+      this.birthDateTouched = true;
       return;
     }
 

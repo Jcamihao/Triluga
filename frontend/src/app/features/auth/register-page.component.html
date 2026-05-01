@@ -252,13 +252,43 @@
           class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1"
           >Data de nascimento</label
         >
-        <input
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-on-surface/30"
-          name="birthDate"
-          [(ngModel)]="birthDate"
-          type="date"
-          required
-        />
+        <div class="relative">
+          <input
+            class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-5 pr-12 focus:ring-2 transition-all placeholder:text-on-surface/30"
+            [ngClass]="
+              !shouldShowBirthDateValidation
+                ? 'focus:ring-primary-container'
+                : birthDateIsValid
+                  ? 'focus:ring-primary-container ring-2 ring-primary/20'
+                  : 'focus:ring-error/20 ring-2 ring-error/20'
+            "
+            name="birthDate"
+            [(ngModel)]="birthDate"
+            type="date"
+            (focus)="birthDateTouched = true"
+            (blur)="birthDateTouched = true"
+            required
+          />
+          <span
+            class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl email-validation-status"
+            *ngIf="shouldShowBirthDateValidation"
+            [ngClass]="birthDateIsValid ? 'text-primary' : 'text-error'"
+            [style.font-variation-settings]="'\'FILL\' 1'"
+          >
+            {{ birthDateIsValid ? 'check_circle' : 'cancel' }}
+          </span>
+        </div>
+        <p
+          class="text-[11px] font-medium email-validation-message"
+          *ngIf="shouldShowBirthDateValidation"
+          [ngClass]="birthDateIsValid ? 'text-primary' : 'text-error'"
+        >
+          {{
+            birthDateIsValid
+              ? 'Data válida'
+              : 'Informe uma data válida. Você precisa ter pelo menos 18 anos.'
+          }}
+        </p>
       </div>
 
       <!-- Address data kept for existing signup flow -->
@@ -744,13 +774,43 @@
 
           <label class="signup-web__field">
             <span>Data de Nascimento</span>
-            <input
-              name="webBirthDate"
-              [(ngModel)]="birthDate"
-              type="date"
-              [disabled]="loading"
-              required
-            />
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowBirthDateValidation && birthDateIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowBirthDateValidation && !birthDateIsValid
+              "
+            >
+              <input
+                name="webBirthDate"
+                [(ngModel)]="birthDate"
+                type="date"
+                (focus)="birthDateTouched = true"
+                (blur)="birthDateTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowBirthDateValidation"
+              >
+                {{ birthDateIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowBirthDateValidation"
+              [class.signup-web__input-message--valid]="birthDateIsValid"
+              [class.signup-web__input-message--invalid]="!birthDateIsValid"
+            >
+              {{
+                birthDateIsValid
+                  ? 'Data válida'
+                  : 'Informe uma data válida. Você precisa ter pelo menos 18 anos.'
+              }}
+            </p>
           </label>
 
           <label class="signup-web__field">
