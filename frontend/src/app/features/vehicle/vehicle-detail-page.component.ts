@@ -146,7 +146,7 @@ export class VehicleDetailPageComponent {
       return 'Veja os detalhes e fale direto com o anunciante';
     }
 
-    return 'Classificado publicado na Triluga';
+    return 'Classificado publicado no Triluga';
   }
 
   protected get pickupTitle() {
@@ -801,7 +801,7 @@ export class VehicleDetailPageComponent {
 
     const shareData = {
       title: this.vehicle.title,
-      text: `Veja ${this.vehicle.title} na Triluga`,
+      text: `Veja ${this.vehicle.title} no Triluga`,
       url: globalThis.location.href,
     };
 

@@ -99,27 +99,27 @@ const COLLECTIONS: CollectionCard[] = [
 
 const TRUST_CARDS: TrustCard[] = [
   {
-    title: 'Vistoria Cautelar Inclusa',
+    title: 'Contato direto sem intermediários',
     description:
-      'Todos os veículos premium passam por uma análise estrutural e documental rigorosa antes de entrar no catálogo.',
+      'Fale diretamente com o proprietário ou interessado e alinhe todos os detalhes de forma rápida e simples.',
     icon: 'verified_user',
   },
   {
-    title: 'Pagamento Seguro',
+    title: 'Negocie do seu jeito',
     description:
-      'Seu dinheiro fica protegido até que a experiência seja confirmada entre as partes.',
+      'Defina valores, prazos e condições diretamente com a outra pessoa, de forma clara e transparente.',
     icon: 'account_balance',
   },
   {
-    title: 'Concierge Dedicado',
+    title: 'Simples de usar',
     description:
-      'Especialistas acompanham toda a jornada, da negociação inicial até a entrega das chaves.',
+      'Anuncie ou encontre veículos rapidamente, com uma experiência prática e sem complicação.',
     icon: 'support_agent',
   },
   {
-    title: 'Comunidade Curada',
+    title: 'Mais clareza nas negociações',
     description:
-      'Perfil verificado para locadores e motoristas, criando um ambiente exclusivo e confiável.',
+      'Acesse informações do anúncio e converse diretamente para tomar decisões com mais segurança.',
     icon: 'handshake',
   },
 ];
