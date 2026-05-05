@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,6 +12,7 @@ describe('RegisterPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RegisterPageComponent],
       providers: [
+        provideHttpClient(),
         provideRouter([]),
         {
           provide: AuthService,

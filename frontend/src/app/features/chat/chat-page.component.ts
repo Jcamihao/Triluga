@@ -18,12 +18,19 @@ import { AuthService } from '../../core/services/auth.service';
 import { ChatApiService } from '../../core/services/chat-api.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { ChatSocketService } from '../../core/services/chat-socket.service';
+import { UiStateService } from '../../core/services/ui-state.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, WebHeaderComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    DatePipe,
+    WebHeaderComponent,
+  ],
   templateUrl: './chat-page.component.html',
   styleUrls: ['./chat-page.component.scss'],
 })
@@ -37,6 +44,7 @@ export class ChatPageComponent {
   private readonly chatInboxService = inject(ChatInboxService);
   private readonly logger = inject(AppLoggerService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly uiStateService = inject(UiStateService);
 
   protected readonly fallbackAvatarImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='40' fill='%23f3eeee'/%3E%3Ccircle cx='80' cy='60' r='24' fill='%23b7aaac'/%3E%3Cpath d='M40 128c7-22 24-34 40-34s33 12 40 34' fill='%23b7aaac'/%3E%3C/svg%3E";
@@ -115,6 +123,14 @@ export class ChatPageComponent {
 
   protected get isConversationRoute() {
     return !!this.requestedConversationId;
+  }
+
+  protected toggleMenu() {
+    this.uiStateService.toggleMenu();
+  }
+
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
   }
 
   protected get currentUserId() {

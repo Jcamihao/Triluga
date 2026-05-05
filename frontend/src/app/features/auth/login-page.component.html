@@ -122,11 +122,13 @@
 
         <!-- Recovery Link -->
         <div class="flex justify-end">
-          <a
-            class="text-sm font-bold text-primary hover:text-primary-container transition-colors tracking-tight"
-            href="#"
-            >Esqueceu a senha?</a
+          <button
+            type="button"
+            class="border-0 bg-transparent p-0 text-sm font-bold text-primary hover:text-primary-container transition-colors tracking-tight"
+            (click)="showPasswordRecoveryMessage()"
           >
+            Esqueceu a senha?
+          </button>
         </div>
       </div>
 
@@ -191,7 +193,9 @@
       <label class="login-web__field">
         <span>
           Senha
-          <a routerLink="/auth/login">Esqueceu a senha?</a>
+          <button type="button" (click)="showPasswordRecoveryMessage()">
+            Esqueceu a senha?
+          </button>
         </span>
         <div>
           <span class="material-symbols-outlined">lock</span>
@@ -239,7 +243,7 @@
     </div>
 
     <div class="login-web__social">
-      <button type="button">
+      <button type="button" (click)="showSocialLoginMessage('Google')">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -261,7 +265,7 @@
         Google
       </button>
 
-      <button type="button">
+      <button type="button" (click)="showSocialLoginMessage('Apple')">
         <span class="material-symbols-outlined">account_circle</span>
         Apple
       </button>

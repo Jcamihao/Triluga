@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -10,6 +10,7 @@ import { PwaInstallService } from './core/services/pwa-install.service';
 import { PrivacyApiService } from './core/services/privacy-api.service';
 import { PrivacyPreferencesService } from './core/services/privacy-preferences.service';
 import { RouteTraceService } from './core/services/route-trace.service';
+import { NotificationsCenterService } from './core/services/notifications-center.service';
 import { BottomNavComponent } from './shared/components/bottom-nav/bottom-nav.component';
 import { CompareTrayComponent } from './shared/components/compare-tray/compare-tray.component';
 import { UiStateService } from './core/services/ui-state.service';
@@ -40,6 +41,7 @@ export class AppComponent {
   private readonly routeTraceService = inject(RouteTraceService);
   protected readonly authService = inject(AuthService);
   protected readonly uiStateService = inject(UiStateService);
+  protected readonly notificationsService = inject(NotificationsCenterService);
 
   protected get menuOpen() {
     return this.uiStateService.menuOpen();
@@ -68,7 +70,25 @@ export class AppComponent {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.uiStateService.closeMenu();
+        this.uiStateService.closeNotifications();
       });
+
+    effect(
+      () => {
+        if (!this.uiStateService.notificationsOpen()) {
+          return;
+        }
+
+        if (!this.authService.hasSession()) {
+          this.uiStateService.closeNotifications();
+          this.router.navigate(['/auth/login']);
+          return;
+        }
+
+        this.notificationsService.ensureLoaded(true).subscribe();
+      },
+      { allowSignalWrites: true },
+    );
 
     if (!this.authService.hasSession()) {
       return;
@@ -163,6 +183,27 @@ export class AppComponent {
 
   protected dismissInstallBanner() {
     this.pwaInstallService.dismissBanner();
+  }
+
+  protected toggleNotifications() {
+    if (!this.authService.hasSession()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    this.uiStateService.toggleNotifications();
+
+    if (this.uiStateService.notificationsOpen()) {
+      this.notificationsService.ensureLoaded(true).subscribe();
+    }
+  }
+
+  protected closeNotifications() {
+    this.uiStateService.closeNotifications();
+  }
+
+  protected markNotificationRead(notificationId: string) {
+    this.notificationsService.markRead(notificationId).subscribe();
   }
 
   protected get showPrivacyBanner() {

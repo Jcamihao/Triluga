@@ -4,10 +4,17 @@
     class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
   >
     <div class="flex items-center gap-3">
-      <span
-        class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
-        >menu</span
+      <button
+        type="button"
+        class="inline-flex items-center justify-center"
+        aria-label="Abrir menu"
+        (click)="toggleMenu()"
       >
+        <span
+          class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+          >menu</span
+        >
+      </button>
       <h1
         class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0"
       >
@@ -15,10 +22,17 @@
       </h1>
     </div>
     <div class="flex items-center gap-4">
-      <span
-        class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
-        >notifications</span
+      <button
+        type="button"
+        class="inline-flex items-center justify-center"
+        aria-label="Abrir notificações"
+        (click)="toggleNotifications()"
       >
+        <span
+          class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+          >notifications</span
+        >
+      </button>
     </div>
   </header>
   <main class="pb-36">
@@ -141,12 +155,22 @@
   <button
     class="fixed right-5 left-5 bg-primary text-on-primary flex items-center justify-center gap-2 rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all z-40 border border-primary-fixed-dim/20"
     style="height: 51px; bottom: 92px"
+    type="button"
+    [disabled]="savingAlert"
+    (click)="saveSearchAlert()"
   >
     <span class="material-symbols-outlined text-2xl">notifications_active</span>
-    <span class="text-sm font-black uppercase tracking-widest"
-      >Criar Alerta de Preço</span
-    >
+    <span class="text-sm font-black uppercase tracking-widest">{{
+      savingAlert ? 'Salvando...' : 'Criar Alerta de Preço'
+    }}</span>
   </button>
+  <p
+    class="fixed left-5 right-5 text-center text-xs font-bold text-on-surface-variant z-40"
+    style="bottom: 150px"
+    *ngIf="alertFeedback"
+  >
+    {{ alertFeedback }}
+  </p>
 
   <app-filter-modal
     [open]="filtersOpen"

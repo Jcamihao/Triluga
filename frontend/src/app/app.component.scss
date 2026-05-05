@@ -616,6 +616,126 @@
   color: #006d37;
 }
 
+.mobile-notifications {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+
+.mobile-notifications__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(17, 24, 39, 0.42);
+}
+
+.mobile-notifications__panel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(100%, 390px);
+  max-height: 78dvh;
+  transform: translateX(-50%);
+  overflow: auto;
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  box-shadow: 0 -18px 48px rgba(15, 23, 42, 0.22);
+}
+
+.mobile-notifications__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 22px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.mobile-notifications__head span {
+  display: block;
+  color: #006d37;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mobile-notifications__head h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.mobile-notifications__close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: inherit;
+}
+
+.mobile-notifications__state {
+  margin: 0;
+  padding: 28px 22px;
+  color: #6b7280;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mobile-notifications__list {
+  display: grid;
+  gap: 12px;
+  padding: 18px 18px calc(24px + env(safe-area-inset-bottom));
+}
+
+.mobile-notification {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.mobile-notification--unread {
+  border-color: rgba(0, 109, 55, 0.3);
+  background: #f0fbf5;
+}
+
+.mobile-notification strong {
+  display: block;
+  font-size: 14px;
+}
+
+.mobile-notification p {
+  margin: 4px 0 6px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.mobile-notification small {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mobile-notification button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: #006d37;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
 @keyframes menu-drawer-enter {
   from {
     opacity: 0;

@@ -27,6 +27,10 @@ export class FavoritesPageComponent {
     this.uiStateService.toggleMenu();
   }
 
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
+  }
+
   constructor() {
     this.favoritesService.refresh();
   }

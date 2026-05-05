@@ -62,6 +62,10 @@ export class ProfilePageComponent implements OnDestroy {
     this.uiStateService.toggleMenu();
   }
 
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
+  }
+
   protected logout() {
     this.authService.logout();
     this.router.navigate(['/']);
@@ -113,9 +117,7 @@ export class ProfilePageComponent implements OnDestroy {
       this.profile.hasDriverLicenseImage || this.pendingDriverLicenseFile,
     ];
 
-    return Math.round(
-      (checks.filter(Boolean).length / checks.length) * 100,
-    );
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
 
   protected get memberSinceLabel() {
@@ -329,7 +331,10 @@ export class ProfilePageComponent implements OnDestroy {
         this.profile.city = address.city || this.profile.city;
         this.profile.state = address.state || this.profile.state;
 
-        if (!this.profile.addressComplement?.trim() && address.addressComplement) {
+        if (
+          !this.profile.addressComplement?.trim() &&
+          address.addressComplement
+        ) {
           this.profile.addressComplement = address.addressComplement;
         }
 

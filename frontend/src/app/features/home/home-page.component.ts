@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../core/models/domain.models';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
@@ -141,6 +142,7 @@ export class HomePageComponent {
   private readonly vehiclesApiService = inject(VehiclesApiService);
   protected readonly authService = inject(AuthService);
   protected readonly favoritesService = inject(FavoritesService);
+  protected readonly uiStateService = inject(UiStateService);
 
   protected readonly quickShortcuts = QUICK_SHORTCUTS;
   protected readonly featuredCategoryCards = FEATURED_CATEGORY_CARDS;
@@ -170,9 +172,17 @@ export class HomePageComponent {
     this.router.navigate(['/search'], { queryParams: params });
   }
 
+  protected toggleMenu() {
+    this.uiStateService.toggleMenu();
+  }
+
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
+  }
+
   protected submitSearch(model: string, city: string) {
     this.goToSearch({
-      query: model.trim() || undefined,
+      q: model.trim() || undefined,
       city: city.trim() || undefined,
     });
   }

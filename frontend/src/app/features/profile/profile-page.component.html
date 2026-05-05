@@ -16,10 +16,17 @@
       </h1>
     </div>
     <div class="flex items-center gap-4">
-      <span
-        class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
-        >notifications</span
+      <button
+        type="button"
+        class="inline-flex items-center justify-center"
+        aria-label="Abrir notificações"
+        (click)="toggleNotifications()"
       >
+        <span
+          class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+          >notifications</span
+        >
+      </button>
     </div>
   </header>
 
@@ -547,7 +554,11 @@
                 <span>Foto de Perfil</span>
                 <p>Aparece no chat e aumenta a confiança.</p>
                 <label>
-                  <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onAvatarSelected($event)"
+                  />
                   <span class="material-symbols-outlined">add_a_photo</span>
                   {{ pendingAvatarFile ? 'Trocar foto' : 'Adicionar foto' }}
                 </label>
@@ -560,7 +571,10 @@
             </label>
             <label>
               <span>Email</span>
-              <input [value]="authService.currentUser()?.email || ''" disabled />
+              <input
+                [value]="authService.currentUser()?.email || ''"
+                disabled
+              />
             </label>
             <label>
               <span>Telefone</span>
@@ -606,7 +620,10 @@
             </label>
           </div>
 
-          <p class="profile-web__feedback profile-web__feedback--ok" *ngIf="feedback">
+          <p
+            class="profile-web__feedback profile-web__feedback--ok"
+            *ngIf="feedback"
+          >
             {{ feedback }}
           </p>
           <p
@@ -624,7 +641,9 @@
             <div
               class="profile-web__verification"
               *ngFor="let row of verificationRows"
-              [class.profile-web__verification--pending]="row.status === 'pending'"
+              [class.profile-web__verification--pending]="
+                row.status === 'pending'
+              "
             >
               <span class="material-symbols-outlined">{{ row.icon }}</span>
               <div>
@@ -636,9 +655,17 @@
 
           <div class="profile-web__uploads">
             <label>
-              <input type="file" accept="image/*" (change)="onDocumentSelected($event)" />
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onDocumentSelected($event)"
+              />
               <span class="material-symbols-outlined">badge</span>
-              {{ pendingDocumentFile ? 'Documento selecionado' : 'Enviar documento' }}
+              {{
+                pendingDocumentFile
+                  ? 'Documento selecionado'
+                  : 'Enviar documento'
+              }}
             </label>
             <label>
               <input
@@ -652,7 +679,6 @@
           </div>
         </article>
       </section>
-
     </section>
   </main>
 

@@ -23,6 +23,16 @@ export class LoginPageComponent {
   protected showPassword = false;
   protected rememberMe = false;
 
+  protected showPasswordRecoveryMessage(event?: Event) {
+    event?.preventDefault();
+    this.feedback =
+      'Recuperação de senha ainda não está disponível. Entre em contato com o suporte.';
+  }
+
+  protected showSocialLoginMessage(provider: string) {
+    this.feedback = `Login com ${provider} ainda não está disponível. Use e-mail e senha.`;
+  }
+
   protected login() {
     this.loading = true;
     this.feedback = '';

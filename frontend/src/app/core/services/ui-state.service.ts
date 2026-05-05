@@ -5,6 +5,7 @@ import { Injectable, signal } from '@angular/core';
 })
 export class UiStateService {
   readonly menuOpen = signal(false);
+  readonly notificationsOpen = signal(false);
 
   toggleMenu() {
     this.menuOpen.update((open) => !open);
@@ -16,5 +17,13 @@ export class UiStateService {
 
   openMenu() {
     this.menuOpen.set(true);
+  }
+
+  toggleNotifications() {
+    this.notificationsOpen.update((open) => !open);
+  }
+
+  closeNotifications() {
+    this.notificationsOpen.set(false);
   }
 }

@@ -11,6 +11,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FilterModalComponent } from '../../shared/components/filter-modal/filter-modal.component';
 import { VehicleCardItem, VehicleType } from '../../core/models/domain.models';
+import { AuthService } from '../../core/services/auth.service';
+import { SearchAlertsApiService } from '../../core/services/search-alerts-api.service';
+import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
@@ -52,6 +55,9 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
+  protected readonly uiStateService = inject(UiStateService);
+  private readonly authService = inject(AuthService);
+  private readonly searchAlertsApiService = inject(SearchAlertsApiService);
 
   private sentinelRef?: ElementRef<HTMLDivElement>;
   private sentinelObservationQueued = false;
@@ -70,6 +76,8 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
   protected hasNextPage = false;
   protected totalItems = 0;
   protected filtersOpen = false;
+  protected alertFeedback = '';
+  protected savingAlert = false;
   protected accordions: Record<string, boolean> = {
     year: false,
     fuel: false,
@@ -157,6 +165,14 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  protected toggleMenu() {
+    this.uiStateService.toggleMenu();
+  }
+
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
+  }
+
   protected applyFilters(filters: any) {
     this.filtersOpen = false;
     this.router.navigate(['/search'], {
@@ -239,6 +255,44 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
 
   protected goToPublish() {
     this.router.navigate(['/anunciar-carro']);
+  }
+
+  protected saveSearchAlert() {
+    if (this.savingAlert) {
+      return;
+    }
+
+    if (!this.authService.hasSession()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    const filters = this.buildSearchAlertFilters();
+
+    if (!Object.keys(filters).length) {
+      this.alertFeedback =
+        'Aplique pelo menos um filtro antes de salvar o alerta.';
+      return;
+    }
+
+    this.savingAlert = true;
+    this.alertFeedback = '';
+    this.searchAlertsApiService
+      .create({
+        title: this.buildSearchAlertTitle(filters),
+        filters,
+      })
+      .subscribe({
+        next: () => {
+          this.savingAlert = false;
+          this.alertFeedback = 'Alerta salvo.';
+        },
+        error: (error) => {
+          this.savingAlert = false;
+          this.alertFeedback =
+            error?.error?.message || 'Não foi possível salvar o alerta.';
+        },
+      });
   }
 
   protected setWebPrice(changed: 'min' | 'max', value: string) {
@@ -484,5 +538,31 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       HYBRID: 'Híbrido',
     };
     return labels[fuelType] || fuelType;
+  }
+
+  private buildSearchAlertFilters() {
+    const ignoredKeys = new Set(['sort']);
+
+    return Object.fromEntries(
+      Object.entries(this.query).filter(
+        ([key, value]) => !ignoredKeys.has(key) && value !== '',
+      ),
+    );
+  }
+
+  private buildSearchAlertTitle(filters: Record<string, unknown>) {
+    if (typeof filters['q'] === 'string') {
+      return `Busca por ${filters['q']}`;
+    }
+
+    if (typeof filters['city'] === 'string') {
+      return `Veículos em ${filters['city']}`;
+    }
+
+    if (filters['vehicleType'] === 'MOTORCYCLE') {
+      return 'Alerta de motos';
+    }
+
+    return 'Alerta de veículos';
   }
 }

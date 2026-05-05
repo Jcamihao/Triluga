@@ -23,6 +23,10 @@ export class ComparePageComponent {
     this.uiStateService.toggleMenu();
   }
 
+  protected toggleNotifications() {
+    this.uiStateService.toggleNotifications();
+  }
+
   protected trackById(_index: number, item: { id: string }) {
     return item.id;
   }

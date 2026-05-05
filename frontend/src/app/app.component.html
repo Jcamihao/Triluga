@@ -149,6 +149,78 @@
 
 <app-compare-tray></app-compare-tray>
 
+<div class="mobile-notifications" *ngIf="uiStateService.notificationsOpen()">
+  <button
+    type="button"
+    class="mobile-notifications__backdrop"
+    aria-label="Fechar notificações"
+    (click)="closeNotifications()"
+  ></button>
+
+  <aside class="mobile-notifications__panel">
+    <header class="mobile-notifications__head">
+      <div>
+        <span>Notificações</span>
+        <h2>Avisos</h2>
+      </div>
+
+      <button
+        type="button"
+        class="mobile-notifications__close"
+        aria-label="Fechar notificações"
+        (click)="closeNotifications()"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <p
+      class="mobile-notifications__state"
+      *ngIf="notificationsService.loading()"
+    >
+      Carregando...
+    </p>
+
+    <p
+      class="mobile-notifications__state"
+      *ngIf="
+        !notificationsService.loading() &&
+        !notificationsService.notifications().length
+      "
+    >
+      Nenhuma notificação por enquanto.
+    </p>
+
+    <div
+      class="mobile-notifications__list"
+      *ngIf="
+        !notificationsService.loading() &&
+        notificationsService.notifications().length
+      "
+    >
+      <article
+        class="mobile-notification"
+        *ngFor="let notification of notificationsService.notifications()"
+        [class.mobile-notification--unread]="!notification.isRead"
+      >
+        <div>
+          <strong>{{ notification.title }}</strong>
+          <p>{{ notification.message }}</p>
+          <small>{{ notification.createdAt | date: 'dd/MM HH:mm' }}</small>
+        </div>
+
+        <button
+          type="button"
+          *ngIf="!notification.isRead"
+          (click)="markNotificationRead(notification.id)"
+        >
+          Marcar lida
+        </button>
+      </article>
+    </div>
+  </aside>
+</div>
+
 <section
   class="privacy-banner"
   *ngIf="showPrivacyBanner"

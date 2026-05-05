@@ -529,10 +529,17 @@
           class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
         >
           <div class="flex items-center gap-3">
-            <span
-              class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
-              >menu</span
+            <button
+              type="button"
+              class="inline-flex items-center justify-center"
+              aria-label="Abrir menu"
+              (click)="toggleMenu()"
             >
+              <span
+                class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+                >menu</span
+              >
+            </button>
             <h1
               class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0"
             >
@@ -541,10 +548,17 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <span
-              class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
-              >notifications</span
+            <button
+              type="button"
+              class="inline-flex items-center justify-center"
+              aria-label="Abrir notificações"
+              (click)="toggleNotifications()"
             >
+              <span
+                class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+                >notifications</span
+              >
+            </button>
           </div>
         </header>
 
