@@ -143,8 +143,8 @@
               class="text-primary focus:ring-primary"
               name="insurance"
               type="radio"
-              [ngModel]="owner.vehicleDraft.hasInsurance"
-              (ngModelChange)="owner.vehicleDraft.hasInsurance = true"
+              [checked]="owner.vehicleDraft.hasInsurance === true"
+              (change)="owner.setInsuranceStatus(true)"
             />
             <span class="text-sm font-semibold">Sim, ativo</span>
           </label>
@@ -160,8 +160,8 @@
               class="text-primary focus:ring-primary"
               name="insurance"
               type="radio"
-              [ngModel]="!owner.vehicleDraft.hasInsurance"
-              (ngModelChange)="owner.vehicleDraft.hasInsurance = false"
+              [checked]="owner.vehicleDraft.hasInsurance !== true"
+              (change)="owner.setInsuranceStatus(false)"
             />
             <span class="text-sm font-semibold">Não possui</span>
           </label>

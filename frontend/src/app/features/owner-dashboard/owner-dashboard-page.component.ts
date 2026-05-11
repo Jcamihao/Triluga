@@ -309,6 +309,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     this.vehicleDraft.hasDetranIssues = status === 'ISSUES';
   }
 
+  protected setInsuranceStatus(hasInsurance: boolean) {
+    this.vehicleDraft.hasInsurance = hasInsurance;
+  }
+
   protected setMechanicsCondition(condition: MechanicsCondition) {
     this.vehicleDraft.mechanicsCondition = condition;
   }
@@ -542,10 +546,9 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
     if (!payload) {
       const missingFields = this.collectMissingVehicleFields();
-      this.vehicleError = missingFields.length
-        ? `Preencha os campos obrigatórios: ${missingFields.join(', ')}.`
-        : 'Preencha os campos obrigatórios do anúncio.';
+      this.vehicleError = this.formatMissingVehicleFieldsError(missingFields);
       this.vehicleFeedback = '';
+      this.goToStep(this.resolveMissingVehicleFieldsStep(missingFields));
       return;
     }
 
@@ -625,10 +628,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
-      dailyRate:
-        vehicle.dailyRate ||
-        Math.max(1, Math.round((vehicle.weeklyRate || 7) / 7)),
-      weeklyRate: vehicle.weeklyRate || vehicle.dailyRate * 7,
+      weeklyRate: vehicle.weeklyRate || vehicle.dailyRate,
       kmPolicy: vehicle.kmPolicy || 'FREE',
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
       engineCc: vehicle.engineCc || undefined,
@@ -980,7 +980,6 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       transmission: 'AUTOMATIC',
       fuelType: 'FLEX',
       seats: 5,
-      dailyRate: 150,
       weeklyRate: 1050,
       kmPolicy: 'FREE',
       motorcycleStyle: undefined,
@@ -1010,10 +1009,6 @@ export class OwnerDashboardPageComponent implements OnDestroy {
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
       weeklyRate: Number(this.vehicleDraft.weeklyRate),
-      dailyRate: Math.max(
-        1,
-        Math.round(Number(this.vehicleDraft.weeklyRate || 0) / 7),
-      ),
       kmPolicy: this.vehicleDraft.kmPolicy || 'FREE',
       hasInsurance: !!this.vehicleDraft.hasInsurance,
       mechanicsCondition: this.vehicleDraft.mechanicsCondition || undefined,
@@ -1106,6 +1101,62 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     }
 
     return missingFields;
+  }
+
+  private resolveMissingVehicleFieldsStep(missingFields: string[]) {
+    const stepOneFields = new Set(['placa', 'marca', 'modelo', 'ano']);
+    const stepTwoFields = new Set([
+      'cidade',
+      'estado',
+      'endereço de retirada',
+      'preço por semana',
+      'descrição',
+      'mínimo de 3 fotos',
+    ]);
+
+    if (missingFields.some((field) => stepOneFields.has(field))) {
+      return 1;
+    }
+
+    if (missingFields.some((field) => stepTwoFields.has(field))) {
+      return 2;
+    }
+
+    return 3;
+  }
+
+  private formatMissingVehicleFieldsError(missingFields: string[]) {
+    if (!missingFields.length) {
+      return 'Não foi possível publicar. Revise os campos obrigatórios do anúncio.';
+    }
+
+    const fieldHints: Record<string, string> = {
+      placa: 'informe a placa do veículo',
+      marca: 'informe a marca',
+      modelo: 'informe o modelo',
+      ano: 'informe um ano válido',
+      cidade: 'informe a cidade de retirada',
+      estado: 'informe a UF com 2 letras',
+      'endereço de retirada': 'informe bairro, avenida ou ponto de encontro',
+      assentos: 'informe a quantidade de lugares',
+      'preço por semana': 'informe um valor semanal maior que zero',
+      descrição: 'escreva a descrição do anúncio',
+      'mínimo de 3 fotos': `adicione pelo menos ${this.minimumVehiclePhotoCount} fotos reais do veículo`,
+    };
+
+    const stepLabels = [
+      { label: 'Dados do veículo', step: 1 },
+      { label: 'Fotos, valor e retirada', step: 2 },
+      { label: 'Condições do veículo', step: 3 },
+    ];
+    const step = this.resolveMissingVehicleFieldsStep(missingFields);
+    const stepLabel =
+      stepLabels.find((item) => item.step === step)?.label || 'Cadastro';
+    const hints = missingFields
+      .map((field) => fieldHints[field] || `preencha ${field}`)
+      .join('; ');
+
+    return `Não foi possível publicar. Na etapa "${stepLabel}", falta: ${hints}.`;
   }
 
   private get publicationChecklistSummary() {
