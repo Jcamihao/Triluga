@@ -430,25 +430,19 @@
 
                 <div class="space-y-3">
                   <div class="flex justify-between text-sm">
-                    <span class="text-on-surface-variant">Preço/dia</span>
+                    <span class="text-on-surface-variant">Preço semanal</span>
                     <span class="font-bold">
                       R$
-                      {{ conversation.vehicle.dailyRate | number: '1.0-0' }}
+                      {{
+                        conversation.vehicle.weeklyRate ??
+                          conversation.vehicle.dailyRate | number: '1.0-0'
+                      }}
                     </span>
                   </div>
                   <!-- <div class="flex justify-between text-sm">
                     <span class="text-on-surface-variant">Taxa Triluga</span>
                     <span class="font-bold text-primary">Grátis</span>
                   </div> -->
-                  <div
-                    class="border-t border-outline-variant/10 pt-3 flex justify-between"
-                  >
-                    <!-- <span class="font-bold text-on-surface">Total (3 dias)</span> -->
-                    <span class="font-black text-primary">
-                      R$
-                      {{ conversation.vehicle.dailyRate * 3 | number: '1.0-0' }}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -784,7 +778,8 @@
                   <p class="text-primary font-bold text-base">
                     R$
                     {{
-                      selectedConversation.vehicle.dailyRate | number: '1.0-0'
+                      selectedConversation.vehicle.weeklyRate ??
+                        selectedConversation.vehicle.dailyRate | number: '1.0-0'
                     }}
                   </p>
                 </div>

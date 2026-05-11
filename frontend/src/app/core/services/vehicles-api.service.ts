@@ -113,7 +113,6 @@ export class VehiclesApiService {
       transmission: payload.transmission,
       fuelType: payload.fuelType,
       seats: payload.seats,
-      dailyRate: payload.dailyRate,
       weeklyRate: payload.weeklyRate,
       kmPolicy: payload.kmPolicy,
       motorcycleStyle: payload.motorcycleStyle,

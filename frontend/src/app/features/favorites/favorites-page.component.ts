@@ -43,11 +43,11 @@ export class FavoritesPageComponent {
     const items = [...this.favoriteItems];
 
     if (this.sortMode === 'priceAsc') {
-      return items.sort((a, b) => a.dailyRate - b.dailyRate);
+      return items.sort((a, b) => this.weeklyPrice(a) - this.weeklyPrice(b));
     }
 
     if (this.sortMode === 'priceDesc') {
-      return items.sort((a, b) => b.dailyRate - a.dailyRate);
+      return items.sort((a, b) => this.weeklyPrice(b) - this.weeklyPrice(a));
     }
 
     return items;
@@ -185,5 +185,9 @@ export class FavoritesPageComponent {
     }
 
     return vehicle.kmPolicy === 'FREE' ? 'Km livre' : '200 km/dia';
+  }
+
+  protected weeklyPrice(vehicle: VehicleCardItem) {
+    return vehicle.weeklyRate ?? vehicle.dailyRate;
   }
 }

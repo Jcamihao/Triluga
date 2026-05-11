@@ -120,13 +120,15 @@
           A partir de
         </p>
         <p class="text-3xl font-black text-primary leading-none">
-          {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
-          <span class="text-sm font-medium text-on-surface-variant">/dia</span>
+          {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
+          <span class="text-sm font-medium text-on-surface-variant"
+            >/semana</span
+          >
         </p>
         <p
           class="text-[11px] font-bold text-primary-container bg-primary/5 px-2 py-1 mt-1 rounded-lg inline-block"
         >
-          {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}/semana
+          Valor semanal do anúncio
         </p>
       </div>
     </div>
@@ -649,9 +651,9 @@
             <div class="vehicle-detail-web__price-row">
               <div>
                 <strong>
-                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+                  {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
                 </strong>
-                <span>/dia</span>
+                <span>/semana</span>
               </div>
 
               <div class="vehicle-detail-web__rating-pill">

@@ -300,7 +300,7 @@ export interface CreateVehiclePayload {
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
-  dailyRate: number;
+  dailyRate?: number;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean;
@@ -309,7 +309,7 @@ export interface CreateVehiclePayload {
   mechanicsCondition?: MechanicsCondition;
   hasDetranIssues?: boolean;
   trunkSize?: number;
-  weeklyRate?: number;
+  weeklyRate: number;
   kmPolicy?: 'FREE' | 'FIXED';
   description: string;
   addressLine?: string;
@@ -338,6 +338,7 @@ export interface ChatConversationItem {
     city: string;
     state: string;
     dailyRate: number;
+    weeklyRate?: number | null;
   };
   otherParticipant: {
     id: string;

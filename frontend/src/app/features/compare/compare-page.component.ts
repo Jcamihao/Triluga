@@ -79,7 +79,7 @@ export class ComparePageComponent {
   }
 
   protected weeklyPrice(vehicle: VehicleCardItem) {
-    return vehicle.weeklyRate ?? vehicle.dailyRate * 7;
+    return vehicle.weeklyRate ?? vehicle.dailyRate;
   }
 
   protected vehicleTypeLabel(vehicle: VehicleCardItem) {

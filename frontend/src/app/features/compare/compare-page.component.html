@@ -173,10 +173,10 @@
                 >
                   <span
                     class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
-                    >Preço/dia</span
+                    >Preço semanal</span
                   >
                   <span class="text-lg font-bold text-primary">{{
-                    vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
                   }}</span>
                 </div>
                 <div

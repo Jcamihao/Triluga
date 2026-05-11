@@ -167,8 +167,8 @@
 
                 <strong>
                   {{
-                    vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
-                  }}/dia
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/semana
                 </strong>
               </div>
 
@@ -209,8 +209,8 @@
                 <h3>{{ vehicle.title }}</h3>
                 <p>
                   {{
-                    vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
-                  }}/dia
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/semana
                 </p>
               </div>
               <button

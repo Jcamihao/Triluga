@@ -267,33 +267,7 @@ export class VehicleDetailPageComponent {
       return 0;
     }
 
-    return this.vehicle.weeklyRate ?? this.vehicle.dailyRate * 6;
-  }
-
-  protected get bookingDays() {
-    return 3;
-  }
-
-  protected get bookingSubtotal() {
-    return (this.vehicle?.dailyRate ?? 0) * this.bookingDays;
-  }
-
-  protected get bookingInsuranceFee() {
-    if (!this.vehicle?.hasInsurance) {
-      return 0;
-    }
-
-    return Math.round(this.bookingSubtotal * 0.09);
-  }
-
-  protected get bookingServiceFee() {
-    return Math.round(this.bookingSubtotal * 0.04);
-  }
-
-  protected get bookingTotal() {
-    return (
-      this.bookingSubtotal + this.bookingInsuranceFee + this.bookingServiceFee
-    );
+    return this.vehicle.weeklyRate ?? this.vehicle.dailyRate;
   }
 
   protected get kmPolicyLabel() {

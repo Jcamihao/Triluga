@@ -277,12 +277,12 @@
                   </p>
                 </div>
                 <div class="flex items-center gap-1">
-                  <span class="text-primary font-extrabold text-sm"
-                    >R$ {{ vehicle.dailyRate }}</span
-                  >
+                  <span class="text-primary font-extrabold text-sm">
+                    R$ {{ vehicle.weeklyRate ?? vehicle.dailyRate }}
+                  </span>
                   <span
                     class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-tighter"
-                    >/ dia</span
+                    >/ semana</span
                   >
                 </div>
               </div>
@@ -605,8 +605,10 @@
                 <div class="public-profile-web__vehicle-title">
                   <h3>{{ vehicle.title }}</h3>
                   <strong>
-                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
-                    }}<small>/dia</small>
+                    {{
+                      vehicle.weeklyRate ?? vehicle.dailyRate
+                        | currency: 'BRL' : 'symbol' : '1.0-0'
+                    }}<small>/semana</small>
                   </strong>
                 </div>
 
