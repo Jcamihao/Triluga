@@ -162,6 +162,7 @@ export class ProfilesService {
         transmission: vehicle.transmission,
         fuelType: vehicle.fuelType,
         dailyRate: Number(vehicle.dailyRate),
+        weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
         motorcycleStyle: vehicle.motorcycleStyle,
         engineCc: vehicle.engineCc,
         hasAbs: vehicle.hasAbs,

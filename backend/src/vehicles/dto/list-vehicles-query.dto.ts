@@ -77,13 +77,13 @@ export class ListVehiclesQueryDto {
   @IsNumber({ maxDecimalPlaces: 0 })
   maxEngineCc?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço semanal mínimo.' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   minPrice?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço semanal máximo.' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })

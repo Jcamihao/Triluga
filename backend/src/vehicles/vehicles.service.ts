@@ -147,7 +147,7 @@ export class VehiclesService {
 
     if (query.minPrice || query.maxPrice) {
       andFilters.push({
-        dailyRate: {
+        weeklyRate: {
           gte: query.minPrice,
           lte: query.maxPrice,
         },
@@ -186,9 +186,9 @@ export class VehiclesService {
     };
 
     if (query.sort === 'price_asc') {
-      orderBy = { dailyRate: 'asc' };
+      orderBy = { weeklyRate: 'asc' };
     } else if (query.sort === 'price_desc') {
-      orderBy = { dailyRate: 'desc' };
+      orderBy = { weeklyRate: 'desc' };
     } else if (query.sort === 'oldest') {
       orderBy = { createdAt: 'asc' };
     } else if (query.sort === 'relevance') {
@@ -451,7 +451,7 @@ export class VehiclesService {
           transmission: dto.transmission,
           fuelType: dto.fuelType,
           seats: dto.seats,
-          dailyRate: dto.dailyRate,
+          dailyRate: dto.weeklyRate,
           weeklyRate: dto.weeklyRate,
           kmPolicy: dto.kmPolicy,
           motorcycleStyle: dto.motorcycleStyle,
@@ -489,8 +489,13 @@ export class VehiclesService {
       }
       return this.mapVehicleDetail(vehicle);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Já existe um veículo cadastrado com esta placa.');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Já existe um veículo cadastrado com esta placa.',
+        );
       }
       throw error;
     }
@@ -498,12 +503,15 @@ export class VehiclesService {
 
   async update(ownerId: string, vehicleId: string, dto: UpdateVehicleDto) {
     await this.ensureVehicleOwnership(ownerId, vehicleId);
+    const weeklyRate = dto.weeklyRate ?? dto.dailyRate;
 
     try {
       const vehicle = await this.prisma.vehicle.update({
         where: { id: vehicleId },
         data: {
           ...dto,
+          dailyRate: weeklyRate,
+          weeklyRate,
           plate: dto.plate ? dto.plate.toUpperCase() : undefined,
           state: dto.state ? dto.state.toUpperCase() : undefined,
         },
@@ -532,8 +540,13 @@ export class VehiclesService {
       }
       return this.mapVehicleDetail(vehicle);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Já existe um veículo cadastrado com esta placa.');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Já existe um veículo cadastrado com esta placa.',
+        );
       }
       throw error;
     }
@@ -668,7 +681,11 @@ export class VehiclesService {
           where: { fuelType: 'ELECTRIC', isActive: true, isPublished: true },
         }),
         this.prisma.vehicle.count({
-          where: { vehicleType: 'MOTORCYCLE', isActive: true, isPublished: true },
+          where: {
+            vehicleType: 'MOTORCYCLE',
+            isActive: true,
+            isPublished: true,
+          },
         }),
         this.prisma.vehicle.count({
           where: {

@@ -553,7 +553,10 @@ export class ChatService {
         coverImage: conversation.vehicle.images[0]?.url ?? null,
         city: conversation.vehicle.city,
         state: conversation.vehicle.state,
-        dailyRate: conversation.vehicle.dailyRate,
+        dailyRate: Number(conversation.vehicle.dailyRate),
+        weeklyRate: conversation.vehicle.weeklyRate
+          ? Number(conversation.vehicle.weeklyRate)
+          : null,
       },
       otherParticipant: {
         id: otherParticipant?.id ?? '',

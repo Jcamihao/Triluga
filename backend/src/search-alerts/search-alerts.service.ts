@@ -240,6 +240,7 @@ export class SearchAlertsService {
       motorcycleStyle: string | null;
       engineCc: number | null;
       dailyRate: Prisma.Decimal | number | string;
+      weeklyRate: Prisma.Decimal | number | string | null;
       latitude: Prisma.Decimal | number | null;
       longitude: Prisma.Decimal | number | null;
     },
@@ -294,13 +295,16 @@ export class SearchAlertsService {
       return false;
     }
 
-    const dailyRate = Number(vehicle.dailyRate);
+    const weeklyRate =
+      vehicle.weeklyRate !== null
+        ? Number(vehicle.weeklyRate)
+        : Number(vehicle.dailyRate);
 
-    if (filters.minPrice !== undefined && dailyRate < filters.minPrice) {
+    if (filters.minPrice !== undefined && weeklyRate < filters.minPrice) {
       return false;
     }
 
-    if (filters.maxPrice !== undefined && dailyRate > filters.maxPrice) {
+    if (filters.maxPrice !== undefined && weeklyRate > filters.maxPrice) {
       return false;
     }
 

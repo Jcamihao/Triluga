@@ -80,16 +80,20 @@ export class CreateVehicleDto {
   @Max(12)
   seats: number;
 
-  @ApiProperty({ example: 189.9 })
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(1)
-  dailyRate: number;
-
-  @ApiPropertyOptional({ example: 999.9 })
+  @ApiPropertyOptional({
+    example: 999.9,
+    description:
+      'Campo legado. Quando enviado, deve representar o valor semanal.',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
-  weeklyRate?: number;
+  dailyRate?: number;
+
+  @ApiProperty({ example: 999.9 })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  weeklyRate: number;
 
   @ApiPropertyOptional({ enum: KmPolicy, default: KmPolicy.FREE })
   @IsOptional()
