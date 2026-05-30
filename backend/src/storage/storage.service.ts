@@ -2,7 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client as MinioClient } from 'minio';
 import { extname } from 'path';
+import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
+
+type UploadFile = Pick<
+  Express.Multer.File,
+  'buffer' | 'mimetype' | 'originalname' | 'size'
+>;
 
 @Injectable()
 export class StorageService {
@@ -79,10 +85,11 @@ export class StorageService {
     file: Express.Multer.File,
     folder: 'vehicles' | 'users' | 'documents',
   ) {
-    const extension = extname(file.originalname || '');
+    const optimizedFile = await this.optimizePublicImage(file, folder);
+    const extension = this.getUploadExtension(optimizedFile);
     const objectKey = `${folder}/${uuidv4()}${extension}`;
 
-    await this.putObject(this.publicBucket, objectKey, file);
+    await this.putObject(this.publicBucket, objectKey, optimizedFile);
 
     return {
       key: objectKey,
@@ -200,11 +207,65 @@ export class StorageService {
   private async putObject(
     bucket: string,
     objectKey: string,
-    file: Express.Multer.File,
+    file: UploadFile,
   ) {
     await this.client.putObject(bucket, objectKey, file.buffer, file.size, {
       'Content-Type': file.mimetype,
     });
+  }
+
+  private async optimizePublicImage(
+    file: Express.Multer.File,
+    folder: 'vehicles' | 'users' | 'documents',
+  ): Promise<UploadFile> {
+    if (!file.mimetype.startsWith('image/') || folder === 'documents') {
+      return file;
+    }
+
+    const size =
+      folder === 'users'
+        ? { width: 768, height: 768, quality: 78 }
+        : { width: 1600, height: 1200, quality: 76 };
+
+    try {
+      const buffer = await sharp(file.buffer, {
+        failOn: 'none',
+      })
+        .rotate()
+        .resize({
+          width: size.width,
+          height: size.height,
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .webp({
+          quality: size.quality,
+          effort: 5,
+        })
+        .toBuffer();
+
+      return {
+        buffer,
+        mimetype: 'image/webp',
+        originalname: `${file.originalname.replace(/\.[^.]+$/, '')}.webp`,
+        size: buffer.length,
+      };
+    } catch (error) {
+      this.logger.warn(
+        `Nao foi possivel otimizar imagem ${file.originalname}: ${
+          error instanceof Error ? error.message : 'Erro desconhecido'
+        }`,
+      );
+      return file;
+    }
+  }
+
+  private getUploadExtension(file: UploadFile) {
+    if (file.mimetype === 'image/webp') {
+      return '.webp';
+    }
+
+    return extname(file.originalname || '') || '.bin';
   }
 
   private async deleteObjectFromBucket(bucket: string, objectKey: string) {
