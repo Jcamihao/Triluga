@@ -20,10 +20,9 @@
       <p class="mb-4 text-xs font-bold text-on-surface-variant">
         Mínimo obrigatório: {{ owner.minimumVehiclePhotoCount }} fotos.
       </p>
-      <label
-        class="grid grid-cols-2 md:grid-cols-4 auto-rows-fr gap-4 cursor-pointer"
-      >
+      <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-fr gap-4">
         <input
+          #vehiclePhotosInput
           class="sr-only"
           type="file"
           accept="image/png,image/jpeg,image/webp,image/*"
@@ -46,34 +45,99 @@
             >
               <span class="text-white font-bold text-sm">Foto Principal</span>
             </div>
+            <div class="absolute right-3 top-3 flex gap-2">
+              <button
+                class="h-9 w-9 rounded-full bg-black/65 text-white grid place-items-center backdrop-blur hover:bg-error"
+                type="button"
+                aria-label="Remover foto principal"
+                (click)="owner.removeSelectedVehicleImage(0)"
+              >
+                <span class="material-symbols-outlined text-base">close</span>
+              </button>
+              <button
+                class="h-9 w-9 rounded-full bg-black/65 text-white grid place-items-center backdrop-blur hover:bg-primary"
+                type="button"
+                aria-label="Substituir foto principal"
+                (click)="heroReplaceInput.click()"
+              >
+                <span class="material-symbols-outlined text-base">edit</span>
+              </button>
+              <input
+                #heroReplaceInput
+                class="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/*"
+                (change)="owner.onVehicleFileReplace($event, 0)"
+              />
+            </div>
           </ng-container>
           <ng-template #uploadHeroEmpty>
-            <span
-              class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-primary transition-colors"
+            <button
+              class="absolute inset-0 flex flex-col items-center justify-center"
+              type="button"
+              (click)="vehiclePhotosInput.click()"
             >
-              add_a_photo
-            </span>
-            <span class="text-sm font-semibold text-on-surface-variant">
-              Foto Principal
-            </span>
-            <span class="text-xs text-outline mt-1">Arraste ou clique</span>
+              <span
+                class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-primary transition-colors"
+              >
+                add_a_photo
+              </span>
+              <span class="text-sm font-semibold text-on-surface-variant">
+                Foto Principal
+              </span>
+              <span class="text-xs text-outline mt-1">Clique para enviar</span>
+            </button>
           </ng-template>
         </div>
         <div
-          class="aspect-square bg-surface-container-low rounded-xl flex items-center justify-center border-2 border-dashed border-outline-variant/30 hover:border-primary/50 transition-all overflow-hidden"
+          class="aspect-square bg-surface-container-low rounded-xl flex items-center justify-center border-2 border-dashed border-outline-variant/30 hover:border-primary/50 transition-all overflow-hidden relative group"
           *ngFor="let slot of owner.photoSlots; trackBy: owner.trackByIndex"
         >
-          <img
-            *ngIf="owner.photoSlotUrl(slot); else pricePhotoSlotEmpty"
-            class="w-full h-full object-cover"
-            [src]="owner.photoSlotUrl(slot)"
-            alt="Foto do veículo"
-          />
+          <ng-container *ngIf="owner.photoSlotImage(slot); else pricePhotoSlotEmpty">
+            <img
+              class="w-full h-full object-cover"
+              [src]="owner.photoSlotImage(slot).url"
+              alt="Foto do veículo"
+            />
+            <div
+              class="absolute right-2 top-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            >
+              <button
+                class="h-8 w-8 rounded-full bg-black/65 text-white grid place-items-center backdrop-blur hover:bg-error"
+                type="button"
+                aria-label="Remover foto"
+                (click)="owner.removeSelectedVehicleImage(slot + 1)"
+              >
+                <span class="material-symbols-outlined text-sm">close</span>
+              </button>
+              <button
+                class="h-8 w-8 rounded-full bg-black/65 text-white grid place-items-center backdrop-blur hover:bg-primary"
+                type="button"
+                aria-label="Substituir foto"
+                (click)="slotReplaceInput.click()"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+              </button>
+              <input
+                #slotReplaceInput
+                class="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/*"
+                (change)="owner.onVehicleFileReplace($event, slot + 1)"
+              />
+            </div>
+          </ng-container>
           <ng-template #pricePhotoSlotEmpty>
-            <span class="material-symbols-outlined text-outline">add</span>
+            <button
+              class="absolute inset-0 grid place-items-center"
+              type="button"
+              (click)="vehiclePhotosInput.click()"
+            >
+              <span class="material-symbols-outlined text-outline">add</span>
+            </button>
           </ng-template>
         </div>
-      </label>
+      </div>
       <p
         class="mt-4 text-xs text-on-surface-variant/70 italic flex items-center gap-2"
       >

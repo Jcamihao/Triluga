@@ -132,6 +132,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     { length: 4 },
     (_, index) => index,
   );
+  protected readonly maxVehiclePhotoCount = 5;
   protected readonly minimumVehiclePhotoCount = 3;
 
   constructor() {
@@ -350,6 +351,10 @@ export class OwnerDashboardPageComponent implements OnDestroy {
 
   protected photoSlotUrl(index: number) {
     return this.selectedVehicleImages[index + 1]?.url || '';
+  }
+
+  protected photoSlotImage(index: number) {
+    return this.selectedVehicleImages[index + 1] ?? null;
   }
 
   protected get editingVehicle() {
@@ -691,22 +696,74 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     const imageFiles = selectedFiles.filter((file) =>
       file.type.startsWith('image/'),
     );
-    const exceededLimit =
-      this.pendingVehicleFiles.length + imageFiles.length > 7;
-    const limitedFiles = [...this.pendingVehicleFiles, ...imageFiles].slice(
+    const availableSlots = Math.max(
+      this.maxVehiclePhotoCount - this.selectedPhotoCount,
       0,
-      7,
     );
+    const exceededLimit = imageFiles.length > availableSlots;
+    const limitedFiles = [
+      ...this.pendingVehicleFiles,
+      ...imageFiles.slice(0, availableSlots),
+    ];
 
     this.setPendingVehicleFiles(limitedFiles);
     this.mediaError =
       imageFiles.length !== selectedFiles.length
         ? 'Somente arquivos de imagem podem ser enviados.'
         : exceededLimit
-          ? 'Você pode enviar até 7 novas fotos por vez.'
+          ? `Você pode enviar até ${this.maxVehiclePhotoCount} fotos por anúncio.`
           : '';
     this.mediaFeedback = `${this.pendingVehicleFiles.length} foto(s) pronta(s) para envio.`;
     input.value = '';
+  }
+
+  protected onVehicleFileReplace(event: Event, selectedIndex: number) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.mediaError = 'Somente arquivos de imagem podem ser enviados.';
+      return;
+    }
+
+    const selectedImage = this.selectedVehicleImages[selectedIndex];
+
+    if (!selectedImage) {
+      this.setPendingVehicleFiles([...this.pendingVehicleFiles, file]);
+      this.mediaFeedback = 'Foto adicionada.';
+      return;
+    }
+
+    if (selectedImage.source === 'pending') {
+      const nextFiles = [...this.pendingVehicleFiles];
+      nextFiles[selectedImage.pendingIndex] = file;
+      this.setPendingVehicleFiles(nextFiles);
+      this.mediaFeedback = 'Foto substituída.';
+      this.mediaError = '';
+      return;
+    }
+
+    this.replaceSavedVehicleImage(selectedImage.id, file);
+  }
+
+  protected removeSelectedVehicleImage(selectedIndex: number) {
+    const selectedImage = this.selectedVehicleImages[selectedIndex];
+
+    if (!selectedImage) {
+      return;
+    }
+
+    if (selectedImage.source === 'pending') {
+      this.removePendingVehicleFile(selectedImage.pendingIndex);
+      return;
+    }
+
+    this.removeVehicleImageById(selectedImage.id);
   }
 
   protected removePendingVehicleFile(index: number) {
@@ -720,16 +777,20 @@ export class OwnerDashboardPageComponent implements OnDestroy {
   }
 
   protected removeVehicleImage(image: VehicleImage) {
+    this.removeVehicleImageById(image.id);
+  }
+
+  private removeVehicleImageById(imageId: string) {
     if (!this.editingVehicleId) {
       return;
     }
 
     const vehicleId = this.editingVehicleId;
 
-    this.imageActionId = image.id;
+    this.imageActionId = imageId;
     this.mediaError = '';
 
-    this.vehiclesApiService.removeImage(vehicleId, image.id).subscribe({
+    this.vehiclesApiService.removeImage(vehicleId, imageId).subscribe({
       next: () => {
         this.imageActionId = null;
         this.mediaFeedback = 'Foto removida do anúncio.';
@@ -740,6 +801,31 @@ export class OwnerDashboardPageComponent implements OnDestroy {
         this.mediaFeedback = '';
         this.mediaError =
           error?.error?.message || 'Não foi possível remover esta foto agora.';
+      },
+    });
+  }
+
+  private replaceSavedVehicleImage(imageId: string, file: File) {
+    if (!this.editingVehicleId) {
+      return;
+    }
+
+    const vehicleId = this.editingVehicleId;
+    this.imageActionId = imageId;
+    this.mediaError = '';
+
+    this.vehiclesApiService.removeImage(vehicleId, imageId).subscribe({
+      next: () => {
+        this.imageActionId = null;
+        this.setPendingVehicleFiles([...this.pendingVehicleFiles, file]);
+        this.mediaFeedback = 'Foto substituída. Salve o anúncio para enviar.';
+        this.loadData(vehicleId);
+      },
+      error: (error) => {
+        this.imageActionId = null;
+        this.mediaFeedback = '';
+        this.mediaError =
+          error?.error?.message || 'Não foi possível substituir esta foto.';
       },
     });
   }
