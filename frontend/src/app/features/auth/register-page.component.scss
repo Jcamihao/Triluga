@@ -213,6 +213,122 @@
   display: none;
 }
 
+.avatar-crop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(9, 29, 46, 0.62);
+}
+
+.avatar-crop__panel {
+  width: min(100%, 420px);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(9, 29, 46, 0.28);
+  padding: 20px;
+}
+
+.avatar-crop__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.avatar-crop__header h2 {
+  margin: 0;
+  color: #091d2e;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.avatar-crop__header button,
+.avatar-crop__actions button {
+  cursor: pointer;
+  border: 0;
+}
+
+.avatar-crop__header button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #edf4ff;
+  color: #091d2e;
+}
+
+.avatar-crop__viewport {
+  position: relative;
+  width: 288px;
+  height: 288px;
+  margin: 0 auto 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #091d2e;
+  touch-action: none;
+  cursor: grab;
+}
+
+.avatar-crop__viewport img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  transform-origin: center;
+}
+
+.avatar-crop__mask {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.avatar-crop__zoom {
+  display: grid;
+  gap: 10px;
+  color: #3d4a3e;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.avatar-crop__zoom input {
+  width: 100%;
+  accent-color: #006d37;
+}
+
+.avatar-crop__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.avatar-crop__actions button {
+  min-height: 46px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.avatar-crop__actions button:first-child {
+  background: #edf4ff;
+  color: #091d2e;
+}
+
+.avatar-crop__actions button:last-child {
+  background: #006d37;
+  color: #fff;
+}
+
 @media (min-width: 768px) {
   .signup-web {
     display: block;

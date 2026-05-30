@@ -49,11 +49,27 @@ export class RegisterPageComponent implements OnDestroy {
   protected zipCodeError = '';
   protected acceptedTerms = false;
   protected pendingAvatarFile: File | null = null;
+  protected cropModalOpen = false;
+  protected cropImageUrl: string | null = null;
+  protected cropZoom = 1;
+  protected cropOffsetX = 0;
+  protected cropOffsetY = 0;
   private avatarPreviewUrl: string | null = null;
+  private cropSourceFile: File | null = null;
+  private cropDragStart:
+    | {
+        pointerId: number;
+        x: number;
+        y: number;
+        offsetX: number;
+        offsetY: number;
+      }
+    | null = null;
   private lastRequestedZipCode = '';
 
   ngOnDestroy() {
     this.revokeAvatarPreview();
+    this.closeCropModal();
   }
 
   protected get resolvedAvatarUrl() {
@@ -520,6 +536,7 @@ export class RegisterPageComponent implements OnDestroy {
   protected onAvatarSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+    input.value = '';
 
     if (!file) {
       return;
@@ -527,14 +544,74 @@ export class RegisterPageComponent implements OnDestroy {
 
     if (!file.type.startsWith('image/')) {
       this.feedback = 'Selecione uma imagem válida para a foto de perfil.';
-      input.value = '';
       return;
     }
 
     this.feedback = '';
-    this.pendingAvatarFile = file;
-    this.setAvatarPreview(file);
-    input.value = '';
+    this.openCropModal(file);
+  }
+
+  protected get cropImageTransform() {
+    return `translate(${this.cropOffsetX}px, ${this.cropOffsetY}px) scale(${this.cropZoom})`;
+  }
+
+  protected onCropPointerDown(event: PointerEvent) {
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture(event.pointerId);
+    this.cropDragStart = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      offsetX: this.cropOffsetX,
+      offsetY: this.cropOffsetY,
+    };
+  }
+
+  protected onCropPointerMove(event: PointerEvent) {
+    if (!this.cropDragStart || this.cropDragStart.pointerId !== event.pointerId) {
+      return;
+    }
+
+    this.cropOffsetX = this.clampCropOffset(
+      this.cropDragStart.offsetX + event.clientX - this.cropDragStart.x,
+    );
+    this.cropOffsetY = this.clampCropOffset(
+      this.cropDragStart.offsetY + event.clientY - this.cropDragStart.y,
+    );
+  }
+
+  protected onCropPointerUp(event: PointerEvent) {
+    if (this.cropDragStart?.pointerId !== event.pointerId) {
+      return;
+    }
+
+    this.cropDragStart = null;
+  }
+
+  protected onCropZoomChange(value: string | number) {
+    this.cropZoom = Number(value);
+    this.cropOffsetX = this.clampCropOffset(this.cropOffsetX);
+    this.cropOffsetY = this.clampCropOffset(this.cropOffsetY);
+  }
+
+  protected cancelAvatarCrop() {
+    this.closeCropModal();
+  }
+
+  protected applyAvatarCrop() {
+    if (!this.cropImageUrl || !this.cropSourceFile) {
+      return;
+    }
+
+    this.createCroppedAvatarFile()
+      .then((file) => {
+        this.pendingAvatarFile = file;
+        this.setAvatarPreview(file);
+        this.closeCropModal();
+      })
+      .catch(() => {
+        this.feedback = 'Não foi possível cortar a imagem selecionada.';
+      });
   }
 
   private setAvatarPreview(file: File) {
@@ -549,5 +626,102 @@ export class RegisterPageComponent implements OnDestroy {
 
     URL.revokeObjectURL(this.avatarPreviewUrl);
     this.avatarPreviewUrl = null;
+  }
+
+  private openCropModal(file: File) {
+    this.closeCropModal();
+    this.cropSourceFile = file;
+    this.cropImageUrl = URL.createObjectURL(file);
+    this.cropZoom = 1;
+    this.cropOffsetX = 0;
+    this.cropOffsetY = 0;
+    this.cropModalOpen = true;
+  }
+
+  private closeCropModal() {
+    if (this.cropImageUrl) {
+      URL.revokeObjectURL(this.cropImageUrl);
+    }
+
+    this.cropImageUrl = null;
+    this.cropSourceFile = null;
+    this.cropDragStart = null;
+    this.cropModalOpen = false;
+    this.cropZoom = 1;
+    this.cropOffsetX = 0;
+    this.cropOffsetY = 0;
+  }
+
+  private async createCroppedAvatarFile() {
+    if (!this.cropImageUrl || !this.cropSourceFile) {
+      throw new Error('Imagem inválida.');
+    }
+
+    const image = await this.loadImage(this.cropImageUrl);
+    const outputSize = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      throw new Error('Canvas indisponível.');
+    }
+
+    const viewportSize = 288;
+    const baseScale = Math.max(
+      viewportSize / image.naturalWidth,
+      viewportSize / image.naturalHeight,
+    );
+    const sourceScale = baseScale * this.cropZoom;
+    const displayedWidth = image.naturalWidth * sourceScale;
+    const displayedHeight = image.naturalHeight * sourceScale;
+    const viewportLeft = (viewportSize - displayedWidth) / 2 + this.cropOffsetX;
+    const viewportTop = (viewportSize - displayedHeight) / 2 + this.cropOffsetY;
+    const sourceX = Math.max(0, -viewportLeft / sourceScale);
+    const sourceY = Math.max(0, -viewportTop / sourceScale);
+    const sourceSize = Math.min(
+      image.naturalWidth - sourceX,
+      image.naturalHeight - sourceY,
+      viewportSize / sourceScale,
+    );
+
+    context.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
+      0,
+      0,
+      outputSize,
+      outputSize,
+    );
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => (result ? resolve(result) : reject(new Error('Blob vazio.'))),
+        'image/jpeg',
+        0.9,
+      );
+    });
+
+    const originalName = this.cropSourceFile.name.replace(/\.[^.]+$/, '');
+    return new File([blob], `${originalName || 'avatar'}-crop.jpg`, {
+      type: 'image/jpeg',
+    });
+  }
+
+  private loadImage(url: string) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Imagem inválida.'));
+      image.src = url;
+    });
+  }
+
+  private clampCropOffset(value: number) {
+    return Math.max(-96, Math.min(96, value));
   }
 }
