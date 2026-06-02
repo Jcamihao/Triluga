@@ -71,7 +71,7 @@ const COLLECTIONS: CollectionCard[] = [
     label: 'Esportivos',
     count: '420 veículos',
     icon: 'directions_car',
-    params: { category: 'LUXURY' },
+    params: { category: 'SPORT' },
     fallbackImage: 'assets/categories/luxury.png',
   },
   {
@@ -280,7 +280,8 @@ export class HomePageComponent {
   private loadCollectionStats() {
     this.vehiclesApiService.getStats().subscribe({
       next: (stats) => {
-        this.collections[0].count = `${stats.luxury} veículos`;
+        console.log('Vehicle stats:', stats);
+        this.collections[0].count = `${stats.sport} veículos`;
         this.collections[1].count = `${stats.electric} veículos`;
         this.collections[2].count = `${stats.motorcycle} veículos`;
         this.collections[3].count = `${stats.suvPickup} veículos`;

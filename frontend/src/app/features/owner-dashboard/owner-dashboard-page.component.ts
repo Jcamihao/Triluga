@@ -82,6 +82,7 @@ export class OwnerDashboardPageComponent implements OnDestroy {
     { label: 'SUV', value: 'SUV' },
     { label: 'Pickup', value: 'PICKUP' },
     { label: 'Van', value: 'VAN' },
+    { label: 'Esportivo', value: 'SPORT' },
     { label: 'Luxo', value: 'LUXURY' },
   ];
   protected readonly transmissionOptions: SelectOption<TransmissionType>[] = [

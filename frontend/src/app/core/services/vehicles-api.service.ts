@@ -47,6 +47,7 @@ export class VehiclesApiService {
   getStats() {
     return this.http.get<{
       luxury: number;
+      sport: number;
       electric: number;
       motorcycle: number;
       suvPickup: number;

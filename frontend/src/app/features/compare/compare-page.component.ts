@@ -40,6 +40,8 @@ export class ComparePageComponent {
       PICKUP: 'Pickup',
       VAN: 'Van',
       LUXURY: 'Luxo',
+      SPORT: 'Esportivo',
+      MOTORCYCLE: 'Moto',
     };
 
     return labels[category] || category;

@@ -6,6 +6,7 @@ export type VehicleCategory =
   | 'SUV'
   | 'PICKUP'
   | 'VAN'
+  | 'SPORT'
   | 'LUXURY';
 export type VehicleType = 'CAR' | 'MOTORCYCLE';
 export type MotorcycleStyle =
