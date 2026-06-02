@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   OnDestroy,
+  OnInit,
   ViewChild,
   inject,
 } from '@angular/core';
@@ -15,6 +16,7 @@ import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
+import { LocationService } from 'src/app/core/services/location.service';
 
 type SearchQuery = {
   q: string;
@@ -49,7 +51,7 @@ type SearchQuery = {
   templateUrl: './search-page.component.html',
   styleUrls: ['./search-page.component.scss'],
 })
-export class SearchPageComponent implements AfterViewInit, OnDestroy {
+export class SearchPageComponent implements AfterViewInit, OnDestroy, OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
@@ -103,7 +105,7 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
     return Math.ceil(this.totalItems / 21);
   }
 
-  constructor() {
+  constructor(protected readonly locationService: LocationService) {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.query = {
         q: params.get('q') || '',
@@ -128,6 +130,10 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       this.vehicles = [];
       this.fetchVehicles();
     });
+  }
+
+  ngOnInit() {
+    this.locationService.loadLocation();
   }
 
   ngAfterViewInit() {
@@ -404,27 +410,14 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       : 'Encontre seu carro ideal';
   }
 
-  protected detectedCity = 'São Paulo, SP';
-
-  ngOnInit() {
-    fetch('https://ipapi.co/json/')
-      .then((res) => res.json())
-      .then((data) => {
-        this.detectedCity = `${data.city}, ${data.region_code}`;
-      })
-      .catch(() => {
-        this.detectedCity = 'São Paulo, SP';
-      });
-  }
-
   protected get webResultsTitle() {
-    const city = this.query.city || this.detectedCity;
+    const city = this.query.city || this.locationService.city;
 
     if (this.query.vehicleType === 'MOTORCYCLE') {
       return `Motos em ${city}`;
     }
 
-    return `Veículos em ${city}`;
+    return `Veículos de ${city}`;
   }
 
   protected get searchOverviewSubtitle() {
