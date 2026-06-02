@@ -404,15 +404,24 @@ export class SearchPageComponent implements AfterViewInit, OnDestroy {
       : 'Encontre seu carro ideal';
   }
 
+  protected detectedCity = 'São Paulo, SP';
+
+  ngOnInit() {
+    fetch('https://ipapi.co/json/')
+      .then((res) => res.json())
+      .then((data) => {
+        this.detectedCity = `${data.city}, ${data.region_code}`;
+      })
+      .catch(() => {
+        this.detectedCity = 'São Paulo, SP';
+      });
+  }
+
   protected get webResultsTitle() {
-    const city = this.query.city || 'São Paulo, SP';
+    const city = this.query.city || this.detectedCity;
 
     if (this.query.vehicleType === 'MOTORCYCLE') {
       return `Motos em ${city}`;
-    }
-
-    if (this.query.vehicleType === 'CAR') {
-      return `Veículos em ${city}`;
     }
 
     return `Veículos em ${city}`;
