@@ -15,6 +15,7 @@ import { BottomNavComponent } from './shared/components/bottom-nav/bottom-nav.co
 import { CompareTrayComponent } from './shared/components/compare-tray/compare-tray.component';
 import { UiStateService } from './core/services/ui-state.service';
 import { WebFooterComponent } from './shared/components/web-footer/web-footer.component';
+import { LocationService } from './core/services/location.service';
 
 @Component({
   selector: 'app-root',
@@ -55,7 +56,7 @@ export class AppComponent {
     { initialValue: this.router.url },
   );
 
-  constructor() {
+  constructor(public locationService: LocationService) {
     this.routeTraceService.start();
     this.analyticsTrackingService.trackCurrentSession(
       globalThis.location?.pathname

@@ -64,7 +64,7 @@
           {{
             authService.currentUser()?.profile?.city
               ? authService.currentUser()?.profile?.city + ', BR'
-              : 'São Paulo, BR'
+              : locationService.city
           }}
         </span>
       </div>
@@ -258,7 +258,7 @@
   [class.install-banner--docked]="showBottomNav()"
 >
   <div>
-    <strong>Instale a Triluga no celular</strong>
+    <strong>Instale o Triluga no celular</strong>
     <p *ngIf="pwaInstallService.canPromptInstall(); else manualInstallHint">
       Abra a Triluga como aplicativo, com acesso direto pela tela inicial e
       experiência mais fluida no mobile.
@@ -296,7 +296,7 @@
   <div class="install-banner__actions">
     <button
       type="button"
-      class="btn btn-secondary"
+      class="web-header__logout"
       (click)="dismissInstallBanner()"
     >
       Agora não
@@ -304,7 +304,7 @@
     <button
       *ngIf="pwaInstallService.canPromptInstall()"
       type="button"
-      class="btn btn-primary"
+      class="web-header__announce"
       (click)="installApp()"
     >
       Instalar
