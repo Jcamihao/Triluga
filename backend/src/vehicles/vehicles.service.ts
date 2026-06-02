@@ -672,14 +672,16 @@ export class VehiclesService {
   }
 
   async getHomeStats() {
-    const [luxuryCount, electricCount, motorcycleCount, suvPickupCount] =
+    const [sportCount, electricCount, motorcycleCount, suvPickupCount] =
       await Promise.all([
         this.prisma.vehicle.count({
-          where: { category: 'LUXURY', isActive: true, isPublished: true },
+          where: { category: 'SPORT', isActive: true, isPublished: true },
         }),
+
         this.prisma.vehicle.count({
           where: { fuelType: 'ELECTRIC', isActive: true, isPublished: true },
         }),
+
         this.prisma.vehicle.count({
           where: {
             vehicleType: 'MOTORCYCLE',
@@ -697,7 +699,7 @@ export class VehiclesService {
       ]);
 
     return {
-      luxury: luxuryCount,
+      sport: sportCount,
       electric: electricCount,
       motorcycle: motorcycleCount,
       suvPickup: suvPickupCount,

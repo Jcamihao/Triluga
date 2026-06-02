@@ -32,6 +32,7 @@ enum VehicleCategory {
   SEDAN
   SUV
   PICKUP
+  SPORT
   VAN
   LUXURY
 }
