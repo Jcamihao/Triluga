@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -89,6 +89,108 @@ export class VehicleDetailPageComponent {
   protected showAllDetails = false;
   protected previewImageUrl = '';
   protected previewImageIndex = 0;
+  protected readonly mobileGalleryIndex = signal(0);
+  protected mobileGalleryTouchStartX = 0;
+
+  // Hero zoom state
+  protected heroZoomScale = 1;
+  protected heroZoomPanX = 0;
+  protected heroZoomPanY = 0;
+  protected heroIsPinching = false;
+  private heroPinchStartDist = 0;
+  private heroPinchStartScale = 1;
+  private heroPanLastX = 0;
+  private heroPanLastY = 0;
+  private heroLastTapTime = 0;
+
+  protected get heroZoomTransform() {
+    return `translate(${this.heroZoomPanX}px, ${this.heroZoomPanY}px) scale(${this.heroZoomScale})`;
+  }
+
+  protected mobileGalleryTouchStart(event: TouchEvent) {
+    this.mobileGalleryTouchStartX = event.changedTouches[0].clientX;
+  }
+
+  protected mobileGalleryTouchEnd(event: TouchEvent) {
+    if (this.heroZoomScale > 1) return;
+    const deltaX =
+      event.changedTouches[0].clientX - this.mobileGalleryTouchStartX;
+    if (Math.abs(deltaX) < 40) return;
+    const images = this.webGalleryImages;
+    if (deltaX < 0) {
+      this.mobileGalleryIndex.set(
+        (this.mobileGalleryIndex() + 1) % images.length,
+      );
+    } else {
+      this.mobileGalleryIndex.set(
+        (this.mobileGalleryIndex() - 1 + images.length) % images.length,
+      );
+    }
+    this.resetHeroZoom();
+  }
+
+  protected heroImageTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      event.stopPropagation();
+      this.heroIsPinching = true;
+      this.heroPinchStartDist = this.getTouchDist(event.touches);
+      this.heroPinchStartScale = this.heroZoomScale;
+      return;
+    }
+    if (this.heroZoomScale > 1) {
+      event.stopPropagation();
+      this.heroPanLastX = event.touches[0].clientX;
+      this.heroPanLastY = event.touches[0].clientY;
+    }
+    const now = Date.now();
+    if (now - this.heroLastTapTime < 300) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.heroZoomScale > 1 ? this.resetHeroZoom() : (this.heroZoomScale = 2.5);
+    }
+    this.heroLastTapTime = now;
+  }
+
+  protected heroImageTouchMove(event: TouchEvent) {
+    if (event.touches.length === 2 && this.heroIsPinching) {
+      const dist = this.getTouchDist(event.touches);
+      this.heroZoomScale = Math.min(
+        5,
+        Math.max(1, this.heroPinchStartScale * (dist / this.heroPinchStartDist)),
+      );
+      if (this.heroZoomScale <= 1) {
+        this.heroZoomPanX = 0;
+        this.heroZoomPanY = 0;
+      }
+    } else if (event.touches.length === 1 && this.heroZoomScale > 1) {
+      this.heroZoomPanX += event.touches[0].clientX - this.heroPanLastX;
+      this.heroZoomPanY += event.touches[0].clientY - this.heroPanLastY;
+      this.heroPanLastX = event.touches[0].clientX;
+      this.heroPanLastY = event.touches[0].clientY;
+    }
+  }
+
+  protected heroImageTouchEnd(event: TouchEvent) {
+    if (this.heroIsPinching && event.touches.length < 2) {
+      event.stopPropagation();
+      this.heroIsPinching = false;
+      if (this.heroZoomScale < 1.15) this.resetHeroZoom();
+      return;
+    }
+    if (this.heroZoomScale > 1) event.stopPropagation();
+  }
+
+  protected resetHeroZoom() {
+    this.heroZoomScale = 1;
+    this.heroZoomPanX = 0;
+    this.heroZoomPanY = 0;
+    this.heroIsPinching = false;
+  }
+
+  protected openMobilePreview() {
+    if (this.heroZoomScale > 1) return;
+    this.openImagePreview(this.webGalleryImages[this.mobileGalleryIndex()]);
+  }
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -211,6 +313,7 @@ export class VehicleDetailPageComponent {
 
   protected closeImagePreview() {
     this.previewImageUrl = '';
+    this.resetPreviewZoom();
   }
 
   protected showPreviousPreviewImage(event: Event) {
@@ -223,6 +326,105 @@ export class VehicleDetailPageComponent {
     this.setPreviewImage(this.previewImageIndex + 1);
   }
 
+  protected previewTouchStartX = 0;
+
+  // Preview zoom state
+  protected previewZoomScale = 1;
+  protected previewZoomPanX = 0;
+  protected previewZoomPanY = 0;
+  protected previewIsPinching = false;
+  private previewPinchStartDist = 0;
+  private previewPinchStartScale = 1;
+  private previewPanLastX = 0;
+  private previewPanLastY = 0;
+  private previewLastTapTime = 0;
+
+  protected get previewZoomTransform() {
+    return `translate(${this.previewZoomPanX}px, ${this.previewZoomPanY}px) scale(${this.previewZoomScale})`;
+  }
+
+  protected previewTouchStart(event: TouchEvent) {
+    this.previewTouchStartX = event.changedTouches[0].clientX;
+  }
+
+  protected previewTouchEnd(event: TouchEvent) {
+    if (this.previewZoomScale > 1) return;
+    const deltaX =
+      event.changedTouches[0].clientX - this.previewTouchStartX;
+    if (Math.abs(deltaX) < 40) return;
+    event.stopPropagation();
+    if (deltaX < 0) {
+      this.setPreviewImage(this.previewImageIndex + 1);
+    } else {
+      this.setPreviewImage(this.previewImageIndex - 1);
+    }
+  }
+
+  protected previewImageTouchStart(event: TouchEvent) {
+    event.stopPropagation();
+    if (event.touches.length === 2) {
+      this.previewIsPinching = true;
+      this.previewPinchStartDist = this.getTouchDist(event.touches);
+      this.previewPinchStartScale = this.previewZoomScale;
+      return;
+    }
+    if (this.previewZoomScale > 1) {
+      this.previewPanLastX = event.touches[0].clientX;
+      this.previewPanLastY = event.touches[0].clientY;
+    }
+    const now = Date.now();
+    if (now - this.previewLastTapTime < 300) {
+      event.preventDefault();
+      this.previewZoomScale > 1
+        ? this.resetPreviewZoom()
+        : (this.previewZoomScale = 2.5);
+    }
+    this.previewLastTapTime = now;
+  }
+
+  protected previewImageTouchMove(event: TouchEvent) {
+    if (event.touches.length === 2 && this.previewIsPinching) {
+      const dist = this.getTouchDist(event.touches);
+      this.previewZoomScale = Math.min(
+        5,
+        Math.max(
+          1,
+          this.previewPinchStartScale * (dist / this.previewPinchStartDist),
+        ),
+      );
+      if (this.previewZoomScale <= 1) {
+        this.previewZoomPanX = 0;
+        this.previewZoomPanY = 0;
+      }
+    } else if (event.touches.length === 1 && this.previewZoomScale > 1) {
+      this.previewZoomPanX += event.touches[0].clientX - this.previewPanLastX;
+      this.previewZoomPanY += event.touches[0].clientY - this.previewPanLastY;
+      this.previewPanLastX = event.touches[0].clientX;
+      this.previewPanLastY = event.touches[0].clientY;
+    }
+  }
+
+  protected previewImageTouchEnd(event: TouchEvent) {
+    event.stopPropagation();
+    if (this.previewIsPinching && event.touches.length < 2) {
+      this.previewIsPinching = false;
+      if (this.previewZoomScale < 1.15) this.resetPreviewZoom();
+    }
+  }
+
+  protected resetPreviewZoom() {
+    this.previewZoomScale = 1;
+    this.previewZoomPanX = 0;
+    this.previewZoomPanY = 0;
+    this.previewIsPinching = false;
+  }
+
+  private getTouchDist(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   private setPreviewImage(index: number) {
     const images = this.webGalleryImages;
 
@@ -232,6 +434,7 @@ export class VehicleDetailPageComponent {
 
     this.previewImageIndex = (index + images.length) % images.length;
     this.previewImageUrl = images[this.previewImageIndex];
+    this.resetPreviewZoom();
   }
 
   protected get galleryImageCount() {

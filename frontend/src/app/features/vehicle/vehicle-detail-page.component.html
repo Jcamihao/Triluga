@@ -4,12 +4,30 @@
 >
   <!-- Hero Section: Full width gallery with overlays -->
   <section class="relative">
-    <div class="relative w-full h-[420px] bg-surface-container-low">
-      <img
-        [alt]="vehicle.title"
-        class="w-full h-full object-cover"
-        [src]="heroImageUrl"
-      />
+    <div
+      class="relative w-full h-[420px] bg-black overflow-hidden"
+      (touchstart)="mobileGalleryTouchStart($event)"
+      (touchend)="mobileGalleryTouchEnd($event)"
+    >
+      <button
+        type="button"
+        class="absolute inset-0 w-full h-full border-0 p-0 overflow-hidden bg-black"
+        style="touch-action: none"
+        (click)="openMobilePreview()"
+        (touchstart)="heroImageTouchStart($event)"
+        (touchmove)="heroImageTouchMove($event)"
+        (touchend)="heroImageTouchEnd($event)"
+        aria-label="Ampliar foto do veículo"
+      >
+        <img
+          [alt]="vehicle.title"
+          class="w-full h-full object-contain"
+          style="will-change: transform; user-select: none"
+          [style.transform]="heroZoomTransform"
+          [style.transition]="heroIsPinching ? 'none' : 'transform 180ms ease'"
+          [src]="webGalleryImages[mobileGalleryIndex()]"
+        />
+      </button>
 
       <!-- Overlaid Controls -->
       <div
@@ -58,14 +76,18 @@
       <div
         class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center space-x-2 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full"
       >
-        <span class="w-6 h-1.5 rounded-full bg-white"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
-        <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+        <span
+          *ngFor="let img of webGalleryImages; let i = index"
+          [class]="
+            i === mobileGalleryIndex()
+              ? 'w-6 h-1.5 rounded-full bg-white transition-all'
+              : 'w-1.5 h-1.5 rounded-full bg-white/40 transition-all'
+          "
+        ></span>
         <span
           class="ml-2 text-[10px] font-bold text-white uppercase tracking-widest"
         >
-          1 / {{ galleryImageCount }}
+          {{ mobileGalleryIndex() + 1 }} / {{ webGalleryImages.length }}
         </span>
       </div>
     </div>
@@ -738,15 +760,22 @@
     class="vehicle-detail-web__preview"
     *ngIf="previewImageUrl"
     (click)="closeImagePreview()"
+    (touchstart)="previewTouchStart($event)"
+    (touchend)="previewTouchEnd($event)"
   >
-    <button
-      type="button"
-      class="vehicle-detail-web__preview-close"
-      aria-label="Fechar preview"
-      (click)="closeImagePreview()"
-    >
-      <span class="material-symbols-outlined">close</span>
-    </button>
+    <header class="vehicle-detail-web__preview-header" (click)="$event.stopPropagation()">
+      <span class="vehicle-detail-web__preview-count">
+        {{ previewImageIndex + 1 }} / {{ webGalleryImages.length }}
+      </span>
+      <button
+        type="button"
+        class="vehicle-detail-web__preview-close"
+        aria-label="Fechar preview"
+        (click)="closeImagePreview()"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
 
     <button
       type="button"
@@ -757,6 +786,19 @@
       <span class="material-symbols-outlined">chevron_left</span>
     </button>
 
+    <img
+      class="vehicle-detail-web__preview-image"
+      [src]="previewImageUrl"
+      [alt]="vehicle.title"
+      style="touch-action: none; will-change: transform; user-select: none"
+      [style.transform]="previewZoomTransform"
+      [style.transition]="previewIsPinching ? 'none' : 'transform 180ms ease'"
+      (touchstart)="previewImageTouchStart($event)"
+      (touchmove)="previewImageTouchMove($event)"
+      (touchend)="previewImageTouchEnd($event)"
+      (click)="$event.stopPropagation()"
+    />
+
     <button
       type="button"
       class="vehicle-detail-web__preview-nav vehicle-detail-web__preview-nav--next"
@@ -765,11 +807,5 @@
     >
       <span class="material-symbols-outlined">chevron_right</span>
     </button>
-
-    <img
-      [src]="previewImageUrl"
-      [alt]="vehicle.title"
-      (click)="$event.stopPropagation()"
-    />
   </div>
 </ng-container>
