@@ -1,193 +1,24 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { VehicleCardItem } from '../../core/models/domain.models';
-import { CompareService } from '../../core/services/compare.service';
-import { FavoritesService } from '../../core/services/favorites.service';
-import { UiStateService } from '../../core/services/ui-state.service';
-import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
-import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
+import { Component, OnDestroy } from '@angular/core';
+import { FavoritesDesktopComponent } from './favorites-desktop.component';
+import { FavoritesMobileComponent } from './favorites-mobile.component';
 
 @Component({
   selector: 'app-favorites-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, VehicleCardComponent, WebHeaderComponent],
-  templateUrl: './favorites-page.component.html',
-  styleUrls: ['./favorites-page.component.scss'],
+  imports: [CommonModule, FavoritesMobileComponent, FavoritesDesktopComponent],
+  template: `
+    <app-favorites-mobile *ngIf="isMobile"></app-favorites-mobile>
+    <app-favorites-desktop *ngIf="!isMobile"></app-favorites-desktop>
+  `,
 })
-export class FavoritesPageComponent {
-  protected readonly favoritesService = inject(FavoritesService);
-  protected readonly compareService = inject(CompareService);
-  protected readonly uiStateService = inject(UiStateService);
-  protected readonly fallbackImage =
-    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80';
-  protected sortMode: 'recent' | 'priceAsc' | 'priceDesc' = 'recent';
-
-  protected toggleMenu() {
-    this.uiStateService.toggleMenu();
-  }
-
-  protected toggleNotifications() {
-    this.uiStateService.toggleNotifications();
-  }
-
-  constructor() {
-    this.favoritesService.refresh();
-  }
-
-  protected get favoriteItems() {
-    return this.favoritesService.items();
-  }
-
-  protected get sortedFavoriteItems() {
-    const items = [...this.favoriteItems];
-
-    if (this.sortMode === 'priceAsc') {
-      return items.sort((a, b) => this.weeklyPrice(a) - this.weeklyPrice(b));
-    }
-
-    if (this.sortMode === 'priceDesc') {
-      return items.sort((a, b) => this.weeklyPrice(b) - this.weeklyPrice(a));
-    }
-
-    return items;
-  }
-
-  protected get compareFavoritesCount() {
-    return Math.min(this.favoriteItems.length, 4);
-  }
-
-  protected get selectedCompareVehicles() {
-    const favoriteIds = new Set(
-      this.favoriteItems.map((vehicle) => vehicle.id),
-    );
-    return this.compareService
-      .items()
-      .filter((vehicle) => favoriteIds.has(vehicle.id))
-      .slice(0, 3);
-  }
-
-  protected get compareEmptySlots() {
-    return Array.from(
-      { length: Math.max(0, 3 - this.selectedCompareVehicles.length) },
-      (_, index) => index,
-    );
-  }
-
-  protected cycleSortMode() {
-    const nextMode: Record<typeof this.sortMode, typeof this.sortMode> = {
-      recent: 'priceAsc',
-      priceAsc: 'priceDesc',
-      priceDesc: 'recent',
-    };
-
-    this.sortMode = nextMode[this.sortMode];
-  }
-
-  protected sortLabel() {
-    const labels: Record<typeof this.sortMode, string> = {
-      recent: 'Ordenar',
-      priceAsc: 'Menor preço',
-      priceDesc: 'Maior preço',
-    };
-
-    return labels[this.sortMode];
-  }
-
-  protected compareFavorites() {
-    const selected = this.favoriteItems.slice(0, 4);
-
-    this.compareService.clear();
-    selected.forEach((vehicle) => this.compareService.toggle(vehicle));
-  }
-
-  protected toggleFavoriteCompare(vehicle: VehicleCardItem) {
-    if (
-      !this.compareService.isSelected(vehicle.id) &&
-      this.selectedCompareVehicles.length >= 3
-    ) {
-      return;
-    }
-
-    this.compareService.toggle(vehicle);
-  }
-
-  protected isCompareDisabled(vehicle: VehicleCardItem) {
-    return (
-      !this.compareService.isSelected(vehicle.id) &&
-      this.selectedCompareVehicles.length >= 3
-    );
-  }
-
-  protected removeFavorite(vehicle: VehicleCardItem) {
-    this.favoritesService.toggleFavorite(vehicle);
-    if (this.compareService.isSelected(vehicle.id)) {
-      this.compareService.remove(vehicle.id);
-    }
-  }
-
-  protected trackById(_index: number, vehicle: VehicleCardItem) {
-    return vehicle.id;
-  }
-
-  protected trackByIndex(index: number) {
-    return index;
-  }
-
-  protected categoryLabel(vehicle: VehicleCardItem) {
-    if (vehicle.vehicleType === 'MOTORCYCLE') {
-      return 'Moto';
-    }
-
-    const labels: Record<string, string> = {
-      ECONOMY: 'Econômico',
-      HATCH: 'Hatch',
-      SEDAN: 'Sedan',
-      SUV: 'SUV',
-      PICKUP: 'Pickup',
-      VAN: 'Van',
-      LUXURY: 'Premium',
-    };
-
-    return labels[vehicle.category] || vehicle.category;
-  }
-
-  protected transmissionLabel(transmission: string) {
-    const labels: Record<string, string> = {
-      AUTOMATIC: 'Automático',
-      MANUAL: 'Manual',
-      CVT: 'CVT',
-    };
-
-    return labels[transmission] || transmission;
-  }
-
-  protected fuelTypeLabel(fuelType: string) {
-    const labels: Record<string, string> = {
-      FLEX: 'Flex',
-      GASOLINE: 'Gasolina',
-      ETHANOL: 'Etanol',
-      DIESEL: 'Diesel',
-      ELECTRIC: 'Elétrico',
-      HYBRID: 'Híbrido',
-    };
-
-    return labels[fuelType] || fuelType;
-  }
-
-  protected rangeLabel(vehicle: VehicleCardItem) {
-    if (vehicle.fuelType === 'ELECTRIC') {
-      return vehicle.vehicleType === 'MOTORCYCLE' ? 'Elétrica' : 'Elétrico';
-    }
-
-    if (vehicle.vehicleType === 'MOTORCYCLE' && vehicle.engineCc) {
-      return `${vehicle.engineCc} cc`;
-    }
-
-    return vehicle.kmPolicy === 'FREE' ? 'Km livre' : '200 km/dia';
-  }
-
-  protected weeklyPrice(vehicle: VehicleCardItem) {
-    return vehicle.weeklyRate ?? vehicle.dailyRate;
+export class FavoritesPageComponent implements OnDestroy {
+  protected isMobile = this.detectMobile();
+  private mq = typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)') : null;
+  private mqListener = (e: MediaQueryListEvent) => { this.isMobile = e.matches; };
+  constructor() { this.mq?.addEventListener('change', this.mqListener); }
+  ngOnDestroy() { this.mq?.removeEventListener('change', this.mqListener); }
+  private detectMobile(): boolean {
+    return typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false;
   }
 }

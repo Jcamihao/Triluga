@@ -1,0 +1,148 @@
+<div class="favorites-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="favorites-web__main">
+    <section class="favorites-web__hero">
+      <div>
+        <h1>Favoritos e Comparação</h1>
+        <p>Gerencie seus veículos salvos e compare até 3 lado a lado.</p>
+      </div>
+    </section>
+
+    <div
+      class="favorites-web__layout"
+      *ngIf="favoriteItems.length; else desktopEmptyState"
+    >
+      <section class="favorites-web__list">
+        <header class="favorites-web__list-head">
+          <h2>Veículos Salvos</h2>
+          <span>{{ favoriteItems.length }} itens</span>
+        </header>
+
+        <div class="favorites-web__cards">
+          <article
+            class="favorite-card"
+            *ngFor="let vehicle of sortedFavoriteItems; trackBy: trackById"
+          >
+            <div class="favorite-card__media">
+              <a [routerLink]="['/vehicles', vehicle.id]">
+                <img
+                  [src]="vehicle.coverImage || fallbackImage"
+                  [alt]="vehicle.title"
+                />
+              </a>
+
+              <button
+                type="button"
+                class="favorite-card__remove"
+                [disabled]="favoritesService.isPending(vehicle.id)"
+                (click)="removeFavorite(vehicle)"
+                aria-label="Remover dos favoritos"
+              >
+                <span class="material-symbols-outlined">favorite</span>
+              </button>
+            </div>
+
+            <div class="favorite-card__body">
+              <div class="favorite-card__title-row">
+                <div>
+                  <h3>{{ vehicle.title }}</h3>
+                  <p>
+                    {{ fuelTypeLabel(vehicle.fuelType) }} • {{ vehicle.year }}
+                  </p>
+                </div>
+
+                <strong>
+                  {{
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/semana
+                </strong>
+              </div>
+
+              <label class="favorite-card__compare">
+                <input
+                  type="checkbox"
+                  [checked]="compareService.isSelected(vehicle.id)"
+                  [disabled]="isCompareDisabled(vehicle)"
+                  (change)="toggleFavoriteCompare(vehicle)"
+                />
+                <span>Comparar</span>
+              </label>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <aside class="favorites-web__compare-panel">
+        <section>
+          <header>
+            <h2>Comparação</h2>
+            <span>{{ selectedCompareVehicles.length }}/3 selecionados</span>
+          </header>
+
+          <div class="favorites-web__compare-list">
+            <article
+              class="favorites-web__compare-item"
+              *ngFor="
+                let vehicle of selectedCompareVehicles;
+                trackBy: trackById
+              "
+            >
+              <img
+                [src]="vehicle.coverImage || fallbackImage"
+                [alt]="vehicle.title"
+              />
+              <div>
+                <h3>{{ vehicle.title }}</h3>
+                <p>
+                  {{
+                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
+                  }}/semana
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Remover da comparação"
+                (click)="compareService.remove(vehicle.id)"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </article>
+
+            <div
+              class="favorites-web__compare-empty-slot"
+              *ngFor="let slot of compareEmptySlots; trackBy: trackByIndex"
+            >
+              <span class="material-symbols-outlined">add</span>
+              <span>Adicionar para comparar</span>
+            </div>
+          </div>
+
+          <a
+            routerLink="/compare"
+            class="favorites-web__compare-action"
+            [class.favorites-web__compare-action--disabled]="
+              selectedCompareVehicles.length < 2
+            "
+          >
+            Ver Comparação Completa
+          </a>
+        </section>
+      </aside>
+    </div>
+
+    <ng-template #desktopEmptyState>
+      <section class="favorites-web__empty">
+        <div class="favorites-web__empty-icon">
+          <span class="material-symbols-outlined">favorite_border</span>
+        </div>
+        <h2>Sua lista está vazia</h2>
+        <p>
+          Comece a explorar o showroom e salve os veículos que mais combinam com
+          sua rotina.
+        </p>
+        <a routerLink="/search">Explorar Veículos</a>
+      </section>
+    </ng-template>
+  </main>
+</div>
