@@ -1,0 +1,197 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100dvh;
+}
+
+.chat-stitch {
+  min-height: max(884px, 100dvh);
+  font-family: 'Inter', sans-serif;
+  background: #f7f9ff !important;
+  color: #091d2e !important;
+}
+
+.chat-stitch .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.chat-stitch .rounded-lg {
+  border-radius: 0.5rem !important;
+}
+
+.chat-stitch .rounded-xl {
+  border-radius: 0.75rem !important;
+}
+
+.chat-stitch h1.text-xl {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+  font-weight: 700;
+}
+
+.chat-stitch h1.text-2xl {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+}
+
+.chat-stitch h3 {
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+}
+
+.chat-stitch h3.text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.chat-stitch .bg-surface {
+  background-color: #f7f9ff !important;
+}
+
+.chat-stitch .bg-surface\/90 {
+  background-color: rgba(247, 249, 255, 0.9) !important;
+}
+
+.chat-stitch .bg-surface-container {
+  background-color: #e3efff !important;
+}
+
+.chat-stitch .bg-surface-container-low {
+  background-color: #edf4ff !important;
+}
+
+.chat-stitch .bg-surface-container-lowest {
+  background-color: #ffffff !important;
+}
+
+.chat-stitch .bg-surface-container-high,
+.chat-stitch .bg-surface-container-highest,
+.chat-stitch .bg-surface-variant {
+  background-color: #d1e4fb !important;
+}
+
+.chat-stitch .bg-primary {
+  background-color: #006d37 !important;
+}
+
+.chat-stitch .bg-primary\/10 {
+  background-color: rgba(0, 109, 55, 0.1) !important;
+}
+
+.chat-stitch .bg-primary-container {
+  background-color: #2ecc71 !important;
+}
+
+.chat-stitch .bg-on-surface-variant\/30 {
+  background-color: rgba(61, 74, 62, 0.3) !important;
+}
+
+.chat-stitch .text-on-background,
+.chat-stitch .text-on-surface {
+  color: #091d2e !important;
+}
+
+.chat-stitch .text-on-background\/30 {
+  color: rgba(9, 29, 46, 0.3) !important;
+}
+
+.chat-stitch .text-on-background\/40 {
+  color: rgba(9, 29, 46, 0.4) !important;
+}
+
+.chat-stitch .text-on-background\/60 {
+  color: rgba(9, 29, 46, 0.6) !important;
+}
+
+.chat-stitch .text-on-surface-variant {
+  color: #3d4a3e !important;
+}
+
+.chat-stitch .text-on-surface-variant\/40 {
+  color: rgba(61, 74, 62, 0.4) !important;
+}
+
+.chat-stitch .text-on-surface-variant\/50 {
+  color: rgba(61, 74, 62, 0.5) !important;
+}
+
+.chat-stitch .text-on-surface-variant\/60 {
+  color: rgba(61, 74, 62, 0.6) !important;
+}
+
+.chat-stitch .text-on-surface-variant\/80 {
+  color: rgba(61, 74, 62, 0.8) !important;
+}
+
+.chat-stitch .text-primary {
+  color: #006d37 !important;
+}
+
+.chat-stitch .text-primary\/30 {
+  color: rgba(0, 109, 55, 0.3) !important;
+}
+
+.chat-stitch .text-secondary {
+  color: #336943 !important;
+}
+
+.chat-stitch .text-white {
+  color: #ffffff !important;
+}
+
+.chat-stitch .bg-gradient-to-br p {
+  color: #ffffff !important;
+}
+
+.chat-stitch .border-primary\/10 {
+  border-color: rgba(0, 109, 55, 0.1) !important;
+}
+
+.chat-stitch .border-outline-variant\/10 {
+  border-color: rgba(187, 203, 187, 0.1) !important;
+}
+
+.chat-stitch .from-primary {
+  --tw-gradient-from: #006d37 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(0, 109, 55, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops:
+    var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.chat-stitch .to-primary-container {
+  --tw-gradient-to: #2ecc71 var(--tw-gradient-to-position) !important;
+}
+
+.chat-stitch [class*='bg-[#f7f9ff]/80'] {
+  background-color: rgba(247, 249, 255, 0.8) !important;
+}
+
+.chat-stitch [class*='text-[#006d37]'] {
+  color: #006d37 !important;
+}
+
+.chat-stitch [class*='text-[#091d2e]'] {
+  color: #091d2e !important;
+}
+
+.chat-stitch [class*='shadow-[#006d37]/20'] {
+  --tw-shadow-color: rgba(0, 109, 55, 0.2) !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.glass-panel {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
