@@ -17,6 +17,7 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
   private queueClient: Redis | null = null;
   private notificationsQueue: Queue | null = null;
   private notificationsWorker: Worker | null = null;
+  private notificationProcessor: ((job: Job) => Promise<void>) | null = null;
   private queueConnection: {
     host: string;
     port: number;
@@ -80,9 +81,13 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
       this.notificationsWorker = new Worker(
         'notifications',
         async (job: Job) => {
-          this.logger.debug(
-            `Processando job ${job.name} com payload ${JSON.stringify(job.data)}`,
-          );
+          if (this.notificationProcessor) {
+            await this.notificationProcessor(job);
+          } else {
+            this.logger.debug(
+              `Processando job ${job.name} com payload ${JSON.stringify(job.data)}`,
+            );
+          }
         },
         {
           connection: this.queueConnection,
@@ -156,6 +161,10 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
         await this.cacheClient.del(...keys);
       }
     } while (cursor !== '0');
+  }
+
+  setNotificationProcessor(processor: (job: Job) => Promise<void>) {
+    this.notificationProcessor = processor;
   }
 
   async enqueue(name: string, payload: Record<string, unknown>) {

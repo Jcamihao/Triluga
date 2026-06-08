@@ -27,6 +27,8 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SearchAlertsModule } from './search-alerts/search-alerts.module';
 import { LookupsModule } from './lookups/lookups.module';
+import { EmailModule } from './email/email.module';
+import { emailConfig } from './config/email.config';
 
 @Module({
   imports: [
@@ -37,7 +39,7 @@ import { LookupsModule } from './lookups/lookups.module';
         resolve(__dirname, '../.env'),
         resolve(__dirname, '../.env.example'),
       ],
-      load: [appConfig, authConfig, cacheConfig, storageConfig],
+      load: [appConfig, authConfig, cacheConfig, storageConfig, emailConfig],
     }),
     PrismaModule,
     CacheQueueModule,
@@ -56,6 +58,7 @@ import { LookupsModule } from './lookups/lookups.module';
     NotificationsModule,
     ReviewsModule,
     AdminModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
