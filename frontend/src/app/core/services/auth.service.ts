@@ -236,6 +236,20 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  forgotPassword(email: string) {
+    return this.http.post<{ success: boolean }>(
+      `${environment.apiBaseUrl}/auth/forgot-password`,
+      { email },
+    );
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post<{ success: boolean }>(
+      `${environment.apiBaseUrl}/auth/reset-password`,
+      { token, newPassword },
+    );
+  }
+
   clearSession() {
     this.logger.debug('auth', 'session_cleared', {
       userId: this.currentUserSignal()?.id ?? null,
