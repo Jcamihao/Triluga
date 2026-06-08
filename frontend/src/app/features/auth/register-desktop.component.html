@@ -1,0 +1,524 @@
+<section class="signup-web" aria-label="Cadastro web">
+  <app-web-header></app-web-header>
+
+  <main class="signup-web__main">
+    <div class="signup-web__shell">
+      <aside class="signup-web__story" aria-label="Boas-vindas">
+        <img src="assets/branding/hero-car.png" alt="Automóvel em destaque" />
+        <div class="signup-web__story-overlay"></div>
+        <div class="signup-web__story-content">
+          <h1>Sua jornada começa aqui.</h1>
+          <p>
+            Junte-se ao Triluga. Seu Classificado de Automotores começa com uma
+            conta completa.
+          </p>
+        </div>
+      </aside>
+
+      <section class="signup-web__card">
+        <div class="signup-web__heading">
+          <h2>Crie sua conta</h2>
+          <p>Preencha os dados abaixo para iniciar sua experiência.</p>
+        </div>
+
+        <form class="signup-web__form" (ngSubmit)="register()">
+          <label class="signup-web__photo">
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onAvatarSelected($event)"
+            />
+            <span class="signup-web__avatar">
+              <img
+                *ngIf="resolvedAvatarUrl; else webAvatarInitials"
+                [src]="resolvedAvatarUrl"
+                alt="Foto de perfil"
+              />
+              <ng-template #webAvatarInitials>
+                <span class="material-symbols-outlined">person</span>
+              </ng-template>
+            </span>
+            <span class="signup-web__photo-action">
+              <span class="material-symbols-outlined">edit</span>
+            </span>
+            <small>{{
+              pendingAvatarFile ? 'Foto selecionada' : 'Foto de Perfil'
+            }}</small>
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Nome Completo</span>
+            <input
+              name="webFullName"
+              [(ngModel)]="fullName"
+              placeholder="Ex: João da Silva"
+              type="text"
+              autocomplete="name"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>E-mail</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowEmailValidation && emailIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowEmailValidation && !emailIsValid
+              "
+            >
+              <input
+                name="webEmail"
+                [(ngModel)]="email"
+                placeholder="seu@email.com"
+                type="email"
+                autocomplete="email"
+                (focus)="emailTouched = true"
+                (blur)="emailTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__email-status"
+                *ngIf="shouldShowEmailValidation"
+              >
+                {{ emailIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__email-message"
+              *ngIf="shouldShowEmailValidation"
+              [class.signup-web__email-message--valid]="emailIsValid"
+              [class.signup-web__email-message--invalid]="!emailIsValid"
+            >
+              {{ emailIsValid ? 'E-mail válido' : 'Digite um e-mail válido' }}
+            </p>
+          </label>
+
+          <label class="signup-web__field">
+            <span>CPF</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowCpfValidation && cpfIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowCpfValidation && !cpfIsValid
+              "
+            >
+              <input
+                name="webCpf"
+                [ngModel]="cpf"
+                (ngModelChange)="cpf = formatCpf($event)"
+                placeholder="000.000.000-00"
+                type="text"
+                inputmode="numeric"
+                maxlength="14"
+                (focus)="cpfTouched = true"
+                (blur)="cpfTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowCpfValidation"
+              >
+                {{ cpfIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowCpfValidation"
+              [class.signup-web__input-message--valid]="cpfIsValid"
+              [class.signup-web__input-message--invalid]="!cpfIsValid"
+            >
+              {{ cpfIsValid ? 'CPF válido' : 'Digite um CPF válido' }}
+            </p>
+          </label>
+
+          <label class="signup-web__field">
+            <span>Telefone/Celular</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowPhoneValidation && phoneIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowPhoneValidation && !phoneIsValid
+              "
+            >
+              <input
+                name="webPhone"
+                [ngModel]="phone"
+                (ngModelChange)="phone = formatPhone($event)"
+                placeholder="(00) 00000-0000"
+                type="tel"
+                autocomplete="tel"
+                maxlength="19"
+                (focus)="phoneTouched = true"
+                (blur)="phoneTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowPhoneValidation"
+              >
+                {{ phoneIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowPhoneValidation"
+              [class.signup-web__input-message--valid]="phoneIsValid"
+              [class.signup-web__input-message--invalid]="!phoneIsValid"
+            >
+              {{
+                phoneIsValid ? 'Telefone válido' : 'Digite um telefone válido'
+              }}
+            </p>
+          </label>
+
+          <label class="signup-web__field">
+            <span>Data de Nascimento</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowBirthDateValidation && birthDateIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowBirthDateValidation && !birthDateIsValid
+              "
+            >
+              <input
+                name="webBirthDate"
+                [(ngModel)]="birthDate"
+                type="date"
+                (focus)="birthDateTouched = true"
+                (blur)="birthDateTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowBirthDateValidation"
+              >
+                {{ birthDateIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="shouldShowBirthDateValidation"
+              [class.signup-web__input-message--valid]="birthDateIsValid"
+              [class.signup-web__input-message--invalid]="!birthDateIsValid"
+            >
+              {{
+                birthDateIsValid
+                  ? 'Data válida'
+                  : 'Informe uma data válida. Você precisa ter pelo menos 18 anos.'
+              }}
+            </p>
+          </label>
+
+          <label class="signup-web__field">
+            <span>CEP</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                shouldShowZipCodeValidation && zipCodeIsValid
+              "
+              [class.signup-web__field-icon--invalid]="
+                shouldShowZipCodeValidation && !zipCodeIsValid
+              "
+            >
+              <input
+                name="webZipCode"
+                [ngModel]="zipCode"
+                (ngModelChange)="onZipCodeChange($event)"
+                placeholder="00000-000"
+                type="text"
+                inputmode="numeric"
+                maxlength="9"
+                (focus)="zipCodeTouched = true"
+                (blur)="zipCodeTouched = true; onZipCodeChange(zipCode)"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__input-status"
+                *ngIf="shouldShowZipCodeValidation"
+              >
+                {{ zipCodeIsValid ? 'check_circle' : 'cancel' }}
+              </span>
+              <span
+                class="material-symbols-outlined"
+                *ngIf="!shouldShowZipCodeValidation"
+              >
+                location_on
+              </span>
+            </div>
+            <p
+              class="signup-web__input-message"
+              *ngIf="
+                shouldShowZipCodeValidation && !zipCodeHint && !zipCodeError
+              "
+              [class.signup-web__input-message--valid]="zipCodeIsValid"
+              [class.signup-web__input-message--invalid]="!zipCodeIsValid"
+            >
+              {{ zipCodeIsValid ? 'CEP válido' : 'Digite um CEP válido' }}
+            </p>
+          </label>
+
+          <div
+            class="signup-web__hint signup-web__hint--success"
+            *ngIf="zipCodeHint && !zipCodeError"
+          >
+            {{ zipCodeHint }}
+          </div>
+          <div
+            class="signup-web__hint signup-web__hint--error"
+            *ngIf="zipCodeError"
+          >
+            {{ zipCodeError }}
+          </div>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Cidade</span>
+            <input
+              name="webCity"
+              [(ngModel)]="city"
+              placeholder="Cidade"
+              type="text"
+              autocomplete="address-level2"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Endereço</span>
+            <input
+              name="webAddressLine"
+              [(ngModel)]="addressLine"
+              placeholder="Rua, número e bairro"
+              type="text"
+              autocomplete="street-address"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field">
+            <span>Complemento</span>
+            <input
+              name="webAddressComplement"
+              [(ngModel)]="addressComplement"
+              placeholder="Apto, bloco, referência"
+              type="text"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field">
+            <span>UF</span>
+            <input
+              name="webState"
+              [ngModel]="state"
+              (ngModelChange)="state = formatState($event)"
+              placeholder="SP"
+              type="text"
+              autocomplete="address-level1"
+              maxlength="2"
+              [disabled]="loading"
+              required
+            />
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Senha</span>
+            <div class="signup-web__field-icon">
+              <input
+                name="webPassword"
+                [(ngModel)]="password"
+                placeholder="••••••••"
+                [type]="showPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                (focus)="passwordTouched = true"
+                (blur)="passwordTouched = true"
+                [disabled]="loading"
+                required
+              />
+              <button
+                type="button"
+                aria-label="Alternar visibilidade da senha"
+                (click)="showPassword = !showPassword"
+              >
+                <span class="material-symbols-outlined">
+                  {{ showPassword ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+            <div class="signup-web__strength" aria-hidden="true">
+              <span
+                *ngFor="let item of passwordStrengthChecklist"
+                [class.signup-web__strength-segment--active]="item.valid"
+              ></span>
+            </div>
+            <div class="signup-web__password-panel" *ngIf="passwordTouched">
+              <p [class]="password ? passwordStrengthTextClass : ''">
+                {{ passwordStrengthLabel }}
+              </p>
+              <div class="signup-web__password-rules">
+                <div
+                  *ngFor="let item of passwordStrengthChecklist"
+                  [class.signup-web__password-rule--complete]="item.valid"
+                >
+                  <span class="material-symbols-outlined">
+                    {{ item.valid ? 'check_circle' : 'radio_button_unchecked' }}
+                  </span>
+                  <span>{{ item.label }}</span>
+                </div>
+              </div>
+            </div>
+            <small *ngIf="!passwordTouched">
+              A senha deve ter pelo menos 8 caracteres.
+            </small>
+          </label>
+
+          <label class="signup-web__field signup-web__field--full">
+            <span>Confirmar Senha</span>
+            <div
+              class="signup-web__field-icon"
+              [class.signup-web__field-icon--valid]="
+                confirmPasswordTouched && passwordsMatch
+              "
+              [class.signup-web__field-icon--invalid]="
+                confirmPasswordTouched && !passwordsMatch
+              "
+            >
+              <input
+                name="webConfirmPassword"
+                [(ngModel)]="confirmPassword"
+                placeholder="••••••••"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                [disabled]="loading"
+                required
+              />
+              <span
+                class="material-symbols-outlined signup-web__confirm-status"
+                *ngIf="confirmPasswordTouched"
+              >
+                {{ passwordsMatch ? 'check_circle' : 'cancel' }}
+              </span>
+              <button
+                type="button"
+                aria-label="Alternar visibilidade da confirmação de senha"
+                (click)="showConfirmPassword = !showConfirmPassword"
+              >
+                <span class="material-symbols-outlined">
+                  {{ showConfirmPassword ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+            <p
+              class="signup-web__confirm-message"
+              *ngIf="confirmPasswordTouched"
+              [class.signup-web__confirm-message--valid]="passwordsMatch"
+              [class.signup-web__confirm-message--invalid]="!passwordsMatch"
+            >
+              {{
+                passwordsMatch ? 'As senhas conferem' : 'As senhas não conferem'
+              }}
+            </p>
+          </label>
+
+          <label class="signup-web__terms signup-web__field--full">
+            <input
+              type="checkbox"
+              name="webAcceptedTerms"
+              [(ngModel)]="acceptedTerms"
+              [disabled]="loading"
+            />
+            <span>
+              Li e concordo com os
+              <a routerLink="/privacy">Termos de Serviço</a> e a
+              <a routerLink="/privacy">Política de Privacidade</a>, confirmando
+              o tratamento dos meus dados pessoais conforme a LGPD.
+            </span>
+          </label>
+
+          <p
+            class="signup-web__feedback signup-web__field--full"
+            *ngIf="feedback"
+          >
+            {{ feedback }}
+          </p>
+
+          <button
+            class="signup-web__submit signup-web__field--full"
+            type="submit"
+            [disabled]="loading"
+          >
+            {{ loading ? 'Criando conta...' : 'Criar Conta' }}
+          </button>
+
+          <p class="signup-web__login signup-web__field--full">
+            Já tem uma conta?
+            <a routerLink="/auth/login">Entrar agora</a>
+          </p>
+        </form>
+      </section>
+    </div>
+  </main>
+</section>
+
+<div class="avatar-crop" *ngIf="cropModalOpen" role="dialog" aria-modal="true">
+  <div class="avatar-crop__panel">
+    <div class="avatar-crop__header">
+      <h2>Ajustar foto</h2>
+      <button type="button" aria-label="Fechar" (click)="cancelAvatarCrop()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div
+      class="avatar-crop__viewport"
+      (pointerdown)="onCropPointerDown($event)"
+      (pointermove)="onCropPointerMove($event)"
+      (pointerup)="onCropPointerUp($event)"
+      (pointercancel)="onCropPointerUp($event)"
+    >
+      <img
+        *ngIf="cropImageUrl"
+        [src]="cropImageUrl"
+        alt="Prévia da foto"
+        [style.transform]="cropImageTransform"
+        draggable="false"
+      />
+      <div class="avatar-crop__mask" aria-hidden="true"></div>
+    </div>
+
+    <label class="avatar-crop__zoom">
+      <span>Zoom</span>
+      <input
+        type="range"
+        min="1"
+        max="2.6"
+        step="0.01"
+        [ngModel]="cropZoom"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="onCropZoomChange($event)"
+      />
+    </label>
+
+    <div class="avatar-crop__actions">
+      <button type="button" (click)="cancelAvatarCrop()">Cancelar</button>
+      <button type="button" (click)="applyAvatarCrop()">Usar foto</button>
+    </div>
+  </div>
+</div>
