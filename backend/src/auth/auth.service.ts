@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -8,10 +9,15 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role, UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import { EmailService } from '../email/email.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UsersService } from '../users/users.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +28,8 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -49,6 +57,11 @@ export class AuthService {
     this.logger.log(
       `register_success userId=${user.id} email=${user.email} role=${user.role}`,
     );
+
+    this.emailService
+      .sendWelcome(user.email, dto.fullName)
+      .catch((err) => this.logger.error(`welcome_email_failed userId=${user.id} error=${err.message}`));
+
     return this.issueTokens(user.id, user.email, user.role, user);
   }
 
@@ -162,6 +175,58 @@ export class AuthService {
     this.logger.debug(`me_requested userId=${userId}`);
     const user = await this.usersService.findById(userId);
     return this.usersService.sanitizeUser(user);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.usersService.findByEmail(dto.email).catch(() => null);
+
+    // Resposta genérica para não revelar se o email existe
+    if (!user) {
+      this.logger.debug(`forgot_password_email_not_found email=${dto.email}`);
+      return { success: true };
+    }
+
+    // Invalida tokens anteriores não utilizados
+    await this.prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await this.prisma.passwordResetToken.create({
+      data: { userId: user.id, token: rawToken, expiresAt },
+    });
+
+    const fullName = (user as any).profile?.fullName ?? user.email;
+    await this.emailService.sendPasswordReset(user.email, fullName, rawToken);
+    this.logger.log(`forgot_password_sent userId=${user.id}`);
+
+    return { success: true };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { token: dto.token },
+      include: { user: true },
+    });
+
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new BadRequestException('Token inválido ou expirado.');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    await Promise.all([
+      this.prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+      this.prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+      // Invalida todas as sessões ativas
+      this.usersService.updateRefreshToken(record.userId, null),
+    ]);
+
+    this.logger.log(`reset_password_success userId=${record.userId}`);
+    return { success: true };
   }
 
   private async issueTokens(
