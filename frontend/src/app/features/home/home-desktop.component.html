@@ -1,0 +1,151 @@
+<main class="home-web">
+  <app-web-header></app-web-header>
+
+  <header class="home-web__hero">
+    <div class="home-web__hero-media">
+      <img
+        [src]="heroImage"
+        alt="Carro esportivo em uma estrada costeira ao amanhecer"
+      />
+      <div></div>
+    </div>
+
+    <div class="home-web__hero-content">
+      <span class="home-web__eyebrow">Seu Classificado de Automotores</span>
+      <h1>
+        Encontre o movimento
+        <span>perfeito para você.</span>
+      </h1>
+      <p>
+        O marketplace de classificados que conecta pessoas a veículos para
+        aluguel, com segurança e sem burocracia.
+      </p>
+
+      <form
+        class="home-web__search"
+        (submit)="
+          $event.preventDefault();
+          submitSearch(modelInput.value, cityInput.value)
+        "
+      >
+        <label>
+          <span class="material-symbols-outlined">search</span>
+          <input #modelInput type="search" placeholder="Marca ou Modelo" />
+        </label>
+
+        <label>
+          <span class="material-symbols-outlined">location_on</span>
+          <input #cityInput type="search" placeholder="Cidade" />
+        </label>
+
+        <button type="submit">
+          Explorar
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <section class="home-web__section home-web__section--surface">
+    <div class="home-web__container">
+      <div class="home-web__section-head">
+        <div>
+          <h2>Coleções em Destaque</h2>
+          <p>Navegue pelas categorias mais buscadas do momento.</p>
+        </div>
+      </div>
+
+      <div class="home-web__collections">
+        <button
+          *ngFor="let collection of collections"
+          type="button"
+          class="home-web__collection"
+          (click)="goToSearch(collection.params)"
+        >
+          <img
+            [src]="collection.fallbackImage"
+            alt=""
+            class="home-web__collection-bg"
+          />
+          <div class="home-web__collection-overlay"></div>
+
+          <span class="home-web__collection-icon">
+            <span class="material-symbols-outlined">{{ collection.icon }}</span>
+          </span>
+          <strong>{{ collection.label }}</strong>
+          <small>{{ collection.count }}</small>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-web__section home-web__section--muted">
+    <div class="home-web__container">
+      <div class="home-web__section-head home-web__section-head--row">
+        <div>
+          <h2>Seleção Exclusiva</h2>
+          <p>Os veículos mais desejados da semana.</p>
+        </div>
+        <button type="button" (click)="goToSearch({})">
+          Ver todos
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+
+      <div class="home-web__vehicle-grid" *ngIf="featuredLoading">
+        <article
+          class="home-web__vehicle home-web__vehicle--loading"
+          *ngFor="let item of [1, 2, 3]"
+        >
+          <div></div>
+          <span></span>
+          <small></small>
+        </article>
+      </div>
+
+      <div class="home-web__vehicle-grid" *ngIf="!featuredLoading">
+        <app-vehicle-card
+          *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
+          [vehicle]="vehicle"
+        ></app-vehicle-card>
+      </div>
+
+      <p
+        class="home-web__empty"
+        *ngIf="!featuredLoading && !featuredVehicles.length"
+      >
+        Nenhum veículo disponível por enquanto.
+      </p>
+    </div>
+  </section>
+
+  <section class="home-web__section home-web__trust-section">
+    <div class="home-web__container home-web__trust">
+      <div class="home-web__trust-copy">
+        <h2>
+          Alugue ou anuncie carros com mais
+          <span>liberdade e menos burocracia</span>
+        </h2>
+        <p>
+          No TRILUGA, você fala direto com o dono e combina tudo sem
+          intermediários. Mais autonomia, mais praticidade e novas oportunidades
+          de renda.
+        </p>
+      </div>
+
+      <div class="home-web__trust-grid">
+        <article
+          *ngFor="let card of trustCards; let odd = odd"
+          [class.home-web__trust-card--offset]="odd"
+          class="home-web__trust-card"
+        >
+          <span>
+            <span class="material-symbols-outlined">{{ card.icon }}</span>
+          </span>
+          <h3>{{ card.title }}</h3>
+          <p>{{ card.description }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
