@@ -128,10 +128,13 @@ model User {
   status                    UserStatus            @default(ACTIVE)
   refreshTokenHash          String?
   lastLoginAt               DateTime?
-  analyticsConsentGranted   Boolean               @default(false)
-  analyticsConsentUpdatedAt DateTime?
-  createdAt                 DateTime              @default(now())
-  updatedAt                 DateTime              @updatedAt
+  analyticsConsentGranted    Boolean               @default(false)
+  analyticsConsentUpdatedAt  DateTime?
+  emailVerified              Boolean               @default(false)
+  emailVerificationToken     String?               @unique
+  emailVerificationExpiresAt DateTime?
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
   profile                   Profile?
   ownedVehicles             Vehicle[]             @relation("VehicleOwner")
   reviewsWritten            Review[]              @relation("ReviewAuthor")
@@ -167,6 +170,9 @@ model Profile {
   driverLicenseNumber        String?
   documentImageUrl           String?
   driverLicenseImageUrl      String?
+  selfieImageUrl             String?
+  documentOcrText            String?
+  cnhOcrText                 String?
   documentVerificationStatus VerificationStatus @default(NOT_SUBMITTED)
   driverLicenseVerification  VerificationStatus @default(NOT_SUBMITTED)
   createdAt                  DateTime           @default(now())
