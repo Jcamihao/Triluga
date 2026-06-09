@@ -102,6 +102,52 @@
       </p>
     </section>
 
+    <!-- Banner: email não verificado -->
+    <div
+      *ngIf="!isEmailVerified"
+      class="flex flex-col gap-3 p-4 rounded-2xl border border-amber-300/40 bg-amber-50"
+      role="alert"
+    >
+      <div class="flex items-start gap-3">
+        <span
+          class="material-symbols-outlined text-amber-500 text-2xl shrink-0 mt-0.5"
+          style="font-variation-settings:'FILL' 1"
+        >mark_email_unread</span>
+        <div>
+          <p class="text-sm font-bold text-amber-800">Confirme seu email para anunciar</p>
+          <p class="text-xs text-amber-700/80 mt-0.5">
+            Enviamos um link para <strong>{{ authService.currentUser()?.email }}</strong>.
+            Verifique sua caixa de entrada e o spam.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-xs font-semibold text-green-700 flex items-center gap-1"
+        *ngIf="resendVerificationFeedback"
+      >
+        <span class="material-symbols-outlined text-sm">check_circle</span>
+        {{ resendVerificationFeedback }}
+      </p>
+      <p
+        class="text-xs font-semibold text-red-600 flex items-center gap-1"
+        *ngIf="resendVerificationError"
+      >
+        <span class="material-symbols-outlined text-sm">error</span>
+        {{ resendVerificationError }}
+      </p>
+      <button
+        type="button"
+        id="resend-verification-email-mobile"
+        class="w-full py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+        [disabled]="resendingVerification"
+        (click)="resendVerificationEmail()"
+      >
+        <span class="material-symbols-outlined text-sm" *ngIf="!resendingVerification">send</span>
+        <span class="material-symbols-outlined text-sm animate-spin" *ngIf="resendingVerification">sync</span>
+        {{ resendingVerification ? 'Enviando...' : 'Reenviar email de confirmação' }}
+      </button>
+    </div>
+
     <!-- Profile Form -->
     <section class="space-y-6" *ngIf="!loading">
       <!-- Photo Upload -->
@@ -238,6 +284,38 @@
         </label>
       </div>
 
+      <!-- Reenvio de email de confirmação -->
+      <div
+        *ngIf="!isEmailVerified"
+        class="flex items-start gap-3 p-4 rounded-xl border border-amber-300/40 bg-amber-50"
+        role="alert"
+      >
+        <span class="material-symbols-outlined text-amber-500 text-xl shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1">mark_email_unread</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-bold text-amber-800">Email não confirmado</p>
+          <p class="text-xs text-amber-700/80 mt-0.5">Confirme seu email para poder anunciar veículos.</p>
+          <p class="text-xs font-semibold text-green-700 mt-1 flex items-center gap-1" *ngIf="resendVerificationFeedback">
+            <span class="material-symbols-outlined text-sm">check_circle</span>
+            {{ resendVerificationFeedback }}
+          </p>
+          <p class="text-xs font-semibold text-red-600 mt-1 flex items-center gap-1" *ngIf="resendVerificationError">
+            <span class="material-symbols-outlined text-sm">error</span>
+            {{ resendVerificationError }}
+          </p>
+        </div>
+        <button
+          type="button"
+          id="resend-verification-email-mobile"
+          class="shrink-0 px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-60 flex items-center gap-1.5 whitespace-nowrap"
+          [disabled]="resendingVerification"
+          (click)="resendVerificationEmail()"
+        >
+          <span class="material-symbols-outlined text-sm" *ngIf="!resendingVerification">send</span>
+          <span class="material-symbols-outlined text-sm animate-spin" *ngIf="resendingVerification">sync</span>
+          {{ resendingVerification ? 'Enviando...' : 'Reenviar email' }}
+        </button>
+      </div>
+
       <!-- CTA verificação -->
       <div *ngIf="verificationCta === 'start'" class="p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4">
         <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
@@ -258,6 +336,39 @@
 
       <!-- Verification Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Email Card -->
+        <div
+          class="p-4 bg-surface-container-lowest rounded-xl border space-y-2"
+          [class.border-primary/20]="isEmailVerified"
+          [class.border-amber-300/50]="!isEmailVerified"
+          [class.bg-amber-50]="!isEmailVerified"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span
+                class="material-symbols-outlined text-xl"
+                [class.text-primary]="isEmailVerified"
+                [class.text-amber-500]="!isEmailVerified"
+                style="font-variation-settings:'FILL' 1"
+              >{{ isEmailVerified ? 'mark_email_read' : 'mark_email_unread' }}</span>
+              <div>
+                <strong class="text-sm font-bold text-on-surface">Email</strong>
+                <p class="text-xs mt-0.5"
+                   [class.text-primary]="isEmailVerified"
+                   [class.text-amber-600]="!isEmailVerified"
+                >{{ isEmailVerified ? 'Verificado' : 'Não confirmado' }}</p>
+              </div>
+            </div>
+            <span
+              class="text-xs font-bold px-2.5 py-1 rounded-full"
+              [class.bg-primary/10]="isEmailVerified"
+              [class.text-primary]="isEmailVerified"
+              [class.bg-amber-100]="!isEmailVerified"
+              [class.text-amber-700]="!isEmailVerified"
+            >{{ isEmailVerified ? 'Confirmado' : 'Pendente' }}</span>
+          </div>
+        </div>
+
         <!-- Document Card -->
         <div
           class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 space-y-3"

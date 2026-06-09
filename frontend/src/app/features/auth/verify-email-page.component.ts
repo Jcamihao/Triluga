@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../core/services/auth.service';
 
 type State = 'loading' | 'success' | 'error' | 'already';
 
@@ -71,6 +72,7 @@ export class VerifyEmailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token');
@@ -87,6 +89,13 @@ export class VerifyEmailPageComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.state = res.alreadyVerified ? 'already' : 'success';
+
+          // Atualiza a sessão do frontend para refletir emailVerified: true localmente.
+          // Isso evita requisições de refresh que podem ser canceladas se o usuário
+          // fechar a aba rapidamente, causando um logout acidental.
+          if (this.authService.isAuthenticated()) {
+            this.authService.markEmailAsVerified();
+          }
         },
         error: () => {
           this.state = 'error';
@@ -94,3 +103,4 @@ export class VerifyEmailPageComponent implements OnInit {
       });
   }
 }
+

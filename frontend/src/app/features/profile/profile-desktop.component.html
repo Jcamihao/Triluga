@@ -6,11 +6,7 @@
       <section class="profile-web__mini-card">
         <div class="profile-web__mini-head">
           <div class="profile-web__avatar profile-web__avatar--small">
-            <img
-              *ngIf="resolvedAvatarUrl; else webInitialsSmall"
-              [src]="resolvedAvatarUrl"
-              alt="Foto de perfil"
-            />
+            <img *ngIf="resolvedAvatarUrl; else webInitialsSmall" [src]="resolvedAvatarUrl" alt="Foto de perfil" />
             <ng-template #webInitialsSmall>
               <span>{{ avatarInitials }}</span>
             </ng-template>
@@ -42,7 +38,7 @@
           Mensagens
           <small *ngIf="chatInboxService.unreadCount()">{{
             unreadChatBadge
-          }}</small>
+            }}</small>
         </a>
         <a class="profile-web__nav-item" routerLink="/anunciar-carro">
           <span class="material-symbols-outlined">directions_car</span>
@@ -53,11 +49,7 @@
           Privacidade e Segurança
         </a>
 
-        <button
-          type="button"
-          class="profile-web__nav-item profile-web__nav-item--danger"
-          (click)="logout()"
-        >
+        <button type="button" class="profile-web__nav-item profile-web__nav-item--danger" (click)="logout()">
           <span class="material-symbols-outlined">logout</span>
           Sair da conta
         </button>
@@ -89,11 +81,7 @@
           <div class="profile-web__form-grid">
             <div class="profile-web__photo-field">
               <div class="profile-web__avatar profile-web__avatar--form">
-                <img
-                  *ngIf="resolvedAvatarUrl; else webInitialsForm"
-                  [src]="resolvedAvatarUrl"
-                  alt="Foto de perfil"
-                />
+                <img *ngIf="resolvedAvatarUrl; else webInitialsForm" [src]="resolvedAvatarUrl" alt="Foto de perfil" />
                 <ng-template #webInitialsForm>
                   <span>{{ avatarInitials }}</span>
                 </ng-template>
@@ -103,11 +91,7 @@
                 <span>Foto de Perfil</span>
                 <p>Aparece no chat e aumenta a confiança.</p>
                 <label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    (change)="onAvatarSelected($event)"
-                  />
+                  <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
                   <span class="material-symbols-outlined">add_a_photo</span>
                   {{ pendingAvatarFile ? 'Trocar foto' : 'Adicionar foto' }}
                 </label>
@@ -120,10 +104,7 @@
             </label>
             <label>
               <span>Email</span>
-              <input
-                [value]="authService.currentUser()?.email || ''"
-                disabled
-              />
+              <input [value]="authService.currentUser()?.email || ''" disabled />
             </label>
             <label>
               <span>Telefone</span>
@@ -131,24 +112,13 @@
             </label>
             <label>
               <span>CEP</span>
-              <input
-                [ngModel]="profile.zipCode"
-                (ngModelChange)="onZipCodeChange($event)"
-                inputmode="numeric"
-                maxlength="9"
-                placeholder="13010-111"
-              />
+              <input [ngModel]="profile.zipCode" (ngModelChange)="onZipCodeChange($event)" inputmode="numeric"
+                maxlength="9" placeholder="13010-111" />
             </label>
-            <p
-              class="profile-web__zip-message profile-web__zip-message--ok"
-              *ngIf="zipCodeHint && !zipCodeError"
-            >
+            <p class="profile-web__zip-message profile-web__zip-message--ok" *ngIf="zipCodeHint && !zipCodeError">
               {{ zipCodeHint }}
             </p>
-            <p
-              class="profile-web__zip-message profile-web__zip-message--error"
-              *ngIf="zipCodeError"
-            >
+            <p class="profile-web__zip-message profile-web__zip-message--error" *ngIf="zipCodeError">
               {{ zipCodeError }}
             </p>
             <label class="profile-web__wide">
@@ -161,24 +131,26 @@
             </label>
             <label>
               <span>UF</span>
-              <input
-                [ngModel]="profile.state"
-                (ngModelChange)="profile.state = formatState($event)"
-                maxlength="2"
-              />
+              <input [ngModel]="profile.state" (ngModelChange)="profile.state = formatState($event)" maxlength="2" />
+            </label>
+            <label>
+              <span>Número do documento</span>
+              <input [(ngModel)]="profile.documentNumber" />
+            </label>
+            <label>
+              <span>Número da CNH</span>
+              <input [(ngModel)]="profile.driverLicenseNumber" />
+            </label>
+            <label class="profile-web__wide">
+              <span>Bio</span>
+              <textarea [(ngModel)]="profile.bio" rows="4" class="profile-web__textarea"></textarea>
             </label>
           </div>
 
-          <p
-            class="profile-web__feedback profile-web__feedback--ok"
-            *ngIf="feedback"
-          >
+          <p class="profile-web__feedback profile-web__feedback--ok" *ngIf="feedback">
             {{ feedback }}
           </p>
-          <p
-            class="profile-web__feedback profile-web__feedback--error"
-            *ngIf="errorMessage"
-          >
+          <p class="profile-web__feedback profile-web__feedback--error" *ngIf="errorMessage">
             {{ errorMessage }}
           </p>
         </article>
@@ -186,32 +158,67 @@
         <article class="profile-web__card">
           <h2>Status de Verificação</h2>
 
+          <!-- Reenvio de email de confirmação -->
+          <div
+            *ngIf="!isEmailVerified"
+            class="flex items-start gap-3 p-4 rounded-xl border border-amber-300/40 bg-amber-50 mb-4"
+            role="alert"
+          >
+            <span class="material-symbols-outlined text-amber-500 text-xl shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1">mark_email_unread</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-amber-800">Email não confirmado</p>
+              <p class="text-xs text-amber-700/80 mt-0.5">Confirme seu email para poder anunciar veículos.</p>
+              <p class="text-xs font-semibold text-green-700 mt-1 flex items-center gap-1" *ngIf="resendVerificationFeedback">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                {{ resendVerificationFeedback }}
+              </p>
+              <p class="text-xs font-semibold text-red-600 mt-1 flex items-center gap-1" *ngIf="resendVerificationError">
+                <span class="material-symbols-outlined text-sm">error</span>
+                {{ resendVerificationError }}
+              </p>
+            </div>
+            <button
+              type="button"
+              id="resend-verification-email-desktop"
+              class="shrink-0 px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all active:scale-95 disabled:opacity-60 flex items-center gap-1.5 whitespace-nowrap"
+              [disabled]="resendingVerification"
+              (click)="resendVerificationEmail()"
+            >
+              <span class="material-symbols-outlined text-sm" *ngIf="!resendingVerification">send</span>
+              <span class="material-symbols-outlined text-sm animate-spin" *ngIf="resendingVerification">sync</span>
+              {{ resendingVerification ? 'Enviando...' : 'Reenviar email' }}
+            </button>
+          </div>
+
           <!-- CTA verificação -->
-          <div *ngIf="verificationCta === 'start'" class="p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4 mb-4">
+          <div *ngIf="verificationCta === 'start'"
+            class="p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4 mb-4">
             <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
             <div class="flex-1">
               <p class="text-sm font-bold text-primary">Verifique sua identidade</p>
-              <p class="text-xs text-on-surface-variant">Documento, CNH e selfie são necessários para o badge de membro verificado.</p>
+              <p class="text-xs text-on-surface-variant">Documento, CNH e selfie são necessários para o badge de membro
+                verificado.</p>
             </div>
-            <button type="button" (click)="showVerificationOnboarding = true" class="px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-bold whitespace-nowrap active:scale-95 transition-all">Verificar</button>
+            <button type="button" (click)="showVerificationOnboarding = true"
+              class="px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-bold whitespace-nowrap active:scale-95 transition-all">Verificar</button>
           </div>
-          <div *ngIf="verificationCta === 'pending'" class="p-4 rounded-xl bg-surface-container-low flex items-center gap-3 mb-4">
+          <div *ngIf="verificationCta === 'pending'"
+            class="p-4 rounded-xl bg-surface-container-low flex items-center gap-3 mb-4">
             <span class="material-symbols-outlined text-primary animate-spin">sync</span>
             <p class="text-sm text-on-surface-variant">Seus documentos estão em análise. Retorno em até 24h.</p>
           </div>
-          <div *ngIf="verificationCta === 'done'" class="p-4 rounded-xl bg-primary-container/10 flex items-center gap-3 mb-4">
+          <div *ngIf="verificationCta === 'done'"
+            class="p-4 rounded-xl bg-primary-container/10 flex items-center gap-3 mb-4">
             <span class="material-symbols-outlined text-primary">verified</span>
             <p class="text-sm font-bold text-primary">Identidade verificada — você é um Membro Premium Triluga.</p>
           </div>
 
+
           <div class="profile-web__verification-list">
-            <div
-              class="profile-web__verification"
-              *ngFor="let row of verificationRows"
+            <div class="profile-web__verification" *ngFor="let row of verificationRows"
               [class.profile-web__verification--pending]="
                 row.status === 'pending'
-              "
-            >
+              ">
               <span class="material-symbols-outlined">{{ row.icon }}</span>
               <div>
                 <strong>{{ row.title }}</strong>
@@ -221,11 +228,8 @@
           </div>
 
           <div *ngIf="verificationCta === 'start'" class="mt-2">
-            <button
-              type="button"
-              (click)="showVerificationOnboarding = true"
-              class="w-full py-3 rounded-xl bg-surface-container-low text-on-surface-variant text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
-            >
+            <button type="button" (click)="showVerificationOnboarding = true"
+              class="w-full py-3 rounded-xl bg-surface-container-low text-on-surface-variant text-sm font-medium flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors">
               <span class="material-symbols-outlined text-base text-primary">upload_file</span>
               Iniciar verificação de identidade
             </button>
@@ -243,8 +247,6 @@
   </ng-template>
 
   <!-- Overlay do onboarding de verificação -->
-  <app-verification-onboarding
-    *ngIf="showVerificationOnboarding"
-    (closed)="showVerificationOnboarding = false; loadData()"
-  ></app-verification-onboarding>
+  <app-verification-onboarding *ngIf="showVerificationOnboarding"
+    (closed)="showVerificationOnboarding = false; loadData()"></app-verification-onboarding>
 </div>

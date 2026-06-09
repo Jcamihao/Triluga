@@ -3,6 +3,7 @@ import { Component, OnDestroy, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of, switchMap } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { CepLookupService } from '../../core/services/cep-lookup.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
@@ -11,6 +12,7 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
 import { Profile } from '../../core/models/domain.models';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 import { VerificationOnboardingComponent } from './components/verification-onboarding.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile-page',
@@ -48,8 +50,13 @@ export class ProfilePageComponent implements OnDestroy {
   protected showVerificationOnboarding = false;
   protected zipCodeHint = '';
   protected zipCodeError = '';
+  protected resendingVerification = false;
+  protected resendVerificationFeedback = '';
+  protected resendVerificationError = '';
   private avatarPreviewUrl: string | null = null;
   private lastRequestedZipCode = '';
+
+  private readonly http = inject(HttpClient);
 
   constructor() {
     this.chatInboxService.ensureReady().subscribe();
@@ -71,6 +78,39 @@ export class ProfilePageComponent implements OnDestroy {
   protected logout() {
     this.authService.logout();
     this.router.navigate(['/']);
+  }
+
+  protected get isEmailVerified(): boolean {
+    return this.authService.currentUser()?.emailVerified === true;
+  }
+
+  protected resendVerificationEmail() {
+    const email = this.authService.currentUser()?.email;
+    if (!email || this.resendingVerification) return;
+
+    this.resendingVerification = true;
+    this.resendVerificationFeedback = '';
+    this.resendVerificationError = '';
+
+    this.http
+      .post<{ success: boolean }>(
+        `${environment.apiBaseUrl}/auth/resend-verification`,
+        { email },
+      )
+      .subscribe({
+        next: () => {
+          this.resendVerificationFeedback =
+            'Email de confirmação reenviado! Verifique sua caixa de entrada.';
+          this.resendingVerification = false;
+        },
+        error: (err) => {
+          const msg = err?.error?.message;
+          this.resendVerificationError =
+            (Array.isArray(msg) ? msg.join('. ') : msg) ||
+            'Não foi possível reenviar. Tente novamente em instantes.';
+          this.resendingVerification = false;
+        },
+      });
   }
 
   protected get resolvedAvatarUrl() {
@@ -107,6 +147,7 @@ export class ProfilePageComponent implements OnDestroy {
 
   protected get profileCompletion() {
     const checks = [
+      this.authService.currentUser()?.emailVerified,
       this.profile.fullName,
       this.profile.phone,
       this.profile.city,
