@@ -7,6 +7,8 @@ import {
 import { UserStatus, VerificationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { AiVerificationService } from '../verification/ai-verification.service';
+import { OcrService } from '../verification/ocr.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
@@ -16,6 +18,8 @@ export class ProfilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly ocrService: OcrService,
+    private readonly aiVerification: AiVerificationService,
   ) {}
 
   async getMyProfile(userId: string) {
@@ -125,7 +129,6 @@ export class ProfilesService {
         activeListingsCount: vehicles.length,
         reviewsCount: reviewsAggregate._count.rating,
         averageRating: ratingAverage,
-        completedRentalsCount: 0,
       },
       reviews: reviews.map((review) => ({
         id: review.id,
@@ -275,20 +278,23 @@ export class ProfilesService {
 
   async getVerificationFileUrl(
     userId: string,
-    type: 'document' | 'driverLicense',
+    type: 'document' | 'driverLicense' | 'selfie',
   ) {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
       select: {
         documentImageUrl: true,
         driverLicenseImageUrl: true,
+        selfieImageUrl: true,
       },
     });
 
     const storedValue =
       type === 'document'
         ? profile?.documentImageUrl
-        : profile?.driverLicenseImageUrl;
+        : type === 'driverLicense'
+          ? profile?.driverLicenseImageUrl
+          : profile?.selfieImageUrl;
 
     if (!storedValue) {
       throw new NotFoundException('Arquivo de verificação não encontrado.');
@@ -498,7 +504,165 @@ export class ProfilesService {
             },
     });
 
+    // Disparar OCR de forma não-blocking — falha não afeta a resposta
+    this.runOcrForProfile(userId, uploadedFile.key, type).catch(() => {});
+
     return this.mapPrivateProfile(profile);
+  }
+
+  async uploadMySelfie(userId: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Selecione uma imagem para a selfie.');
+    }
+
+    if (!file.mimetype?.startsWith('image/')) {
+      throw new BadRequestException('Envie uma imagem válida.');
+    }
+
+    const currentProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { selfieImageUrl: true },
+    });
+
+    const uploaded = await this.storageService.uploadPrivateFile(
+      file,
+      'documents',
+    );
+
+    if (currentProfile?.selfieImageUrl) {
+      await this.storageService
+        .deletePrivateFileByStoredValue(currentProfile.selfieImageUrl)
+        .catch(() => {});
+    }
+
+    await this.prisma.profile.upsert({
+      where: { userId },
+      update: { selfieImageUrl: uploaded.key },
+      create: {
+        userId,
+        fullName: '',
+        phone: '',
+        city: '',
+        state: '',
+        selfieImageUrl: uploaded.key,
+      },
+    });
+
+    // Após selfie, tenta verificação por IA se todos os documentos estiverem presentes
+    this.runAiVerification(userId).catch((err) =>
+      this.logger.error(`ai_verification_failed userId=${userId} error=${err?.message}`),
+    );
+
+    return { submitted: true };
+  }
+
+  async getMySelfieUrl(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { selfieImageUrl: true },
+    });
+
+    if (!profile?.selfieImageUrl) {
+      throw new NotFoundException('Selfie não encontrada.');
+    }
+
+    const url = await this.storageService.getPrivateFileUrl(
+      profile.selfieImageUrl,
+    );
+
+    return { url: typeof url === 'string' ? url : url };
+  }
+
+  private async runAiVerification(userId: string) {
+    if (!this.aiVerification.isEnabled) return;
+
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        fullName: true,
+        documentImageUrl: true,
+        driverLicenseImageUrl: true,
+        selfieImageUrl: true,
+      },
+    });
+
+    if (!profile?.documentImageUrl || !profile?.driverLicenseImageUrl || !profile?.selfieImageUrl) {
+      return;
+    }
+
+    this.logger.log(`ai_verification_started userId=${userId}`);
+
+    const [docUrl, cnhUrl, selfieUrl] = await Promise.all([
+      this.storageService.getPrivateFileUrl(profile.documentImageUrl),
+      this.storageService.getPrivateFileUrl(profile.driverLicenseImageUrl),
+      this.storageService.getPrivateFileUrl(profile.selfieImageUrl),
+    ]);
+
+    const [docBuffer, cnhBuffer, selfieBuffer] = await Promise.all([
+      this.downloadBuffer(String(docUrl)),
+      this.downloadBuffer(String(cnhUrl)),
+      this.downloadBuffer(String(selfieUrl)),
+    ]);
+
+    const result = await this.aiVerification.verifyKyc({
+      documentBuffer: docBuffer,
+      cnhBuffer: cnhBuffer,
+      selfieBuffer: selfieBuffer,
+      fullName: profile.fullName ?? '',
+    });
+
+    this.logger.log(
+      `ai_verification_result userId=${userId} doc=${result.documentApproved} cnh=${result.cnhApproved} face=${result.faceMatch} reason="${result.reason}"`,
+    );
+
+    await this.prisma.profile.update({
+      where: { userId },
+      data: {
+        documentVerificationStatus:
+          result.documentApproved && result.faceMatch
+            ? VerificationStatus.APPROVED
+            : VerificationStatus.REJECTED,
+        driverLicenseVerification:
+          result.cnhApproved && result.faceMatch
+            ? VerificationStatus.APPROVED
+            : VerificationStatus.REJECTED,
+      },
+    });
+  }
+
+  private async runOcrForProfile(
+    userId: string,
+    fileKey: string,
+    type: 'document' | 'driverLicense',
+  ) {
+    const tempUrlResult =
+      await this.storageService.getPrivateFileUrl(fileKey);
+    const tempUrl =
+      typeof tempUrlResult === 'string' ? tempUrlResult : String(tempUrlResult);
+    const buffer = await this.downloadBuffer(tempUrl);
+    const text = await this.ocrService.extractText(buffer);
+
+    await this.prisma.profile.update({
+      where: { userId },
+      data:
+        type === 'document'
+          ? { documentOcrText: text }
+          : { cnhOcrText: text },
+    });
+  }
+
+  private downloadBuffer(url: string): Promise<Buffer> {
+    const lib = url.startsWith('https://') ? require('node:https') : require('node:http');
+    return new Promise((resolve, reject) => {
+      const req = lib.request(url, (res: import('http').IncomingMessage) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+      req.on('error', reject);
+      req.setTimeout(10000, () => req.destroy(new Error('timeout')));
+      req.end();
+    });
   }
 
   private mapPrivateProfile(

@@ -157,4 +157,41 @@ export class ProfilesController {
       'driverLicense',
     );
   }
+
+  @Post('me/selfie')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiOperation({ summary: 'Faz upload da selfie de verificação facial' })
+  uploadMySelfie(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.profilesService.uploadMySelfie(user.sub, file);
+  }
+
+  @Get('me/selfie/url')
+  @ApiOperation({
+    summary: 'Gera URL temporária para a selfie do usuário autenticado',
+  })
+  getMySelfieUrl(@CurrentUser() user: AuthenticatedUser) {
+    return this.profilesService.getMySelfieUrl(user.sub);
+  }
 }

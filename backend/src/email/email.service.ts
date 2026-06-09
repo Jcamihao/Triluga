@@ -30,6 +30,15 @@ export class EmailService {
     }
   }
 
+  async sendEmailVerification(to: string, fullName: string, token: string) {
+    const link = `${this.frontendUrl}/auth/verify-email?token=${token}`;
+    await this.send({
+      to,
+      subject: 'Confirme seu email – Triluga',
+      html: this.templateEmailVerification(fullName, link),
+    });
+  }
+
   async sendWelcome(to: string, fullName: string) {
     await this.send({
       to,
@@ -115,7 +124,7 @@ export class EmailService {
           <tr>
             <td style="background:linear-gradient(135deg,#006d37,#2ecc71);padding:32px 40px;text-align:center;">
               <p style="margin:0;font-size:28px;font-weight:900;font-style:italic;letter-spacing:-1px;color:#ffffff;">Triluga</p>
-              <p style="margin:8px 0 0;font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);">Marketplace de veículos</p>
+              <p style="margin:8px 0 0;font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);">Seu Classificado de Automotores</p>
             </td>
           </tr>
           <!-- Content -->
@@ -201,6 +210,23 @@ export class EmailService {
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. ${message}</p>
       ${reason ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffdad6;border-radius:12px;border-left:4px solid #ba1a1a;margin-bottom:24px;"><tr><td style="padding:16px 20px;"><p style="margin:0;font-size:13px;color:#93000a;line-height:1.5;"><strong>Motivo:</strong> ${reason}</p></td></tr></table>` : ''}
       <a href="${this.frontendUrl}/profile" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ir para meu perfil</a>
+    `);
+  }
+
+  private templateEmailVerification(fullName: string, link: string) {
+    const firstName = fullName.split(' ')[0];
+    return this.templateBase('Confirme seu email', `
+      <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Olá, ${firstName}! 👋</h1>
+      <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Sua conta no Triluga foi criada. Confirme seu email para começar a anunciar e usar todas as funcionalidades da plataforma.</p>
+      <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;margin-bottom:24px;">Confirmar meu email</a>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;border-radius:12px;border-left:4px solid #f59e0b;margin-bottom:16px;">
+        <tr>
+          <td style="padding:16px 20px;">
+            <p style="margin:0;font-size:13px;color:#92400e;line-height:1.5;">⚠️ Este link expira em <strong>48 horas</strong>. Se você não criou esta conta, ignore este email.</p>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0;font-size:12px;color:#9ab0a3;word-break:break-all;">Ou copie este link: ${link}</p>
     `);
   }
 
