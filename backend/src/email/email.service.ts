@@ -14,8 +14,14 @@ export class EmailService {
   constructor(private readonly config: ConfigService) {
     const user = this.config.get<string>('email.user', '');
     const pass = this.config.get<string>('email.pass', '');
-    this.from = this.config.get<string>('email.from', '"Triluga" <noreply@triluga.com.br>');
-    this.frontendUrl = this.config.get<string>('email.frontendUrl', 'http://localhost:4200');
+    this.from = this.config.get<string>(
+      'email.from',
+      '"Triluga" <noreply@triluga.com.br>',
+    );
+    this.frontendUrl = this.config.get<string>(
+      'email.frontendUrl',
+      'https://triluga.com.br',
+    );
     this.isConfigured = Boolean(user && pass);
 
     if (this.isConfigured) {
@@ -26,7 +32,9 @@ export class EmailService {
         auth: { user, pass },
       });
     } else {
-      this.logger.warn('SMTP não configurado. Emails seguirão em modo degradado (apenas log).');
+      this.logger.warn(
+        'SMTP não configurado. Emails seguirão em modo degradado (apenas log).',
+      );
     }
   }
 
@@ -56,7 +64,12 @@ export class EmailService {
     });
   }
 
-  async sendChatNotification(to: string, fullName: string, vehicleTitle: string, conversationId: string) {
+  async sendChatNotification(
+    to: string,
+    fullName: string,
+    vehicleTitle: string,
+    conversationId: string,
+  ) {
     const link = `${this.frontendUrl}/chat/${conversationId}`;
     await this.send({
       to,
@@ -65,8 +78,13 @@ export class EmailService {
     });
   }
 
-  async sendDocumentApproved(to: string, fullName: string, documentType: 'document' | 'driver-license') {
-    const label = documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
+  async sendDocumentApproved(
+    to: string,
+    fullName: string,
+    documentType: 'document' | 'driver-license',
+  ) {
+    const label =
+      documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
     await this.send({
       to,
       subject: `Seu ${label} foi aprovado – Triluga`,
@@ -74,8 +92,14 @@ export class EmailService {
     });
   }
 
-  async sendDocumentRejected(to: string, fullName: string, documentType: 'document' | 'driver-license', reason?: string) {
-    const label = documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
+  async sendDocumentRejected(
+    to: string,
+    fullName: string,
+    documentType: 'document' | 'driver-license',
+    reason?: string,
+  ) {
+    const label =
+      documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
     await this.send({
       to,
       subject: `Ação necessária: ${label} não aprovado – Triluga`,
@@ -83,26 +107,43 @@ export class EmailService {
     });
   }
 
-  async sendSearchAlertMatch(to: string, fullName: string, alertTitle: string, vehicleTitle: string, vehicleId: string) {
+  async sendSearchAlertMatch(
+    to: string,
+    fullName: string,
+    alertTitle: string,
+    vehicleTitle: string,
+    vehicleId: string,
+  ) {
     const link = `${this.frontendUrl}/vehicles/${vehicleId}`;
     await this.send({
       to,
       subject: `Novo veículo para seu alerta "${alertTitle}" – Triluga`,
-      html: this.templateSearchAlertMatch(fullName, alertTitle, vehicleTitle, link),
+      html: this.templateSearchAlertMatch(
+        fullName,
+        alertTitle,
+        vehicleTitle,
+        link,
+      ),
     });
   }
 
   private async send(options: { to: string; subject: string; html: string }) {
     if (!this.isConfigured || !this.transporter) {
-      this.logger.debug(`[EMAIL degradado] Para: ${options.to} | Assunto: ${options.subject}`);
+      this.logger.debug(
+        `[EMAIL degradado] Para: ${options.to} | Assunto: ${options.subject}`,
+      );
       return;
     }
 
     try {
       await this.transporter.sendMail({ from: this.from, ...options });
-      this.logger.debug(`email_sent to=${options.to} subject="${options.subject}"`);
+      this.logger.debug(
+        `email_sent to=${options.to} subject="${options.subject}"`,
+      );
     } catch (error) {
-      this.logger.error(`email_failed to=${options.to} error=${(error as Error).message}`);
+      this.logger.error(
+        `email_failed to=${options.to} error=${(error as Error).message}`,
+      );
     }
   }
 
@@ -152,7 +193,9 @@ export class EmailService {
 
   private templateWelcome(fullName: string) {
     const firstName = fullName.split(' ')[0];
-    return this.templateBase('Bem-vindo ao Triluga', `
+    return this.templateBase(
+      'Bem-vindo ao Triluga',
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Olá, ${firstName}! 👋</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Sua conta no Triluga foi criada com sucesso. Agora você pode buscar, comparar e anunciar veículos.</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fbf7;border-radius:12px;padding:0;overflow:hidden;margin-bottom:28px;">
@@ -167,12 +210,15 @@ export class EmailService {
         </tr>
       </table>
       <a href="${this.frontendUrl}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Acessar o Triluga</a>
-    `);
+    `,
+    );
   }
 
   private templatePasswordReset(fullName: string, link: string) {
     const firstName = fullName.split(' ')[0];
-    return this.templateBase('Redefinição de senha', `
+    return this.templateBase(
+      'Redefinição de senha',
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Redefinir senha</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. Recebemos uma solicitação para redefinir a senha da sua conta.</p>
       <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;margin-bottom:24px;">Redefinir minha senha</a>
@@ -184,38 +230,58 @@ export class EmailService {
         </tr>
       </table>
       <p style="margin:0;font-size:12px;color:#9ab0a3;word-break:break-all;">Ou copie este link: ${link}</p>
-    `);
+    `,
+    );
   }
 
-  private templateChatNotification(fullName: string, vehicleTitle: string, link: string) {
+  private templateChatNotification(
+    fullName: string,
+    vehicleTitle: string,
+    link: string,
+  ) {
     const firstName = fullName.split(' ')[0];
-    return this.templateBase('Nova mensagem', `
+    return this.templateBase(
+      'Nova mensagem',
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Nova mensagem 💬</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. Você recebeu uma nova mensagem sobre <strong style="color:#1a2421;">${vehicleTitle}</strong>.</p>
       <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ver mensagem</a>
-    `);
+    `,
+    );
   }
 
-  private templateDocumentStatus(fullName: string, label: string, approved: boolean, reason?: string) {
+  private templateDocumentStatus(
+    fullName: string,
+    label: string,
+    approved: boolean,
+    reason?: string,
+  ) {
     const firstName = fullName.split(' ')[0];
     const color = approved ? '#006d37' : '#ba1a1a';
     const icon = approved ? '✅' : '❌';
-    const title = approved ? `${icon} ${label} aprovado` : `${icon} ${label} não aprovado`;
+    const title = approved
+      ? `${icon} ${label} aprovado`
+      : `${icon} ${label} não aprovado`;
     const message = approved
       ? `Seu ${label} foi verificado e aprovado com sucesso! Agora você tem acesso a todos os recursos da plataforma.`
       : `Infelizmente seu ${label} não pôde ser aprovado. Por favor, envie novamente com uma foto nítida e legível.`;
 
-    return this.templateBase(title, `
+    return this.templateBase(
+      title,
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:${color};">${title}</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. ${message}</p>
       ${reason ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffdad6;border-radius:12px;border-left:4px solid #ba1a1a;margin-bottom:24px;"><tr><td style="padding:16px 20px;"><p style="margin:0;font-size:13px;color:#93000a;line-height:1.5;"><strong>Motivo:</strong> ${reason}</p></td></tr></table>` : ''}
       <a href="${this.frontendUrl}/profile" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ir para meu perfil</a>
-    `);
+    `,
+    );
   }
 
   private templateEmailVerification(fullName: string, link: string) {
     const firstName = fullName.split(' ')[0];
-    return this.templateBase('Confirme seu email', `
+    return this.templateBase(
+      'Confirme seu email',
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Olá, ${firstName}! 👋</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Sua conta no Triluga foi criada. Confirme seu email para começar a anunciar e usar todas as funcionalidades da plataforma.</p>
       <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;margin-bottom:24px;">Confirmar meu email</a>
@@ -227,12 +293,20 @@ export class EmailService {
         </tr>
       </table>
       <p style="margin:0;font-size:12px;color:#9ab0a3;word-break:break-all;">Ou copie este link: ${link}</p>
-    `);
+    `,
+    );
   }
 
-  private templateSearchAlertMatch(fullName: string, alertTitle: string, vehicleTitle: string, link: string) {
+  private templateSearchAlertMatch(
+    fullName: string,
+    alertTitle: string,
+    vehicleTitle: string,
+    link: string,
+  ) {
     const firstName = fullName.split(' ')[0];
-    return this.templateBase('Novo veículo encontrado', `
+    return this.templateBase(
+      'Novo veículo encontrado',
+      `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Novo veículo encontrado! 🔔</h1>
       <p style="margin:0 0 8px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. Um veículo compatível com seu alerta <strong style="color:#006d37;">${alertTitle}</strong> acaba de ser publicado.</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fbf7;border-radius:12px;margin:20px 0 28px;">
@@ -243,6 +317,7 @@ export class EmailService {
         </tr>
       </table>
       <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ver veículo</a>
-    `);
+    `,
+    );
   }
 }
