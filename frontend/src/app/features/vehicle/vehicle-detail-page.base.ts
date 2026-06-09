@@ -10,6 +10,7 @@ import { ChatApiService } from '../../core/services/chat-api.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { CompareService } from '../../core/services/compare.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { FipeApiService } from '../../core/services/fipe-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleDetail } from '../../core/models/domain.models';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
@@ -50,6 +51,7 @@ export abstract class VehicleDetailPageBase {
   private readonly chatInboxService = inject(ChatInboxService);
   private readonly compareService = inject(CompareService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly fipeApiService = inject(FipeApiService);
   private readonly analyticsTrackingService = inject(AnalyticsTrackingService);
   private readonly logger = inject(AppLoggerService);
   private readonly destroyRef = inject(DestroyRef);
@@ -86,6 +88,8 @@ export abstract class VehicleDetailPageBase {
   };
 
   protected vehicle?: VehicleDetail;
+  protected fipeValue: number | null = null;
+  protected fipeMonth: string | null = null;
   protected readonly collapsedDetailCount = 6;
   protected showAllDetails = false;
   protected previewImageUrl = '';
@@ -208,6 +212,7 @@ export abstract class VehicleDetailPageBase {
           `${globalThis.location.pathname}${globalThis.location.search}`,
         );
         this.scheduleInboxWarmup();
+        this.loadFipeValue(vehicle);
       });
     });
   }
@@ -1005,6 +1010,70 @@ export abstract class VehicleDetailPageBase {
 
   protected trackByDetailLabel(_index: number, item: DetailFactItem) {
     return item.label;
+  }
+
+  private loadFipeValue(vehicle: VehicleDetail) {
+    if (!vehicle.brand || !vehicle.model || !vehicle.year) {
+      return;
+    }
+
+    const type: 'cars' | 'motorcycles' =
+      vehicle.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
+    const brandName = vehicle.brand.toLowerCase();
+    const modelName = vehicle.model.toLowerCase();
+    const targetYear = String(vehicle.year);
+
+    this.fipeApiService.getBrands(type).subscribe((brands) => {
+      if (!brands) return;
+
+      const matchedBrand = brands.find(
+        (b) =>
+          b.name.toLowerCase().includes(brandName) ||
+          brandName.includes(b.name.toLowerCase()),
+      );
+
+      if (!matchedBrand) return;
+
+      this.fipeApiService
+        .getModels(type, matchedBrand.code)
+        .subscribe((models) => {
+          if (!models) return;
+
+          const matchedModel = models.find(
+            (m) =>
+              m.name.toLowerCase().includes(modelName) ||
+              modelName.includes(m.name.toLowerCase()),
+          );
+
+          if (!matchedModel) return;
+
+          this.fipeApiService
+            .getYears(type, matchedBrand.code, matchedModel.code)
+            .subscribe((years) => {
+              if (!years) return;
+
+              const matchedYear = years.find((y) =>
+                y.code.startsWith(targetYear),
+              );
+
+              if (!matchedYear) return;
+
+              this.fipeApiService
+                .getPrice(
+                  type,
+                  matchedBrand.code,
+                  matchedModel.code,
+                  matchedYear.code,
+                )
+                .subscribe((price) => {
+                  if (!price) return;
+
+                  this.fipeValue = price.priceValue;
+                  this.fipeMonth = price.referenceMonth;
+                });
+            });
+        });
+    });
   }
 
   private startChatFlow() {

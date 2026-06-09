@@ -54,6 +54,38 @@ services:
       /usr/bin/mc anonymous set download local/${MINIO_BUCKET:-triluga-public}
       "
 
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - '${OLLAMA_HOST_PORT:-11434}:11434'
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ['CMD-SHELL', 'ollama list > /dev/null 2>&1 || exit 1']
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    # Para usar GPU NVIDIA, descomente as linhas abaixo:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: >
+      /bin/sh -c "ollama pull ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b} && echo 'Modelo pronto.'"
+    restart: 'no'
+
   backend:
     build:
       context: ./backend
@@ -64,6 +96,8 @@ services:
         condition: service_healthy
       minio-create-bucket:
         condition: service_completed_successfully
+      ollama:
+        condition: service_healthy
     environment:
       PORT: ${PORT:-3000}
       APP_URL: ${APP_URL:-http://localhost:3002}
@@ -84,6 +118,8 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-triluga-public}
       MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:-triluga-private}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9004/triluga-public}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b}
     ports:
       - '${BACKEND_HOST_PORT:-3002}:3000'
 
@@ -102,3 +138,4 @@ services:
 volumes:
   postgres-data:
   minio-data:
+  ollama-data:

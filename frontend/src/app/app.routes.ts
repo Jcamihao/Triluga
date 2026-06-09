@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { emailVerifiedGuard } from './core/guards/email-verified.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
@@ -69,6 +70,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'terms',
+    loadComponent: () =>
+      import('./features/terms/terms-page.component').then(
+        (m) => m.TermsPageComponent,
+      ),
+  },
+  {
     path: 'users/:id',
     loadComponent: () =>
       import('./features/user-profile/user-profile-page.component').then(
@@ -85,7 +93,7 @@ export const routes: Routes = [
   },
   {
     path: 'anunciar-carro',
-    canActivate: [authGuard],
+    canActivate: [authGuard, emailVerifiedGuard],
     data: { view: 'ads' },
     loadComponent: () =>
       import('./features/owner-dashboard/owner-dashboard-page.component').then(
@@ -132,6 +140,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/reset-password-page.component').then(
         (m) => m.ResetPasswordPageComponent,
+      ),
+  },
+  {
+    path: 'auth/verify-email',
+    loadComponent: () =>
+      import('./features/auth/verify-email-page.component').then(
+        (m) => m.VerifyEmailPageComponent,
       ),
   },
   {

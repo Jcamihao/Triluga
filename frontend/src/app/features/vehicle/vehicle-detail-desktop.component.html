@@ -221,6 +221,9 @@
                   {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
                 </strong>
                 <span>/semana</span>
+                <div *ngIf="fipeValue" class="mt-1 text-xs text-on-surface-variant">
+                  Tabela FIPE: {{ fipeValue | currency:'BRL':'symbol':'1.0-0' }} <span class="opacity-60">{{ fipeMonth }}</span>
+                </div>
               </div>
 
               <div class="vehicle-detail-web__rating-pill">
@@ -282,7 +285,7 @@
               </div>
             </div>
 
-            <div class="vehicle-detail-web__owner-badge">
+            <div *ngIf="vehicle.owner?.isVerified" class="vehicle-detail-web__owner-badge">
               <span class="material-symbols-outlined">verified_user</span>
               Identidade verificada
             </div>
