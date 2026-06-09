@@ -47,6 +47,9 @@ export class AdminService {
             driverLicenseVerification: true,
             documentImageUrl: true,
             driverLicenseImageUrl: true,
+            selfieImageUrl: true,
+            documentOcrText: true,
+            cnhOcrText: true,
           },
         },
       },
@@ -67,6 +70,9 @@ export class AdminService {
             driverLicenseVerification: user.profile.driverLicenseVerification,
             hasDocumentImage: !!user.profile.documentImageUrl,
             hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
+            hasSelfieImage: !!user.profile.selfieImageUrl,
+            documentOcrText: user.profile.documentOcrText ?? null,
+            cnhOcrText: user.profile.cnhOcrText ?? null,
           }
         : null,
     }));
@@ -152,7 +158,7 @@ export class AdminService {
 
   async getUserVerificationFileUrl(
     userId: string,
-    type: 'document' | 'driverLicense',
+    type: 'document' | 'driverLicense' | 'selfie',
   ) {
     return this.profilesService.getVerificationFileUrl(userId, type);
   }

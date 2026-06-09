@@ -58,11 +58,22 @@ export class AuthService {
       `register_success userId=${user.id} email=${user.email} role=${user.role}`,
     );
 
-    this.emailService
-      .sendWelcome(user.email, dto.fullName)
-      .catch((err) => this.logger.error(`welcome_email_failed userId=${user.id} error=${err.message}`));
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
-    return this.issueTokens(user.id, user.email, user.role, user);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiresAt: verificationExpiresAt,
+      },
+    });
+
+    this.emailService
+      .sendEmailVerification(user.email, dto.fullName, verificationToken)
+      .catch((err) => this.logger.error(`verification_email_failed userId=${user.id} error=${err.message}`));
+
+    return this.issueTokens(user.id, user.email, user.role, { ...user, emailVerified: false });
   }
 
   async login(dto: LoginDto) {
@@ -229,6 +240,63 @@ export class AuthService {
     return { success: true };
   }
 
+  async verifyEmail(token: string) {
+    if (!token) throw new BadRequestException('Token inválido.');
+
+    const user = await this.prisma.user.findUnique({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!user || !user.emailVerificationExpiresAt || user.emailVerificationExpiresAt < new Date()) {
+      throw new BadRequestException('Link de verificação inválido ou expirado.');
+    }
+
+    if (user.emailVerified) {
+      return { success: true, alreadyVerified: true };
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      },
+    });
+
+    this.logger.log(`email_verified userId=${user.id}`);
+    return { success: true, alreadyVerified: false };
+  }
+
+  async resendVerification(email: string) {
+    const user = await this.usersService.findByEmail(email).catch(() => null);
+
+    if (!user) return { success: true }; // não revela se o email existe
+
+    if ((user as any).emailVerified) {
+      throw new BadRequestException('Email já verificado.');
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiresAt: verificationExpiresAt,
+      },
+    });
+
+    const fullName = (user as any).profile?.fullName ?? user.email;
+    this.emailService
+      .sendEmailVerification(user.email, fullName, verificationToken)
+      .catch((err) => this.logger.error(`resend_verification_failed userId=${user.id} error=${err.message}`));
+
+    this.logger.log(`verification_resent userId=${user.id}`);
+    return { success: true };
+  }
+
   private async issueTokens(
     userId: string,
     email: string,
@@ -237,11 +305,13 @@ export class AuthService {
     options: { rememberMe?: boolean } = {},
   ) {
     const rememberMe = options.rememberMe === true;
+    const emailVerified = (user as any)?.emailVerified ?? false;
     const payload: JwtPayload = {
       sub: userId,
       email,
       role,
       rememberMe,
+      emailVerified,
     };
 
     const accessSecret =

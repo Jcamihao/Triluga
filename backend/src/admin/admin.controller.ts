@@ -35,7 +35,7 @@ export class AdminController {
   })
   getUserVerificationFileUrl(
     @Param('id') userId: string,
-    @Query('type') type: 'document' | 'driverLicense',
+    @Query('type') type: 'document' | 'driverLicense' | 'selfie',
   ) {
     return this.adminService.getUserVerificationFileUrl(userId, type);
   }
