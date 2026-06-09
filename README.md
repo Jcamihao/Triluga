@@ -1,19 +1,19 @@
-# Triluga 2.4.14
+# Triluga 2.5.0
 
 Classificado mobile-first de veículos entre pessoas, com frontend Angular PWA, backend NestJS modular e experiência visual orientada ao marketplace para web e mobile.
 
 ## Destaques da versão
 
+- **Identidade e Segurança 2.5.0**: Sistema de verificação de identidade com envio de selfies e documentos via OCR/IA; Verificação de e-mail com tokens e SMTP; Recuperação de senhas segura.
+- **Integração de Mapas Precisa 2.5.0**: Mapas de veículos agora priorizam o endereço completo exato em vez de exibir apenas a cidade genérica, se fornecido.
+- **Componentes de Perfil e UX 2.5.0**: Refatoração massiva de views de usuário, privacidade e compare pages, separando instâncias Desktop/Mobile.
+- **Tabela FIPE e Mais 2.5.0**: Adição de valores da Tabela FIPE nas páginas do veículo, além de um backend processador de e-mails em filas (BullMQ).
 - **Galeria responsiva 2.4.14**: detalhe do veículo exibe galeria com zoom, navegação por toque e carrossel de miniaturas.
 - **Localização automática 2.4.13**: ao entrar no app, a localização do usuário é detectada pelo browser e usada para ordenar resultados.
-- **Categorias de veículos ampliadas**: nova categoria adicionada no frontend e backend para cobrir mais tipos de anúncio.
-- **Instalação mobile melhorada**: card de instalação do PWA revisado para melhor apelo visual.
 - **Galeria com edição 2.3.12**: fotos do anúncio permitem remover ou substituir individualmente; crop de avatar na modal de perfil.
 - **Preço semanal 2.3.10**: busca, ordenação, cards, favoritos, chat, comparação e detalhe usam o valor semanal como referência.
-- **Publicação guiada**: o painel do proprietário indica a etapa e os campos pendentes antes de publicar.
-- **Comparação funcional**: veículos selecionados podem ser avaliados lado a lado com preço semanal, especificações, localização e reputação do anunciante.
-- **Publicação mais segura**: anúncio exige no mínimo 3 fotos, título automático e ações de publicar, despublicar e excluir.
-- **Backend evoluído**: estatísticas da home, visualizações por anúncio, filtros de busca e tempo médio de resposta em perfil público.
+- **Publicação guiada e segura**: painel indica pendências; anúncio exige no mínimo 3 fotos, título automático.
+- **Backend evoluído**: estatísticas da home, visualizações, filtros e tempo de resposta.
 
 ## Arquitetura
 
@@ -286,6 +286,7 @@ Guia para abrir o Triluga no Xcode e testar em iPhone em [docs/ios-capacitor.md]
 
 ## Releases
 
+- [v2.5.0](./docs/releases/v2.5.0.md)
 - [v2.4.14](./docs/releases/v2.4.14.md)
 - [v2.3.12](./docs/releases/v2.3.12.md)
 - [v2.3.11](./docs/releases/v2.3.11.md)
