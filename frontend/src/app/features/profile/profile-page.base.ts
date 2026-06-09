@@ -46,6 +46,7 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected pendingDriverLicenseFile: File | null = null;
   protected openingDocument = false;
   protected openingDriverLicense = false;
+  protected showVerificationOnboarding = false;
   protected zipCodeHint = '';
   protected zipCodeError = '';
   private avatarPreviewUrl: string | null = null;
@@ -187,6 +188,23 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected get unreadChatBadge() {
     const count = this.chatInboxService.unreadCount();
     return count > 99 ? '99+' : String(count);
+  }
+
+  protected get isFullyVerified(): boolean {
+    return (
+      this.profile.documentVerificationStatus === 'APPROVED' &&
+      this.profile.driverLicenseVerification === 'APPROVED'
+    );
+  }
+
+  protected get verificationCta(): 'start' | 'pending' | 'done' {
+    if (this.isFullyVerified) return 'done';
+    if (
+      this.profile.documentVerificationStatus === 'PENDING' ||
+      this.profile.driverLicenseVerification === 'PENDING'
+    )
+      return 'pending';
+    return 'start';
   }
 
   protected save() {
@@ -387,7 +405,7 @@ export abstract class ProfilePageBase implements OnDestroy {
     });
   }
 
-  private loadData() {
+  protected loadData() {
     this.loading = true;
     this.errorMessage = '';
 

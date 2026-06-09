@@ -516,14 +516,14 @@
     </aside>
 
     <section class="profile-web__content">
-      <section class="profile-web__hero">
+      <section class="profile-web__hero" *ngIf="!isFullyVerified">
         <div>
           <h1>Olá, {{ displayName.split(' ')[0] || 'usuário' }}!</h1>
           <p>
             Seu perfil está quase pronto. Verifique sua identidade para aumentar
             a confiança em suas negociações.
           </p>
-          <a routerLink="/privacy-center">Verificar agora</a>
+          <button type="button" (click)="showVerificationOnboarding = true">Verificar agora</button>
         </div>
         <span class="material-symbols-outlined">shield</span>
       </section>
@@ -653,29 +653,22 @@
             </div>
           </div>
 
-          <div class="profile-web__uploads">
-            <label>
-              <input
-                type="file"
-                accept="image/*"
-                (change)="onDocumentSelected($event)"
-              />
-              <span class="material-symbols-outlined">badge</span>
-              {{
-                pendingDocumentFile
-                  ? 'Documento selecionado'
-                  : 'Enviar documento'
-              }}
-            </label>
-            <label>
-              <input
-                type="file"
-                accept="image/*"
-                (change)="onDriverLicenseSelected($event)"
-              />
-              <span class="material-symbols-outlined">credit_card</span>
-              {{ pendingDriverLicenseFile ? 'CNH selecionada' : 'Enviar CNH' }}
-            </label>
+          <!-- CTA verificação -->
+          <div *ngIf="verificationCta === 'start'" class="mt-4 p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4">
+            <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-primary">Verifique sua identidade</p>
+              <p class="text-xs text-on-surface-variant">Documento, CNH e selfie são necessários para o badge de membro verificado.</p>
+            </div>
+            <button type="button" (click)="showVerificationOnboarding = true" class="px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-bold whitespace-nowrap active:scale-95 transition-all">Verificar</button>
+          </div>
+          <div *ngIf="verificationCta === 'pending'" class="mt-4 p-4 rounded-xl bg-surface-container-low flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary animate-spin">sync</span>
+            <p class="text-sm text-on-surface-variant">Seus documentos estão em análise. Retorno em até 24h.</p>
+          </div>
+          <div *ngIf="verificationCta === 'done'" class="mt-4 p-4 rounded-xl bg-primary-container/10 flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">verified</span>
+            <p class="text-sm font-bold text-primary">Identidade verificada — você é um Membro Premium Triluga.</p>
           </div>
         </article>
       </section>
@@ -688,4 +681,9 @@
       <strong>Carregando seu perfil...</strong>
     </section>
   </ng-template>
+
+  <app-verification-onboarding
+    *ngIf="showVerificationOnboarding"
+    (closed)="showVerificationOnboarding = false; loadData()"
+  ></app-verification-onboarding>
 </div>

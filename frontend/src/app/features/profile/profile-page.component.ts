@@ -10,11 +10,12 @@ import { UiStateService } from '../../core/services/ui-state.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
 import { Profile } from '../../core/models/domain.models';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
+import { VerificationOnboardingComponent } from './components/verification-onboarding.component';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent, VerificationOnboardingComponent],
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.scss'],
 })
@@ -44,6 +45,7 @@ export class ProfilePageComponent implements OnDestroy {
   protected pendingDriverLicenseFile: File | null = null;
   protected openingDocument = false;
   protected openingDriverLicense = false;
+  protected showVerificationOnboarding = false;
   protected zipCodeHint = '';
   protected zipCodeError = '';
   private avatarPreviewUrl: string | null = null;
@@ -148,8 +150,8 @@ export class ProfilePageComponent implements OnDestroy {
       {
         title: 'Email Verificado',
         description: this.authService.currentUser()?.email || 'Email da conta',
-        status: 'approved',
-        icon: 'check_circle',
+        status: this.authService.currentUser()?.emailVerified ? 'approved' : 'pending',
+        icon: this.authService.currentUser()?.emailVerified ? 'check_circle' : 'error',
       },
       {
         title: 'Documento',
@@ -180,6 +182,26 @@ export class ProfilePageComponent implements OnDestroy {
             : 'error',
       },
     ];
+  }
+
+  protected get isFullyVerified(): boolean {
+    return (
+      this.profile.documentVerificationStatus === 'APPROVED' &&
+      this.profile.driverLicenseVerification === 'APPROVED'
+    );
+  }
+
+  protected get verificationCta(): 'start' | 'pending' | 'done' {
+    if (this.isFullyVerified) return 'done';
+    if (
+      this.profile.documentVerificationStatus === 'PENDING' ||
+      this.profile.driverLicenseVerification === 'PENDING'
+    ) return 'pending';
+    return 'start';
+  }
+
+  protected get hasPendingDocuments(): boolean {
+    return !!(this.pendingDocumentFile || this.pendingDriverLicenseFile);
   }
 
   protected get unreadChatBadge() {
@@ -356,7 +378,7 @@ export class ProfilePageComponent implements OnDestroy {
     });
   }
 
-  private loadData() {
+  protected loadData() {
     this.loading = true;
     this.errorMessage = '';
 

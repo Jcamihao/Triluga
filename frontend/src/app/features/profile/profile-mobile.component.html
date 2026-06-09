@@ -238,6 +238,24 @@
         </label>
       </div>
 
+      <!-- CTA verificação -->
+      <div *ngIf="verificationCta === 'start'" class="p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4">
+        <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-primary">Verifique sua identidade</p>
+          <p class="text-xs text-on-surface-variant">Documento, CNH e selfie são necessários para o badge de membro verificado.</p>
+        </div>
+        <button type="button" (click)="showVerificationOnboarding = true" class="px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-bold whitespace-nowrap active:scale-95 transition-all">Verificar</button>
+      </div>
+      <div *ngIf="verificationCta === 'pending'" class="p-4 rounded-xl bg-surface-container-low flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary animate-spin">sync</span>
+        <p class="text-sm text-on-surface-variant">Seus documentos estão em análise. Retorno em até 24h.</p>
+      </div>
+      <div *ngIf="verificationCta === 'done'" class="p-4 rounded-xl bg-primary-container/10 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">verified</span>
+        <p class="text-sm font-bold text-primary">Identidade verificada — você é um Membro Premium Triluga.</p>
+      </div>
+
       <!-- Verification Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Document Card -->
@@ -447,4 +465,10 @@
       </div>
     </section>
   </div>
+
+  <!-- Overlay do onboarding de verificação -->
+  <app-verification-onboarding
+    *ngIf="showVerificationOnboarding"
+    (closed)="showVerificationOnboarding = false; loadData()"
+  ></app-verification-onboarding>
 </main>
