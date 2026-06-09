@@ -1,181 +1,417 @@
-<main class="page privacy-center-page">
-  <section class="hero-card">
-    <span class="eyebrow">Central de privacidade</span>
-    <h1>Controle do titular em um só lugar</h1>
-    <p>
-      Ajuste preferências, exporte seus dados e registre solicitações
-      relacionadas à LGPD.
-    </p>
-  </section>
-
-  <section class="privacy-card" *ngIf="loading">
-    <strong>Carregando central...</strong>
-    <p>Estamos buscando suas preferências e solicitações registradas.</p>
-  </section>
-
-  <ng-container *ngIf="!loading && overview">
-    <section class="privacy-card">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow eyebrow--soft">Preferências</span>
-          <h2>Analytics não essencial</h2>
-        </div>
-        <span
-          class="status-pill"
-          [class.status-pill--enabled]="
-            privacyPreferencesService.analyticsConsentGranted()
-          "
-        >
-          {{
-            privacyPreferencesService.analyticsConsentGranted()
-              ? 'Ativo'
-              : 'Desativado'
-          }}
-        </span>
-      </div>
-
-      <p>
-        Quando ativado, a Triluga coleta métricas de navegação para melhorar
-        produto, conteúdo e conversão.
-      </p>
-
-      <div class="action-row">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          [disabled]="
-            savingPreferences ||
-            !privacyPreferencesService.analyticsConsentGranted()
-          "
-          (click)="setAnalyticsConsent(false)"
-        >
-          {{ savingPreferences ? 'Salvando...' : 'Desativar' }}
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="
-            savingPreferences ||
-            privacyPreferencesService.analyticsConsentGranted()
-          "
-          (click)="setAnalyticsConsent(true)"
-        >
-          {{ savingPreferences ? 'Salvando...' : 'Ativar' }}
-        </button>
-      </div>
-    </section>
-
-    <section class="privacy-card">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow eyebrow--soft">Exportação</span>
-          <h2>Baixe seus dados</h2>
-        </div>
-      </div>
-
-      <p>
-        O arquivo inclui conta, perfil, anúncios, notificações, favoritos,
-        alertas e solicitações LGPD registradas.
-      </p>
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="exporting"
-        (click)="exportMyData()"
+<!-- Mobile -->
+<main class="bg-surface text-on-surface pb-24 font-body antialiased md:hidden">
+  <header
+    class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
+  >
+    <div class="flex items-center gap-3">
+      <span
+        class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+        routerLink="/profile"
+        >arrow_back</span
       >
-        {{ exporting ? 'Preparando exportação...' : 'Exportar meus dados' }}
-      </button>
-    </section>
-
-    <section class="privacy-card">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow eyebrow--soft">Solicitações</span>
-          <h2>Registrar novo pedido</h2>
-        </div>
-      </div>
-
-      <label>
-        <span>Tipo de solicitação</span>
-        <select [(ngModel)]="selectedRequestType">
-          <option *ngFor="let option of requestTypeOptions" [value]="option">
-            {{ requestTypeLabel(option) }}
-          </option>
-        </select>
-      </label>
-
-      <label>
-        <span>Observações</span>
-        <textarea
-          [(ngModel)]="requestNotes"
-          rows="4"
-          placeholder="Explique o contexto da sua solicitação, se desejar."
-        ></textarea>
-      </label>
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="submittingRequest"
-        (click)="submitRequest()"
+      <h1
+        class="!text-2xl !font-black italic tracking-tighter text-primary !leading-none !m-0"
       >
-        {{ submittingRequest ? 'Enviando...' : 'Enviar solicitação' }}
-      </button>
-    </section>
+        Privacidade
+      </h1>
+    </div>
+  </header>
 
-    <section class="privacy-card">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow eyebrow--soft">Histórico</span>
-          <h2>Pedidos já registrados</h2>
-        </div>
-      </div>
+  <div class="px-4 space-y-4 max-w-2xl mx-auto pt-2">
+    <div
+      class="flex items-center justify-center py-16"
+      *ngIf="loading"
+    >
+      <span class="text-on-surface-variant/60 text-sm">Carregando...</span>
+    </div>
 
-      <div
-        class="request-list"
-        *ngIf="overview.requests.length; else emptyRequests"
-      >
-        <article class="request-item" *ngFor="let request of overview.requests">
-          <div class="request-item__top">
-            <strong>{{ requestTypeLabel(request.type) }}</strong>
+    <ng-container *ngIf="!loading && overview">
+      <!-- Analytics -->
+      <section class="bg-surface-container-low rounded-[1.5rem] p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
             <span
-              class="status-pill"
-              [class]="
-                'status-pill status-pill--' + request.status.toLowerCase()
-              "
+              class="text-xs font-bold uppercase tracking-widest text-primary"
+              >Preferências</span
             >
-              {{ requestStatusLabel(request.status) }}
-            </span>
+            <h2 class="text-base font-bold text-on-surface mt-0.5">
+              Analytics
+            </h2>
           </div>
-
-          <p *ngIf="request.notes">{{ request.notes }}</p>
-          <small
-            >Criada em {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small
+          <span
+            class="px-3 py-1 rounded-full text-xs font-bold"
+            [class]="
+              privacyPreferencesService.analyticsConsentGranted()
+                ? 'bg-primary/10 text-primary'
+                : 'bg-surface-container-high text-on-surface-variant'
+            "
           >
-          <small *ngIf="request.resolutionNotes"
-            >Retorno: {{ request.resolutionNotes }}</small
+            {{
+              privacyPreferencesService.analyticsConsentGranted()
+                ? 'Ativo'
+                : 'Desativado'
+            }}
+          </span>
+        </div>
+        <p class="text-sm text-on-surface-variant">
+          Métricas de navegação para melhorar produto e conversão.
+        </p>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl border border-outline-variant text-sm font-semibold text-on-surface-variant transition-colors disabled:opacity-50"
+            [disabled]="
+              savingPreferences ||
+              !privacyPreferencesService.analyticsConsentGranted()
+            "
+            (click)="setAnalyticsConsent(false)"
           >
-        </article>
-      </div>
+            Desativar
+          </button>
+          <button
+            type="button"
+            class="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold transition-colors disabled:opacity-50"
+            [disabled]="
+              savingPreferences ||
+              privacyPreferencesService.analyticsConsentGranted()
+            "
+            (click)="setAnalyticsConsent(true)"
+          >
+            Ativar
+          </button>
+        </div>
+      </section>
 
-      <ng-template #emptyRequests>
-        <p>Nenhuma solicitação LGPD registrada até o momento.</p>
-      </ng-template>
-    </section>
+      <!-- Export -->
+      <section class="bg-surface-container-low rounded-[1.5rem] p-5 space-y-3">
+        <span class="text-xs font-bold uppercase tracking-widest text-primary"
+          >Exportação</span
+        >
+        <h2 class="text-base font-bold text-on-surface">Baixe seus dados</h2>
+        <p class="text-sm text-on-surface-variant">
+          Conta, perfil, anúncios, favoritos, alertas e solicitações LGPD.
+        </p>
+        <button
+          type="button"
+          class="w-full py-3 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50"
+          [disabled]="exporting"
+          (click)="exportMyData()"
+        >
+          {{ exporting ? 'Preparando...' : 'Exportar meus dados' }}
+        </button>
+      </section>
 
-    <section class="privacy-card privacy-card--compact">
-      <strong>Contato de privacidade</strong>
+      <!-- Submit Request -->
+      <section class="bg-surface-container-low rounded-[1.5rem] p-5 space-y-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-primary"
+            >Solicitações</span
+          >
+          <h2 class="text-base font-bold text-on-surface mt-0.5">
+            Novo pedido LGPD
+          </h2>
+        </div>
+        <label class="block space-y-1">
+          <span class="text-sm font-medium text-on-surface-variant"
+            >Tipo de solicitação</span
+          >
+          <select
+            [(ngModel)]="selectedRequestType"
+            class="w-full border border-outline-variant/20 rounded-xl px-4 py-3 bg-surface text-on-surface text-sm outline-none"
+          >
+            <option *ngFor="let option of requestTypeOptions" [value]="option">
+              {{ requestTypeLabel(option) }}
+            </option>
+          </select>
+        </label>
+        <label class="block space-y-1">
+          <span class="text-sm font-medium text-on-surface-variant"
+            >Observações (opcional)</span
+          >
+          <textarea
+            [(ngModel)]="requestNotes"
+            rows="3"
+            class="w-full border border-outline-variant/20 rounded-xl px-4 py-3 bg-surface text-on-surface text-sm resize-none outline-none"
+            placeholder="Descreva o contexto da sua solicitação."
+          ></textarea>
+        </label>
+        <button
+          type="button"
+          class="w-full py-3 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50"
+          [disabled]="submittingRequest"
+          (click)="submitRequest()"
+        >
+          {{ submittingRequest ? 'Enviando...' : 'Enviar solicitação' }}
+        </button>
+      </section>
+
+      <!-- History -->
+      <section class="bg-surface-container-low rounded-[1.5rem] p-5 space-y-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-primary"
+            >Histórico</span
+          >
+          <h2 class="text-base font-bold text-on-surface mt-0.5">
+            Pedidos registrados
+          </h2>
+        </div>
+        <div
+          class="space-y-2"
+          *ngIf="overview.requests.length; else noMobileRequests"
+        >
+          <article
+            class="bg-surface rounded-2xl p-4 space-y-1"
+            *ngFor="let request of overview.requests"
+          >
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <strong class="text-sm text-on-surface">{{
+                requestTypeLabel(request.type)
+              }}</strong>
+              <span
+                class="px-2 py-0.5 rounded-full text-xs font-bold"
+                [class]="requestStatusClass(request.status)"
+              >
+                {{ requestStatusLabel(request.status) }}
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant" *ngIf="request.notes">
+              {{ request.notes }}
+            </p>
+            <span class="text-xs text-on-surface-variant/60">{{
+              request.createdAt | date: 'dd/MM/yyyy'
+            }}</span>
+          </article>
+        </div>
+        <ng-template #noMobileRequests>
+          <p class="text-sm text-on-surface-variant">
+            Nenhuma solicitação registrada.
+          </p>
+        </ng-template>
+      </section>
+
+      <!-- Contact -->
+      <section class="bg-surface-container-low rounded-[1.5rem] p-5 space-y-1">
+        <strong class="block text-sm font-bold text-on-surface"
+          >Contato de privacidade</strong
+        >
+        <p class="text-sm text-on-surface-variant">
+          {{ overview.policy.contactEmail }}
+        </p>
+      </section>
+    </ng-container>
+
+    <p
+      class="text-sm font-semibold text-center py-2"
+      style="color: var(--success)"
+      *ngIf="feedback"
+    >
+      {{ feedback }}
+    </p>
+    <p
+      class="text-sm font-semibold text-center py-2 text-red-500"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </p>
+  </div>
+</main>
+
+<!-- Desktop -->
+<div class="privacy-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="privacy-web__layout">
+    <section class="privacy-web__hero">
+      <span class="privacy-web__eyebrow">Central de Privacidade</span>
+      <h1>Controle do titular em um só lugar</h1>
       <p>
-        Para temas regulatórios e acompanhamento adicional, use
-        {{ overview.policy.contactEmail }}.
+        Ajuste preferências, exporte seus dados e registre solicitações
+        relacionadas à LGPD.
       </p>
     </section>
-  </ng-container>
 
-  <p class="feedback" *ngIf="feedback">{{ feedback }}</p>
-  <p class="feedback feedback--error" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </p>
-</main>
+    <div class="surface-card privacy-web__card" *ngIf="loading">
+      <strong>Carregando central...</strong>
+      <p>Buscando suas preferências e solicitações registradas.</p>
+    </div>
+
+    <ng-container *ngIf="!loading && overview">
+      <!-- Analytics -->
+      <section class="surface-card privacy-web__card">
+        <div class="privacy-web__card-head">
+          <div>
+            <span class="privacy-web__eyebrow privacy-web__eyebrow--soft"
+              >Preferências</span
+            >
+            <h2>Analytics não essencial</h2>
+          </div>
+          <span
+            class="privacy-web__pill"
+            [class.privacy-web__pill--on]="
+              privacyPreferencesService.analyticsConsentGranted()
+            "
+          >
+            {{
+              privacyPreferencesService.analyticsConsentGranted()
+                ? 'Ativo'
+                : 'Desativado'
+            }}
+          </span>
+        </div>
+        <p>
+          Quando ativado, a Triluga coleta métricas de navegação para melhorar
+          produto, conteúdo e conversão.
+        </p>
+        <div class="privacy-web__actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="
+              savingPreferences ||
+              !privacyPreferencesService.analyticsConsentGranted()
+            "
+            (click)="setAnalyticsConsent(false)"
+          >
+            {{ savingPreferences ? 'Salvando...' : 'Desativar' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="
+              savingPreferences ||
+              privacyPreferencesService.analyticsConsentGranted()
+            "
+            (click)="setAnalyticsConsent(true)"
+          >
+            {{ savingPreferences ? 'Salvando...' : 'Ativar' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Export -->
+      <section class="surface-card privacy-web__card">
+        <div class="privacy-web__card-head">
+          <div>
+            <span class="privacy-web__eyebrow privacy-web__eyebrow--soft"
+              >Exportação</span
+            >
+            <h2>Baixe seus dados</h2>
+          </div>
+        </div>
+        <p>
+          O arquivo inclui conta, perfil, anúncios, notificações, favoritos,
+          alertas e solicitações LGPD registradas.
+        </p>
+        <div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="exporting"
+            (click)="exportMyData()"
+          >
+            {{ exporting ? 'Preparando exportação...' : 'Exportar meus dados' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Request -->
+      <section class="surface-card privacy-web__card">
+        <div class="privacy-web__card-head">
+          <div>
+            <span class="privacy-web__eyebrow privacy-web__eyebrow--soft"
+              >Solicitações</span
+            >
+            <h2>Registrar novo pedido</h2>
+          </div>
+        </div>
+        <div class="privacy-web__form">
+          <label class="privacy-web__label">
+            <span>Tipo de solicitação</span>
+            <select [(ngModel)]="selectedRequestType">
+              <option
+                *ngFor="let option of requestTypeOptions"
+                [value]="option"
+              >
+                {{ requestTypeLabel(option) }}
+              </option>
+            </select>
+          </label>
+          <label class="privacy-web__label">
+            <span>Observações</span>
+            <textarea
+              [(ngModel)]="requestNotes"
+              rows="4"
+              placeholder="Explique o contexto da sua solicitação, se desejar."
+            ></textarea>
+          </label>
+        </div>
+        <div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="submittingRequest"
+            (click)="submitRequest()"
+          >
+            {{ submittingRequest ? 'Enviando...' : 'Enviar solicitação' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section class="surface-card privacy-web__card">
+        <div class="privacy-web__card-head">
+          <div>
+            <span class="privacy-web__eyebrow privacy-web__eyebrow--soft"
+              >Histórico</span
+            >
+            <h2>Pedidos já registrados</h2>
+          </div>
+        </div>
+        <div
+          class="privacy-web__request-list"
+          *ngIf="overview.requests.length; else noRequests"
+        >
+          <article
+            class="privacy-web__request-item"
+            *ngFor="let request of overview.requests"
+          >
+            <div class="privacy-web__request-top">
+              <strong>{{ requestTypeLabel(request.type) }}</strong>
+              <span
+                class="privacy-web__pill"
+                [class]="'privacy-web__pill--' + request.status.toLowerCase()"
+              >
+                {{ requestStatusLabel(request.status) }}
+              </span>
+            </div>
+            <p *ngIf="request.notes">{{ request.notes }}</p>
+            <small>Criada em {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            <small *ngIf="request.resolutionNotes"
+              >Retorno: {{ request.resolutionNotes }}</small
+            >
+          </article>
+        </div>
+        <ng-template #noRequests>
+          <p>Nenhuma solicitação LGPD registrada até o momento.</p>
+        </ng-template>
+      </section>
+
+      <!-- Contact -->
+      <section class="surface-card privacy-web__card privacy-web__card--compact">
+        <strong>Contato de privacidade</strong>
+        <p>
+          Para temas regulatórios e acompanhamento adicional, use
+          {{ overview.policy.contactEmail }}.
+        </p>
+      </section>
+    </ng-container>
+
+    <p class="privacy-web__feedback" *ngIf="feedback">{{ feedback }}</p>
+    <p
+      class="privacy-web__feedback privacy-web__feedback--error"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </p>
+  </main>
+</div>

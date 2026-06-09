@@ -1,6 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   PrivacyCenterOverview,
   PrivacyRequestItem,
@@ -8,11 +9,12 @@ import {
 } from '../../core/models/domain.models';
 import { PrivacyApiService } from '../../core/services/privacy-api.service';
 import { PrivacyPreferencesService } from '../../core/services/privacy-preferences.service';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-privacy-center-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink, WebHeaderComponent],
   templateUrl: './privacy-center-page.component.html',
   styleUrls: ['./privacy-center-page.component.scss'],
 })
@@ -139,6 +141,17 @@ export class PrivacyCenterPageComponent {
     };
 
     return labels[type] || type;
+  }
+
+  protected requestStatusClass(status: PrivacyRequestItem['status']): string {
+    const map: Record<string, string> = {
+      OPEN: 'bg-amber-100 text-amber-700',
+      IN_REVIEW: 'bg-amber-100 text-amber-700',
+      COMPLETED: 'bg-green-100 text-green-700',
+      REJECTED: 'bg-red-100 text-red-700',
+      CANCELLED: 'bg-red-100 text-red-700',
+    };
+    return map[status] ?? 'bg-gray-100 text-gray-600';
   }
 
   protected requestStatusLabel(status: PrivacyRequestItem['status']) {
