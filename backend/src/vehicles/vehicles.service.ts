@@ -451,7 +451,7 @@ export class VehiclesService {
           transmission: dto.transmission,
           fuelType: dto.fuelType,
           seats: dto.seats,
-          dailyRate: dto.weeklyRate,
+          dailyRate: dto.dailyRate ?? dto.weeklyRate,
           weeklyRate: dto.weeklyRate,
           kmPolicy: dto.kmPolicy,
           motorcycleStyle: dto.motorcycleStyle,
@@ -503,15 +503,13 @@ export class VehiclesService {
 
   async update(ownerId: string, vehicleId: string, dto: UpdateVehicleDto) {
     await this.ensureVehicleOwnership(ownerId, vehicleId);
-    const weeklyRate = dto.weeklyRate ?? dto.dailyRate;
-
     try {
       const vehicle = await this.prisma.vehicle.update({
         where: { id: vehicleId },
         data: {
           ...dto,
-          dailyRate: weeklyRate,
-          weeklyRate,
+          dailyRate: dto.dailyRate ?? dto.weeklyRate,
+          weeklyRate: dto.weeklyRate,
           plate: dto.plate ? dto.plate.toUpperCase() : undefined,
           state: dto.state ? dto.state.toUpperCase() : undefined,
         },
@@ -713,6 +711,8 @@ export class VehiclesService {
       avatarUrl?: string | null;
       city?: string | null;
       state?: string | null;
+      documentVerificationStatus?: string | null;
+      driverLicenseVerification?: string | null;
     } | null;
     userReviewsReceived?: Array<{ rating: number }>;
   }) {
@@ -731,6 +731,10 @@ export class VehiclesService {
         )
       : 0;
 
+    const isVerified =
+      owner.profile?.documentVerificationStatus === 'APPROVED' &&
+      owner.profile?.driverLicenseVerification === 'APPROVED';
+
     return {
       id: owner.id,
       fullName: owner.profile?.fullName ?? null,
@@ -739,6 +743,7 @@ export class VehiclesService {
       state: owner.profile?.state ?? null,
       ratingAverage,
       reviewsCount,
+      isVerified,
     };
   }
 }

@@ -148,6 +148,7 @@ export class UsersService {
       email: user.email,
       role: user.role,
       status: user.status,
+      emailVerified: (user as any).emailVerified ?? false,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       analyticsConsentGranted: user.analyticsConsentGranted,
