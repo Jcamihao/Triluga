@@ -344,6 +344,16 @@ export class AuthService {
     });
   }
 
+  markEmailAsVerified() {
+    const user = this.currentUserSignal();
+    if (user && !user.emailVerified) {
+      this.persistUser({ ...user, emailVerified: true });
+      this.logger.debug('auth', 'email_marked_as_verified_locally', {
+        userId: user.id,
+      });
+    }
+  }
+
   private setSession(response: AuthResponse, rememberMe: boolean) {
     const targetStorage = this.getSessionStorage(rememberMe);
     const inactiveStorage = rememberMe ? this.storage : this.persistentStorage;
@@ -502,6 +512,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       status: user.status,
+      emailVerified: user.emailVerified ?? false,
       lastLoginAt: user.lastLoginAt ?? null,
       createdAt: user.createdAt,
       analyticsConsentGranted: user.analyticsConsentGranted,
