@@ -72,6 +72,8 @@ export interface Profile {
   hasDriverLicenseImage?: boolean;
   documentVerificationStatus?: VerificationStatus;
   driverLicenseVerification?: VerificationStatus;
+  hasSelfieImage?: boolean;
+  selfieImageUrl?: string | null;
 }
 
 export interface User {
@@ -79,6 +81,7 @@ export interface User {
   email: string;
   role: UserRole;
   status: string;
+  emailVerified?: boolean;
   profile: Profile | null;
   lastLoginAt?: string | null;
   createdAt?: string;
@@ -103,7 +106,6 @@ export interface PublicUserProfile {
     activeListingsCount: number;
     reviewsCount: number;
     averageRating: number;
-    completedRentalsCount: number;
   };
   reviews: UserReviewItem[];
   verification: {
@@ -203,6 +205,7 @@ export interface VehicleCardItem {
     state: string | null;
     ratingAverage?: number;
     reviewsCount?: number;
+    isVerified?: boolean;
   };
 }
 

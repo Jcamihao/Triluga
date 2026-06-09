@@ -491,6 +491,7 @@ export class AuthService {
       email: claims.email,
       role: claims.role,
       status: 'ACTIVE',
+      emailVerified: (claims as any).emailVerified ?? false,
       profile: null,
     } satisfies User;
   }

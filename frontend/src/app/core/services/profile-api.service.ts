@@ -92,6 +92,15 @@ export class ProfileApiService {
       .pipe(map((profile) => normalizeApiPayloadUrls(profile)));
   }
 
+  uploadMySelfie(file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ submitted: boolean }>(
+      `${environment.apiBaseUrl}/profiles/me/selfie`,
+      form,
+    );
+  }
+
   getMyDocumentUrl() {
     return this.http
       .get<{
