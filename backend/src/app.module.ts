@@ -29,6 +29,7 @@ import { SearchAlertsModule } from './search-alerts/search-alerts.module';
 import { LookupsModule } from './lookups/lookups.module';
 import { EmailModule } from './email/email.module';
 import { emailConfig } from './config/email.config';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { emailConfig } from './config/email.config';
     ReviewsModule,
     AdminModule,
     EmailModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [
