@@ -728,11 +728,14 @@ export abstract class VehicleDetailPageBase {
 
     const latitude = this.vehicleLatitude;
     const longitude = this.vehicleLongitude;
+    const fullAddress = this.vehicle.addressLine?.trim()
+      ? `${this.vehicle.addressLine}, ${this.vehicle.city}, ${this.vehicle.state}`
+      : this.vehicleLocationLabel;
 
     const cacheKey =
       latitude !== null && longitude !== null
         ? `${latitude},${longitude}`
-        : this.vehicleLocationLabel;
+        : fullAddress;
 
     if (this.mapEmbedCacheKey === cacheKey) {
       return this.mapEmbedCacheUrl;
@@ -743,7 +746,7 @@ export abstract class VehicleDetailPageBase {
       'q',
       latitude !== null && longitude !== null
         ? `${latitude},${longitude}`
-        : this.vehicleLocationLabel,
+        : fullAddress,
     );
     url.searchParams.set('output', 'embed');
 
@@ -758,11 +761,14 @@ export abstract class VehicleDetailPageBase {
   protected get mapLink() {
     const latitude = this.vehicleLatitude;
     const longitude = this.vehicleLongitude;
+    const fullAddress = this.vehicle?.addressLine?.trim()
+      ? `${this.vehicle.addressLine}, ${this.vehicle.city}, ${this.vehicle.state}`
+      : this.vehicleLocationLabel;
 
     if (latitude === null || longitude === null) {
       const url = new URL('https://www.google.com/maps/search/');
       url.searchParams.set('api', '1');
-      url.searchParams.set('query', this.vehicleLocationLabel);
+      url.searchParams.set('query', fullAddress);
       return url.toString();
     }
 
