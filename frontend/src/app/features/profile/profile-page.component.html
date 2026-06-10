@@ -824,3 +824,50 @@
     (closed)="showVerificationOnboarding = false; loadData()"
   ></app-verification-onboarding>
 </div>
+
+<div class="avatar-crop" *ngIf="cropModalOpen" role="dialog" aria-modal="true">
+  <div class="avatar-crop__panel">
+    <div class="avatar-crop__header">
+      <h2>Ajustar foto</h2>
+      <button type="button" aria-label="Fechar" (click)="cancelAvatarCrop()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div
+      class="avatar-crop__viewport"
+      (pointerdown)="onCropPointerDown($event)"
+      (pointermove)="onCropPointerMove($event)"
+      (pointerup)="onCropPointerUp($event)"
+      (pointercancel)="onCropPointerUp($event)"
+    >
+      <img
+        *ngIf="cropImageUrl"
+        [src]="cropImageUrl"
+        alt="Prévia da foto"
+        [style.transform]="cropImageTransform"
+        draggable="false"
+      />
+      <div class="avatar-crop__mask" aria-hidden="true"></div>
+    </div>
+
+    <label class="avatar-crop__zoom">
+      <span>Zoom</span>
+      <input
+        type="range"
+        min="1"
+        max="2.6"
+        step="0.01"
+        [ngModel]="cropZoom"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="onCropZoomChange($event)"
+      />
+    </label>
+
+    <div class="avatar-crop__actions">
+      <button type="button" (click)="cancelAvatarCrop()">Cancelar</button>
+      <button type="button" (click)="applyAvatarCrop()">Usar foto</button>
+    </div>
+  </div>
+</div>
+
