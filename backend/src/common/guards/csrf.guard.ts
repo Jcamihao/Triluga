@@ -23,6 +23,13 @@ export class CsrfGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
 
+    // Se o request possui um Bearer token no header Authorization, pulamos a validação de CSRF,
+    // pois Bearer tokens previnem CSRF nativamente (não são enviados automaticamente pelo browser).
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+      return true;
+    }
+
     if (SAFE_METHODS.has(req.method)) return true;
 
     const cookieToken = this.parseCookie(req.headers.cookie ?? '', 'XSRF-TOKEN');
