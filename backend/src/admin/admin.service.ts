@@ -34,69 +34,75 @@ export class AdminService {
     };
   }
 
-  async getUsers() {
-    const users = await this.prisma.user.findMany({
-      include: {
-        profile: {
-          select: {
-            fullName: true,
-            city: true,
-            state: true,
-            avatarUrl: true,
-            documentVerificationStatus: true,
-            driverLicenseVerification: true,
-            documentImageUrl: true,
-            driverLicenseImageUrl: true,
-            selfieImageUrl: true,
-            documentOcrText: true,
-            cnhOcrText: true,
+  async getUsers(page = 1, limit = 50) {
+    const safeLimit = Math.min(limit, 100);
+    const [total, users] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.findMany({
+        include: {
+          profile: {
+            select: {
+              fullName: true,
+              city: true,
+              state: true,
+              avatarUrl: true,
+              documentVerificationStatus: true,
+              driverLicenseVerification: true,
+              documentImageUrl: true,
+              driverLicenseImageUrl: true,
+              selfieImageUrl: true,
+              documentOcrText: true,
+              cnhOcrText: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
+      }),
+    ]);
 
-    return users.map((user) => ({
-      ...user,
-      profile: user.profile
-        ? {
-            fullName: user.profile.fullName,
-            city: user.profile.city,
-            state: user.profile.state,
-            avatarUrl: user.profile.avatarUrl,
-            documentVerificationStatus: user.profile.documentVerificationStatus,
-            driverLicenseVerification: user.profile.driverLicenseVerification,
-            hasDocumentImage: !!user.profile.documentImageUrl,
-            hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
-            hasSelfieImage: !!user.profile.selfieImageUrl,
-            documentOcrText: user.profile.documentOcrText ?? null,
-            cnhOcrText: user.profile.cnhOcrText ?? null,
-          }
-        : null,
-    }));
+    return {
+      total,
+      page,
+      limit: safeLimit,
+      items: users.map((user) => ({
+        ...user,
+        profile: user.profile
+          ? {
+              fullName: user.profile.fullName,
+              city: user.profile.city,
+              state: user.profile.state,
+              avatarUrl: user.profile.avatarUrl,
+              documentVerificationStatus: user.profile.documentVerificationStatus,
+              driverLicenseVerification: user.profile.driverLicenseVerification,
+              hasDocumentImage: !!user.profile.documentImageUrl,
+              hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
+              hasSelfieImage: !!user.profile.selfieImageUrl,
+              documentOcrText: user.profile.documentOcrText ?? null,
+              cnhOcrText: user.profile.cnhOcrText ?? null,
+            }
+          : null,
+      })),
+    };
   }
 
-  async getVehicles() {
-    return this.prisma.vehicle.findMany({
-      include: {
-        owner: {
-          include: {
-            profile: true,
-          },
+  async getVehicles(page = 1, limit = 50) {
+    const safeLimit = Math.min(limit, 100);
+    const [total, items] = await Promise.all([
+      this.prisma.vehicle.count(),
+      this.prisma.vehicle.findMany({
+        include: {
+          owner: { include: { profile: true } },
+          images: { orderBy: { position: 'asc' }, take: 1 },
         },
-        images: {
-          orderBy: {
-            position: 'asc',
-          },
-          take: 1,
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * safeLimit,
+        take: safeLimit,
+      }),
+    ]);
+
+    return { total, page, limit: safeLimit, items };
   }
 
   async blockUser(userId: string) {
@@ -198,5 +204,68 @@ export class AdminService {
         [field]: status,
       },
     });
+  }
+
+  async getFeaturedOrders(status?: string) {
+    return this.prisma.featuredOrder.findMany({
+      where: status ? { status: status as any } : undefined,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        vehicle: { select: { id: true, title: true } },
+        user: { select: { id: true, email: true } },
+      },
+    });
+  }
+
+  async activateFeaturedOrder(orderId: string) {
+    const order = await this.prisma.featuredOrder.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new NotFoundException('Pedido não encontrado.');
+
+    const expiresAt = new Date(
+      Date.now() + order.durationDays * 24 * 60 * 60 * 1000,
+    );
+
+    await this.prisma.$transaction([
+      this.prisma.featuredOrder.update({
+        where: { id: orderId },
+        data: { status: 'ACTIVE', activatedAt: new Date(), expiresAt },
+      }),
+      this.prisma.vehicle.update({
+        where: { id: order.vehicleId },
+        data: { isFeatured: true, featuredUntil: expiresAt } as any,
+      }),
+    ]);
+
+    return { success: true, expiresAt };
+  }
+
+  async getRecentVehicles(limit = 5) {
+    return this.prisma.vehicle.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true, title: true, brand: true, model: true, year: true,
+        city: true, state: true, isActive: true, isPublished: true, createdAt: true,
+        owner: { select: { id: true, email: true, profile: { select: { fullName: true } } } },
+      },
+    });
+  }
+
+  async getRecentUsers(limit = 5) {
+    return this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true, email: true, role: true, status: true, createdAt: true,
+        profile: { select: { fullName: true, city: true, state: true } },
+      },
+    });
+  }
+
+  async getPendingFeaturedCount() {
+    return this.prisma.featuredOrder.count({ where: { status: 'PENDING' } });
   }
 }

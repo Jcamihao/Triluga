@@ -1,138 +1,336 @@
-<main class="page admin-page">
-  <section class="admin-hero">
-    <span class="eyebrow">Admin</span>
-    <h1>Visão geral do marketplace</h1>
-  </section>
+<main class="min-h-screen bg-background pb-20">
+  <div class="w-full max-w-5xl mx-auto px-4 md:px-8 pt-6 flex flex-col gap-5">
 
-  <section class="admin-stats" *ngIf="dashboard">
-    <article>
-      <strong>{{ dashboard.totals.users }}</strong
-      ><span>usuários</span>
-    </article>
-    <article>
-      <strong>{{ dashboard.totals.vehicles }}</strong
-      ><span>veículos</span>
-    </article>
-    <article>
-      <strong>{{ dashboard.totals.privacyRequests }}</strong
-      ><span>pedidos LGPD</span>
-    </article>
-  </section>
-
-  <section class="admin-card">
-    <h2>Usuários</h2>
-    <article class="row" *ngFor="let user of users">
+    <!-- Hero -->
+    <header class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm px-7 py-6 flex items-center justify-between">
       <div>
-        <strong>{{ user.profile?.fullName || user.email }}</strong>
-        <p>{{ user.role }} • {{ user.status }}</p>
-        <p>
-          Documento:
-          {{ verificationLabel(user.profile?.documentVerificationStatus) }} •
-          CNH: {{ verificationLabel(user.profile?.driverLicenseVerification) }}
-        </p>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-2">Admin</span>
+        <h1 class="text-2xl font-black text-on-surface tracking-tight leading-none">Painel Triluga</h1>
       </div>
-      <div class="row__actions">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="approveDocument(user.id)"
-        >
-          Aprovar doc
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="rejectDocument(user.id)"
-        >
-          Recusar doc
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="approveDriverLicense(user.id)"
-        >
-          Aprovar CNH
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="rejectDriverLicense(user.id)"
-        >
-          Recusar CNH
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          *ngIf="user.profile?.hasDocumentImage"
-          (click)="openVerificationFile(user.id, 'document')"
-        >
-          Ver doc
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          *ngIf="user.profile?.hasDriverLicenseImage"
-          (click)="openVerificationFile(user.id, 'driverLicense')"
-        >
-          Ver CNH
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="blockUser(user.id)"
-        >
-          Bloquear
-        </button>
-      </div>
-    </article>
-  </section>
+      <span class="material-symbols-outlined text-primary text-4xl opacity-20 hidden sm:block" style="font-variation-settings:'FILL' 1">admin_panel_settings</span>
+    </header>
 
-  <section class="admin-card">
-    <h2>Veículos</h2>
-    <article class="row" *ngFor="let vehicle of vehicles">
-      <div>
-        <strong>{{ vehicle.title }}</strong>
-        <p>{{ vehicle.city }}, {{ vehicle.state }}</p>
-      </div>
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="deactivateVehicle(vehicle.id)"
-      >
-        Desativar
+    <!-- Tabs -->
+    <div class="flex gap-1 p-1 bg-surface-container rounded-2xl w-fit self-start">
+      <button type="button"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+        [ngClass]="activeTab === 'overview' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+        (click)="activeTab = 'overview'">
+        <span class="material-symbols-outlined text-[18px]">monitoring</span>
+        Visão Geral
+        <span *ngIf="openReportsCount > 0"
+          class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black"
+          [ngClass]="activeTab === 'overview' ? 'bg-white/30 text-white' : 'bg-error text-white'">
+          {{ openReportsCount }}
+        </span>
       </button>
-    </article>
-  </section>
+      <button type="button"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+        [ngClass]="activeTab === 'manage' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+        (click)="activeTab = 'manage'">
+        <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+        Gestão
+      </button>
+    </div>
 
-  <section class="admin-card">
-    <h2>Solicitações LGPD</h2>
-    <article class="row" *ngFor="let request of privacyRequests">
-      <div>
-        <strong>{{ privacyRequestTypeLabel(request.type) }}</strong>
-        <p>
-          {{ request.user?.profile?.fullName || request.user?.email }} •
-          {{ privacyRequestStatusLabel(request.status) }}
+    <!-- =================== VISÃO GERAL =================== -->
+    <ng-container *ngIf="activeTab === 'overview'">
+
+      <!-- Analytics card -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="text-base font-black text-on-surface">Analytics</h2>
+          <div class="flex gap-1.5 flex-wrap">
+            <button *ngFor="let p of [['today','Hoje'],['7d','7 dias'],['30d','30 dias'],['all','Tudo']]"
+              type="button"
+              class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+              [ngClass]="overviewPeriod === p[0] ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+              (click)="setOverviewPeriod($any(p[0]))">
+              {{ p[1] }}
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" *ngIf="overview?.analytics">
+          <div class="flex flex-col items-center gap-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
+            <span class="text-3xl font-black text-primary leading-none">{{ overview.analytics.totalSiteVisits | number }}</span>
+            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Visitas</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
+            <span class="text-3xl font-black text-primary leading-none">{{ overview.analytics.firstTimeVisitors | number }}</span>
+            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Novos visitantes</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
+            <span class="text-3xl font-black text-primary leading-none">{{ overview.analytics.totalVehicleViews | number }}</span>
+            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Views anúncios</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
+            <span class="text-3xl font-black text-primary leading-none">{{ overview.analytics.registeredUsers | number }}</span>
+            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Usuários</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
+            <span class="text-3xl font-black text-primary leading-none">{{ overview.analytics.registeredListings | number }}</span>
+            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Anúncios</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 rounded-xl border text-center transition-colors"
+            [ngClass]="overview.openReports > 0 ? 'bg-red-50 border-red-200' : 'bg-surface-container-low border-outline-variant/20'">
+            <span class="text-3xl font-black leading-none" [ngClass]="overview.openReports > 0 ? 'text-error' : 'text-primary'">{{ overview.openReports }}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wide" [ngClass]="overview.openReports > 0 ? 'text-error' : 'text-on-surface-variant'">Reports abertos</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 p-4 rounded-xl border text-center transition-colors"
+            [ngClass]="overview.pendingFeatured > 0 ? 'bg-amber-50 border-amber-200' : 'bg-surface-container-low border-outline-variant/20'">
+            <span class="text-3xl font-black leading-none" [ngClass]="overview.pendingFeatured > 0 ? 'text-amber-600' : 'text-primary'">{{ overview.pendingFeatured }}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wide" [ngClass]="overview.pendingFeatured > 0 ? 'text-amber-600' : 'text-on-surface-variant'">Destaques pendentes</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent activity: 2 columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- Recent users -->
+        <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-3">
+          <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">person_add</span>
+            Últimos cadastros
+          </h2>
+          <p *ngIf="!overview?.recentUsers?.length" class="text-sm text-on-surface-variant text-center py-4">Nenhum cadastro recente.</p>
+          <div *ngFor="let u of overview?.recentUsers" class="flex flex-col gap-0.5 py-3 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+            <span class="text-sm font-bold text-on-surface">{{ u.profile?.fullName || u.email }}</span>
+            <span class="text-xs text-on-surface-variant">{{ u.email }}</span>
+            <span class="text-xs text-on-surface-variant">{{ u.profile?.city }}{{ u.profile?.state ? ', ' + u.profile?.state : '' }} · {{ u.createdAt | date:'dd/MM/yy HH:mm' }}</span>
+          </div>
+        </section>
+
+        <!-- Recent vehicles -->
+        <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-3">
+          <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">directions_car</span>
+            Últimos anúncios
+          </h2>
+          <p *ngIf="!overview?.recentVehicles?.length" class="text-sm text-on-surface-variant text-center py-4">Nenhum anúncio recente.</p>
+          <div *ngFor="let v of overview?.recentVehicles" class="flex items-center justify-between gap-3 py-3 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-sm font-bold text-on-surface truncate">{{ v.title }}</span>
+              <span class="text-xs text-on-surface-variant truncate">{{ v.owner?.profile?.fullName || v.owner?.email }}</span>
+              <span class="text-xs text-on-surface-variant">{{ v.city }}, {{ v.state }} · {{ v.createdAt | date:'dd/MM/yy HH:mm' }}</span>
+            </div>
+            <span class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold"
+              [ngClass]="v.isActive && v.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-container-high text-on-surface-variant'">
+              {{ v.isActive && v.isPublished ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Audit log -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+        <h2 class="text-base font-black text-on-surface flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-[18px] text-primary">history</span>
+          Log de ações administrativas
+        </h2>
+        <p *ngIf="!overview?.audit?.items?.length" class="text-sm text-on-surface-variant text-center py-4">Nenhuma ação registrada.</p>
+        <div *ngFor="let log of overview?.audit?.items" class="flex items-start justify-between gap-4 py-3 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-on-surface">{{ auditActionLabel(log.action) }}</span>
+            <span class="text-xs text-on-surface-variant">{{ log.admin?.email }} · {{ log.targetType }}</span>
+          </div>
+          <span class="shrink-0 text-xs text-on-surface-variant">{{ log.createdAt | date:'dd/MM/yy HH:mm' }}</span>
+        </div>
+      </section>
+
+    </ng-container>
+    <!-- =================== /VISÃO GERAL =================== -->
+
+    <!-- =================== GESTÃO =================== -->
+    <ng-container *ngIf="activeTab === 'manage'">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" *ngIf="dashboard">
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+          <span class="text-3xl font-black text-primary leading-none">{{ dashboard.totals.users }}</span>
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Usuários</span>
+        </div>
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+          <span class="text-3xl font-black text-primary leading-none">{{ dashboard.totals.vehicles }}</span>
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Veículos</span>
+        </div>
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+          <span class="text-3xl font-black text-primary leading-none">{{ dashboard.totals.privacyRequests }}</span>
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Pedidos LGPD</span>
+        </div>
+        <div class="rounded-2xl border shadow-sm p-5 flex flex-col gap-1 transition-colors"
+          [ngClass]="openReportsCount > 0 ? 'bg-red-50 border-red-200' : 'bg-surface-container-lowest border-outline-variant/20'">
+          <span class="text-3xl font-black leading-none" [ngClass]="openReportsCount > 0 ? 'text-error' : 'text-primary'">{{ openReportsCount }}</span>
+          <span class="text-xs font-bold uppercase tracking-wide" [ngClass]="openReportsCount > 0 ? 'text-error' : 'text-on-surface-variant'">Reports abertos</span>
+        </div>
+      </div>
+
+      <!-- Usuários -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+        <h2 class="text-base font-black text-on-surface flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-[18px] text-primary">group</span>
+          Usuários
+        </h2>
+        <div *ngFor="let user of users" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-on-surface">{{ user.profile?.fullName || user.email }}</span>
+            <span class="text-xs text-on-surface-variant">{{ user.role }} · {{ user.status }}</span>
+            <span class="text-xs text-on-surface-variant">
+              Doc: {{ verificationLabel(user.profile?.documentVerificationStatus) }} · CNH: {{ verificationLabel(user.profile?.driverLicenseVerification) }}
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-2 shrink-0">
+            <button type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="approveDocument(user.id)">Aprovar doc</button>
+            <button type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="rejectDocument(user.id)">Recusar doc</button>
+            <button type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="approveDriverLicense(user.id)">Aprovar CNH</button>
+            <button type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="rejectDriverLicense(user.id)">Recusar CNH</button>
+            <button *ngIf="user.profile?.hasDocumentImage" type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="openVerificationFile(user.id, 'document')">Ver doc</button>
+            <button *ngIf="user.profile?.hasDriverLicenseImage" type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="openVerificationFile(user.id, 'driverLicense')">Ver CNH</button>
+            <button type="button" class="px-3 py-1.5 rounded-full border border-error/40 text-xs font-bold text-error hover:bg-error/5 transition-colors" (click)="blockUser(user.id)">Bloquear</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Veículos -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+        <h2 class="text-base font-black text-on-surface flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-[18px] text-primary">directions_car</span>
+          Veículos
+        </h2>
+        <div *ngFor="let vehicle of vehicles" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-on-surface">{{ vehicle.title }}</span>
+            <span class="text-xs text-on-surface-variant">{{ vehicle.city }}, {{ vehicle.state }}</span>
+          </div>
+          <button type="button" class="shrink-0 px-4 py-1.5 rounded-full border border-error/40 text-xs font-bold text-error hover:bg-error/5 transition-colors" (click)="deactivateVehicle(vehicle.id)">Desativar</button>
+        </div>
+      </section>
+
+      <!-- LGPD -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+        <h2 class="text-base font-black text-on-surface flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-[18px] text-primary">shield</span>
+          Solicitações LGPD
+        </h2>
+        <p *ngIf="!privacyRequests.length" class="text-sm text-on-surface-variant text-center py-4">Nenhuma solicitação.</p>
+        <div *ngFor="let request of privacyRequests" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-on-surface">{{ privacyRequestTypeLabel(request.type) }}</span>
+            <span class="text-xs text-on-surface-variant">{{ request.user?.profile?.fullName || request.user?.email }} · {{ privacyRequestStatusLabel(request.status) }}</span>
+            <span *ngIf="request.notes" class="text-xs text-on-surface-variant italic">{{ request.notes }}</span>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button *ngIf="request.status === 'OPEN'" type="button" class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors" (click)="updatePrivacyRequest(request.id, 'IN_REVIEW')">Em análise</button>
+            <button *ngIf="request.status !== 'COMPLETED'" type="button" class="px-3 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold hover:bg-primary/90 transition-colors" (click)="updatePrivacyRequest(request.id, 'COMPLETED')">Concluir</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Destaques -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-amber-500" style="font-variation-settings:'FILL' 1">stars</span>
+            Destaques de Anúncio
+          </h2>
+          <div class="flex gap-1.5 flex-wrap">
+            <button *ngFor="let f of ['ALL','PENDING','ACTIVE','EXPIRED']"
+              type="button"
+              class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+              [ngClass]="featuredFilter === f ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+              (click)="setFeaturedFilter($any(f))">
+              {{ f === 'ALL' ? 'Todos' : featuredStatusLabel(f) }}
+            </button>
+          </div>
+        </div>
+        <p *ngIf="featuredOrders.length === 0" class="text-sm text-on-surface-variant text-center py-4">Nenhum pedido encontrado.</p>
+        <div *ngFor="let order of featuredOrders" class="flex items-center justify-between gap-3 py-3 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5 min-w-0">
+            <span class="text-sm font-bold text-on-surface truncate">{{ order.vehicle?.title || order.vehicleId }}</span>
+            <span class="text-xs text-on-surface-variant">{{ order.user?.email }}</span>
+            <span class="text-xs text-on-surface-variant">
+              R$ {{ order.price | number:'1.2-2' }} · {{ order.durationDays }} dias
+              <ng-container *ngIf="order.activatedAt"> · Ativado {{ order.activatedAt | date:'dd/MM/yy' }}</ng-container>
+              <ng-container *ngIf="order.expiresAt"> · Expira {{ order.expiresAt | date:'dd/MM/yy' }}</ng-container>
+            </span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold" [ngClass]="featuredStatusClass(order.status)">{{ featuredStatusLabel(order.status) }}</span>
+            <button *ngIf="order.status === 'PENDING'" type="button"
+              class="px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold disabled:opacity-50 hover:bg-primary/90 transition-colors"
+              [disabled]="activatingOrderId === order.id"
+              (click)="activateFeaturedOrder(order.id)">
+              {{ activatingOrderId === order.id ? 'Ativando...' : 'Ativar' }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-error" style="font-variation-settings:'FILL' 1">flag</span>
+            Reports de Anúncios
+            <span *ngIf="openReportsCount > 0" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-error/10 text-error">{{ openReportsCount }} abertos</span>
+          </h2>
+          <div class="flex gap-1.5 flex-wrap">
+            <button *ngFor="let f of ['', 'OPEN', 'REVIEWING', 'RESOLVED', 'DISMISSED']"
+              type="button"
+              class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+              [ngClass]="reportFilter === f ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+              (click)="setReportFilter(f)">
+              {{ f === '' ? 'Todos' : reportStatusLabel(f) }}
+            </button>
+          </div>
+        </div>
+
+        <p *ngIf="reports.length === 0" class="text-sm text-on-surface-variant text-center py-4">Nenhum report encontrado.</p>
+
+        <div *ngFor="let r of reports" class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+            <span class="text-sm font-bold text-on-surface">{{ r.vehicle?.title ?? '—' }}</span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold" [ngClass]="reportStatusClass(r.status)">{{ reportStatusLabel(r.status) }}</span>
+              <span class="text-xs font-semibold text-on-surface-variant">{{ reportReasonLabel(r.reason) }}</span>
+            </div>
+            <span *ngIf="r.description" class="text-xs text-on-surface-variant italic">{{ r.description }}</span>
+            <span class="text-xs text-on-surface-variant">
+              Denunciante: {{ r.reporter?.profile?.fullName || r.reporter?.email || '—' }} · {{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span *ngIf="r.adminNotes" class="text-xs text-on-surface-variant">Nota: {{ r.adminNotes }}</span>
+            <textarea
+              *ngIf="r.status === 'OPEN' || r.status === 'REVIEWING'"
+              class="mt-1 w-full text-xs border border-outline-variant/40 rounded-xl p-2.5 resize-none bg-surface-container-low outline-none focus:border-primary transition-colors"
+              rows="2"
+              placeholder="Notas internas (opcional)"
+              [(ngModel)]="reportNotesMap[r.id]"
+            ></textarea>
+          </div>
+          <div *ngIf="r.status === 'OPEN' || r.status === 'REVIEWING'" class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button type="button"
+              class="px-4 py-1.5 rounded-full bg-error text-white text-xs font-bold disabled:opacity-50 hover:bg-error/90 transition-colors"
+              [disabled]="resolvingReportId === r.id"
+              (click)="resolveReport(r.id, 'RESOLVE')">
+              {{ resolvingReportId === r.id ? 'Processando...' : 'Resolver e desativar' }}
+            </button>
+            <button type="button"
+              class="px-4 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary disabled:opacity-50 transition-colors"
+              [disabled]="resolvingReportId === r.id"
+              (click)="resolveReport(r.id, 'DISMISS')">
+              Descartar
+            </button>
+          </div>
+        </div>
+
+        <p *ngIf="reportsTotal > reports.length" class="text-xs text-on-surface-variant text-center pt-2">
+          Exibindo {{ reports.length }} de {{ reportsTotal }} reports.
         </p>
-        <p *ngIf="request.notes">{{ request.notes }}</p>
-      </div>
-      <div class="row__actions">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          *ngIf="request.status === 'OPEN'"
-          (click)="updatePrivacyRequest(request.id, 'IN_REVIEW')"
-        >
-          Em análise
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          *ngIf="request.status !== 'COMPLETED'"
-          (click)="updatePrivacyRequest(request.id, 'COMPLETED')"
-        >
-          Concluir
-        </button>
-      </div>
-    </article>
-  </section>
+      </section>
+
+    </ng-container>
+    <!-- =================== /GESTÃO =================== -->
+
+  </div>
 </main>

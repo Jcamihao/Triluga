@@ -1,17 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../core/services/admin-api.service';
 
 @Component({
   selector: 'app-admin-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-page.component.html',
   styleUrls: ['./admin-page.component.scss'],
 })
 export class AdminPageComponent {
   private readonly adminApiService = inject(AdminApiService);
+
+  protected activeTab: 'overview' | 'manage' = 'overview';
 
   protected dashboard?: {
     totals: { users: number; vehicles: number; privacyRequests: number };
@@ -19,6 +22,20 @@ export class AdminPageComponent {
   protected users: any[] = [];
   protected vehicles: any[] = [];
   protected privacyRequests: any[] = [];
+  protected featuredOrders: any[] = [];
+  protected activatingOrderId: string | null = null;
+  protected featuredFilter: 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRED' = 'ALL';
+
+  protected overview: any = null;
+  protected overviewPeriod: 'today' | '7d' | '30d' | 'all' = '7d';
+
+  protected reports: any[] = [];
+  protected reportsTotal = 0;
+  protected reportsPage = 1;
+  protected openReportsCount = 0;
+  protected reportFilter = '';
+  protected resolvingReportId: string | null = null;
+  protected reportNotesMap: Record<string, string> = {};
 
   constructor() {
     this.loadData();
@@ -113,6 +130,133 @@ export class AdminPageComponent {
     return labels[status] || status;
   }
 
+  protected activateFeaturedOrder(orderId: string) {
+    if (this.activatingOrderId) return;
+    this.activatingOrderId = orderId;
+    this.adminApiService.activateFeaturedOrder(orderId).subscribe({
+      next: () => {
+        this.activatingOrderId = null;
+        this.loadFeaturedOrders();
+      },
+      error: () => { this.activatingOrderId = null; },
+    });
+  }
+
+  protected setFeaturedFilter(f: 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRED') {
+    this.featuredFilter = f;
+    this.loadFeaturedOrders();
+  }
+
+  protected featuredStatusLabel(status: string) {
+    const map: Record<string, string> = {
+      PENDING: 'Pendente', ACTIVE: 'Ativo', EXPIRED: 'Expirado', CANCELLED: 'Cancelado',
+    };
+    return map[status] ?? status;
+  }
+
+  protected featuredStatusClass(status: string) {
+    const map: Record<string, string> = {
+      PENDING: 'bg-amber-100 text-amber-700',
+      ACTIVE: 'bg-emerald-100 text-emerald-700',
+      EXPIRED: 'bg-surface-container-high text-on-surface-variant',
+      CANCELLED: 'bg-error/10 text-error',
+    };
+    return map[status] ?? '';
+  }
+
+  private loadFeaturedOrders() {
+    const status = this.featuredFilter === 'ALL' ? undefined : this.featuredFilter;
+    this.adminApiService.getFeaturedOrders(status).subscribe((orders) => {
+      this.featuredOrders = orders;
+    });
+  }
+
+  protected setOverviewPeriod(period: 'today' | '7d' | '30d' | 'all') {
+    this.overviewPeriod = period;
+    this.loadOverview();
+  }
+
+  protected auditActionLabel(action: string) {
+    const map: Record<string, string> = {
+      report_resolve: 'Report resolvido',
+      report_dismiss: 'Report descartado',
+      block_user: 'Usuário bloqueado',
+      approve_document: 'Documento aprovado',
+      reject_document: 'Documento recusado',
+      approve_driver_license: 'CNH aprovada',
+      reject_driver_license: 'CNH recusada',
+      deactivate_vehicle: 'Veículo desativado',
+      activate_featured: 'Destaque ativado',
+    };
+    return map[action] ?? action;
+  }
+
+  protected setReportFilter(status: string) {
+    this.reportFilter = status;
+    this.reportsPage = 1;
+    this.loadReports();
+  }
+
+  protected resolveReport(reportId: string, action: 'DISMISS' | 'RESOLVE') {
+    if (this.resolvingReportId) return;
+    this.resolvingReportId = reportId;
+    const notes = this.reportNotesMap[reportId];
+    this.adminApiService.resolveReport(reportId, action, notes).subscribe({
+      next: () => {
+        this.resolvingReportId = null;
+        this.loadReports();
+        this.loadOpenReportsCount();
+      },
+      error: () => { this.resolvingReportId = null; },
+    });
+  }
+
+  protected reportStatusLabel(status: string) {
+    const map: Record<string, string> = {
+      OPEN: 'Aberto', REVIEWING: 'Em revisão', RESOLVED: 'Resolvido', DISMISSED: 'Descartado',
+    };
+    return map[status] ?? status;
+  }
+
+  protected reportStatusClass(status: string) {
+    const map: Record<string, string> = {
+      OPEN: 'bg-red-100 text-red-700',
+      REVIEWING: 'bg-amber-100 text-amber-700',
+      RESOLVED: 'bg-emerald-100 text-emerald-700',
+      DISMISSED: 'bg-surface-container-high text-on-surface-variant',
+    };
+    return map[status] ?? '';
+  }
+
+  protected reportReasonLabel(reason: string) {
+    const map: Record<string, string> = {
+      FRAUD: 'Fraude', INAPPROPRIATE: 'Conteúdo inadequado', WRONG_INFO: 'Informação incorreta',
+      DUPLICATE: 'Anúncio duplicado', OTHER: 'Outro',
+    };
+    return map[reason] ?? reason;
+  }
+
+  private loadReports() {
+    const status = this.reportFilter || undefined;
+    this.adminApiService.getReports(status, this.reportsPage).subscribe((res) => {
+      this.reports = res.items;
+      this.reportsTotal = res.total;
+    });
+  }
+
+  private loadOpenReportsCount() {
+    this.adminApiService.getOpenReportsCount().subscribe((count) => {
+      this.openReportsCount = count;
+    });
+  }
+
+  private loadOverview() {
+    this.adminApiService.getOverview(this.overviewPeriod).subscribe((data) => {
+      this.overview = data;
+      this.openReportsCount = data.openReports ?? 0;
+    });
+  }
+
   private loadData() {
     forkJoin({
       dashboard: this.adminApiService.getDashboard(),
@@ -125,5 +269,8 @@ export class AdminPageComponent {
       this.vehicles = vehicles as any[];
       this.privacyRequests = privacyRequests as any[];
     });
+    this.loadFeaturedOrders();
+    this.loadReports();
+    this.loadOverview();
   }
 }

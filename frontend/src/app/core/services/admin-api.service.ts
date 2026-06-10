@@ -88,4 +88,45 @@ export class AdminApiService {
       { status, resolutionNotes },
     );
   }
+
+  getFeaturedOrders(status?: string) {
+    return this.http.get<any[]>(
+      `${environment.apiBaseUrl}/admin/featured-orders`,
+      status ? { params: { status } } : {},
+    );
+  }
+
+  activateFeaturedOrder(orderId: string) {
+    return this.http.patch(
+      `${environment.apiBaseUrl}/admin/featured-orders/${orderId}/activate`,
+      {},
+    );
+  }
+
+  getOverview(period: 'today' | '7d' | '30d' | 'all' = '7d') {
+    return this.http.get<any>(
+      `${environment.apiBaseUrl}/admin/overview`,
+      { params: { period } },
+    );
+  }
+
+  getReports(status?: string, page = 1) {
+    const params: Record<string, string> = { page: String(page) };
+    if (status) params['status'] = status;
+    return this.http.get<{ total: number; page: number; limit: number; items: any[] }>(
+      `${environment.apiBaseUrl}/admin/reports`,
+      { params },
+    );
+  }
+
+  getOpenReportsCount() {
+    return this.http.get<number>(`${environment.apiBaseUrl}/admin/reports/count`);
+  }
+
+  resolveReport(reportId: string, action: 'DISMISS' | 'RESOLVE', adminNotes?: string) {
+    return this.http.patch(
+      `${environment.apiBaseUrl}/admin/reports/${reportId}/resolve`,
+      { action, adminNotes },
+    );
+  }
 }
