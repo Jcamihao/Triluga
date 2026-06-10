@@ -9,6 +9,7 @@ export class EmailService {
   private transporter: Transporter | null = null;
   private readonly from: string;
   private readonly frontendUrl: string;
+  private readonly adminEmail: string;
   private readonly isConfigured: boolean;
 
   constructor(private readonly config: ConfigService) {
@@ -22,6 +23,7 @@ export class EmailService {
       'email.frontendUrl',
       'https://triluga.com.br',
     );
+    this.adminEmail = this.config.get<string>('email.adminEmail', '');
     this.isConfigured = Boolean(user && pass);
 
     if (this.isConfigured) {
@@ -123,6 +125,38 @@ export class EmailService {
         alertTitle,
         vehicleTitle,
         link,
+      ),
+    });
+  }
+
+  async sendNewReportAlert(params: {
+    vehicleTitle: string;
+    vehicleId: string;
+    reason: string;
+    reporterEmail: string;
+  }) {
+    if (!this.adminEmail) return;
+    const adminLink = `${this.frontendUrl}/admin`;
+    await this.send({
+      to: this.adminEmail,
+      subject: `[Triluga] Novo report: "${params.vehicleTitle}"`,
+      html: this.templateBase(
+        'Novo report de anúncio',
+        `
+        <h1 style="margin:0 0 8px;font-size:24px;font-weight:900;color:#b91c1c;">⚠️ Novo report recebido</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#4d6b59;line-height:1.6;">Um usuário denunciou um anúncio na plataforma.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border-radius:12px;border-left:4px solid #ef4444;margin-bottom:24px;">
+          <tr>
+            <td style="padding:16px 20px;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.5px;">Detalhes</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#1a2421;"><strong>Anúncio:</strong> ${params.vehicleTitle}</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#1a2421;"><strong>Motivo:</strong> ${params.reason}</p>
+              <p style="margin:0;font-size:14px;color:#1a2421;"><strong>Denunciante:</strong> ${params.reporterEmail}</p>
+            </td>
+          </tr>
+        </table>
+        <a href="${adminLink}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#b91c1c,#ef4444);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:15px;font-weight:900;box-sizing:border-box;">Revisar no painel admin</a>
+        `,
       ),
     });
   }

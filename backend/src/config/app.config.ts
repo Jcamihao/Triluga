@@ -26,4 +26,5 @@ export const appConfig = registerAs('app', () => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
   appUrl: resolveAppUrl(parseInt(process.env.PORT ?? '3000', 10)),
   platformFeeRate: parseFloat(process.env.PLATFORM_FEE_RATE ?? '0.12'),
+  adminEmail: process.env.ADMIN_ACCOUNT_EMAIL ?? 'admin.triluga@triluga.com',
 }));

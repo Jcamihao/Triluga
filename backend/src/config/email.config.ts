@@ -8,4 +8,5 @@ export const emailConfig = registerAs('email', () => ({
   pass: process.env.SMTP_PASS ?? '',
   from: process.env.SMTP_FROM ?? '"Triluga" <noreply@triluga.com.br>',
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:4200',
+  adminEmail: process.env.ADMIN_EMAIL ?? '',
 }));

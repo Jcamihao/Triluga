@@ -1,14 +1,17 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CacheQueueModule } from './cache-queue/cache-queue.module';
 import { ChatModule } from './chat/chat.module';
+import { CsrfGuard } from './common/guards/csrf.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { appConfig } from './config/app.config';
 import { authConfig } from './config/auth.config';
 import { cacheConfig } from './config/cache.config';
@@ -29,7 +32,13 @@ import { SearchAlertsModule } from './search-alerts/search-alerts.module';
 import { LookupsModule } from './lookups/lookups.module';
 import { EmailModule } from './email/email.module';
 import { emailConfig } from './config/email.config';
+import { efipayConfig } from './config/efipay.config';
 import { VerificationModule } from './verification/verification.module';
+import { SitemapModule } from './sitemap/sitemap.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
+import { ReportsModule } from './reports/reports.module';
+import { AuditModule } from './audit/audit.module';
+import { FeaturedModule } from './featured/featured.module';
 
 @Module({
   imports: [
@@ -40,8 +49,9 @@ import { VerificationModule } from './verification/verification.module';
         resolve(__dirname, '../.env'),
         resolve(__dirname, '../.env.example'),
       ],
-      load: [appConfig, authConfig, cacheConfig, storageConfig, emailConfig],
+      load: [appConfig, authConfig, cacheConfig, storageConfig, emailConfig, efipayConfig],
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
     PrismaModule,
     CacheQueueModule,
     StorageModule,
@@ -61,6 +71,11 @@ import { VerificationModule } from './verification/verification.module';
     AdminModule,
     EmailModule,
     VerificationModule,
+    SitemapModule,
+    SchedulerModule,
+    ReportsModule,
+    AuditModule,
+    FeaturedModule,
   ],
   controllers: [AppController],
   providers: [
@@ -73,6 +88,18 @@ import { VerificationModule } from './verification/verification.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CsrfMiddleware).forRoutes('*');
+  }
+}

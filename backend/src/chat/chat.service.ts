@@ -549,6 +549,7 @@ export class ChatService {
       id: conversation.id,
       vehicle: {
         id: conversation.vehicle.id,
+        slug: conversation.vehicle.slug,
         title: conversation.vehicle.title,
         coverImage: conversation.vehicle.images[0]?.url ?? null,
         city: conversation.vehicle.city,
