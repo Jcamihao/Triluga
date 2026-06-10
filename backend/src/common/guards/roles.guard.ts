@@ -4,16 +4,21 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
+import { Role } from '@prisma/client';
 import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly config: ConfigService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -27,6 +32,13 @@ export class RolesGuard implements CanActivate {
 
     if (!user || !requiredRoles.includes(user.role)) {
       throw new ForbiddenException('Você não tem permissão para esta ação.');
+    }
+
+    if (requiredRoles.includes(Role.ADMIN)) {
+      const adminEmail = this.config.get<string>('app.adminEmail');
+      if (adminEmail && user.email !== adminEmail) {
+        throw new ForbiddenException('Você não tem permissão para esta ação.');
+      }
     }
 
     return true;

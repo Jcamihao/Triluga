@@ -59,8 +59,15 @@ async function bootstrap() {
 
     next();
   });
+  const frontendUrls = (
+    configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200'
+  )
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: true,
+    origin: frontendUrls,
     credentials: true,
   });
   app.use(helmet());

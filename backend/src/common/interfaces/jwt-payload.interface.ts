@@ -6,4 +6,5 @@ export interface JwtPayload {
   role: Role;
   rememberMe?: boolean;
   emailVerified?: boolean;
+  tokenVersion?: number;
 }

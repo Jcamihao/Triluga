@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -21,6 +22,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('register')
   @ApiOperation({ summary: 'Cria uma nova conta de usuário' })
   async register(
@@ -33,6 +35,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   @ApiOperation({
     summary:
@@ -48,6 +51,7 @@ export class AuthController {
   }
 
   @Public()
+  @SkipThrottle()
   @Post('refresh')
   @ApiOperation({
     summary:
@@ -66,6 +70,7 @@ export class AuthController {
   }
 
   @Public()
+  @SkipThrottle()
   @Post('logout')
   @ApiOperation({ summary: 'Encerra a sessão atual e remove o refresh token' })
   async logout(
@@ -79,6 +84,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('forgot-password')
   @HttpCode(200)
   @ApiOperation({ summary: 'Solicita redefinição de senha via e-mail' })
@@ -87,6 +93,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('reset-password')
   @HttpCode(200)
   @ApiOperation({ summary: 'Redefine a senha usando o token recebido por e-mail' })
@@ -95,6 +102,7 @@ export class AuthController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get('verify-email')
   @HttpCode(200)
   @ApiOperation({ summary: 'Confirma o email do usuário via token enviado por email' })
@@ -103,6 +111,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('resend-verification')
   @HttpCode(200)
   @ApiOperation({ summary: 'Reenvia o email de verificação' })

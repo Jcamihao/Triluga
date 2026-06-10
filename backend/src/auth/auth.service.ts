@@ -236,6 +236,12 @@ export class AuthService {
       this.usersService.updateRefreshToken(record.userId, null),
     ]);
 
+    // Invalida todos os access tokens emitidos anteriormente
+    await this.prisma.user.update({
+      where: { id: record.userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+
     this.logger.log(`reset_password_success userId=${record.userId}`);
     return { success: true };
   }
@@ -306,12 +312,14 @@ export class AuthService {
   ) {
     const rememberMe = options.rememberMe === true;
     const emailVerified = (user as any)?.emailVerified ?? false;
+    const tokenVersion: number = (user as any)?.tokenVersion ?? 0;
     const payload: JwtPayload = {
       sub: userId,
       email,
       role,
       rememberMe,
       emailVerified,
+      tokenVersion,
     };
 
     const accessSecret =
