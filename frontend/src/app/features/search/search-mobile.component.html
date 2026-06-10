@@ -70,6 +70,29 @@
           <span class="material-symbols-outlined text-xl">tune</span>
         </button>
       </div>
+
+      <!-- Location chip row -->
+      <div class="flex gap-2 mt-2">
+        <button
+          *ngIf="!hasLocationFilter"
+          type="button"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant/40 bg-surface-container-low text-on-surface-variant text-xs font-semibold active:scale-95 transition-transform"
+          (click)="useCurrentLocation()"
+        >
+          <span class="material-symbols-outlined text-[14px]">my_location</span>
+          Perto de mim
+        </button>
+        <button
+          *ngIf="hasLocationFilter"
+          type="button"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold shadow shadow-primary/20 active:scale-95 transition-transform"
+          (click)="clearLocationFilter()"
+        >
+          <span class="material-symbols-outlined text-[14px]" style="font-variation-settings:'FILL' 1">my_location</span>
+          Raio de {{ query.radiusKm || '20' }} km
+          <span class="material-symbols-outlined text-[12px]">close</span>
+        </button>
+      </div>
     </section>
     <!-- Refined Active Filter Chips -->
     <section
@@ -87,19 +110,81 @@
         </div>
       </div>
     </section>
-    <!-- Result Counter -->
+    <!-- Result Counter + Save Alert -->
     <section class="px-5 mb-4 flex justify-between items-center">
       <h2
         class="search-result-count text-on-surface font-extrabold tracking-tight leading-none whitespace-nowrap overflow-hidden text-ellipsis mr-2"
       >
         {{ totalItems }} {{ resultsLabel }}
       </h2>
-      <div
-        class="flex items-center flex-shrink-0 gap-1 font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded"
-        style="font-size: 10px"
-      >
-        <span>Relevância</span>
-        <span class="material-symbols-outlined text-xs">expand_more</span>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button
+          *ngIf="hasActiveFilters"
+          type="button"
+          class="flex items-center gap-1 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary font-bold text-[11px]"
+          (click)="openSaveAlert()"
+        >
+          <span class="material-symbols-outlined text-[13px]">notifications_active</span>
+          Salvar busca
+        </button>
+        <div class="relative">
+          <button
+            type="button"
+            class="flex items-center gap-1 font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded"
+            style="font-size: 10px"
+            (click)="sortDropdownOpen = !sortDropdownOpen"
+          >
+            {{ activeSortLabel }}
+            <span class="material-symbols-outlined text-primary transition-transform" style="font-size: 12px" [style.transform]="sortDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'">expand_more</span>
+          </button>
+          <div
+            *ngIf="sortDropdownOpen"
+            class="absolute right-0 top-full mt-1 z-50 bg-surface rounded-xl shadow-xl border border-outline-variant/20 overflow-hidden min-w-[140px]"
+          >
+            <button
+              *ngFor="let opt of sortOptions"
+              type="button"
+              class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors"
+              [ngClass]="query.sort === opt.value ? 'text-primary bg-primary/5' : 'text-on-surface hover:bg-surface-container-low'"
+              (click)="selectSort(opt.value)"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Save Alert Panel (mobile) -->
+    <section *ngIf="saveAlertOpen" class="px-5 mb-4">
+      <div class="bg-surface-container-lowest rounded-2xl border border-primary/20 p-4 flex flex-col gap-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings:'FILL' 1">notifications_active</span>
+          <p class="text-sm font-bold text-on-surface">Salvar alerta de busca</p>
+          <button type="button" class="ml-auto" (click)="closeSaveAlert()">
+            <span class="material-symbols-outlined text-on-surface-variant text-lg">close</span>
+          </button>
+        </div>
+        <input
+          class="w-full bg-surface-container-low border-none rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20"
+          type="text"
+          placeholder="Nome do alerta (opcional)"
+          [(ngModel)]="alertTitle"
+        />
+        <ng-container *ngIf="!alertSavedFeedback">
+          <button
+            type="button"
+            class="w-full py-3 rounded-full bg-primary text-white font-bold text-sm disabled:opacity-50"
+            [disabled]="savingAlert"
+            (click)="saveAlert()"
+          >
+            {{ savingAlert ? 'Salvando...' : 'Salvar busca' }}
+          </button>
+        </ng-container>
+        <div *ngIf="alertSavedFeedback" class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm py-1">
+          <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1">check_circle</span>
+          Alerta salvo com sucesso!
+        </div>
       </div>
     </section>
 

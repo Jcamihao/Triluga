@@ -4,6 +4,7 @@ import {
   ElementRef,
   inject,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FilterModalComponent } from '../../shared/components/filter-modal/filter-modal.component';
@@ -13,6 +14,8 @@ import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { LocationService } from 'src/app/core/services/location.service';
+import { AuthService } from '../../core/services/auth.service';
+import { SearchAlertsApiService } from '../../core/services/search-alerts-api.service';
 
 type SearchQuery = {
   q: string;
@@ -36,6 +39,7 @@ type SearchQuery = {
 
 export const SEARCH_IMPORTS = [
   CommonModule,
+  FormsModule,
   RouterLink,
   FilterModalComponent,
   WebHeaderComponent,
@@ -49,6 +53,8 @@ export abstract class SearchPageBase {
   private readonly vehiclesApiService = inject(VehiclesApiService);
   protected readonly uiStateService = inject(UiStateService);
   protected readonly locationService = inject(LocationService);
+  protected readonly authService = inject(AuthService);
+  private readonly searchAlertsApiService = inject(SearchAlertsApiService);
 
   protected sentinelRef: ElementRef<HTMLDivElement> | undefined;
   protected observer: IntersectionObserver | undefined;
@@ -59,6 +65,28 @@ export abstract class SearchPageBase {
   protected hasNextPage = false;
   protected totalItems = 0;
   protected filtersOpen = false;
+
+  protected saveAlertOpen = false;
+  protected alertTitle = '';
+  protected savingAlert = false;
+  protected alertSavedFeedback = false;
+  protected sortDropdownOpen = false;
+
+  protected readonly sortOptions = [
+    { value: 'relevance', label: 'Relevância' },
+    { value: 'price_asc', label: 'Menor preço' },
+    { value: 'price_desc', label: 'Maior preço' },
+    { value: 'newest', label: 'Mais novos' },
+  ];
+
+  protected get activeSortLabel() {
+    return this.sortOptions.find((o) => o.value === this.query.sort)?.label ?? 'Relevância';
+  }
+
+  protected selectSort(value: string) {
+    this.sortDropdownOpen = false;
+    this.applyFilters({ sort: value });
+  }
   protected accordions: Record<string, boolean> = {
     year: false,
     fuel: false,
@@ -457,5 +485,65 @@ export abstract class SearchPageBase {
       HYBRID: 'Híbrido',
     };
     return labels[fuelType] || fuelType;
+  }
+
+  protected get hasActiveFilters() {
+    const q = this.query;
+    return !!(
+      q.q || q.city || q.vehicleType || q.category || q.minPrice ||
+      q.maxPrice || q.transmission || q.fuelType || q.minYear ||
+      q.maxYear || q.motorcycleStyle || q.latitude
+    );
+  }
+
+  protected openSaveAlert() {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    this.alertTitle = '';
+    this.alertSavedFeedback = false;
+    this.saveAlertOpen = true;
+  }
+
+  protected closeSaveAlert() {
+    this.saveAlertOpen = false;
+  }
+
+  protected saveAlert() {
+    if (this.savingAlert) return;
+    this.savingAlert = true;
+
+    const filters: Record<string, unknown> = {};
+    const q = this.query;
+    if (q.q) filters['q'] = q.q;
+    if (q.city) filters['city'] = q.city;
+    if (q.vehicleType) filters['vehicleType'] = q.vehicleType;
+    if (q.category) filters['category'] = q.category;
+    if (q.minPrice) filters['minPrice'] = q.minPrice;
+    if (q.maxPrice) filters['maxPrice'] = q.maxPrice;
+    if (q.transmission) filters['transmission'] = q.transmission;
+    if (q.fuelType) filters['fuelType'] = q.fuelType;
+    if (q.minYear) filters['minYear'] = q.minYear;
+    if (q.maxYear) filters['maxYear'] = q.maxYear;
+    if (q.latitude) filters['latitude'] = q.latitude;
+    if (q.longitude) filters['longitude'] = q.longitude;
+    if (q.radiusKm) filters['radiusKm'] = q.radiusKm;
+
+    this.searchAlertsApiService
+      .create({ title: this.alertTitle || undefined, filters })
+      .subscribe({
+        next: () => {
+          this.savingAlert = false;
+          this.alertSavedFeedback = true;
+          setTimeout(() => {
+            this.saveAlertOpen = false;
+            this.alertSavedFeedback = false;
+          }, 2000);
+        },
+        error: () => {
+          this.savingAlert = false;
+        },
+      });
   }
 }

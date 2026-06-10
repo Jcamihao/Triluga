@@ -58,10 +58,12 @@ export class SearchHeaderComponent {
   protected removeRecentSearch(event: Event, search: string) {
     event.stopPropagation();
     this.recentSearches = this.recentSearches.filter((s) => s !== search);
-    localStorage.setItem(
-      'triluga_recent_searches',
-      JSON.stringify(this.recentSearches),
-    );
+    try {
+      localStorage.setItem(
+        'triluga_recent_searches',
+        JSON.stringify(this.recentSearches),
+      );
+    } catch { /* quota exceeded — non-critical */ }
   }
 
   protected selectRecentSearch(search: string) {
@@ -86,10 +88,12 @@ export class SearchHeaderComponent {
       query,
       ...this.recentSearches.filter((s) => s !== query),
     ].slice(0, 5);
-    localStorage.setItem(
-      'triluga_recent_searches',
-      JSON.stringify(this.recentSearches),
-    );
+    try {
+      localStorage.setItem(
+        'triluga_recent_searches',
+        JSON.stringify(this.recentSearches),
+      );
+    } catch { /* quota exceeded — non-critical */ }
   }
 
   private blurTimeout?: any;

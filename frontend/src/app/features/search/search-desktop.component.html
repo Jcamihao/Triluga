@@ -74,6 +74,7 @@
                 <option value="Fortaleza"></option>
               </datalist>
             </div>
+
           </div>
 
           <div class="space-y-3 mb-8">
@@ -355,23 +356,95 @@
               {{ totalItems }} {{ resultsLabel }} para sua jornada
             </p>
           </div>
-          <div
-            class="flex items-center gap-4 bg-surface-container-lowest p-1 rounded-xl shadow-sm border border-outline-variant/10 whitespace-nowrap"
-          >
-            <span
-              class="pl-4 text-[10px] font-black text-outline uppercase tracking-widest"
-              >Ordenar por:</span
+          <div class="flex items-stretch gap-3">
+            <button
+              *ngIf="hasActiveFilters"
+              type="button"
+              class="whitespace-nowrap flex items-center gap-1.5 px-4 rounded-xl border border-primary/30 bg-primary/5 text-primary font-bold text-sm hover:bg-primary/10 transition-colors"
+              (click)="openSaveAlert()"
             >
-            <select
-              class="border-none bg-transparent text-sm font-bold focus:ring-0 cursor-pointer pr-10"
-              [value]="query.sort"
-              (change)="applyFilters({ sort: $any($event.target).value })"
+              <span class="material-symbols-outlined text-[16px]">notifications_active</span>
+              Salvar busca
+            </button>
+            <!-- Location button -->
+            <button
+              *ngIf="!hasLocationFilter"
+              type="button"
+              class="whitespace-nowrap flex items-center gap-1.5 px-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-on-surface-variant font-bold text-sm hover:border-primary hover:text-primary transition-colors"
+              (click)="useCurrentLocation()"
             >
-              <option value="relevance">Relevância</option>
-              <option value="price_asc">Menor Preço</option>
-              <option value="price_desc">Maior Preço</option>
-              <option value="newest">Mais Novos</option>
-            </select>
+              <span class="material-symbols-outlined text-[16px]">my_location</span>
+              Perto de mim
+            </button>
+            <button
+              *ngIf="hasLocationFilter"
+              type="button"
+              class="whitespace-nowrap flex items-center gap-1.5 px-4 rounded-xl bg-primary text-on-primary font-bold text-sm shadow shadow-primary/20"
+              (click)="clearLocationFilter()"
+            >
+              <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">my_location</span>
+              Raio de {{ query.radiusKm || '20' }} km
+              <span class="material-symbols-outlined text-[14px]">close</span>
+            </button>
+            <div
+              class="flex items-center gap-4 bg-surface-container-lowest p-1 rounded-xl shadow-sm border border-outline-variant/10 whitespace-nowrap"
+            >
+              <span
+                class="pl-4 text-[10px] font-black text-outline uppercase tracking-widest"
+                >Ordenar por:</span
+              >
+              <select
+                class="border-none bg-transparent text-sm font-bold focus:ring-0 cursor-pointer min-w-[110px]"
+                [value]="query.sort"
+                (change)="applyFilters({ sort: $any($event.target).value })"
+              >
+                <option value="relevance">Relevância</option>
+                <option value="price_asc">Menor Preço</option>
+                <option value="price_desc">Maior Preço</option>
+                <option value="newest">Mais Novos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Alert Panel -->
+        <div
+          *ngIf="saveAlertOpen"
+          class="mt-4 p-5 bg-surface-container-lowest rounded-2xl border border-primary/20 shadow-lg flex items-center gap-4"
+        >
+          <span class="material-symbols-outlined text-primary text-2xl flex-shrink-0" style="font-variation-settings:'FILL' 1">notifications_active</span>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-on-surface mb-1">Nomear alerta (opcional)</p>
+            <input
+              class="w-full bg-surface-container-low border-none rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
+              type="text"
+              placeholder="Ex: Carros automáticos em SP"
+              [(ngModel)]="alertTitle"
+              (keydown.enter)="saveAlert()"
+            />
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <ng-container *ngIf="!alertSavedFeedback">
+              <button
+                type="button"
+                class="px-5 py-2 rounded-xl bg-primary text-white font-bold text-sm disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                [disabled]="savingAlert"
+                (click)="saveAlert()"
+              >
+                {{ savingAlert ? 'Salvando...' : 'Salvar' }}
+              </button>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-xl border border-outline-variant/40 text-on-surface-variant font-medium text-sm hover:bg-surface-container-low transition-colors"
+                (click)="closeSaveAlert()"
+              >
+                Cancelar
+              </button>
+            </ng-container>
+            <div *ngIf="alertSavedFeedback" class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+              <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1">check_circle</span>
+              Alerta salvo!
+            </div>
           </div>
         </div>
       </div>
