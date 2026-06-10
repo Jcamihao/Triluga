@@ -12,6 +12,7 @@ import { ProfileApiService } from '../../core/services/profile-api.service';
 import { Profile } from '../../core/models/domain.models';
 import { environment } from '../../../environments/environment';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
+import { SearchAlertsApiService, SearchAlertItem } from '../../core/services/search-alerts-api.service';
 
 export const PROFILE_IMPORTS = [
   CommonModule,
@@ -28,6 +29,7 @@ export abstract class ProfilePageBase implements OnDestroy {
   private readonly profileApiService = inject(ProfileApiService);
   private readonly uiStateService = inject(UiStateService);
   private readonly router = inject(Router);
+  private readonly searchAlertsApiService = inject(SearchAlertsApiService);
 
   protected profile: Profile = {
     fullName: '',
@@ -54,6 +56,9 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected resendingVerification = false;
   protected resendVerificationFeedback = '';
   protected resendVerificationError = '';
+  protected searchAlerts: SearchAlertItem[] = [];
+  protected loadingAlerts = false;
+  protected removingAlertId: string | null = null;
   private avatarPreviewUrl: string | null = null;
   private lastRequestedZipCode = '';
 
@@ -62,6 +67,7 @@ export abstract class ProfilePageBase implements OnDestroy {
   constructor() {
     this.chatInboxService.ensureReady().subscribe();
     this.loadData();
+    this.loadSearchAlerts();
   }
 
   ngOnDestroy() {
@@ -538,5 +544,45 @@ export abstract class ProfilePageBase implements OnDestroy {
 
     URL.revokeObjectURL(this.avatarPreviewUrl);
     this.avatarPreviewUrl = null;
+  }
+
+  protected loadSearchAlerts() {
+    this.loadingAlerts = true;
+    this.searchAlertsApiService.listMine().subscribe({
+      next: (alerts) => {
+        this.searchAlerts = alerts;
+        this.loadingAlerts = false;
+      },
+      error: () => {
+        this.loadingAlerts = false;
+      },
+    });
+  }
+
+  protected removeSearchAlert(id: string) {
+    if (this.removingAlertId) return;
+    this.removingAlertId = id;
+    this.searchAlertsApiService.remove(id).subscribe({
+      next: () => {
+        this.searchAlerts = this.searchAlerts.filter((a) => a.id !== id);
+        this.removingAlertId = null;
+      },
+      error: () => {
+        this.removingAlertId = null;
+      },
+    });
+  }
+
+  protected alertFilterSummary(alert: SearchAlertItem): string {
+    const f = alert.filters as Record<string, string>;
+    const parts: string[] = [];
+    if (f['q']) parts.push(`"${f['q']}"`);
+    if (f['vehicleType'] === 'CAR') parts.push('Carros');
+    if (f['vehicleType'] === 'MOTORCYCLE') parts.push('Motos');
+    if (f['city']) parts.push(f['city']);
+    if (f['maxPrice']) parts.push(`Até R$ ${f['maxPrice']}/dia`);
+    if (f['transmission'] === 'AUTOMATIC') parts.push('Automático');
+    if (f['transmission'] === 'MANUAL') parts.push('Manual');
+    return parts.length ? parts.join(' · ') : 'Todos os veículos';
   }
 }

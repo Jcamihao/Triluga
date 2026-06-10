@@ -539,6 +539,49 @@
         </div>
       </section>
 
+      <!-- Search Alerts -->
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h4 class="text-[11px] font-black uppercase tracking-[0.2em] text-on-surface/40 px-2">
+            Alertas de Busca
+          </h4>
+          <a routerLink="/search" class="text-xs font-bold text-primary px-2">Nova busca</a>
+        </div>
+
+        <div *ngIf="loadingAlerts" class="flex items-center gap-2 text-on-surface-variant text-sm p-2">
+          <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+          Carregando...
+        </div>
+
+        <div *ngIf="!loadingAlerts && searchAlerts.length === 0" class="p-4 bg-surface-container-low rounded-xl text-center">
+          <p class="text-sm text-on-surface-variant">Nenhum alerta salvo.</p>
+          <p class="text-xs text-on-surface-variant/60 mt-0.5">Use "Salvar busca" na página de busca.</p>
+        </div>
+
+        <ul *ngIf="!loadingAlerts && searchAlerts.length" class="space-y-2">
+          <li
+            *ngFor="let alert of searchAlerts"
+            class="flex items-center justify-between gap-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings:'FILL' 1">notifications_active</span>
+              <div class="min-w-0">
+                <p class="font-bold text-sm text-on-surface truncate">{{ alert.title || 'Alerta sem nome' }}</p>
+                <p class="text-xs text-on-surface-variant truncate">{{ alertFilterSummary(alert) }}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="flex-shrink-0 p-2 rounded-lg text-on-surface-variant disabled:opacity-40"
+              [disabled]="removingAlertId === alert.id"
+              (click)="removeSearchAlert(alert.id)"
+            >
+              <span class="material-symbols-outlined text-[18px]">{{ removingAlertId === alert.id ? 'progress_activity' : 'delete' }}</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
       <!-- Save Button -->
       <button
         type="button"

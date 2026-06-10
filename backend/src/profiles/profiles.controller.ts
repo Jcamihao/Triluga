@@ -19,6 +19,7 @@ import {
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
+import { validateImageMimeType } from '../common/utils/file-validation.util';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfilesService } from './profiles.service';
 
@@ -78,6 +79,7 @@ export class ProfilesController {
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    validateImageMimeType(file);
     return this.profilesService.uploadMyAvatar(user.sub, file);
   }
 
@@ -107,6 +109,7 @@ export class ProfilesController {
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    validateImageMimeType(file);
     return this.profilesService.uploadMyDocument(user.sub, file);
   }
 
@@ -144,6 +147,7 @@ export class ProfilesController {
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    validateImageMimeType(file);
     return this.profilesService.uploadMyDriverLicense(user.sub, file);
   }
 
@@ -184,6 +188,7 @@ export class ProfilesController {
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    validateImageMimeType(file);
     return this.profilesService.uploadMySelfie(user.sub, file);
   }
 

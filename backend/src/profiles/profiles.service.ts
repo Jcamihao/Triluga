@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UserStatus, VerificationStatus } from '@prisma/client';
+import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AiVerificationService } from '../verification/ai-verification.service';
@@ -20,6 +21,7 @@ export class ProfilesService {
     private readonly storageService: StorageService,
     private readonly ocrService: OcrService,
     private readonly aiVerification: AiVerificationService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getMyProfile(userId: string) {
@@ -615,19 +617,41 @@ export class ProfilesService {
       `ai_verification_result userId=${userId} doc=${result.documentApproved} cnh=${result.cnhApproved} face=${result.faceMatch} reason="${result.reason}"`,
     );
 
+    const docStatus =
+      result.documentApproved && result.faceMatch
+        ? VerificationStatus.APPROVED
+        : VerificationStatus.REJECTED;
+
+    const cnhStatus =
+      result.cnhApproved && result.faceMatch
+        ? VerificationStatus.APPROVED
+        : VerificationStatus.REJECTED;
+
     await this.prisma.profile.update({
       where: { userId },
       data: {
-        documentVerificationStatus:
-          result.documentApproved && result.faceMatch
-            ? VerificationStatus.APPROVED
-            : VerificationStatus.REJECTED,
-        driverLicenseVerification:
-          result.cnhApproved && result.faceMatch
-            ? VerificationStatus.APPROVED
-            : VerificationStatus.REJECTED,
+        documentVerificationStatus: docStatus,
+        driverLicenseVerification: cnhStatus,
       },
     });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (user?.email) {
+      const fullName = profile.fullName ?? 'Usuário';
+
+      await Promise.allSettled([
+        docStatus === VerificationStatus.APPROVED
+          ? this.emailService.sendDocumentApproved(user.email, fullName, 'document')
+          : this.emailService.sendDocumentRejected(user.email, fullName, 'document', result.reason),
+        cnhStatus === VerificationStatus.APPROVED
+          ? this.emailService.sendDocumentApproved(user.email, fullName, 'driver-license')
+          : this.emailService.sendDocumentRejected(user.email, fullName, 'driver-license', result.reason),
+      ]);
+    }
   }
 
   private async runOcrForProfile(
