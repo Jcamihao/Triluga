@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional()
@@ -8,16 +8,17 @@ export class UpdateProfileDto {
   @MaxLength(120)
   fullName?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: '+55 11 99999-9999' })
   @IsOptional()
   @IsString()
   @MaxLength(20)
+  @Matches(/^[\d\s\-()+]+$/, { message: 'Telefone com formato inválido.' })
   phone?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: '13010-111' })
   @IsOptional()
   @IsString()
-  @MaxLength(9)
+  @Matches(/^\d{5}-?\d{3}$/, { message: 'CEP deve estar no formato 00000-000.' })
   zipCode?: string;
 
   @ApiPropertyOptional()

@@ -39,12 +39,13 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
+  @Matches(/^[\d\s\-()+]+$/, { message: 'Telefone com formato inválido.' })
   phone: string;
 
   @ApiProperty({ example: '13010-111' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(9)
+  @Matches(/^\d{5}-?\d{3}$/, { message: 'CEP deve estar no formato 00000-000.' })
   zipCode: string;
 
   @ApiProperty({ example: 'Rua Conceição' })
