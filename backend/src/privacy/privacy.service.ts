@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrivacyRequestStatus, VerificationStatus } from '@prisma/client';
+import { PrivacyRequestStatus, UserStatus, VerificationStatus } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrivacyRequestDto } from './dto/create-privacy-request.dto';
@@ -119,6 +119,7 @@ export class PrivacyService {
       reviewsReceived,
       privacyRequests,
       supportConversations,
+      chatConversations,
     ] = await Promise.all([
       this.prisma.user.findUniqueOrThrow({
         where: { id: userId },
@@ -171,6 +172,24 @@ export class PrivacyService {
         },
         orderBy: { updatedAt: 'desc' },
       }),
+      this.prisma.chatConversation.findMany({
+        where: {
+          participants: { some: { userId } },
+        },
+        include: {
+          vehicle: { select: { id: true, title: true } },
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              senderId: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
     ]);
 
     return {
@@ -215,6 +234,7 @@ export class PrivacyService {
       reviewsReceived,
       privacyRequests,
       supportConversations,
+      chatConversations,
     };
   }
 
@@ -246,7 +266,7 @@ export class PrivacyService {
     status: PrivacyRequestStatus;
     resolutionNotes?: string;
   }) {
-    return this.prisma.privacyRequest.update({
+    const request = await this.prisma.privacyRequest.update({
       where: { id: params.requestId },
       data: {
         status: params.status,
@@ -255,5 +275,53 @@ export class PrivacyService {
           params.status === PrivacyRequestStatus.COMPLETED ? new Date() : null,
       },
     });
+
+    if (
+      params.status === PrivacyRequestStatus.COMPLETED &&
+      request.type === 'DELETION'
+    ) {
+      await this.anonymizeUser(request.userId);
+    }
+
+    return request;
+  }
+
+  private async anonymizeUser(userId: string) {
+    const anon = `deleted_${userId.slice(0, 8)}`;
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: `${anon}@deleted.triluga`,
+          passwordHash: '',
+          status: UserStatus.BLOCKED,
+          emailVerified: false,
+          emailVerificationToken: null,
+          refreshTokenHash: null,
+          lastLoginAt: null,
+          analyticsConsentGranted: false,
+        },
+      }),
+      this.prisma.profile.updateMany({
+        where: { userId },
+        data: {
+          fullName: 'Usuário removido',
+          phone: '',
+          zipCode: null,
+          addressLine: null,
+          addressComplement: null,
+          bio: null,
+          avatarUrl: null,
+          documentNumber: null,
+          driverLicenseNumber: null,
+          documentImageUrl: null,
+          driverLicenseImageUrl: null,
+          selfieImageUrl: null,
+          documentOcrText: null,
+          cnhOcrText: null,
+        },
+      }),
+    ]);
   }
 }

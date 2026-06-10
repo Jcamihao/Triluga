@@ -1,53 +1,53 @@
-<main class="page privacy-page">
-  <section class="privacy-hero">
-    <span class="eyebrow">Privacidade</span>
-    <h1>Como a Triluga trata os seus dados</h1>
-    <p>
-      Transparência, minimização e controle do titular fazem parte do produto.
-    </p>
+<main class="min-h-screen bg-background pb-20">
+  <div class="w-full max-w-3xl mx-auto px-4 md:px-8 pt-6 flex flex-col gap-5">
 
-    <div class="privacy-hero__actions">
-      <a
-        class="btn btn-primary"
-        *ngIf="authService.currentUser(); else loginLink"
-        routerLink="/privacy-center"
-      >
-        Abrir central de privacidade
-      </a>
+    <!-- Hero -->
+    <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm px-7 py-8 flex flex-col gap-4">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest w-fit">Privacidade</span>
+      <h1 class="text-2xl font-black text-on-surface tracking-tight leading-tight m-0">Como a Triluga trata os seus dados</h1>
+      <p class="text-sm text-on-surface-variant m-0">Transparência, minimização e controle do titular fazem parte do produto.</p>
+      <div class="flex gap-3 flex-wrap pt-1">
+        <a class="px-5 py-2.5 rounded-full bg-primary text-on-primary text-sm font-bold hover:bg-primary/90 transition-colors"
+          *ngIf="authService.currentUser(); else loginLink"
+          routerLink="/privacy-center">
+          Abrir central de privacidade
+        </a>
+        <ng-template #loginLink>
+          <a class="px-5 py-2.5 rounded-full bg-primary text-on-primary text-sm font-bold hover:bg-primary/90 transition-colors"
+            routerLink="/auth/login">Entrar para gerenciar preferências</a>
+        </ng-template>
+        <a class="px-5 py-2.5 rounded-full border border-outline-variant text-sm font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+          routerLink="/">Voltar para a Triluga</a>
+      </div>
+    </section>
 
-      <ng-template #loginLink>
-        <a class="btn btn-primary" routerLink="/auth/login"
-          >Entrar para gerenciar preferências</a
-        >
-      </ng-template>
+    <!-- Loading -->
+    <section *ngIf="loading" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-6 flex flex-col gap-2">
+      <span class="text-sm font-bold text-on-surface">Carregando política...</span>
+      <p class="text-xs text-on-surface-variant m-0">Estamos buscando a versão mais recente do resumo de privacidade.</p>
+    </section>
 
-      <a class="btn btn-secondary" routerLink="/">Voltar para a Triluga</a>
-    </div>
-  </section>
+    <!-- Policy sections -->
+    <section *ngIf="!loading && policy" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-6 flex flex-col gap-4">
+      <div class="flex gap-4 flex-wrap text-xs text-on-surface-variant">
+        <span>Versão {{ policy.version }}</span>
+        <span>Contato: {{ policy.contactEmail }}</span>
+      </div>
+      <article *ngFor="let section of policy.sections"
+        class="flex flex-col gap-1.5 pt-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+        <strong class="text-sm font-bold text-on-surface">{{ section.title }}</strong>
+        <p class="text-sm text-on-surface-variant m-0">{{ section.summary }}</p>
+      </article>
+    </section>
 
-  <section class="privacy-card" *ngIf="loading">
-    <strong>Carregando política...</strong>
-    <p>Estamos buscando a versão mais recente do resumo de privacidade.</p>
-  </section>
+    <!-- Rights -->
+    <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-6 flex flex-col gap-2">
+      <strong class="text-sm font-bold text-on-surface">Direitos do titular</strong>
+      <p class="text-sm text-on-surface-variant m-0">
+        Pela central de privacidade você pode exportar seus dados, revisar preferências e registrar solicitações
+        de acesso, correção, eliminação, anonimização, portabilidade, oposição e revogação.
+      </p>
+    </section>
 
-  <section class="privacy-card" *ngIf="!loading && policy">
-    <div class="privacy-card__meta">
-      <span>Versão {{ policy.version }}</span>
-      <span>Contato: {{ policy.contactEmail }}</span>
-    </div>
-
-    <article class="privacy-section" *ngFor="let section of policy.sections">
-      <strong>{{ section.title }}</strong>
-      <p>{{ section.summary }}</p>
-    </article>
-  </section>
-
-  <section class="privacy-card privacy-card--compact">
-    <strong>Direitos do titular</strong>
-    <p>
-      Pela central de privacidade você pode exportar seus dados, revisar
-      preferências e registrar solicitações de acesso, correção, eliminação,
-      anonimização, portabilidade, oposição e revogação.
-    </p>
-  </section>
+  </div>
 </main>
