@@ -43,7 +43,7 @@ CMD ["sh", "-c", "\
       npx prisma migrate resolve --applied \"$(basename $m)\" || true; \
     done; \
     echo 'Sincronizando colunas ausentes via db push...'; \
-    npx prisma db push --accept-data-loss; \
+    npx prisma db push; \
     npx prisma migrate deploy; \
   elif [ $rc -ne 0 ]; then \
     echo \"$out\"; exit 1; \
