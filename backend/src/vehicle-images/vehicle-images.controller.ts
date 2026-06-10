@@ -24,7 +24,7 @@ export class VehicleImagesController {
   constructor(private readonly vehicleImagesService: VehicleImagesService) {}
 
   @Post(':id/images')
-  @UseInterceptors(FilesInterceptor('files', 8))
+  @UseInterceptors(FilesInterceptor('files', 8, { limits: { fileSize: 10 * 1024 * 1024 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Faz upload de imagens do veículo para o MinIO' })
   upload(

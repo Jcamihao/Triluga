@@ -24,6 +24,11 @@ export class VehicleImagesService {
       throw new BadRequestException('Envie pelo menos um arquivo.');
     }
 
+    const invalidFile = files.find((f) => !f.mimetype.startsWith('image/'));
+    if (invalidFile) {
+      throw new BadRequestException('Apenas imagens são permitidas.');
+    }
+
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id: vehicleId },
       include: {
