@@ -1,5 +1,5 @@
 import { ApplicationConfig, isDevMode } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
@@ -10,6 +10,7 @@ import { traceInterceptor } from './core/interceptors/trace.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(
+      withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
       withInterceptors([
         traceInterceptor,
         sessionRecoveryInterceptor,
