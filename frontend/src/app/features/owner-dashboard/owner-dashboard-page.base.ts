@@ -5,11 +5,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
+import { FeaturedApiService } from '../../core/services/featured-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
 import { VehicleWizardComponent } from './components/vehicle-wizard.component';
 import {
   CreateVehiclePayload,
+  FeaturedOrder,
+  FeaturedOrderResult,
+  FeaturedPlan,
   FuelType,
   MechanicsCondition,
   MotorcycleStyle,
@@ -50,6 +54,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
+  private readonly featuredApiService = inject(FeaturedApiService);
   private editingVehicleCacheSource: OwnerVehicleItem[] | null = null;
   private editingVehicleCacheId: string | null = null;
   private editingVehicleCache: OwnerVehicleItem | null = null;
@@ -132,6 +137,20 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected readonly maxVehiclePhotoCount = 5;
   protected readonly minimumVehiclePhotoCount = 3;
 
+  // Promote modal state
+  protected promotingVehicle: OwnerVehicleItem | null = null;
+  protected featuredPlans: FeaturedPlan[] = [];
+  protected selectedPlanId = '';
+  protected wizardSelectedPlanId = '';
+  protected wizardFeaturedResult: FeaturedOrderResult | null = null;
+  protected wizardFeaturedSubmitting = false;
+  protected promoteSubmitting = false;
+  protected promoteResult: FeaturedOrderResult | null = null;
+
+  // My featured orders
+  protected myFeaturedOrders: FeaturedOrder[] = [];
+  protected cancellingOrderId: string | null = null;
+
   constructor() {
     this.createMode =
       this.isAdsView &&
@@ -197,22 +216,17 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   }
 
   protected get stepProgressLabel() {
-    return `${Math.round((this.currentStep / 3) * 100)}% Concluído`;
+    return `${Math.round((this.currentStep / 4) * 100)}% Concluído`;
   }
 
   protected get stepProgressWidth() {
-    return `${(this.currentStep / 3) * 100}%`;
+    return `${(this.currentStep / 4) * 100}%`;
   }
 
   protected get stepTitle() {
-    if (this.currentStep === 1) {
-      return 'Dados Principais';
-    }
-
-    if (this.currentStep === 2) {
-      return 'Fotos e Preços';
-    }
-
+    if (this.currentStep === 1) return 'Dados Principais';
+    if (this.currentStep === 2) return 'Fotos e Preços';
+    if (this.currentStep === 4) return 'Destaque do Anúncio';
     return 'Condições do Veículo';
   }
 
@@ -467,7 +481,14 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.currentStep = Math.min(3, this.currentStep + 1);
+    this.currentStep = Math.min(4, this.currentStep + 1);
+
+    if (this.currentStep === 4 && !this.featuredPlans.length) {
+      this.featuredApiService.getPlans().subscribe({
+        next: (plans) => (this.featuredPlans = plans),
+        error: () => undefined,
+      });
+    }
   }
 
   protected maxVisitedStep = 1;
@@ -514,6 +535,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
           : true;
       return !!(d.mechanicsCondition && Number(d.seats) > 0 && isMotoComplete);
     }
+    if (step === 4) return true;
     return false;
   }
 
@@ -609,6 +631,75 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
           error?.error?.message || 'Não foi possível publicar o anúncio agora.';
       },
     });
+  }
+
+  protected saveVehicleAndFeatured() {
+    if (!this.wizardSelectedPlanId || this.wizardFeaturedSubmitting) return;
+
+    if (!this.hasMinimumVehiclePhotos) {
+      this.vehicleError = `O anúncio precisa ter no mínimo ${this.minimumVehiclePhotoCount} fotos.`;
+      this.goToStep(2);
+      return;
+    }
+
+    const payload = this.normalizeVehicleDraft();
+    if (!payload) {
+      const missingFields = this.collectMissingVehicleFields();
+      this.vehicleError = this.formatMissingVehicleFieldsError(missingFields);
+      this.goToStep(this.resolveMissingVehicleFieldsStep(missingFields));
+      return;
+    }
+
+    const planId = this.wizardSelectedPlanId;
+    this.wizardFeaturedSubmitting = true;
+    this.vehicleError = '';
+
+    this.vehiclesApiService.create(payload).subscribe({
+      next: (vehicle) => {
+        const vehicleId = vehicle.id;
+        const createFeaturedOrder = () => {
+          this.featuredApiService.createOrder(vehicleId, planId).subscribe({
+            next: (result) => {
+              this.wizardFeaturedSubmitting = false;
+              this.wizardFeaturedResult = result;
+              this.editingVehicleId = vehicleId;
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            error: () => {
+              this.wizardFeaturedSubmitting = false;
+              this.vehicleFeedback = 'Anúncio publicado! O destaque não pôde ser criado agora.';
+              this.loadData(vehicleId);
+            },
+          });
+        };
+
+        if (this.pendingVehicleFiles.length > 0) {
+          this.uploadingVehicleImages = true;
+          this.vehiclesApiService.uploadImages(vehicleId, this.pendingVehicleFiles).subscribe({
+            next: () => {
+              this.uploadingVehicleImages = false;
+              this.clearPendingVehicleFiles();
+              createFeaturedOrder();
+            },
+            error: () => {
+              this.uploadingVehicleImages = false;
+              this.clearPendingVehicleFiles();
+              createFeaturedOrder();
+            },
+          });
+        } else {
+          createFeaturedOrder();
+        }
+      },
+      error: (error) => {
+        this.wizardFeaturedSubmitting = false;
+        this.vehicleError = error?.error?.message || 'Não foi possível publicar o anúncio agora.';
+      },
+    });
+  }
+
+  protected copyPixCopiaECola(code: string) {
+    navigator.clipboard.writeText(code).catch(() => {});
   }
 
   protected startEditingVehicle(vehicle: OwnerVehicleItem) {
@@ -812,10 +903,20 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
     this.vehiclesApiService.removeImage(vehicleId, imageId).subscribe({
       next: () => {
-        this.imageActionId = null;
-        this.setPendingVehicleFiles([...this.pendingVehicleFiles, file]);
-        this.mediaFeedback = 'Foto substituída. Salve o anúncio para enviar.';
-        this.loadData(vehicleId);
+        this.vehiclesApiService.uploadImages(vehicleId, [file]).subscribe({
+          next: () => {
+            this.imageActionId = null;
+            this.mediaFeedback = 'Foto substituída com sucesso.';
+            this.loadData(vehicleId);
+          },
+          error: (error) => {
+            this.imageActionId = null;
+            this.mediaFeedback = '';
+            this.mediaError =
+              error?.error?.message || 'Foto antiga removida, mas não foi possível enviar a nova foto.';
+            this.loadData(vehicleId);
+          },
+        });
       },
       error: (error) => {
         this.imageActionId = null;
@@ -921,6 +1022,40 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     return item.id;
   }
 
+  protected openPromoteModal(vehicle: OwnerVehicleItem) {
+    this.promotingVehicle = vehicle;
+    this.selectedPlanId = '';
+    this.promoteResult = null;
+    if (!this.featuredPlans.length) {
+      this.featuredApiService.getPlans().subscribe({
+        next: (plans) => (this.featuredPlans = plans),
+        error: () => undefined,
+      });
+    }
+  }
+
+  protected closePromoteModal() {
+    this.promotingVehicle = null;
+    this.promoteResult = null;
+    this.selectedPlanId = '';
+  }
+
+  protected submitPromote() {
+    if (!this.promotingVehicle || !this.selectedPlanId || this.promoteSubmitting) return;
+    this.promoteSubmitting = true;
+    this.featuredApiService
+      .createOrder(this.promotingVehicle.id, this.selectedPlanId)
+      .subscribe({
+        next: (result) => {
+          this.promoteResult = result;
+          this.promoteSubmitting = false;
+        },
+        error: () => {
+          this.promoteSubmitting = false;
+        },
+      });
+  }
+
   protected vehicleViewsLabel(vehicle: OwnerVehicleItem) {
     const viewsCount = vehicle.viewsCount ?? 0;
     return viewsCount === 1 ? '1 visualização' : `${viewsCount} visualizações`;
@@ -1004,6 +1139,28 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     );
   }
 
+  protected cancelFeaturedOrder(orderId: string) {
+    if (this.cancellingOrderId) return;
+    this.cancellingOrderId = orderId;
+    this.featuredApiService.cancelOrder(orderId).subscribe({
+      next: () => {
+        this.cancellingOrderId = null;
+        this.loadMyFeaturedOrders();
+      },
+      error: () => { this.cancellingOrderId = null; },
+    });
+  }
+
+  protected featuredOrderStatusLabel(status: string) {
+    const map: Record<string, string> = {
+      PENDING: 'Aguardando pagamento',
+      ACTIVE: 'Ativo',
+      EXPIRED: 'Expirado',
+      CANCELLED: 'Cancelado',
+    };
+    return map[status] ?? status;
+  }
+
   private loadData(focusVehicleId?: string) {
     this.loading = true;
     this.vehiclesApiService.getMine().subscribe({
@@ -1030,6 +1187,14 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       error: () => {
         this.loading = false;
       },
+    });
+    this.loadMyFeaturedOrders();
+  }
+
+  private loadMyFeaturedOrders() {
+    this.featuredApiService.getMyOrders().subscribe({
+      next: (orders) => { this.myFeaturedOrders = orders; },
+      error: () => {},
     });
   }
 

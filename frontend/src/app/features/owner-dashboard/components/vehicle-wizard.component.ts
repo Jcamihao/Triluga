@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { AnnounceConditionsStepComponent } from './announce-conditions-step.component';
 import { AnnounceDataStepComponent } from './announce-data-step.component';
@@ -10,6 +10,7 @@ import { WebHeaderComponent } from '../../../shared/components/web-header/web-he
   standalone: true,
   imports: [
     CommonModule,
+    CurrencyPipe,
     AnnounceDataStepComponent,
     AnnouncePhotosPriceStepComponent,
     AnnounceConditionsStepComponent,
