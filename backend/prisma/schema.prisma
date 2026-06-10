@@ -100,6 +100,37 @@ enum NotificationType {
   REVIEW_CREATED
   CHAT_MESSAGE
   SYSTEM_ALERT
+  VISIT_REQUEST
+  VISIT_CONFIRMED
+  VISIT_CANCELLED
+  REPORT_RESOLVED
+  DOCUMENT_APPROVED
+  DOCUMENT_REJECTED
+  LISTING_EXPIRING
+}
+
+enum ReportReason {
+  FAKE_LISTING
+  WRONG_PRICE
+  ALREADY_SOLD
+  FRAUDULENT_SELLER
+  SPAM
+  OFFENSIVE_CONTENT
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  DISMISSED
+  RESOLVED
+}
+
+enum FeaturedOrderStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
 }
 
 enum SupportMessageRole {
@@ -133,6 +164,10 @@ model User {
   emailVerified              Boolean               @default(false)
   emailVerificationToken     String?               @unique
   emailVerificationExpiresAt DateTime?
+  tokenVersion               Int                   @default(0)
+  phoneVerified              Boolean               @default(false)
+  phoneVerificationCode      String?
+  phoneVerificationExpiresAt DateTime?
   createdAt                  DateTime              @default(now())
   updatedAt                  DateTime              @updatedAt
   profile                   Profile?
@@ -150,6 +185,10 @@ model User {
   supportConversations      SupportConversation[]
   privacyRequests           PrivacyRequest[]
   passwordResetTokens       PasswordResetToken[]
+  reportsSubmitted          Report[]              @relation("ReportSubmitter")
+  reportsResolved           Report[]              @relation("ReportResolver")
+  auditLogs                 AuditLog[]
+  featuredOrders            FeaturedOrder[]
 
   @@index([role, status])
 }
@@ -182,6 +221,7 @@ model Profile {
 
 model Vehicle {
   id                 String             @id @default(uuid())
+  slug               String             @unique
   ownerId            String
   title              String
   brand              String
@@ -212,9 +252,13 @@ model Vehicle {
   longitude          Decimal?           @db.Decimal(10, 7)
   isActive           Boolean            @default(true)
   isPublished        Boolean            @default(true)
+  isFeatured         Boolean            @default(false)
+  featuredUntil      DateTime?
+  expiresAt          DateTime?
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
   reviewsCount       Int                @default(0)
   viewsCount         Int                @default(0)
+  favoritesCount     Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   owner              User               @relation("VehicleOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -224,10 +268,14 @@ model Vehicle {
   favorites          Favorite[]
   searchAlertMatches SearchAlertMatch[]
   views              VehicleView[]
+  reports            Report[]
+  featuredOrders     FeaturedOrder[]
 
   @@index([ownerId])
   @@index([city, state, vehicleType, category, isActive, isPublished])
   @@index([dailyRate])
+  @@index([isFeatured, isActive, isPublished])
+  @@index([expiresAt, isActive])
 }
 
 model SearchAlert {
@@ -373,6 +421,7 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
+  @@index([conversationId, senderId, createdAt])
 }
 
 model SupportConversation {
@@ -464,3 +513,63 @@ model PrivacyRequest {
   @@index([status, createdAt])
   @@index([type, createdAt])
 }
+
+model Report {
+  id          String       @id @default(uuid())
+  vehicleId   String
+  reporterId  String
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(OPEN)
+  resolvedById String?
+  resolvedAt  DateTime?
+  adminNotes  String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  vehicle     Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  reporter    User         @relation("ReportSubmitter", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolvedBy  User?        @relation("ReportResolver", fields: [resolvedById], references: [id])
+
+  @@index([vehicleId, createdAt])
+  @@index([reporterId, createdAt])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+}
+
+model FeaturedOrder {
+  id           String              @id @default(uuid())
+  vehicleId    String
+  userId       String
+  planId       String
+  durationDays Int
+  price        Decimal             @db.Decimal(10, 2)
+  status       FeaturedOrderStatus @default(PENDING)
+  pixKey        String?
+  txid          String?   @unique
+  pixCopiaECola String?
+  activatedAt   DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  vehicle      Vehicle             @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([vehicleId, status])
+  @@index([status, expiresAt])
+}
+

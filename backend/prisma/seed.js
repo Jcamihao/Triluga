@@ -48,6 +48,9 @@ async function createUserWithProfile({
   addressComplement,
   city,
   state,
+  emailVerified = false,
+  documentVerificationStatus = 'NOT_SUBMITTED',
+  driverLicenseVerification = 'NOT_SUBMITTED',
 }) {
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -57,6 +60,7 @@ async function createUserWithProfile({
       role,
       status: 'ACTIVE',
       passwordHash,
+      emailVerified,
       profile: {
         upsert: {
           update: {
@@ -67,6 +71,8 @@ async function createUserWithProfile({
             addressComplement,
             city,
             state,
+            documentVerificationStatus,
+            driverLicenseVerification,
           },
           create: {
             fullName,
@@ -76,6 +82,8 @@ async function createUserWithProfile({
             addressComplement,
             city,
             state,
+            documentVerificationStatus,
+            driverLicenseVerification,
           },
         },
       },
@@ -84,6 +92,7 @@ async function createUserWithProfile({
       email,
       passwordHash,
       role,
+      emailVerified,
       profile: {
         create: {
           fullName,
@@ -93,6 +102,8 @@ async function createUserWithProfile({
           addressComplement,
           city,
           state,
+          documentVerificationStatus,
+          driverLicenseVerification,
         },
       },
     },
@@ -105,8 +116,8 @@ async function createUserWithProfile({
 async function main() {
   const [admin, listingUser, buyerUser] = await Promise.all([
     createUserWithProfile({
-      email: 'admin@triluga.local',
-      password: 'Admin123!',
+      email: 'admin.triluga@triluga.com',
+      password: 'DMJ@123ABC',
       role: Role.ADMIN,
       fullName: 'Admin Triluga',
       phone: '+55 11 90000-0001',
@@ -115,6 +126,9 @@ async function main() {
       addressComplement: 'Sala administrativa',
       city: 'Sao Paulo',
       state: 'SP',
+      emailVerified: true,
+      documentVerificationStatus: 'APPROVED',
+      driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'mariana@triluga.local',
@@ -155,6 +169,7 @@ async function main() {
     prisma.vehicle.create({
       data: {
         ownerId: listingUser.id,
+        slug: 'jeep-renegade-2022-sao-paulo',
         title: 'Jeep Renegade Longitude 2022',
         brand: 'Jeep',
         model: 'Renegade',
@@ -187,6 +202,7 @@ async function main() {
     prisma.vehicle.create({
       data: {
         ownerId: listingUser.id,
+        slug: 'chevrolet-onix-2023-campinas',
         title: 'Chevrolet Onix LT 2023',
         brand: 'Chevrolet',
         model: 'Onix',
@@ -219,6 +235,7 @@ async function main() {
     prisma.vehicle.create({
       data: {
         ownerId: listingUser.id,
+        slug: 'yamaha-nmax-160-2024-sao-paulo',
         title: 'Yamaha NMAX 160 ABS 2024',
         brand: 'Yamaha',
         model: 'NMAX 160',
