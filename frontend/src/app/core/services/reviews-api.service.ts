@@ -18,4 +18,15 @@ export class ReviewsApiService {
       .post<UserReviewItem>(`${environment.apiBaseUrl}/reviews/user`, payload)
       .pipe(map((review) => normalizeApiPayloadUrls(review)));
   }
+
+  createVehicleReview(payload: {
+    vehicleId: string;
+    rating: number;
+    comment?: string;
+  }) {
+    return this.http.post<{ id: string }>(
+      `${environment.apiBaseUrl}/reviews`,
+      payload,
+    );
+  }
 }

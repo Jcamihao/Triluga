@@ -33,7 +33,7 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'vehicles/:id',
+    path: 'vehicles/:slug',
     loadComponent: () =>
       import('./features/vehicle/vehicle-detail-page.component').then(
         (m) => m.VehicleDetailPageComponent,

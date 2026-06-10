@@ -13,17 +13,20 @@ export const roleGuard: CanActivateFn = (route) => {
     return router.createUrlTree(['/auth/login']);
   }
 
+  const checkAccess = () => {
+    if (!authService.hasRole(roles)) return router.createUrlTree(['/']);
+    if (roles.includes('ADMIN') && !authService.isAdminAccount()) return router.createUrlTree(['/']);
+    return true;
+  };
+
   if (authService.isAuthenticated()) {
-    return authService.hasRole(roles) ? true : router.createUrlTree(['/']);
+    return checkAccess();
   }
 
   return authService.restoreSession().pipe(
     map((authenticated) => {
-      if (!authenticated) {
-        return router.createUrlTree(['/auth/login']);
-      }
-
-      return authService.hasRole(roles) ? true : router.createUrlTree(['/']);
+      if (!authenticated) return router.createUrlTree(['/auth/login']);
+      return checkAccess();
     }),
     catchError(() => of(router.createUrlTree(['/auth/login']))),
   );

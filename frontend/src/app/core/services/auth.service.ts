@@ -291,9 +291,21 @@ export class AuthService {
     );
   }
 
+  getSessionEmail() {
+    return (
+      this.currentUser()?.email ??
+      this.decodeToken(this.accessTokenSignal())?.email ??
+      null
+    );
+  }
+
   hasRole(roles: UserRole[]) {
     const role = this.getSessionRole();
     return !!role && roles.includes(role);
+  }
+
+  isAdminAccount() {
+    return this.getSessionEmail() === 'admin.triluga@triluga.com';
   }
 
   syncProfile(profile: Profile) {
