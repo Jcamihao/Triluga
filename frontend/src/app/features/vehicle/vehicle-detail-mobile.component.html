@@ -99,8 +99,10 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center space-x-2 mb-1">
           <span
-            class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-md"
+            *ngIf="vehicle.isFeatured"
+            class="px-2 py-0.5 bg-amber-400/20 text-amber-600 text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center gap-1"
           >
+            <span class="material-symbols-outlined text-[10px]">stars</span>
             Destaque
           </span>
           <span class="text-xs font-semibold text-on-surface-variant">
@@ -152,9 +154,6 @@
         >
           Valor semanal do anúncio
         </p>
-        <div *ngIf="fipeValue" class="mt-1 text-xs text-on-surface-variant">
-          Tabela FIPE: {{ fipeValue | currency:'BRL':'symbol':'1.0-0' }} <span class="opacity-60">{{ fipeMonth }}</span>
-        </div>
       </div>
     </div>
   </section>
@@ -292,7 +291,7 @@
       <a
         class="bg-surface-container-low hover:bg-surface-container-highest transition-colors px-4 py-2.5 rounded-xl text-xs font-bold text-primary active:scale-95 flex-shrink-0"
         *ngIf="vehicle.owner?.id"
-        [routerLink]="['/users', vehicle.owner?.id]"
+        [routerLink]="['/users', vehicle.owner!.id]"
       >
         Ver Perfil
       </a>
@@ -425,6 +424,96 @@
         </p>
       </div>
     </ng-template>
+
+    <!-- Write review -->
+    <div class="mt-4">
+      <p *ngIf="reviewFeedback" class="text-xs font-bold text-emerald-600 mb-2">{{ reviewFeedback }}</p>
+
+      <ng-container *ngIf="!reviewFormOpen">
+        <button
+          type="button"
+          class="w-full py-3 rounded-2xl border border-outline-variant/30 text-sm font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2"
+          (click)="openReviewForm()"
+        >
+          <span class="material-symbols-outlined text-[18px]">rate_review</span>
+          Avaliar este veículo
+        </button>
+      </ng-container>
+
+      <div *ngIf="reviewFormOpen" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-5 flex flex-col gap-4">
+        <p class="text-sm font-black text-on-surface">Sua avaliação</p>
+
+        <!-- Stars -->
+        <div class="flex gap-2">
+          <button
+            *ngFor="let star of [1,2,3,4,5]"
+            type="button"
+            class="text-3xl transition-transform active:scale-90"
+            (click)="setReviewRating(star)"
+            (mouseenter)="reviewHoverRating = star"
+            (mouseleave)="reviewHoverRating = 0"
+          >
+            <span
+              class="material-symbols-outlined text-3xl"
+              [style.font-variation-settings]="(reviewHoverRating || reviewRating) >= star ? '\'FILL\' 1' : '\'FILL\' 0'"
+              [ngClass]="(reviewHoverRating || reviewRating) >= star ? 'text-[#FFB800]' : 'text-on-surface-variant/30'"
+            >star</span>
+          </button>
+          <span *ngIf="reviewRating" class="text-xs font-bold text-on-surface-variant self-center ml-1">
+            {{ reviewStarLabels[reviewRating - 1] }}
+          </span>
+        </div>
+
+        <textarea
+          class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 resize-none"
+          placeholder="Conte sua experiência (opcional)"
+          rows="3"
+          [(ngModel)]="reviewComment"
+          maxlength="600"
+        ></textarea>
+
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="flex-1 py-3 rounded-full bg-primary text-white font-bold text-sm disabled:opacity-50"
+            [disabled]="!reviewRating || reviewSubmitting"
+            (click)="submitReview()"
+          >
+            {{ reviewSubmitting ? 'Enviando...' : 'Enviar avaliação' }}
+          </button>
+          <button
+            type="button"
+            class="px-4 py-3 rounded-full border border-outline-variant/30 text-on-surface-variant font-bold text-sm"
+            (click)="reviewFormOpen = false"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Similar Vehicles -->
+  <section class="mt-8 px-6" *ngIf="similarVehicles().length">
+    <h3 class="text-xl font-black mb-4 tracking-tight">Veículos semelhantes</h3>
+    <div class="flex flex-col gap-4">
+      <app-vehicle-card
+        *ngFor="let v of similarVehicles(); trackBy: trackById"
+        [vehicle]="v"
+      ></app-vehicle-card>
+    </div>
+  </section>
+
+  <!-- Report link -->
+  <section class="mt-4 px-6 pb-2 text-center" *ngIf="showChatAction">
+    <button
+      type="button"
+      class="text-[11px] font-bold text-error/70 flex items-center gap-1 mx-auto"
+      (click)="openReportModal()"
+    >
+      <span class="material-symbols-outlined text-[14px]">flag</span>
+      Reportar este anúncio
+    </button>
   </section>
 
   <!-- Sticky Interaction Bar -->
@@ -445,6 +534,17 @@
         <span class="material-symbols-outlined">compare_arrows</span>
       </button>
 
+      <a
+        *ngIf="whatsappUrl"
+        [href]="whatsappUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="w-12 h-12 rounded-xl flex items-center justify-center bg-[#25d366] text-white active:scale-95 transition-transform"
+        aria-label="Contato via WhatsApp"
+      >
+        <span class="material-symbols-outlined">chat</span>
+      </a>
+
       <button
         class="flex-1 h-14 bg-primary text-white font-black text-sm uppercase tracking-wider rounded-xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
         type="button"
@@ -452,6 +552,59 @@
       >
         <span class="material-symbols-outlined">{{ ctaIcon }}</span>
         <span>{{ ctaLabel }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Modal -->
+  <div
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+    *ngIf="reportModalOpen()"
+    (click)="closeReportModal()"
+  >
+    <div
+      class="bg-white w-full rounded-t-2xl p-6 flex flex-col gap-4"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-black text-on-surface">Reportar anúncio</h3>
+        <button type="button" (click)="closeReportModal()" class="text-on-surface-variant">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <label class="text-xs font-bold text-on-surface">Motivo</label>
+        <select
+          class="w-full px-3 py-3 rounded-xl border border-outline-variant/30 bg-surface-container-lowest font-medium text-sm"
+          [(ngModel)]="reportReason"
+        >
+          <option value="">Selecione um motivo</option>
+          <option value="FAKE_LISTING">Anúncio falso</option>
+          <option value="WRONG_PRICE">Preço incorreto</option>
+          <option value="ALREADY_SOLD">Já vendido</option>
+          <option value="FRAUDULENT_SELLER">Vendedor fraudulento</option>
+          <option value="SPAM">Spam</option>
+          <option value="OFFENSIVE_CONTENT">Conteúdo ofensivo</option>
+          <option value="OTHER">Outro</option>
+        </select>
+
+        <label class="text-xs font-bold text-on-surface">Descrição (opcional)</label>
+        <textarea
+          class="w-full px-3 py-3 rounded-xl border border-outline-variant/30 bg-surface-container-lowest font-medium text-sm resize-none"
+          [(ngModel)]="reportDescription"
+          placeholder="Descreva o problema..."
+          rows="3"
+        ></textarea>
+      </div>
+
+      <button
+        type="button"
+        class="w-full h-14 bg-error text-white font-black rounded-xl disabled:opacity-50"
+        [disabled]="!reportReason || reportSubmitting"
+        (click)="submitReport()"
+      >
+        {{ reportSubmitting ? 'Enviando...' : 'Enviar reporte' }}
       </button>
     </div>
   </div>

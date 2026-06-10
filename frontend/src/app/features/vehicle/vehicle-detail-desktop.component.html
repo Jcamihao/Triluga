@@ -210,6 +210,72 @@
                 Ainda sem avaliações para este veículo.
               </div>
             </ng-template>
+
+            <!-- Write review -->
+            <div class="mt-4">
+              <p *ngIf="reviewFeedback" class="text-xs font-bold text-emerald-600 mb-3">{{ reviewFeedback }}</p>
+
+              <ng-container *ngIf="!reviewFormOpen">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface-variant hover:bg-surface-container-low hover:border-primary hover:text-primary transition-colors"
+                  (click)="openReviewForm()"
+                >
+                  <span class="material-symbols-outlined text-[18px]">rate_review</span>
+                  Avaliar este veículo
+                </button>
+              </ng-container>
+
+              <div *ngIf="reviewFormOpen" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-5 flex flex-col gap-4 max-w-lg">
+                <p class="text-sm font-black text-on-surface">Sua avaliação</p>
+
+                <!-- Stars -->
+                <div class="flex items-center gap-1">
+                  <button
+                    *ngFor="let star of [1,2,3,4,5]"
+                    type="button"
+                    (click)="setReviewRating(star)"
+                    (mouseenter)="reviewHoverRating = star"
+                    (mouseleave)="reviewHoverRating = 0"
+                  >
+                    <span
+                      class="material-symbols-outlined text-3xl transition-colors"
+                      [style.font-variation-settings]="(reviewHoverRating || reviewRating) >= star ? '\'FILL\' 1' : '\'FILL\' 0'"
+                      [ngClass]="(reviewHoverRating || reviewRating) >= star ? 'text-[#FFB800]' : 'text-on-surface-variant/30'"
+                    >star</span>
+                  </button>
+                  <span *ngIf="reviewRating" class="text-xs font-bold text-on-surface-variant ml-2">
+                    {{ reviewStarLabels[reviewRating - 1] }}
+                  </span>
+                </div>
+
+                <textarea
+                  class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 resize-none"
+                  placeholder="Conte sua experiência (opcional)"
+                  rows="3"
+                  [(ngModel)]="reviewComment"
+                  maxlength="600"
+                ></textarea>
+
+                <div class="flex gap-3">
+                  <button
+                    type="button"
+                    class="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-sm disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                    [disabled]="!reviewRating || reviewSubmitting"
+                    (click)="submitReview()"
+                  >
+                    {{ reviewSubmitting ? 'Enviando...' : 'Enviar avaliação' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="px-5 py-2.5 rounded-full border border-outline-variant/40 text-on-surface-variant font-bold text-sm hover:bg-surface-container-low transition-colors"
+                    (click)="reviewFormOpen = false"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
         </div>
 
@@ -221,9 +287,6 @@
                   {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
                 </strong>
                 <span>/semana</span>
-                <div *ngIf="fipeValue" class="mt-1 text-xs text-on-surface-variant">
-                  Tabela FIPE: {{ fipeValue | currency:'BRL':'symbol':'1.0-0' }} <span class="opacity-60">{{ fipeMonth }}</span>
-                </div>
               </div>
 
               <div class="vehicle-detail-web__rating-pill">
@@ -261,6 +324,17 @@
               {{ ctaLabel }}
             </button>
 
+            <a
+              *ngIf="whatsappUrl"
+              [href]="whatsappUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="vehicle-detail-web__whatsapp"
+            >
+              <span class="material-symbols-outlined">chat</span>
+              WhatsApp com o anunciante
+            </a>
+
             <button
               type="button"
               class="vehicle-detail-web__secondary"
@@ -270,6 +344,15 @@
             >
               <span class="material-symbols-outlined">compare_arrows</span>
               {{ isCompared ? 'Remover da comparação' : 'Comparar veículo' }}
+            </button>
+
+            <button
+              type="button"
+              class="vehicle-detail-web__report-link"
+              (click)="openReportModal()"
+            >
+              <span class="material-symbols-outlined">flag</span>
+              Reportar anúncio
             </button>
           </section>
 
@@ -293,13 +376,23 @@
             <a
               class="vehicle-detail-web__owner-action"
               *ngIf="vehicle.owner?.id"
-              [routerLink]="['/users', vehicle.owner?.id]"
+              [routerLink]="['/users', vehicle.owner!.id]"
             >
               <span class="material-symbols-outlined">account_circle</span>
               Ver perfil público
             </a>
           </section>
         </aside>
+      </section>
+
+      <section class="vehicle-detail-web__similar" *ngIf="similarVehicles().length">
+        <h2>Veículos semelhantes</h2>
+        <div class="vehicle-detail-web__similar-grid">
+          <app-vehicle-card
+            *ngFor="let v of similarVehicles(); trackBy: trackById"
+            [vehicle]="v"
+          ></app-vehicle-card>
+        </div>
       </section>
     </div>
   </main>
@@ -355,5 +448,61 @@
     >
       <span class="material-symbols-outlined">chevron_right</span>
     </button>
+  </div>
+
+  <!-- Report Modal -->
+  <div
+    class="vehicle-detail-web__modal-backdrop"
+    *ngIf="reportModalOpen()"
+    (click)="closeReportModal()"
+  >
+    <div class="vehicle-detail-web__modal" (click)="$event.stopPropagation()">
+      <header class="vehicle-detail-web__modal-header">
+        <h3>Reportar anúncio</h3>
+        <button type="button" (click)="closeReportModal()" aria-label="Fechar">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      <div class="vehicle-detail-web__modal-body">
+        <label class="vehicle-detail-web__modal-label">Motivo</label>
+        <select class="vehicle-detail-web__modal-select" [(ngModel)]="reportReason">
+          <option value="">Selecione um motivo</option>
+          <option value="FAKE_LISTING">Anúncio falso</option>
+          <option value="WRONG_PRICE">Preço incorreto</option>
+          <option value="ALREADY_SOLD">Já vendido</option>
+          <option value="FRAUDULENT_SELLER">Vendedor fraudulento</option>
+          <option value="SPAM">Spam</option>
+          <option value="OFFENSIVE_CONTENT">Conteúdo ofensivo</option>
+          <option value="OTHER">Outro</option>
+        </select>
+
+        <label class="vehicle-detail-web__modal-label">Descrição (opcional)</label>
+        <textarea
+          class="vehicle-detail-web__modal-textarea"
+          [(ngModel)]="reportDescription"
+          placeholder="Descreva o problema..."
+          rows="3"
+        ></textarea>
+      </div>
+
+      <footer class="vehicle-detail-web__modal-footer">
+        <button
+          type="button"
+          class="vehicle-detail-web__secondary"
+          (click)="closeReportModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="vehicle-detail-web__primary"
+          [disabled]="!reportReason || reportSubmitting"
+          (click)="submitReport()"
+        >
+          {{ reportSubmitting ? 'Enviando...' : 'Enviar reporte' }}
+        </button>
+      </footer>
+    </div>
   </div>
 </ng-container>

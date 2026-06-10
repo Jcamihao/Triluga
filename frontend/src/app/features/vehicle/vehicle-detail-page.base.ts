@@ -1,5 +1,6 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,9 +11,10 @@ import { ChatApiService } from '../../core/services/chat-api.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { CompareService } from '../../core/services/compare.service';
 import { FavoritesService } from '../../core/services/favorites.service';
-import { FipeApiService } from '../../core/services/fipe-api.service';
+import { ReviewsApiService } from '../../core/services/reviews-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
-import { VehicleDetail } from '../../core/models/domain.models';
+import { ReportReason, VehicleCardItem, VehicleDetail } from '../../core/models/domain.models';
+import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 type DetailFactItem = {
@@ -32,7 +34,9 @@ type StarIcon = 'star' | 'star_half' | 'star_border';
 export const VEHICLE_DETAIL_IMPORTS = [
   CommonModule,
   CurrencyPipe,
+  FormsModule,
   RouterLink,
+  VehicleCardComponent,
   WebHeaderComponent,
 ];
 
@@ -51,7 +55,7 @@ export abstract class VehicleDetailPageBase {
   private readonly chatInboxService = inject(ChatInboxService);
   private readonly compareService = inject(CompareService);
   private readonly favoritesService = inject(FavoritesService);
-  private readonly fipeApiService = inject(FipeApiService);
+  private readonly reviewsApiService = inject(ReviewsApiService);
   private readonly analyticsTrackingService = inject(AnalyticsTrackingService);
   private readonly logger = inject(AppLoggerService);
   private readonly destroyRef = inject(DestroyRef);
@@ -88,8 +92,19 @@ export abstract class VehicleDetailPageBase {
   };
 
   protected vehicle?: VehicleDetail;
-  protected fipeValue: number | null = null;
-  protected fipeMonth: string | null = null;
+  protected readonly similarVehicles = signal<VehicleCardItem[]>([]);
+  protected readonly reportModalOpen = signal(false);
+  protected reportReason: ReportReason | '' = '';
+  protected reportDescription = '';
+  protected reportSubmitting = false;
+
+  // Review form
+  protected reviewFormOpen = false;
+  protected reviewRating = 0;
+  protected reviewHoverRating = 0;
+  protected reviewComment = '';
+  protected reviewSubmitting = false;
+  protected reviewFeedback = '';
   protected readonly collapsedDetailCount = 6;
   protected showAllDetails = false;
   protected previewImageUrl = '';
@@ -199,7 +214,7 @@ export abstract class VehicleDetailPageBase {
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
-      const vehicleId = params.get('id');
+      const vehicleId = params.get('slug') ?? params.get('id');
 
       if (!vehicleId) {
         return;
@@ -212,7 +227,10 @@ export abstract class VehicleDetailPageBase {
           `${globalThis.location.pathname}${globalThis.location.search}`,
         );
         this.scheduleInboxWarmup();
-        this.loadFipeValue(vehicle);
+        this.vehiclesApiService.getSimilar(vehicleId).subscribe({
+          next: (items) => this.similarVehicles.set(items),
+          error: () => undefined,
+        });
       });
     });
   }
@@ -870,6 +888,93 @@ export abstract class VehicleDetailPageBase {
     this.openChat();
   }
 
+  protected get whatsappUrl(): string | null {
+    const phone = this.vehicle?.owner?.phone;
+    if (!phone || this.isOwnVehicle) return null;
+    const digits = phone.replace(/\D/g, '');
+    const normalized = digits.startsWith('55') ? digits : `55${digits}`;
+    const text = encodeURIComponent(
+      `Olá! Vi seu anúncio "${this.vehicle?.title}" no Triluga e tenho interesse.`,
+    );
+    return `https://wa.me/${normalized}?text=${text}`;
+  }
+
+  protected openReportModal() {
+    if (!this.authService.hasSession()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    this.reportReason = '';
+    this.reportDescription = '';
+    this.reportModalOpen.set(true);
+  }
+
+  protected closeReportModal() {
+    this.reportModalOpen.set(false);
+  }
+
+  protected submitReport() {
+    if (!this.vehicle || !this.reportReason || this.reportSubmitting) return;
+    this.reportSubmitting = true;
+    this.vehiclesApiService
+      .createReport(this.vehicle.id, this.reportReason as ReportReason, this.reportDescription || undefined)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.reportSubmitting = false;
+          this.reportModalOpen.set(false);
+        },
+        error: () => {
+          this.reportSubmitting = false;
+        },
+      });
+  }
+
+  protected get isLoggedIn() {
+    return this.authService.isAuthenticated();
+  }
+
+  protected get reviewStarLabels() {
+    return ['Péssimo', 'Ruim', 'Regular', 'Bom', 'Excelente'];
+  }
+
+  protected openReviewForm() {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    this.reviewFormOpen = true;
+    this.reviewRating = 0;
+    this.reviewComment = '';
+    this.reviewFeedback = '';
+  }
+
+  protected setReviewRating(rating: number) {
+    this.reviewRating = rating;
+  }
+
+  protected submitReview() {
+    if (!this.vehicle || !this.reviewRating || this.reviewSubmitting) return;
+    this.reviewSubmitting = true;
+    this.reviewsApiService
+      .createVehicleReview({
+        vehicleId: this.vehicle.id,
+        rating: this.reviewRating,
+        comment: this.reviewComment || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.reviewSubmitting = false;
+          this.reviewFeedback = 'Avaliação enviada com sucesso!';
+          this.reviewFormOpen = false;
+        },
+        error: () => {
+          this.reviewSubmitting = false;
+          this.reviewFeedback = 'Não foi possível enviar. Tente novamente.';
+        },
+      });
+  }
+
   protected get showChatAction() {
     const user = this.authService.currentUser();
 
@@ -1016,70 +1121,6 @@ export abstract class VehicleDetailPageBase {
 
   protected trackByDetailLabel(_index: number, item: DetailFactItem) {
     return item.label;
-  }
-
-  private loadFipeValue(vehicle: VehicleDetail) {
-    if (!vehicle.brand || !vehicle.model || !vehicle.year) {
-      return;
-    }
-
-    const type: 'cars' | 'motorcycles' =
-      vehicle.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
-    const brandName = vehicle.brand.toLowerCase();
-    const modelName = vehicle.model.toLowerCase();
-    const targetYear = String(vehicle.year);
-
-    this.fipeApiService.getBrands(type).subscribe((brands) => {
-      if (!brands) return;
-
-      const matchedBrand = brands.find(
-        (b) =>
-          b.name.toLowerCase().includes(brandName) ||
-          brandName.includes(b.name.toLowerCase()),
-      );
-
-      if (!matchedBrand) return;
-
-      this.fipeApiService
-        .getModels(type, matchedBrand.code)
-        .subscribe((models) => {
-          if (!models) return;
-
-          const matchedModel = models.find(
-            (m) =>
-              m.name.toLowerCase().includes(modelName) ||
-              modelName.includes(m.name.toLowerCase()),
-          );
-
-          if (!matchedModel) return;
-
-          this.fipeApiService
-            .getYears(type, matchedBrand.code, matchedModel.code)
-            .subscribe((years) => {
-              if (!years) return;
-
-              const matchedYear = years.find((y) =>
-                y.code.startsWith(targetYear),
-              );
-
-              if (!matchedYear) return;
-
-              this.fipeApiService
-                .getPrice(
-                  type,
-                  matchedBrand.code,
-                  matchedModel.code,
-                  matchedYear.code,
-                )
-                .subscribe((price) => {
-                  if (!price) return;
-
-                  this.fipeValue = price.priceValue;
-                  this.fipeMonth = price.referenceMonth;
-                });
-            });
-        });
-    });
   }
 
   private startChatFlow() {
