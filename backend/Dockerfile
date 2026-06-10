@@ -38,8 +38,8 @@ CMD ["sh", "-c", "\
   out=$(npx prisma migrate deploy 2>&1); rc=$?; \
   if [ $rc -ne 0 ] && echo \"$out\" | grep -q 'P3005'; then \
     echo 'Baseline necessário — marcando migrations como aplicadas...'; \
-    for m in $(ls prisma/migrations); do \
-      npx prisma migrate resolve --applied \"$m\" || true; \
+    for m in $(ls -d prisma/migrations/*/); do \
+      npx prisma migrate resolve --applied \"$(basename $m)\" || true; \
     done; \
     npx prisma migrate deploy; \
   elif [ $rc -ne 0 ]; then \
