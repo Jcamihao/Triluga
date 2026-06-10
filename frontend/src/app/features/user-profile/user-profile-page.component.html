@@ -244,7 +244,7 @@
           >
             <a
               *ngFor="let vehicle of profile.vehicles; trackBy: trackById"
-              [routerLink]="['/vehicles', vehicle.id]"
+              [routerLink]="['/vehicles', vehicle.slug]"
               class="bg-surface-container-lowest rounded-2xl p-4 flex gap-4 hover:shadow-md transition-shadow cursor-pointer border border-outline-variant/10"
             >
               <div class="w-28 h-20 rounded-xl overflow-hidden flex-shrink-0">
@@ -573,7 +573,7 @@
             class="public-profile-web__vehicle"
             *ngFor="let vehicle of profile.vehicles; trackBy: trackById"
           >
-            <a [routerLink]="['/vehicles', vehicle.id]">
+            <a [routerLink]="['/vehicles', vehicle.slug]">
               <div class="public-profile-web__vehicle-media">
                 <img
                   [src]="vehicle.coverImage || fallbackAvatarImage"

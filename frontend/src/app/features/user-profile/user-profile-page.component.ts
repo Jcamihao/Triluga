@@ -82,7 +82,7 @@ export class UserProfilePageComponent {
     const firstVehicle = this.profile.vehicles[0];
 
     if (firstVehicle) {
-      this.router.navigate(['/vehicles', firstVehicle.id]);
+      this.router.navigate(['/vehicles', firstVehicle.slug]);
     }
   }
 

@@ -307,7 +307,7 @@
                   trackBy: trackById
                 "
               >
-                <a [routerLink]="['/vehicles', vehicle.id]">Ver anúncio</a>
+                <a [routerLink]="['/vehicles', vehicle.slug]">Ver anúncio</a>
               </td>
               <td *ngIf="compareService.count() < 4"></td>
             </tr>

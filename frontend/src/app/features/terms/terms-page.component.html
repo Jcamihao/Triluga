@@ -143,169 +143,148 @@
 </main>
 
 <!-- Desktop -->
-<div class="terms-web">
-  <main class="terms-web__layout">
-    <section class="terms-web__hero">
-      <span class="terms-web__eyebrow">Legal</span>
-      <h1>Termos de Uso e Serviço</h1>
-      <p>
-        Leia com atenção antes de usar a plataforma. Ao se cadastrar, você
-        concorda com estes termos.
-      </p>
-      <small>Última atualização: {{ lastUpdated }}</small>
+<div class="hidden md:block min-h-screen bg-background">
+  <div class="w-full max-w-3xl mx-auto px-6 pt-12 pb-20 flex flex-col gap-5">
+
+    <!-- Hero -->
+    <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm px-7 py-8 flex flex-col gap-3">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest w-fit">Legal</span>
+      <h1 class="text-2xl font-black text-on-surface tracking-tight leading-tight m-0">Termos de Uso e Serviço</h1>
+      <p class="text-sm text-on-surface-variant m-0">Leia com atenção antes de usar a plataforma. Ao se cadastrar, você concorda com estes termos.</p>
+      <small class="text-xs text-on-surface-variant">Última atualização: {{ lastUpdated }}</small>
     </section>
 
-    <section class="terms-web__card surface-card">
-      <div class="terms-web__section">
-        <h2>1. O que é a Triluga</h2>
-        <p>
-          A Triluga é uma plataforma de classificados de veículos automotores
-          que conecta anunciantes e interessados. Atuamos exclusivamente como
-          intermediador de anúncios, sem participação direta nas negociações,
-          contratos ou transações celebradas entre os usuários.
+    <!-- All sections in one card -->
+    <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-6 flex flex-col">
+
+      <div class="flex flex-col gap-3 py-5 first:pt-0 border-t border-outline-variant/20 first:border-t-0">
+        <h2 class="text-sm font-black text-on-surface m-0">1. O que é a Triluga</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          A Triluga é uma plataforma de classificados de veículos automotores que conecta anunciantes e interessados.
+          Atuamos exclusivamente como intermediador de anúncios, sem participação direta nas negociações, contratos
+          ou transações celebradas entre os usuários.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>2. Natureza do serviço</h2>
-        <p>
-          A Triluga é um classificados — não uma locadora, concessionária ou
-          intermediadora financeira. Não somos parte em nenhuma negociação,
-          contrato de venda, cessão, aluguel ou qualquer outra modalidade de
-          transação entre usuários. Todo e qualquer acordo firmado é de
-          responsabilidade exclusiva das partes envolvidas.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">2. Natureza do serviço</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          A Triluga é um classificados — não uma locadora, concessionária ou intermediadora financeira. Não somos
+          parte em nenhuma negociação, contrato de venda, cessão, aluguel ou qualquer outra modalidade de transação
+          entre usuários. Todo e qualquer acordo firmado é de responsabilidade exclusiva das partes envolvidas.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>3. Responsabilidade pelos anúncios</h2>
-        <p>
-          O anunciante é o único responsável pela veracidade, legalidade e
-          precisão das informações publicadas, incluindo descrição, fotos, preço
-          e estado do veículo. A Triluga não verifica a titularidade dos
-          veículos, a existência de gravames, restrições judiciais ou qualquer
-          outra condição jurídica. Recomendamos sempre verificar a documentação
-          completa do veículo e do vendedor antes de qualquer acordo financeiro
-          ou transferência de bem.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">3. Responsabilidade pelos anúncios</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          O anunciante é o único responsável pela veracidade, legalidade e precisão das informações publicadas,
+          incluindo descrição, fotos, preço e estado do veículo. A Triluga não verifica a titularidade dos veículos,
+          a existência de gravames, restrições judiciais ou qualquer outra condição jurídica. Recomendamos sempre
+          verificar a documentação completa do veículo e do vendedor antes de qualquer acordo financeiro ou
+          transferência de bem.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>4. Conversas e negociações</h2>
-        <p>
-          As mensagens trocadas pelo chat da plataforma são de responsabilidade
-          exclusiva dos usuários. A Triluga não monitora, audita nem se
-          responsabiliza pelo conteúdo das conversas, acordos verbais,
-          combinações de pagamento ou quaisquer compromissos assumidos entre as
-          partes dentro ou fora da plataforma.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">4. Conversas e negociações</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          As mensagens trocadas pelo chat da plataforma são de responsabilidade exclusiva dos usuários. A Triluga
+          não monitora, audita nem se responsabiliza pelo conteúdo das conversas, acordos verbais, combinações de
+          pagamento ou quaisquer compromissos assumidos entre as partes dentro ou fora da plataforma.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>5. Verificação de identidade (KYC)</h2>
-        <p>
-          O processo de verificação de documentos (KYC) tem como objetivo
-          aumentar a confiança entre os usuários da plataforma. A aprovação do
-          KYC não constitui garantia de idoneidade, capacidade financeira ou
-          boa-fé do usuário verificado, tampouco valida a autenticidade ou a
-          qualidade dos veículos anunciados.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">5. Verificação de identidade (KYC)</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          O processo de verificação de documentos (KYC) tem como objetivo aumentar a confiança entre os usuários
+          da plataforma. A aprovação do KYC não constitui garantia de idoneidade, capacidade financeira ou boa-fé
+          do usuário verificado, tampouco valida a autenticidade ou a qualidade dos veículos anunciados.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>6. Condutas proibidas</h2>
-        <p>É expressamente proibido:</p>
-        <ul>
-          <li>
-            Publicar anúncios falsos, enganosos ou de veículos que não sejam de
-            sua propriedade ou posse legítima;
-          </li>
-          <li>
-            Usar a plataforma para fraudes, estelionato, lavagem de dinheiro ou
-            qualquer atividade ilícita;
-          </li>
-          <li>
-            Assediar, ameaçar, discriminar ou prejudicar outros usuários;
-          </li>
-          <li>
-            Tentar contornar mecanismos de segurança ou verificação da
-            plataforma.
-          </li>
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">6. Condutas proibidas</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">É expressamente proibido:</p>
+        <ul class="list-disc pl-5 flex flex-col gap-2 text-sm text-on-surface-variant m-0">
+          <li>Publicar anúncios falsos, enganosos ou de veículos que não sejam de sua propriedade ou posse legítima;</li>
+          <li>Usar a plataforma para fraudes, estelionato, lavagem de dinheiro ou qualquer atividade ilícita;</li>
+          <li>Assediar, ameaçar, discriminar ou prejudicar outros usuários;</li>
+          <li>Tentar contornar mecanismos de segurança ou verificação da plataforma.</li>
         </ul>
-        <p>
-          O descumprimento poderá resultar em suspensão ou exclusão permanente
-          da conta, sem prejuízo das medidas legais cabíveis.
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          O descumprimento poderá resultar em suspensão ou exclusão permanente da conta, sem prejuízo das medidas legais cabíveis.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>7. Limitação de responsabilidade</h2>
-        <p>
-          A Triluga não se responsabiliza por danos diretos, indiretos, morais
-          ou consequenciais resultantes de negociações entre usuários, incluindo
-          fraudes, inadimplência, acidentes com veículo, vícios ocultos,
-          problemas com documentação ou qualquer outro prejuízo decorrente do
-          uso da plataforma ou de acordos entre partes.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">7. Limitação de responsabilidade</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          A Triluga não se responsabiliza por danos diretos, indiretos, morais ou consequenciais resultantes de
+          negociações entre usuários, incluindo fraudes, inadimplência, acidentes com veículo, vícios ocultos,
+          problemas com documentação ou qualquer outro prejuízo decorrente do uso da plataforma ou de acordos
+          entre partes.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>8. Privacidade e LGPD</h2>
-        <p>
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">8. Privacidade e LGPD</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
           O tratamento dos seus dados pessoais é regido pela nossa
-          <a routerLink="/privacy">Política de Privacidade</a>, em conformidade
-          com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados — LGPD).
-          Você pode gerenciar suas preferências e exercer seus direitos na
-          <a routerLink="/privacy-center">Central de Privacidade</a>.
+          <a routerLink="/privacy" class="text-primary font-semibold hover:underline">Política de Privacidade</a>,
+          em conformidade com a Lei nº 13.709/2018 (LGPD). Você pode gerenciar suas preferências e exercer seus
+          direitos na <a routerLink="/privacy-center" class="text-primary font-semibold hover:underline">Central de Privacidade</a>.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>9. Propriedade intelectual</h2>
-        <p>
-          Todo o conteúdo da plataforma — marca, logotipo, design e código —
-          é de propriedade da Triluga ou de seus licenciadores. Os anúncios
-          publicados pelos usuários permanecem de sua propriedade, mas o usuário
-          concede à Triluga licença não exclusiva para exibi-los na plataforma
-          durante o período em que estiverem ativos.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">9. Propriedade intelectual</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          Todo o conteúdo da plataforma — marca, logotipo, design e código — é de propriedade da Triluga ou de
+          seus licenciadores. Os anúncios publicados pelos usuários permanecem de sua propriedade, mas o usuário
+          concede à Triluga licença não exclusiva para exibi-los na plataforma durante o período em que estiverem
+          ativos.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>10. Alterações nos termos</h2>
-        <p>
-          A Triluga pode atualizar estes Termos a qualquer momento. Alterações
-          relevantes serão comunicadas por e-mail cadastrado ou notificação na
-          plataforma com antecedência mínima de 15 dias. O uso contínuo da
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">10. Alterações nos termos</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          A Triluga pode atualizar estes Termos a qualquer momento. Alterações relevantes serão comunicadas por
+          e-mail cadastrado ou notificação na plataforma com antecedência mínima de 15 dias. O uso contínuo da
           plataforma após a comunicação implica concordância com os novos termos.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>11. Lei aplicável e foro</h2>
-        <p>
-          Estes Termos são regidos pelas leis da República Federativa do Brasil.
-          Para dirimir quaisquer controvérsias, fica eleito o foro da Comarca de
-          São Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que
-          seja.
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">11. Lei aplicável e foro</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
+          Estes Termos são regidos pelas leis da República Federativa do Brasil. Para dirimir quaisquer
+          controvérsias, fica eleito o foro da Comarca de São Paulo/SP, com renúncia a qualquer outro, por mais
+          privilegiado que seja.
         </p>
       </div>
 
-      <div class="terms-web__section">
-        <h2>12. Contato</h2>
-        <p>
+      <div class="flex flex-col gap-3 py-5 border-t border-outline-variant/20">
+        <h2 class="text-sm font-black text-on-surface m-0">12. Contato</h2>
+        <p class="text-sm text-on-surface-variant m-0 leading-relaxed">
           Para dúvidas sobre estes Termos, entre em contato pelo e-mail
-          <strong>contato&#64;triluga.com.br</strong>.
+          <strong class="font-bold text-on-surface">contato&#64;triluga.com.br</strong>.
         </p>
       </div>
+
     </section>
 
-    <section class="terms-web__card surface-card terms-web__card--compact">
-      <strong>Também leia</strong>
-      <p>
-        <a routerLink="/privacy">Política de Privacidade</a> ·
-        <a routerLink="/privacy-center">Central de Privacidade</a>
+    <!-- Also read -->
+    <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm px-6 py-5 flex flex-col gap-2">
+      <strong class="text-sm font-bold text-on-surface">Também leia</strong>
+      <p class="text-sm text-on-surface-variant m-0">
+        <a routerLink="/privacy" class="text-primary font-semibold hover:underline">Política de Privacidade</a>
+        ·
+        <a routerLink="/privacy-center" class="text-primary font-semibold hover:underline">Central de Privacidade</a>
       </p>
     </section>
-  </main>
+
+  </div>
 </div>
