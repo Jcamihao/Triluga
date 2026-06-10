@@ -44,6 +44,20 @@ export class VehiclesController {
   }
 
   @Public()
+  @Get(':id/similar')
+  @ApiOperation({ summary: 'Retorna veículos similares' })
+  findSimilar(@Param('id') vehicleId: string) {
+    return this.vehiclesService.findSimilar(vehicleId);
+  }
+
+  @Get(':id/metrics')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Métricas do anúncio (apenas proprietário)' })
+  getOwnerMetrics(@CurrentUser() user: AuthenticatedUser, @Param('id') vehicleId: string) {
+    return this.vehiclesService.getOwnerMetrics(user.sub, vehicleId);
+  }
+
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Detalha um veículo específico' })
   findOne(@Param('id') vehicleId: string) {

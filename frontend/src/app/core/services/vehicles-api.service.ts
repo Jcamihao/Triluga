@@ -5,9 +5,11 @@ import { environment } from '../../../environments/environment';
 import {
   CreateVehiclePayload,
   OwnerVehicleItem,
+  ReportReason,
   UpdateVehiclePayload,
-  VehicleImage,
+  VehicleCardItem,
   VehicleDetail,
+  VehicleImage,
   VehicleSearchResponse,
 } from '../models/domain.models';
 import { normalizeApiPayloadUrls } from '../utils/network-url.util';
@@ -95,6 +97,19 @@ export class VehiclesApiService {
   removeImage(vehicleId: string, imageId: string) {
     return this.http.delete<{ message: string }>(
       `${environment.apiBaseUrl}/vehicles/${vehicleId}/images/${imageId}`,
+    );
+  }
+
+  getSimilar(vehicleId: string) {
+    return this.http
+      .get<VehicleCardItem[]>(`${environment.apiBaseUrl}/vehicles/${vehicleId}/similar`)
+      .pipe(map((vehicles) => normalizeApiPayloadUrls(vehicles)));
+  }
+
+  createReport(vehicleId: string, reason: ReportReason, description?: string) {
+    return this.http.post<{ message: string }>(
+      `${environment.apiBaseUrl}/reports`,
+      { vehicleId, reason, description },
     );
   }
 

@@ -45,7 +45,14 @@ export type PrivacyRequestStatus =
   | 'COMPLETED'
   | 'REJECTED'
   | 'CANCELLED';
-
+export type ReportReason =
+  | 'FAKE_LISTING'
+  | 'WRONG_PRICE'
+  | 'ALREADY_SOLD'
+  | 'FRAUDULENT_SELLER'
+  | 'SPAM'
+  | 'OFFENSIVE_CONTENT'
+  | 'OTHER';
 export interface VehicleImage {
   id: string;
   url: string;
@@ -170,6 +177,7 @@ export interface PrivacyCenterOverview {
 
 export interface VehicleCardItem {
   id: string;
+  slug: string;
   title: string;
   brand: string;
   model: string;
@@ -196,6 +204,7 @@ export interface VehicleCardItem {
   longitude?: number | null;
   ratingAverage: number;
   reviewsCount: number;
+  isFeatured?: boolean;
   coverImage: string | null;
   owner?: {
     id: string;
@@ -203,6 +212,7 @@ export interface VehicleCardItem {
     avatarUrl?: string | null;
     city: string | null;
     state: string | null;
+    phone?: string | null;
     ratingAverage?: number;
     reviewsCount?: number;
     isVerified?: boolean;
@@ -244,6 +254,8 @@ export interface OwnerVehicleItem {
   reviewsCount: number;
   viewsCount: number;
   viewsLast30Days: number;
+  isFeatured?: boolean;
+  featuredUntil?: string | null;
   coverImage: string | null;
   images: VehicleImage[];
 }
@@ -337,6 +349,7 @@ export interface ChatConversationItem {
   id: string;
   vehicle: {
     id: string;
+    slug: string;
     title: string;
     coverImage: string | null;
     city: string;
@@ -361,6 +374,43 @@ export interface ChatConversationItem {
   unreadCount: number;
   updatedAt: string;
   lastMessageAt?: string | null;
+}
+
+export interface FeaturedPlan {
+  id: string;
+  name: string;
+  durationDays: number;
+  price: number;
+}
+
+export interface FeaturedOrderPayment {
+  pixKey: string | null;
+  pixKeyType: string | null;
+  amount: number;
+  description: string;
+  instructions: string;
+  pixCopiaECola: string | null;
+  qrCodeImage: string | null;
+}
+
+export interface FeaturedOrder {
+  id: string;
+  vehicleId: string;
+  planId: string;
+  durationDays: number;
+  price: number;
+  status: 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  pixKey: string | null;
+  txid: string | null;
+  pixCopiaECola: string | null;
+  activatedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface FeaturedOrderResult {
+  order: FeaturedOrder;
+  payment: FeaturedOrderPayment;
 }
 
 export interface ChatMessage {
