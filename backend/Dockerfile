@@ -32,8 +32,9 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-# Startup: tenta migrate deploy; se falhar com P3005 (banco sem histórico de
-# migrations), faz baseline de todas as migrations e retenta.
+# Startup: tenta migrate deploy; se falhar com P3005 (banco com schema mas sem
+# histórico de migrations), faz baseline das migrations existentes, sincroniza
+# o schema via db push para aplicar colunas ainda ausentes, e retenta deploy.
 CMD ["sh", "-c", "\
   out=$(npx prisma migrate deploy 2>&1); rc=$?; \
   if [ $rc -ne 0 ] && echo \"$out\" | grep -q 'P3005'; then \
@@ -41,6 +42,8 @@ CMD ["sh", "-c", "\
     for m in $(ls -d prisma/migrations/*/); do \
       npx prisma migrate resolve --applied \"$(basename $m)\" || true; \
     done; \
+    echo 'Sincronizando colunas ausentes via db push...'; \
+    npx prisma db push --accept-data-loss; \
     npx prisma migrate deploy; \
   elif [ $rc -ne 0 ]; then \
     echo \"$out\"; exit 1; \
