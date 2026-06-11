@@ -117,4 +117,17 @@ export class VehicleCardComponent {
     event.stopPropagation();
     this.compareService.toggle(this.vehicle);
   }
+
+  protected shareVehicle(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const url = `${globalThis.location?.origin ?? ''}/vehicles/${this.vehicle.slug}`;
+    const text = `${this.vehicle.title} — R$${Math.round(this.vehicle.weeklyRate ?? this.vehicle.dailyRate)}/semana`;
+    if (navigator.share) {
+      navigator.share({ title: this.vehicle.title, text, url }).catch(() => {});
+    } else {
+      const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
+      globalThis.open(whatsapp, '_blank', 'noopener,noreferrer');
+    }
+  }
 }
