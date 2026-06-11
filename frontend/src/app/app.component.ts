@@ -139,6 +139,11 @@ export class AppComponent {
     this.router.navigate(['/anunciar-carro']);
   }
 
+  protected openAdmin() {
+    this.closeMenu();
+    this.router.navigate(['/admin']);
+  }
+
   protected goToLogin() {
     this.closeMenu();
     this.router.navigate(['/auth/login']);

@@ -43,6 +43,16 @@
         >
           Meu Perfil
         </button>
+        <button
+          *ngIf="authService.hasRole(['ADMIN'])"
+          type="button"
+          class="web-header__link"
+          [class.web-header__link--active]="isRouteActive('/admin')"
+          routerLink="/admin"
+        >
+          <span class="material-symbols-outlined text-[16px] align-middle">admin_panel_settings</span>
+          Admin
+        </button>
       </div>
     </div>
 

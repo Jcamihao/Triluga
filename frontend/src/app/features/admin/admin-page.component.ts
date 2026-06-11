@@ -23,8 +23,19 @@ export class AdminPageComponent {
   protected vehicles: any[] = [];
   protected privacyRequests: any[] = [];
 
+  protected userSearch = '';
   protected vehicleSearch = '';
   protected vehicleStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+
+  protected get filteredUsers(): any[] {
+    const q = this.userSearch.toLowerCase().trim();
+    if (!q) return this.users;
+    return this.users.filter((u) =>
+      u.profile?.fullName?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.profile?.city?.toLowerCase().includes(q),
+    );
+  }
   protected deletingVehicleId: string | null = null;
   protected deleteConfirmId: string | null = null;
 

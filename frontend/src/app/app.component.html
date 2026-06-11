@@ -121,6 +121,17 @@
         <span class="material-symbols-outlined">help</span>
         <span>Ajuda</span>
       </button>
+
+      <button
+        *ngIf="authService.hasRole(['ADMIN'])"
+        type="button"
+        class="menu-link"
+        [class.menu-link--active]="currentUrl().startsWith('/admin')"
+        (click)="openAdmin()"
+      >
+        <span class="material-symbols-outlined">admin_panel_settings</span>
+        <span>Painel Admin</span>
+      </button>
     </nav>
 
     <div class="menu-drawer__footer">
