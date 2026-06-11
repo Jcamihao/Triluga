@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../core/services/admin-api.service';
 
 @Component({
@@ -310,17 +309,31 @@ export class AdminPageComponent {
     });
   }
 
+  private extractList(res: unknown): any[] {
+    if (Array.isArray(res)) return res;
+    if (res && typeof res === 'object') {
+      const paged = res as any;
+      if (Array.isArray(paged.items)) return paged.items;
+    }
+    return [];
+  }
+
   private loadData() {
-    forkJoin({
-      dashboard: this.adminApiService.getDashboard(),
-      users: this.adminApiService.getUsers(),
-      vehicles: this.adminApiService.getVehicles(),
-      privacyRequests: this.adminApiService.getPrivacyRequests(),
-    }).subscribe(({ dashboard, users, vehicles, privacyRequests }) => {
-      this.dashboard = dashboard;
-      this.users = (users as any).items ?? (users as any[]);
-      this.vehicles = (vehicles as any).items ?? (vehicles as any[]);
-      this.privacyRequests = privacyRequests as any[];
+    this.adminApiService.getDashboard().subscribe({
+      next: (d) => { this.dashboard = d; },
+      error: () => {},
+    });
+    this.adminApiService.getUsers().subscribe({
+      next: (res) => { this.users = this.extractList(res); },
+      error: () => {},
+    });
+    this.adminApiService.getVehicles().subscribe({
+      next: (res) => { this.vehicles = this.extractList(res); },
+      error: () => {},
+    });
+    this.adminApiService.getPrivacyRequests().subscribe({
+      next: (res) => { this.privacyRequests = this.extractList(res); },
+      error: () => {},
     });
     this.loadFeaturedOrders();
     this.loadReports();
