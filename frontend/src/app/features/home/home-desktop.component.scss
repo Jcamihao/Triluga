@@ -450,6 +450,66 @@
   gap: 34px;
 }
 
+.home-web__vehicle-grid--explore {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.home-web__carousel-wrap {
+  overflow: hidden;
+}
+
+.home-web__carousel-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-web__carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.home-web__carousel-item {
+  flex: 0 0 300px;
+}
+
+.home-web__explore-cta {
+  margin-top: 56px;
+  text-align: center;
+}
+
+.home-web__explore-cta button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 2px solid #006d37;
+  border-radius: 999px;
+  background: transparent;
+  color: #006d37;
+  padding: 0 40px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+  cursor: pointer;
+}
+
+.home-web__explore-cta button:hover {
+  background: #006d37;
+  color: #fff;
+}
+
+.home-web__explore-cta button .material-symbols-outlined {
+  font-size: 20px;
+}
+
 .home-web__vehicle {
   overflow: hidden;
   border-radius: 16px;
@@ -728,8 +788,13 @@
 
   .home-web__collections,
   .home-web__vehicle-grid,
+  .home-web__vehicle-grid--explore,
   .home-web__trust {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-web__carousel-item {
+    flex: 0 0 260px;
   }
 
   .home-web__trust {

@@ -81,33 +81,35 @@
 
   <section class="home-web__section home-web__section--muted">
     <div class="home-web__container">
-      <div class="home-web__section-head home-web__section-head--row">
+      <div class="home-web__section-head">
         <div>
-          <h2>Seleção Exclusiva</h2>
-          <p>Os veículos mais desejados da semana.</p>
+          <h2>Destaques da Semana</h2>
+          <p>Os veículos mais desejados do momento.</p>
         </div>
-        <button type="button" (click)="goToSearch({})">
-          Ver todos
-          <span class="material-symbols-outlined">arrow_forward</span>
-        </button>
       </div>
 
-      <div class="home-web__vehicle-grid" *ngIf="featuredLoading">
-        <article
-          class="home-web__vehicle home-web__vehicle--loading"
-          *ngFor="let item of [1, 2, 3]"
-        >
-          <div></div>
-          <span></span>
-          <small></small>
-        </article>
+      <div class="home-web__carousel-wrap" *ngIf="featuredLoading">
+        <div class="home-web__carousel-track">
+          <article
+            class="home-web__carousel-item home-web__vehicle home-web__vehicle--loading"
+            *ngFor="let item of [1, 2, 3, 4, 5]"
+          >
+            <div></div>
+            <span></span>
+            <small></small>
+          </article>
+        </div>
       </div>
 
-      <div class="home-web__vehicle-grid" *ngIf="!featuredLoading">
-        <app-vehicle-card
-          *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
-          [vehicle]="vehicle"
-        ></app-vehicle-card>
+      <div class="home-web__carousel-wrap" *ngIf="!featuredLoading">
+        <div class="home-web__carousel-track">
+          <div
+            *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
+            class="home-web__carousel-item"
+          >
+            <app-vehicle-card [vehicle]="vehicle"></app-vehicle-card>
+          </div>
+        </div>
       </div>
 
       <p
@@ -116,6 +118,42 @@
       >
         Nenhum veículo disponível por enquanto.
       </p>
+    </div>
+  </section>
+
+  <section class="home-web__section home-web__section--surface">
+    <div class="home-web__container">
+      <div class="home-web__section-head home-web__section-head--row">
+        <div>
+          <h2>Explore Veículos</h2>
+          <p>Encontre o veículo certo para a sua próxima aventura.</p>
+        </div>
+      </div>
+
+      <div class="home-web__vehicle-grid home-web__vehicle-grid--explore" *ngIf="carsLoading && carList.length === 0">
+        <article
+          class="home-web__vehicle home-web__vehicle--loading"
+          *ngFor="let item of [1, 2, 3, 4, 5, 6, 7, 8]"
+        >
+          <div></div>
+          <span></span>
+          <small></small>
+        </article>
+      </div>
+
+      <div class="home-web__vehicle-grid home-web__vehicle-grid--explore" *ngIf="carList.length > 0">
+        <app-vehicle-card
+          *ngFor="let vehicle of carList; trackBy: trackByVehicleId"
+          [vehicle]="vehicle"
+        ></app-vehicle-card>
+      </div>
+
+      <div class="home-web__explore-cta">
+        <button type="button" (click)="goToSearch({})">
+          Ver mais veículos
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
     </div>
   </section>
 

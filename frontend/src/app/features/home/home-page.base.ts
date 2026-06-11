@@ -245,7 +245,7 @@ export abstract class HomePageBase {
     if (!this.hasMoreCars) return;
     this.carsLoading = true;
     this.vehiclesApiService
-      .search({ page: this.currentPage, limit: 12 })
+      .search({ page: this.currentPage, limit: 20 })
       .subscribe({
         next: (response) => {
           this.carList = [...this.carList, ...response.items];
@@ -261,7 +261,7 @@ export abstract class HomePageBase {
 
   private loadFeaturedVehicles() {
     this.featuredLoading = true;
-    this.vehiclesApiService.search({ limit: 3 }).subscribe({
+    this.vehiclesApiService.search({ limit: 15 }).subscribe({
       next: (response) => {
         this.featuredVehicles = response.items;
         this.featuredLoading = false;
@@ -276,7 +276,6 @@ export abstract class HomePageBase {
   private loadCollectionStats() {
     this.vehiclesApiService.getStats().subscribe({
       next: (stats) => {
-        console.log('Vehicle stats:', stats);
         this.collections[0].count = `${stats.sport} veículos`;
         this.collections[1].count = `${stats.electric} veículos`;
         this.collections[2].count = `${stats.motorcycle} veículos`;
