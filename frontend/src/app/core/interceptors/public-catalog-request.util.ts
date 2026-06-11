@@ -11,6 +11,10 @@ export function isPublicCatalogRequest(url: string, method: string) {
 
   const normalizedUrl = normalizeUrl(url);
 
+  if (normalizedUrl.pathname.includes('/admin/')) {
+    return false;
+  }
+
   return PUBLIC_CATALOG_PATH_PATTERNS.some((pattern) =>
     pattern.test(normalizedUrl.pathname),
   );
