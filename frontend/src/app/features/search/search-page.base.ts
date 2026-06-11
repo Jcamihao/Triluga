@@ -223,21 +223,21 @@ export abstract class SearchPageBase {
 
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        const cityFromService = this.locationService.cityName;
         this.router.navigate(['/search'], {
           queryParams: {
             ...this.query,
             latitude: coords.latitude.toFixed(6),
             longitude: coords.longitude.toFixed(6),
             radiusKm: this.query.radiusKm || '20',
+            city: this.query.city || cityFromService || undefined,
           },
         });
       },
       () => {
         globalThis.alert('Não foi possível obter sua localização agora.');
       },
-      {
-        enableHighAccuracy: true,
-      },
+      { enableHighAccuracy: true },
     );
   }
 
@@ -399,13 +399,19 @@ export abstract class SearchPageBase {
   }
 
   protected get webResultsTitle() {
-    const city = this.query.city || this.locationService.city;
+    const city = this.query.city;
 
-    if (this.query.vehicleType === 'MOTORCYCLE') {
-      return `Motos em ${city}`;
+    if (this.hasLocationFilter) {
+      return this.query.vehicleType === 'MOTORCYCLE'
+        ? (city ? `Motos perto de você em ${city}` : 'Motos perto de você')
+        : (city ? `Veículos perto de você em ${city}` : 'Veículos perto de você');
     }
 
-    return `Veículos de ${city}`;
+    if (city) {
+      return this.query.vehicleType === 'MOTORCYCLE' ? `Motos em ${city}` : `Veículos de ${city}`;
+    }
+
+    return this.query.vehicleType === 'MOTORCYCLE' ? 'Motos disponíveis' : 'Veículos disponíveis';
   }
 
   protected get searchOverviewSubtitle() {

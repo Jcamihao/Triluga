@@ -187,7 +187,7 @@ export class VehiclesService {
         radiusKm /
         (111 * Math.max(Math.cos((query.latitude * Math.PI) / 180), 0.2));
 
-      andFilters.push({
+      const bboxClause: Prisma.VehicleWhereInput = {
         latitude: {
           not: null,
           gte: query.latitude - latitudeDelta,
@@ -198,7 +198,15 @@ export class VehiclesService {
           gte: query.longitude - longitudeDelta,
           lte: query.longitude + longitudeDelta,
         },
-      });
+      };
+
+      // When city is also provided, include vehicles in the same city that
+      // don't have coordinates stored — they appear alongside geo-filtered results.
+      andFilters.push(
+        query.city
+          ? { OR: [bboxClause, { latitude: null }] }
+          : bboxClause,
+      );
     }
 
     const where: Prisma.VehicleWhereInput = {

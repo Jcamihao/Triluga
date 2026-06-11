@@ -4,37 +4,39 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class LocationService {
-  city = 'São Paulo, SP';
+  city = '';       // "Brasília, Distrito Federal"
+  cityName = '';   // "Brasília" (without state)
 
-  async loadLocation() {
-    if (!navigator.geolocation) {
-      return;
-    }
+  async loadLocation(): Promise<void> {
+    if (!navigator.geolocation) return;
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-          );
-
-          const data = await response.json();
-
-          const city =
-            data.address.city || data.address.town || data.address.village;
-
-          const state = data.address.state;
-
-          this.city = `${city}, ${state}`;
-        } catch (error) {
-          console.error(error);
-        }
-      },
-      (error) => {
-        console.error('Erro ao obter localização:', error);
-      },
-    );
+    return new Promise<void>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+            );
+            const data = await response.json();
+            const city = data.address.city || data.address.town || data.address.village;
+            const state = data.address.state;
+            if (city) {
+              this.cityName = city;
+              this.city = `${city}, ${state}`;
+            }
+          } catch (error) {
+            console.error(error);
+          } finally {
+            resolve();
+          }
+        },
+        (error) => {
+          console.error('Erro ao obter localização:', error);
+          resolve();
+        },
+        { enableHighAccuracy: true, timeout: 5000 },
+      );
+    });
   }
 }
