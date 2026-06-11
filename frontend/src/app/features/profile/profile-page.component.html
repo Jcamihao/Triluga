@@ -621,6 +621,33 @@
         <span class="material-symbols-outlined">shield</span>
       </section>
 
+      <section
+        class="profile-web__onboarding"
+        *ngIf="profileCompletion < 100 && !onboardingDismissed"
+      >
+        <div class="profile-web__onboarding-head">
+          <div>
+            <h3>Complete seu perfil</h3>
+            <p>{{ profileCompletion }}% concluído — perfis completos geram mais confiança.</p>
+          </div>
+          <button type="button" (click)="dismissOnboarding()" aria-label="Fechar">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <ul class="profile-web__onboarding-list">
+          <li
+            *ngFor="let step of onboardingSteps"
+            class="profile-web__onboarding-step"
+            [class.profile-web__onboarding-step--done]="step.done"
+          >
+            <span class="material-symbols-outlined profile-web__onboarding-icon">
+              {{ step.done ? 'check_circle' : 'radio_button_unchecked' }}
+            </span>
+            {{ step.label }}
+          </li>
+        </ul>
+      </section>
+
       <section class="profile-web__grid">
         <article class="profile-web__card">
           <div class="profile-web__card-head">

@@ -536,6 +536,76 @@
     color: #006d37;
     font-size: 48px;
   }
+
+  .profile-web__onboarding {
+    background: #f0faf3;
+    border: 1px solid #c6e8d0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 8px;
+  }
+
+  .profile-web__onboarding-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #003920;
+      margin: 0 0 4px;
+    }
+
+    p {
+      font-size: 13px;
+      color: #3d6b4a;
+      margin: 0;
+    }
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      color: #5a8066;
+      line-height: 1;
+
+      &:hover {
+        color: #003920;
+      }
+    }
+  }
+
+  .profile-web__onboarding-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .profile-web__onboarding-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3d4a3e;
+  }
+
+  .profile-web__onboarding-step--done {
+    color: #006d37;
+    text-decoration: line-through;
+    opacity: 0.75;
+  }
+
+  .profile-web__onboarding-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1180px) {

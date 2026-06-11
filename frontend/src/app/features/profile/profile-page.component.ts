@@ -50,6 +50,7 @@ export class ProfilePageComponent implements OnDestroy {
   protected showVerificationOnboarding = false;
   protected zipCodeHint = '';
   protected zipCodeError = '';
+  protected onboardingDismissed = localStorage.getItem('triluga.onboarding.dismissed') === '1';
   protected resendingVerification = false;
   protected resendVerificationFeedback = '';
   protected resendVerificationError = '';
@@ -177,6 +178,21 @@ export class ProfilePageComponent implements OnDestroy {
     ];
 
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }
+
+  protected dismissOnboarding() {
+    this.onboardingDismissed = true;
+    try { localStorage.setItem('triluga.onboarding.dismissed', '1'); } catch {}
+  }
+
+  protected get onboardingSteps() {
+    return [
+      { label: 'Verificar email', done: !!this.authService.currentUser()?.emailVerified, action: 'email' },
+      { label: 'Adicionar foto de perfil', done: !!(this.profile.avatarUrl || this.pendingAvatarFile), action: 'photo' },
+      { label: 'Preencher nome e telefone', done: !!(this.profile.fullName && this.profile.phone), action: 'name' },
+      { label: 'Informar cidade e estado', done: !!(this.profile.city && this.profile.state), action: 'address' },
+      { label: 'Enviar documento (CPF/RG)', done: !!(this.profile.documentNumber && this.profile.hasDocumentImage), action: 'doc' },
+    ];
   }
 
   protected get memberSinceLabel() {
