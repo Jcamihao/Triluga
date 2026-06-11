@@ -78,6 +78,14 @@
       </button>
       <button
         type="button"
+        class="web-header__icon"
+        [attr.aria-label]="themeService.isDark() ? 'Modo claro' : 'Modo escuro'"
+        (click)="themeService.toggle()"
+      >
+        <span class="material-symbols-outlined">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+      <button
+        type="button"
         class="web-header__icon web-header__icon--with-badge"
         aria-label="Notificações"
         (click)="toggleNotifications()"

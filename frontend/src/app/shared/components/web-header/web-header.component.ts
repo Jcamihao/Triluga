@@ -6,6 +6,7 @@ import { AppLoggerService } from '../../../core/services/app-logger.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatInboxService } from '../../../core/services/chat-inbox.service';
 import { NotificationsCenterService } from '../../../core/services/notifications-center.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-web-header',
@@ -19,6 +20,7 @@ export class WebHeaderComponent {
   protected readonly authService = inject(AuthService);
   protected readonly chatInboxService = inject(ChatInboxService);
   protected readonly notificationsService = inject(NotificationsCenterService);
+  protected readonly themeService = inject(ThemeService);
   private readonly logger = inject(AppLoggerService);
   private inboxWarmupScheduled = false;
   protected notificationsOpen = false;
