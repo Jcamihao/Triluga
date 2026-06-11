@@ -23,8 +23,13 @@ export class AdminPageComponent {
   protected privacyRequests: any[] = [];
 
   protected userSearch = '';
+  protected deletingUserId: string | null = null;
+  protected deleteUserConfirmId: string | null = null;
+
   protected vehicleSearch = '';
   protected vehicleStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  protected deletingVehicleId: string | null = null;
+  protected deleteConfirmId: string | null = null;
 
   protected get filteredUsers(): any[] {
     const q = this.userSearch.toLowerCase().trim();
@@ -35,8 +40,6 @@ export class AdminPageComponent {
       u.profile?.city?.toLowerCase().includes(q),
     );
   }
-  protected deletingVehicleId: string | null = null;
-  protected deleteConfirmId: string | null = null;
 
   protected get filteredVehicles(): any[] {
     const q = this.vehicleSearch.toLowerCase().trim();
@@ -74,6 +77,27 @@ export class AdminPageComponent {
 
   protected blockUser(userId: string) {
     this.adminApiService.blockUser(userId).subscribe(() => this.loadData());
+  }
+
+  protected confirmDeleteUser(userId: string) {
+    this.deleteUserConfirmId = userId;
+  }
+
+  protected cancelDeleteUser() {
+    this.deleteUserConfirmId = null;
+  }
+
+  protected deleteUser(userId: string) {
+    if (this.deletingUserId) return;
+    this.deletingUserId = userId;
+    this.deleteUserConfirmId = null;
+    this.adminApiService.deleteUser(userId).subscribe({
+      next: () => {
+        this.deletingUserId = null;
+        this.loadData();
+      },
+      error: () => { this.deletingUserId = null; },
+    });
   }
 
   protected approveDocument(userId: string) {

@@ -27,6 +27,10 @@ export class AdminApiService {
     );
   }
 
+  deleteUser(userId: string) {
+    return this.http.delete(`${environment.apiBaseUrl}/admin/users/${userId}`);
+  }
+
   approveUserDocument(userId: string) {
     return this.http.patch(
       `${environment.apiBaseUrl}/admin/users/${userId}/document/approve`,

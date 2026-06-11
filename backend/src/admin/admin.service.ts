@@ -109,10 +109,13 @@ export class AdminService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { status: UserStatus.BLOCKED },
-      include: {
-        profile: true,
-      },
+      include: { profile: true },
     });
+  }
+
+  async deleteUser(userId: string) {
+    await this.cacheQueueService.invalidateByPrefix('vehicles:list:');
+    return this.prisma.user.delete({ where: { id: userId } });
   }
 
   async approveUserDocument(userId: string) {

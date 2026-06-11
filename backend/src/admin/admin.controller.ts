@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PrivacyRequestStatus, Role } from '@prisma/client';
 import { AnalyticsPeriod, AnalyticsService } from '../analytics/analytics.service';
@@ -104,6 +104,17 @@ export class AdminController {
   async blockUser(@CurrentUser() admin: AuthenticatedUser, @Param('id') userId: string) {
     const result = await this.adminService.blockUser(userId);
     await this.auditService.log(admin.sub, 'user_blocked', 'User', userId);
+    return result;
+  }
+
+  @Delete('users/:id')
+  @ApiOperation({ summary: 'Exclui permanentemente um usuário e todos os seus dados' })
+  async deleteUser(@CurrentUser() admin: AuthenticatedUser, @Param('id') userId: string) {
+    if (userId === admin.sub) {
+      throw new BadRequestException('Não é possível excluir a própria conta pelo painel.');
+    }
+    const result = await this.adminService.deleteUser(userId);
+    await this.auditService.log(admin.sub, 'user_deleted', 'User', userId);
     return result;
   }
 
