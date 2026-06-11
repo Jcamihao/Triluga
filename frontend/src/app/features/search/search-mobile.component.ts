@@ -28,7 +28,14 @@ export class SearchMobileComponent
   }
 
   ngOnInit() {
-    this.locationService.loadLocation();
+    this.locationService.loadLocation().then(() => {
+      if (!this.query.city && !this.query.latitude && this.locationService.cityName) {
+        this.router.navigate(['/search'], {
+          queryParams: { ...this.query, city: this.locationService.cityName },
+          replaceUrl: true,
+        });
+      }
+    });
   }
 
   ngAfterViewInit() {

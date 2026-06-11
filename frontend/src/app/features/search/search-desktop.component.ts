@@ -10,6 +10,13 @@ import { SEARCH_IMPORTS, SearchPageBase } from './search-page.base';
 })
 export class SearchDesktopComponent extends SearchPageBase implements OnInit {
   ngOnInit() {
-    this.locationService.loadLocation();
+    this.locationService.loadLocation().then(() => {
+      if (!this.query.city && !this.query.latitude && this.locationService.cityName) {
+        this.router.navigate(['/search'], {
+          queryParams: { ...this.query, city: this.locationService.cityName },
+          replaceUrl: true,
+        });
+      }
+    });
   }
 }

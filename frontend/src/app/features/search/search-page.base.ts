@@ -49,7 +49,7 @@ export const SEARCH_IMPORTS = [
 @Component({ template: '' })
 export abstract class SearchPageBase {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  protected readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
   protected readonly uiStateService = inject(UiStateService);
   protected readonly locationService = inject(LocationService);
