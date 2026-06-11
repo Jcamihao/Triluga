@@ -22,6 +22,27 @@ export class AdminPageComponent {
   protected users: any[] = [];
   protected vehicles: any[] = [];
   protected privacyRequests: any[] = [];
+
+  protected vehicleSearch = '';
+  protected vehicleStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  protected deletingVehicleId: string | null = null;
+  protected deleteConfirmId: string | null = null;
+
+  protected get filteredVehicles(): any[] {
+    const q = this.vehicleSearch.toLowerCase().trim();
+    return this.vehicles.filter((v) => {
+      const matchesSearch = !q ||
+        v.title?.toLowerCase().includes(q) ||
+        v.city?.toLowerCase().includes(q) ||
+        v.owner?.profile?.fullName?.toLowerCase().includes(q) ||
+        v.owner?.email?.toLowerCase().includes(q);
+      const matchesStatus =
+        this.vehicleStatusFilter === 'all' ||
+        (this.vehicleStatusFilter === 'active' && v.isActive && v.isPublished) ||
+        (this.vehicleStatusFilter === 'inactive' && (!v.isActive || !v.isPublished));
+      return matchesSearch && matchesStatus;
+    });
+  }
   protected featuredOrders: any[] = [];
   protected activatingOrderId: string | null = null;
   protected featuredFilter: 'ALL' | 'PENDING' | 'ACTIVE' | 'EXPIRED' = 'ALL';
@@ -84,6 +105,27 @@ export class AdminPageComponent {
     this.adminApiService
       .deactivateVehicle(vehicleId)
       .subscribe(() => this.loadData());
+  }
+
+  protected confirmDelete(vehicleId: string) {
+    this.deleteConfirmId = vehicleId;
+  }
+
+  protected cancelDelete() {
+    this.deleteConfirmId = null;
+  }
+
+  protected deleteVehicle(vehicleId: string) {
+    if (this.deletingVehicleId) return;
+    this.deletingVehicleId = vehicleId;
+    this.deleteConfirmId = null;
+    this.adminApiService.deleteVehicle(vehicleId).subscribe({
+      next: () => {
+        this.deletingVehicleId = null;
+        this.loadData();
+      },
+      error: () => { this.deletingVehicleId = null; },
+    });
   }
 
   protected openVerificationFile(
@@ -265,8 +307,8 @@ export class AdminPageComponent {
       privacyRequests: this.adminApiService.getPrivacyRequests(),
     }).subscribe(({ dashboard, users, vehicles, privacyRequests }) => {
       this.dashboard = dashboard;
-      this.users = users as any[];
-      this.vehicles = vehicles as any[];
+      this.users = (users as any).items ?? (users as any[]);
+      this.vehicles = (vehicles as any).items ?? (vehicles as any[]);
       this.privacyRequests = privacyRequests as any[];
     });
     this.loadFeaturedOrders();

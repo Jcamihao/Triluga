@@ -162,6 +162,12 @@ export class AdminService {
     return vehicle;
   }
 
+  async deleteVehicle(vehicleId: string) {
+    await this.cacheQueueService.del(`vehicles:detail:${vehicleId}`);
+    await this.cacheQueueService.invalidateByPrefix('vehicles:list:');
+    return this.prisma.vehicle.delete({ where: { id: vehicleId } });
+  }
+
   async getUserVerificationFileUrl(
     userId: string,
     type: 'document' | 'driverLicense' | 'selfie',

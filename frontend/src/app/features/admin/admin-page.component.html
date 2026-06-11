@@ -193,17 +193,103 @@
       </section>
 
       <!-- Veículos -->
-      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
-        <h2 class="text-base font-black text-on-surface flex items-center gap-2 mb-3">
-          <span class="material-symbols-outlined text-[18px] text-primary">directions_car</span>
-          Veículos
-        </h2>
-        <div *ngFor="let vehicle of vehicles" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
-          <div class="flex flex-col gap-0.5">
-            <span class="text-sm font-bold text-on-surface">{{ vehicle.title }}</span>
-            <span class="text-xs text-on-surface-variant">{{ vehicle.city }}, {{ vehicle.state }}</span>
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-4">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-primary">directions_car</span>
+              Anúncios
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-surface-container text-on-surface-variant">
+                {{ filteredVehicles.length }}
+              </span>
+            </h2>
+            <div class="flex gap-1.5 flex-wrap">
+              <button *ngFor="let f of [['all','Todos'],['active','Publicados'],['inactive','Inativos']]"
+                type="button"
+                class="px-3 py-1 rounded-full text-xs font-bold transition-colors"
+                [ngClass]="vehicleStatusFilter === f[0] ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+                (click)="vehicleStatusFilter = $any(f[0])">
+                {{ f[1] }}
+              </button>
+            </div>
           </div>
-          <button type="button" class="shrink-0 px-4 py-1.5 rounded-full border border-error/40 text-xs font-bold text-error hover:bg-error/5 transition-colors" (click)="deactivateVehicle(vehicle.id)">Desativar</button>
+
+          <!-- Search -->
+          <div class="flex items-center gap-2 bg-surface-container rounded-xl px-3.5 py-2.5">
+            <span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+            <input type="text"
+              class="flex-1 bg-transparent text-sm outline-none placeholder:text-on-surface-variant/60 text-on-surface"
+              placeholder="Buscar por título, cidade ou proprietário…"
+              [(ngModel)]="vehicleSearch">
+            <button *ngIf="vehicleSearch" type="button" (click)="vehicleSearch = ''"
+              class="material-symbols-outlined text-on-surface-variant text-[18px] hover:text-on-surface leading-none">
+              close
+            </button>
+          </div>
+        </div>
+
+        <p *ngIf="filteredVehicles.length === 0" class="text-sm text-on-surface-variant text-center py-6">Nenhum anúncio encontrado.</p>
+
+        <div *ngFor="let vehicle of filteredVehicles"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+
+          <!-- Thumbnail -->
+          <img *ngIf="vehicle.images?.[0]?.url"
+            [src]="vehicle.images[0].url"
+            class="w-14 h-14 rounded-xl object-cover shrink-0 bg-surface-container"
+            [alt]="vehicle.title">
+          <div *ngIf="!vehicle.images?.[0]?.url"
+            class="w-14 h-14 rounded-xl shrink-0 bg-surface-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-surface-variant text-2xl">directions_car</span>
+          </div>
+
+          <!-- Info -->
+          <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+            <span class="text-sm font-bold text-on-surface truncate">{{ vehicle.title }}</span>
+            <span class="text-xs text-on-surface-variant">{{ vehicle.city }}, {{ vehicle.state }}</span>
+            <span class="text-xs text-on-surface-variant truncate">
+              {{ vehicle.owner?.profile?.fullName || vehicle.owner?.email }}
+            </span>
+          </div>
+
+          <!-- Status -->
+          <span class="shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+            [ngClass]="vehicle.isActive && vehicle.isPublished
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-surface-container-high text-on-surface-variant'">
+            {{ vehicle.isActive && vehicle.isPublished ? 'Publicado' : 'Inativo' }}
+          </span>
+
+          <!-- Actions -->
+          <div class="flex gap-2 shrink-0 flex-wrap">
+            <ng-container *ngIf="deleteConfirmId !== vehicle.id; else deleteConfirm">
+              <button type="button"
+                class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors disabled:opacity-40"
+                [disabled]="!vehicle.isActive || !vehicle.isPublished"
+                (click)="deactivateVehicle(vehicle.id)">
+                Desativar
+              </button>
+              <button type="button"
+                class="px-3 py-1.5 rounded-full border border-error/40 text-xs font-bold text-error hover:bg-error/5 transition-colors"
+                (click)="confirmDelete(vehicle.id)">
+                Excluir
+              </button>
+            </ng-container>
+            <ng-template #deleteConfirm>
+              <span class="text-xs text-on-surface-variant self-center mr-1">Confirmar exclusão permanente?</span>
+              <button type="button"
+                class="px-3 py-1.5 rounded-full bg-error text-white text-xs font-bold disabled:opacity-50 hover:bg-error/90 transition-colors"
+                [disabled]="deletingVehicleId === vehicle.id"
+                (click)="deleteVehicle(vehicle.id)">
+                {{ deletingVehicleId === vehicle.id ? 'Excluindo…' : 'Confirmar' }}
+              </button>
+              <button type="button"
+                class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+                (click)="cancelDelete()">
+                Cancelar
+              </button>
+            </ng-template>
+          </div>
         </div>
       </section>
 

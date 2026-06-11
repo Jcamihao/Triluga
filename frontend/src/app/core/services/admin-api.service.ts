@@ -62,6 +62,10 @@ export class AdminApiService {
     );
   }
 
+  deleteVehicle(vehicleId: string) {
+    return this.http.delete(`${environment.apiBaseUrl}/admin/vehicles/${vehicleId}`);
+  }
+
   getUserVerificationFileUrl(
     userId: string,
     type: 'document' | 'driverLicense',

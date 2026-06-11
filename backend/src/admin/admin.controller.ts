@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PrivacyRequestStatus, Role } from '@prisma/client';
 import { AnalyticsPeriod, AnalyticsService } from '../analytics/analytics.service';
@@ -144,6 +144,14 @@ export class AdminController {
   async deactivateVehicle(@CurrentUser() admin: AuthenticatedUser, @Param('id') vehicleId: string) {
     const result = await this.adminService.deactivateVehicle(vehicleId);
     await this.auditService.log(admin.sub, 'vehicle_deactivated', 'Vehicle', vehicleId);
+    return result;
+  }
+
+  @Delete('vehicles/:id')
+  @ApiOperation({ summary: 'Exclui permanentemente um veículo' })
+  async deleteVehicle(@CurrentUser() admin: AuthenticatedUser, @Param('id') vehicleId: string) {
+    const result = await this.adminService.deleteVehicle(vehicleId);
+    await this.auditService.log(admin.sub, 'vehicle_deleted', 'Vehicle', vehicleId);
     return result;
   }
 
