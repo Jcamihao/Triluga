@@ -26,6 +26,16 @@
       <button
         type="button"
         class="inline-flex items-center justify-center"
+        [attr.aria-label]="themeService.isDark() ? 'Modo claro' : 'Modo escuro'"
+        (click)="themeService.toggle()"
+      >
+        <span class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer">
+          {{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}
+        </span>
+      </button>
+      <button
+        type="button"
+        class="inline-flex items-center justify-center"
         aria-label="Abrir notificações"
         (click)="toggleNotifications()"
       >
@@ -148,6 +158,18 @@
       <div class="flex gap-4 overflow-x-auto pb-2 hide-scrollbar" *ngIf="!featuredLoading">
         <div
           *ngFor="let vehicle of featuredVehicles; trackBy: trackByVehicleId"
+          class="flex-none w-72"
+        >
+          <app-vehicle-card [vehicle]="vehicle"></app-vehicle-card>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-6 space-y-4" *ngIf="recentlyViewed.length > 0">
+      <h3 class="!text-xl !font-bold tracking-tight">Vistos Recentemente</h3>
+      <div class="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+        <div
+          *ngFor="let vehicle of recentlyViewed; trackBy: trackByVehicleId"
           class="flex-none w-72"
         >
           <app-vehicle-card [vehicle]="vehicle"></app-vehicle-card>

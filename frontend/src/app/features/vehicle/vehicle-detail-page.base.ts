@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnalyticsTrackingService } from '../../core/services/analytics-tracking.service';
+import { RecentlyViewedService } from '../../core/services/recently-viewed.service';
 import { AppLoggerService } from '../../core/services/app-logger.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ChatApiService } from '../../core/services/chat-api.service';
@@ -57,6 +58,7 @@ export abstract class VehicleDetailPageBase {
   private readonly favoritesService = inject(FavoritesService);
   private readonly reviewsApiService = inject(ReviewsApiService);
   private readonly analyticsTrackingService = inject(AnalyticsTrackingService);
+  private readonly recentlyViewedService = inject(RecentlyViewedService);
   private readonly logger = inject(AppLoggerService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly idleScheduler = (
@@ -222,6 +224,7 @@ export abstract class VehicleDetailPageBase {
 
       this.vehiclesApiService.getById(vehicleId).subscribe((vehicle) => {
         this.vehicle = vehicle;
+        this.recentlyViewedService.track(vehicle as any);
         this.analyticsTrackingService.trackVehicleView(
           vehicle.id,
           `${globalThis.location.pathname}${globalThis.location.search}`,

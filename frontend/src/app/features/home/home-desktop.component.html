@@ -121,6 +121,28 @@
     </div>
   </section>
 
+  <section class="home-web__section home-web__section--surface" *ngIf="recentlyViewed.length > 0">
+    <div class="home-web__container">
+      <div class="home-web__section-head">
+        <div>
+          <h2>Vistos Recentemente</h2>
+          <p>Continue de onde parou.</p>
+        </div>
+      </div>
+
+      <div class="home-web__carousel-wrap">
+        <div class="home-web__carousel-track">
+          <div
+            *ngFor="let vehicle of recentlyViewed; trackBy: trackByVehicleId"
+            class="home-web__carousel-item"
+          >
+            <app-vehicle-card [vehicle]="vehicle"></app-vehicle-card>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="home-web__section home-web__section--surface">
     <div class="home-web__container">
       <div class="home-web__section-head home-web__section-head--row">

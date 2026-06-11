@@ -4,6 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../core/models/domain.models';
 import { AuthService } from '../../core/services/auth.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { RecentlyViewedService } from '../../core/services/recently-viewed.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
@@ -139,6 +141,8 @@ export abstract class HomePageBase {
   protected readonly authService = inject(AuthService);
   protected readonly favoritesService = inject(FavoritesService);
   protected readonly uiStateService = inject(UiStateService);
+  private readonly recentlyViewedService = inject(RecentlyViewedService);
+  protected readonly themeService = inject(ThemeService);
 
   protected readonly quickShortcuts = QUICK_SHORTCUTS;
   protected readonly featuredCategoryCards = FEATURED_CATEGORY_CARDS;
@@ -157,6 +161,10 @@ export abstract class HomePageBase {
   protected carsLoading = true;
   protected hasMoreCars = true;
   private currentPage = 1;
+
+  protected get recentlyViewed(): VehicleCardItem[] {
+    return this.recentlyViewedService.getAll();
+  }
 
   constructor() {
     this.loadFeaturedVehicles();
