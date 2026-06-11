@@ -26,16 +26,6 @@
       <button
         type="button"
         class="inline-flex items-center justify-center"
-        [attr.aria-label]="themeService.isDark() ? 'Modo claro' : 'Modo escuro'"
-        (click)="themeService.toggle()"
-      >
-        <span class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer">
-          {{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}
-        </span>
-      </button>
-      <button
-        type="button"
-        class="inline-flex items-center justify-center"
         aria-label="Abrir notificações"
         (click)="toggleNotifications()"
       >

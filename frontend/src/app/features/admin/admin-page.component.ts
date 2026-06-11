@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-admin-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WebHeaderComponent],
   templateUrl: './admin-page.component.html',
   styleUrls: ['./admin-page.component.scss'],
 })
