@@ -50,9 +50,21 @@ export class NotificationProcessorService implements OnModuleInit {
         }
 
         case 'REVIEW_CREATED':
-        case 'SYSTEM_ALERT':
-          // Tipos futuros — sem email específico ainda
           break;
+
+        case 'SYSTEM_ALERT': {
+          const meta = notification.metadata as Record<string, string> | null;
+          if (meta?.emailType === 'search_alert_match' && meta.vehicleSlug && meta.vehicleTitle && meta.alertTitle) {
+            await this.email.sendSearchAlertMatch(
+              to,
+              fullName,
+              meta.alertTitle,
+              meta.vehicleTitle,
+              meta.vehicleSlug,
+            );
+          }
+          break;
+        }
 
         default:
           this.logger.debug(`notification_processor_unhandled type=${notification.type}`);

@@ -145,7 +145,11 @@ export class SearchAlertsService {
         message: `${vehicle.title} acabou de entrar no ar e combina com o alerta "${alert.title || 'Busca salva'}".`,
         metadata: {
           vehicleId,
+          vehicleSlug: vehicle.slug,
+          vehicleTitle: vehicle.title,
           searchAlertId: alert.id,
+          alertTitle: alert.title || 'Busca salva',
+          emailType: 'search_alert_match',
         },
       });
     }
