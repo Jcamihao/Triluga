@@ -393,6 +393,15 @@
               </button>
             </div>
 
+            <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar" *ngIf="selectedConversationId && messages.length <= 2">
+              <button
+                *ngFor="let reply of quickReplies"
+                type="button"
+                class="flex-none px-4 py-2 rounded-full border border-outline-variant/40 bg-surface-container-low text-on-surface text-sm font-medium whitespace-nowrap active:scale-95 transition-transform"
+                (click)="selectQuickReply(reply)"
+              >{{ reply }}</button>
+            </div>
+
             <form
               class="max-w-screen-md mx-auto flex items-center gap-3"
               (ngSubmit)="sendMessage()"

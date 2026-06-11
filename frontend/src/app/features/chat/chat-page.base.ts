@@ -47,6 +47,14 @@ export abstract class ChatPageBase {
   protected readonly vehicleFallbackImage =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuD-5CMBZUxKBjq4dV6OIv6jCIskL6ZMefW2QaELDIBGXJDHaPcGeNaM0QyVIQHM5sejbgxOcXb5PeohKC6voIgcg2RIZ-IAQPYOWHMm3pPTYhpkAYXvG8TwtBYPHeYZrnFoKPQ6YpWMtmRRngAcqyvttsX0ossSO1D2rD98NvuoBZ-sLiRAvxwRIvTcpfNnj3-9sL9DQME-VW91LXK1JGFKgI4nj3wWwNwpW9Aqti-1BGxBWV8Zj0scwXENExlTaoX328NStqdT-i34';
 
+  protected readonly quickReplies = [
+    'Olá! Ainda disponível?',
+    'Qual o valor para mais dias?',
+    'Posso retirar hoje?',
+    'Tem como entregar no endereço?',
+    'Pode me enviar mais fotos?',
+  ];
+
   protected conversations: ChatConversationItem[] = [];
   protected messages: ChatMessage[] = [];
   protected selectedConversationId: string | null = null;
@@ -308,6 +316,10 @@ export abstract class ChatPageBase {
     this.socketService.joinConversation(conversationId);
     this.zeroUnreadCount(conversationId);
     this.loadMessages(conversationId);
+  }
+
+  protected selectQuickReply(text: string) {
+    this.draftMessage = text;
   }
 
   protected sendMessage() {
