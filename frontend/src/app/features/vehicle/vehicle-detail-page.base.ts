@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ChatApiService } from '../../core/services/chat-api.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { CompareService } from '../../core/services/compare.service';
+import { ContactedVehiclesService } from '../../core/services/contacted-vehicles.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { ReviewsApiService } from '../../core/services/reviews-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
@@ -55,6 +56,7 @@ export abstract class VehicleDetailPageBase {
   private readonly chatApiService = inject(ChatApiService);
   private readonly chatInboxService = inject(ChatInboxService);
   private readonly compareService = inject(CompareService);
+  private readonly contactedVehiclesService = inject(ContactedVehiclesService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly reviewsApiService = inject(ReviewsApiService);
   private readonly analyticsTrackingService = inject(AnalyticsTrackingService);
@@ -96,6 +98,7 @@ export abstract class VehicleDetailPageBase {
   protected vehicle?: VehicleDetail;
   protected readonly similarVehicles = signal<VehicleCardItem[]>([]);
   protected readonly reportModalOpen = signal(false);
+  protected readonly linkCopied = signal(false);
   protected reportReason: ReportReason | '' = '';
   protected reportDescription = '';
   protected reportSubmitting = false;
@@ -1110,6 +1113,13 @@ export abstract class VehicleDetailPageBase {
     await navigator.clipboard?.writeText(shareData.url).catch(() => undefined);
   }
 
+  protected async copyLink() {
+    const url = globalThis.location?.href ?? '';
+    await navigator.clipboard?.writeText(url).catch(() => undefined);
+    this.linkCopied.set(true);
+    setTimeout(() => this.linkCopied.set(false), 2000);
+  }
+
   protected trackByIndex(index: number) {
     return index;
   }
@@ -1151,6 +1161,9 @@ export abstract class VehicleDetailPageBase {
             vehicleId: this.vehicle?.id ?? null,
             conversationId: conversation.id,
           });
+          if (this.vehicle?.id) {
+            this.contactedVehiclesService.markAsContacted(this.vehicle.id);
+          }
           this.chatInboxService.refresh();
           this.router.navigate(['/chat', conversation.id]);
         },

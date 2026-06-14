@@ -216,6 +216,7 @@ export interface VehicleCardItem {
     ratingAverage?: number;
     reviewsCount?: number;
     isVerified?: boolean;
+    responseRate?: number | null;
   };
 }
 

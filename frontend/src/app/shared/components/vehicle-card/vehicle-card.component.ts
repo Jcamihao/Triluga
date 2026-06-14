@@ -3,6 +3,7 @@ import { Component, Input, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../../core/models/domain.models';
 import { CompareService } from '../../../core/services/compare.service';
+import { ContactedVehiclesService } from '../../../core/services/contacted-vehicles.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
 
 @Component({
@@ -15,6 +16,7 @@ import { FavoritesService } from '../../../core/services/favorites.service';
 export class VehicleCardComponent {
   private readonly favoritesService = inject(FavoritesService);
   private readonly compareService = inject(CompareService);
+  private readonly contactedVehiclesService = inject(ContactedVehiclesService);
   private readonly router = inject(Router);
   @Input({ required: true }) vehicle!: VehicleCardItem;
   @Input() hideOwner = false;
@@ -88,6 +90,10 @@ export class VehicleCardComponent {
     }
 
     return `${ratingAverage.toFixed(1)}`;
+  }
+
+  protected get isContacted() {
+    return this.contactedVehiclesService.isContacted(this.vehicle.id);
   }
 
   protected get isFavorite() {

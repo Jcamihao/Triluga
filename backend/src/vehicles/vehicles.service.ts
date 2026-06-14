@@ -491,10 +491,31 @@ export class VehiclesService {
       })
       .catch((err) => this.logger.error(`vehicle_views_increment_failed vehicleId=${vehicle.id} error=${err?.message}`));
 
-    const payload = this.mapVehicleDetail(vehicle);
+    const basePayload = this.mapVehicleDetail(vehicle);
+    const responseRate = await this.computeOwnerResponseRate(vehicle.ownerId);
+    const payload = {
+      ...basePayload,
+      owner: basePayload.owner ? { ...basePayload.owner, responseRate } : basePayload.owner,
+    };
     await this.cacheQueueService.setJson(cacheKey, payload);
 
     return payload;
+  }
+
+  private async computeOwnerResponseRate(ownerId: string): Promise<number | null> {
+    const [total, replied] = await Promise.all([
+      this.prisma.chatConversation.count({
+        where: { vehicle: { ownerId } },
+      }),
+      this.prisma.chatConversation.count({
+        where: {
+          vehicle: { ownerId },
+          messages: { some: { senderId: ownerId } },
+        },
+      }),
+    ]);
+    if (!total) return null;
+    return Math.round((replied / total) * 100);
   }
 
   async create(ownerId: string, dto: CreateVehicleDto) {

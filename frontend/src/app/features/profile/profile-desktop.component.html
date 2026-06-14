@@ -216,14 +216,19 @@
 
           <div class="profile-web__verification-list">
             <div class="profile-web__verification" *ngFor="let row of verificationRows"
-              [class.profile-web__verification--pending]="
-                row.status === 'pending'
-              ">
+              [class.profile-web__verification--pending]="row.status === 'pending'"
+              [class.profile-web__verification--rejected]="row.status === 'rejected'">
               <span class="material-symbols-outlined">{{ row.icon }}</span>
               <div>
                 <strong>{{ row.title }}</strong>
                 <p>{{ row.description }}</p>
               </div>
+              <span class="profile-web__verification-status"
+                [class.profile-web__verification-status--approved]="row.status === 'approved'"
+                [class.profile-web__verification-status--pending]="row.status === 'pending'"
+                [class.profile-web__verification-status--rejected]="row.status === 'rejected'">
+                {{ row.status === 'approved' ? 'Aprovado' : row.status === 'rejected' ? 'Recusado' : 'Em análise' }}
+              </span>
             </div>
           </div>
 

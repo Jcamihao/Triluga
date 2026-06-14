@@ -284,6 +284,10 @@
                 {{ ownerRatingValue | number: '1.1-1' }}
               </span>
             </div>
+            <span *ngIf="vehicle.owner?.responseRate != null" class="text-outline-variant">•</span>
+            <span *ngIf="vehicle.owner?.responseRate != null" class="text-[11px] font-bold text-[#006d37]">
+              {{ vehicle.owner!.responseRate }}% resposta
+            </span>
           </div>
         </div>
       </div>
@@ -532,6 +536,17 @@
         "
       >
         <span class="material-symbols-outlined">compare_arrows</span>
+      </button>
+
+      <button
+        class="w-12 h-12 rounded-xl flex items-center justify-center border border-outline-variant/30 transition-colors active:scale-95"
+        type="button"
+        [class.text-primary]="linkCopied()"
+        [class.text-on-surface-variant]="!linkCopied()"
+        (click)="copyLink()"
+        aria-label="Copiar link do anúncio"
+      >
+        <span class="material-symbols-outlined">{{ linkCopied() ? 'check' : 'link' }}</span>
       </button>
 
       <a

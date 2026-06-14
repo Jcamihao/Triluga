@@ -421,6 +421,42 @@
     color: #ea580c;
   }
 
+  .profile-web__verification--rejected {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+  }
+
+  .profile-web__verification--rejected > .material-symbols-outlined {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .profile-web__verification-status {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &--approved {
+      background: rgba(0, 109, 55, 0.1);
+      color: #006d37;
+    }
+
+    &--pending {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    &--rejected {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+  }
+
   .profile-web__uploads {
     display: flex;
     flex-wrap: wrap;

@@ -234,11 +234,15 @@ export class ProfilePageComponent implements OnDestroy {
         status:
           this.profile.documentVerificationStatus === 'APPROVED'
             ? 'approved'
-            : 'pending',
+            : this.profile.documentVerificationStatus === 'REJECTED'
+              ? 'rejected'
+              : 'pending',
         icon:
           this.profile.documentVerificationStatus === 'APPROVED'
             ? 'check_circle'
-            : 'error',
+            : this.profile.documentVerificationStatus === 'REJECTED'
+              ? 'cancel'
+              : 'pending',
       },
       {
         title: 'CNH',
@@ -248,11 +252,15 @@ export class ProfilePageComponent implements OnDestroy {
         status:
           this.profile.driverLicenseVerification === 'APPROVED'
             ? 'approved'
-            : 'pending',
+            : this.profile.driverLicenseVerification === 'REJECTED'
+              ? 'rejected'
+              : 'pending',
         icon:
           this.profile.driverLicenseVerification === 'APPROVED'
             ? 'check_circle'
-            : 'error',
+            : this.profile.driverLicenseVerification === 'REJECTED'
+              ? 'cancel'
+              : 'pending',
       },
     ];
   }
