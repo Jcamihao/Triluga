@@ -411,7 +411,7 @@
         class="chat-web__details w-[320px] 2xl:w-[360px] hidden xl:flex flex-col bg-surface-container-low border-l border-outline-variant/10 p-8"
       >
         <h3 class="font-black text-lg text-on-surface mb-8 tracking-tight">
-          Detalhes da Reserva
+          Sobre o Anúncio
         </h3>
 
         <div class="rounded-2xl overflow-hidden mb-7 bg-white shadow-sm">
@@ -435,13 +435,13 @@
 
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
-                <span class="text-on-surface-variant">Preço semanal</span>
+                <span class="text-on-surface-variant">Valor anunciado</span>
                 <span class="font-bold">
                   R$
                   {{
                     conversation.vehicle.weeklyRate ??
                       conversation.vehicle.dailyRate | number: '1.0-0'
-                  }}
+                  }}/sem
                 </span>
               </div>
             </div>
