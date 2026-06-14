@@ -38,6 +38,9 @@ jobs:
             echo "▶ Subindo containers (rebuild apenas do que mudou)..."
             docker compose up --build -d --remove-orphans
 
+            echo "▶ Limpando cache de build acumulado..."
+            docker builder prune --force
+
             echo "▶ Status dos containers:"
             docker compose ps
 
