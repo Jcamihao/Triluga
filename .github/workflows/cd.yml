@@ -1,0 +1,44 @@
+name: CD — Deploy VPS
+
+# Só roda quando o workflow de CI terminar COM SUCESSO no branch master.
+# Isso garante que nunca fazemos deploy de código que quebrou o CI.
+on:
+  workflow_run:
+    workflows: ['CI']
+    branches: [master]
+    types: [completed]
+
+jobs:
+  deploy:
+    name: Deploy na VPS
+    runs-on: ubuntu-latest
+
+    # Condição extra: só executa se o CI terminou com sucesso.
+    # Sem isso, o job rodaria mesmo quando o CI falha.
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: SSH → VPS → deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          # Tempo máximo de espera para o SSH conectar (segundos)
+          connect_timeout: 30s
+          script: |
+            set -e  # Para imediatamente se qualquer comando falhar
+
+            echo "▶ Entrando no projeto..."
+            cd ${{ secrets.VPS_PROJECT_PATH }}
+
+            echo "▶ Atualizando código..."
+            git pull origin master
+
+            echo "▶ Subindo containers (rebuild apenas do que mudou)..."
+            docker compose up --build -d --remove-orphans
+
+            echo "▶ Status dos containers:"
+            docker compose ps
+
+            echo "✓ Deploy concluído com sucesso."
