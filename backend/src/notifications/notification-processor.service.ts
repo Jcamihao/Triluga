@@ -23,7 +23,10 @@ export class NotificationProcessorService implements OnModuleInit {
       return;
     }
 
-    const { notificationId } = job.data as { notificationId: string; userId: string };
+    const { notificationId } = job.data as {
+      notificationId: string;
+      userId: string;
+    };
 
     try {
       const notification = await this.prisma.notification.findUnique({
@@ -32,7 +35,9 @@ export class NotificationProcessorService implements OnModuleInit {
       });
 
       if (!notification?.user?.profile) {
-        this.logger.warn(`notification_processor_skip notificationId=${notificationId} reason=no_user_profile`);
+        this.logger.warn(
+          `notification_processor_skip notificationId=${notificationId} reason=no_user_profile`,
+        );
         return;
       }
 
@@ -44,7 +49,12 @@ export class NotificationProcessorService implements OnModuleInit {
         case 'CHAT_MESSAGE': {
           const meta = notification.metadata as Record<string, string> | null;
           if (meta?.conversationId) {
-            await this.email.sendChatNotification(to, fullName, notification.message, meta.conversationId);
+            await this.email.sendChatNotification(
+              to,
+              fullName,
+              notification.message,
+              meta.conversationId,
+            );
           }
           break;
         }
@@ -54,7 +64,12 @@ export class NotificationProcessorService implements OnModuleInit {
 
         case 'SYSTEM_ALERT': {
           const meta = notification.metadata as Record<string, string> | null;
-          if (meta?.emailType === 'search_alert_match' && meta.vehicleSlug && meta.vehicleTitle && meta.alertTitle) {
+          if (
+            meta?.emailType === 'search_alert_match' &&
+            meta.vehicleSlug &&
+            meta.vehicleTitle &&
+            meta.alertTitle
+          ) {
             await this.email.sendSearchAlertMatch(
               to,
               fullName,
@@ -67,10 +82,14 @@ export class NotificationProcessorService implements OnModuleInit {
         }
 
         default:
-          this.logger.debug(`notification_processor_unhandled type=${notification.type}`);
+          this.logger.debug(
+            `notification_processor_unhandled type=${notification.type}`,
+          );
       }
     } catch (error) {
-      this.logger.error(`notification_processor_error notificationId=${notificationId} error=${(error as Error).message}`);
+      this.logger.error(
+        `notification_processor_error notificationId=${notificationId} error=${(error as Error).message}`,
+      );
       throw error; // Re-throw para BullMQ marcar como failed e permitir retry
     }
   }

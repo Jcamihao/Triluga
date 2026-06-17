@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -96,7 +105,9 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('reset-password')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Redefine a senha usando o token recebido por e-mail' })
+  @ApiOperation({
+    summary: 'Redefine a senha usando o token recebido por e-mail',
+  })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
   }
@@ -105,7 +116,9 @@ export class AuthController {
   @SkipThrottle()
   @Get('verify-email')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Confirma o email do usuário via token enviado por email' })
+  @ApiOperation({
+    summary: 'Confirma o email do usuário via token enviado por email',
+  })
   verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
   }

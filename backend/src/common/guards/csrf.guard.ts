@@ -32,7 +32,10 @@ export class CsrfGuard implements CanActivate {
 
     if (SAFE_METHODS.has(req.method)) return true;
 
-    const cookieToken = this.parseCookie(req.headers.cookie ?? '', 'XSRF-TOKEN');
+    const cookieToken = this.parseCookie(
+      req.headers.cookie ?? '',
+      'XSRF-TOKEN',
+    );
     const headerToken = req.headers['x-xsrf-token'];
 
     if (!cookieToken || !headerToken || cookieToken !== headerToken) {

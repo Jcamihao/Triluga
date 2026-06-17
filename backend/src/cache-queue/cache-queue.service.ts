@@ -95,7 +95,7 @@ export class CacheQueueService implements OnModuleInit, OnModuleDestroy {
       );
 
       this.isAvailable = true;
-    } catch (error) {
+    } catch {
       this.logger.warn(
         'Redis não disponível. Cache e fila seguirão em modo degradado.',
       );

@@ -18,7 +18,9 @@ export class UpdateProfileDto {
   @ApiPropertyOptional({ example: '13010-111' })
   @IsOptional()
   @IsString()
-  @Matches(/^\d{5}-?\d{3}$/, { message: 'CEP deve estar no formato 00000-000.' })
+  @Matches(/^\d{5}-?\d{3}$/, {
+    message: 'CEP deve estar no formato 00000-000.',
+  })
   zipCode?: string;
 
   @ApiPropertyOptional()

@@ -5,7 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async log(adminId: string, action: string, targetType: string, targetId: string, details?: object) {
+  async log(
+    adminId: string,
+    action: string,
+    targetType: string,
+    targetId: string,
+    details?: object,
+  ) {
     return this.prisma.auditLog.create({
       data: { adminId, action, targetType, targetId, details: details ?? {} },
     });
@@ -19,8 +25,12 @@ export class AuditService {
         skip: (page - 1) * limit,
         take: limit,
         select: {
-          id: true, action: true, targetType: true, targetId: true,
-          details: true, createdAt: true,
+          id: true,
+          action: true,
+          targetType: true,
+          targetId: true,
+          details: true,
+          createdAt: true,
           admin: { select: { id: true, email: true } },
         },
       }),

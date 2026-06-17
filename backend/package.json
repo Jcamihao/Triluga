@@ -117,5 +117,8 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "overrides": {
+    "form-data": "^4.0.1"
   }
 }

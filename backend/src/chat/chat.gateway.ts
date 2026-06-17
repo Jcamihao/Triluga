@@ -79,7 +79,7 @@ export class ChatGateway
       this.logger.debug(
         `socket_rooms_bound socketId=${client.id} userId=${payload.sub} conversations=${conversationIds.length}`,
       );
-    } catch (error) {
+    } catch {
       this.logger.warn(`Conexao de chat recusada: ${client.id}`);
       client.emit('chat:error', { message: 'Nao autorizado.' });
       client.disconnect(true);
@@ -131,14 +131,13 @@ export class ChatGateway
     readerId: string;
     readAt: Date;
   }) {
-    this.server.to(this.getConversationRoom(payload.conversationId)).emit(
-      'chat:read',
-      {
+    this.server
+      .to(this.getConversationRoom(payload.conversationId))
+      .emit('chat:read', {
         conversationId: payload.conversationId,
         readerId: payload.readerId,
         readAt: payload.readAt,
-      },
-    );
+      });
   }
 
   @SubscribeMessage('chat:join')

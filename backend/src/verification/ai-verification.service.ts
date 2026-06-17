@@ -24,9 +24,13 @@ export class AiVerificationService {
     this.enabled = Boolean(this.baseUrl);
 
     if (this.enabled) {
-      this.logger.log(`AI verification enabled — model=${this.model} url=${this.baseUrl}`);
+      this.logger.log(
+        `AI verification enabled — model=${this.model} url=${this.baseUrl}`,
+      );
     } else {
-      this.logger.warn('OLLAMA_BASE_URL não configurado. Verificação por IA desabilitada.');
+      this.logger.warn(
+        'OLLAMA_BASE_URL não configurado. Verificação por IA desabilitada.',
+      );
     }
   }
 
@@ -84,7 +88,9 @@ Responda SOMENTE com JSON válido, sem texto extra:
         reason: String(result.reason ?? ''),
       };
     } catch {
-      this.logger.error(`ai_kyc_parse_failed response="${responseText.slice(0, 200)}"`);
+      this.logger.error(
+        `ai_kyc_parse_failed response="${responseText.slice(0, 200)}"`,
+      );
       throw new Error('Falha ao interpretar resposta da IA.');
     }
   }
@@ -111,13 +117,19 @@ Responda SOMENTE com JSON válido, sem texto extra:
             try {
               resolve(JSON.parse(data));
             } catch {
-              reject(new Error(`Ollama response parse failed: ${data.slice(0, 100)}`));
+              reject(
+                new Error(
+                  `Ollama response parse failed: ${data.slice(0, 100)}`,
+                ),
+              );
             }
           });
         },
       );
 
-      req.setTimeout(120_000, () => req.destroy(new Error('Ollama request timeout')));
+      req.setTimeout(120_000, () =>
+        req.destroy(new Error('Ollama request timeout')),
+      );
       req.on('error', reject);
       req.write(body);
       req.end();

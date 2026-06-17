@@ -204,11 +204,7 @@ export class StorageService {
     return this.endpoint.endsWith('.r2.cloudflarestorage.com');
   }
 
-  private async putObject(
-    bucket: string,
-    objectKey: string,
-    file: UploadFile,
-  ) {
+  private async putObject(bucket: string, objectKey: string, file: UploadFile) {
     await this.client.putObject(bucket, objectKey, file.buffer, file.size, {
       'Content-Type': file.mimetype,
     });
@@ -300,7 +296,7 @@ export class StorageService {
       return decodeURIComponent(
         parsedUrl.pathname.slice(publicPath.length + 1),
       );
-    } catch (error) {
+    } catch {
       this.logger.warn(
         `Nao foi possivel extrair a chave do arquivo publico: ${url}`,
       );

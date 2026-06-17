@@ -53,7 +53,10 @@ export class VehiclesController {
   @Get(':id/metrics')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Métricas do anúncio (apenas proprietário)' })
-  getOwnerMetrics(@CurrentUser() user: AuthenticatedUser, @Param('id') vehicleId: string) {
+  getOwnerMetrics(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') vehicleId: string,
+  ) {
     return this.vehiclesService.getOwnerMetrics(user.sub, vehicleId);
   }
 

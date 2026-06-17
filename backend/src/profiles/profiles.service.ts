@@ -10,6 +10,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { AiVerificationService } from '../verification/ai-verification.service';
 import { OcrService } from '../verification/ocr.service';
+import * as http from 'node:http';
+import * as https from 'node:https';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
@@ -552,7 +554,9 @@ export class ProfilesService {
 
     // Após selfie, tenta verificação por IA se todos os documentos estiverem presentes
     this.runAiVerification(userId).catch((err) =>
-      this.logger.error(`ai_verification_failed userId=${userId} error=${err?.message}`),
+      this.logger.error(
+        `ai_verification_failed userId=${userId} error=${err?.message}`,
+      ),
     );
 
     return { submitted: true };
@@ -588,7 +592,11 @@ export class ProfilesService {
       },
     });
 
-    if (!profile?.documentImageUrl || !profile?.driverLicenseImageUrl || !profile?.selfieImageUrl) {
+    if (
+      !profile?.documentImageUrl ||
+      !profile?.driverLicenseImageUrl ||
+      !profile?.selfieImageUrl
+    ) {
       return;
     }
 
@@ -645,11 +653,29 @@ export class ProfilesService {
 
       await Promise.allSettled([
         docStatus === VerificationStatus.APPROVED
-          ? this.emailService.sendDocumentApproved(user.email, fullName, 'document')
-          : this.emailService.sendDocumentRejected(user.email, fullName, 'document', result.reason),
+          ? this.emailService.sendDocumentApproved(
+              user.email,
+              fullName,
+              'document',
+            )
+          : this.emailService.sendDocumentRejected(
+              user.email,
+              fullName,
+              'document',
+              result.reason,
+            ),
         cnhStatus === VerificationStatus.APPROVED
-          ? this.emailService.sendDocumentApproved(user.email, fullName, 'driver-license')
-          : this.emailService.sendDocumentRejected(user.email, fullName, 'driver-license', result.reason),
+          ? this.emailService.sendDocumentApproved(
+              user.email,
+              fullName,
+              'driver-license',
+            )
+          : this.emailService.sendDocumentRejected(
+              user.email,
+              fullName,
+              'driver-license',
+              result.reason,
+            ),
       ]);
     }
   }
@@ -659,8 +685,7 @@ export class ProfilesService {
     fileKey: string,
     type: 'document' | 'driverLicense',
   ) {
-    const tempUrlResult =
-      await this.storageService.getPrivateFileUrl(fileKey);
+    const tempUrlResult = await this.storageService.getPrivateFileUrl(fileKey);
     const tempUrl =
       typeof tempUrlResult === 'string' ? tempUrlResult : String(tempUrlResult);
     const buffer = await this.downloadBuffer(tempUrl);
@@ -669,14 +694,12 @@ export class ProfilesService {
     await this.prisma.profile.update({
       where: { userId },
       data:
-        type === 'document'
-          ? { documentOcrText: text }
-          : { cnhOcrText: text },
+        type === 'document' ? { documentOcrText: text } : { cnhOcrText: text },
     });
   }
 
   private downloadBuffer(url: string): Promise<Buffer> {
-    const lib = url.startsWith('https://') ? require('node:https') : require('node:http');
+    const lib = url.startsWith('https://') ? https : http;
     return new Promise((resolve, reject) => {
       const req = lib.request(url, (res: import('http').IncomingMessage) => {
         const chunks: Buffer[] = [];

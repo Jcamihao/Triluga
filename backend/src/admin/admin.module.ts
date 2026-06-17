@@ -9,7 +9,14 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
 @Module({
-  imports: [ProfilesModule, PrivacyModule, VehiclesModule, ReportsModule, AnalyticsModule, AuditModule],
+  imports: [
+    ProfilesModule,
+    PrivacyModule,
+    VehiclesModule,
+    ReportsModule,
+    AnalyticsModule,
+    AuditModule,
+  ],
   controllers: [AdminController],
   providers: [AdminService],
   exports: [AdminService],

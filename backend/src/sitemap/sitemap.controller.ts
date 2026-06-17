@@ -15,7 +15,10 @@ export class SitemapController {
   @Public()
   @Header('Content-Type', 'application/xml')
   async getSitemap(@Res() res: Response) {
-    const appUrl = this.config.get<string>('app.appUrl', 'https://triluga.com.br');
+    const appUrl = this.config.get<string>(
+      'app.appUrl',
+      'https://triluga.com.br',
+    );
     const frontendUrl = appUrl.replace(':3002', ':4200').replace('/api/v1', '');
 
     const vehicles = await this.prisma.vehicle.findMany({

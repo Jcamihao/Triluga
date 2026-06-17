@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrivacyRequestStatus, UserStatus, VerificationStatus } from '@prisma/client';
+import {
+  PrivacyRequestStatus,
+  UserStatus,
+  VerificationStatus,
+} from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrivacyRequestDto } from './dto/create-privacy-request.dto';

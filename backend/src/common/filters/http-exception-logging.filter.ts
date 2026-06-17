@@ -32,7 +32,8 @@ export class HttpExceptionLoggingFilter implements ExceptionFilter {
       `request_failed requestId=${requestId} method=${request.method} ` +
       `path=${request.originalUrl ?? request.url} status=${status} userId=${userId}`;
 
-    const isUpstreamFailure = status === 502 || status === 503 || status === 504;
+    const isUpstreamFailure =
+      status === 502 || status === 503 || status === 504;
     if (status >= 500 && !isUpstreamFailure) {
       this.logger.error(
         logLine,

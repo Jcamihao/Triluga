@@ -115,7 +115,9 @@ export class LookupsService {
     const response = await this.fetchFipe(`${type}/brands`);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new BadGatewayException('Não foi possível consultar a Tabela FIPE.');
+      throw new BadGatewayException(
+        'Não foi possível consultar a Tabela FIPE.',
+      );
     }
 
     const brands = response.payload as FipeBrand[];
@@ -138,7 +140,9 @@ export class LookupsService {
     const response = await this.fetchFipe(`${type}/brands/${brandCode}/models`);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new BadGatewayException('Não foi possível consultar a Tabela FIPE.');
+      throw new BadGatewayException(
+        'Não foi possível consultar a Tabela FIPE.',
+      );
     }
 
     const models = response.payload as FipeModel[];
@@ -164,7 +168,9 @@ export class LookupsService {
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new BadGatewayException('Não foi possível consultar a Tabela FIPE.');
+      throw new BadGatewayException(
+        'Não foi possível consultar a Tabela FIPE.',
+      );
     }
 
     const years = response.payload as FipeYear[];
@@ -191,7 +197,9 @@ export class LookupsService {
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw new BadGatewayException('Não foi possível consultar a Tabela FIPE.');
+      throw new BadGatewayException(
+        'Não foi possível consultar a Tabela FIPE.',
+      );
     }
 
     const raw = response.payload as FipePriceRaw;
@@ -228,7 +236,9 @@ export class LookupsService {
     return parseFloat(cleaned) || 0;
   }
 
-  private fetchFipe(path: string): Promise<{ statusCode: number; payload: unknown }> {
+  private fetchFipe(
+    path: string,
+  ): Promise<{ statusCode: number; payload: unknown }> {
     const url = new URL(`https://parallelum.com.br/fipe/api/v2/${path}`);
 
     return new Promise((resolve, reject) => {

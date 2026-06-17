@@ -17,12 +17,19 @@ export class ReportsService {
     });
     if (!vehicle) throw new BadRequestException('Anúncio não encontrado.');
     if (vehicle.ownerId === reporterId)
-      throw new BadRequestException('Você não pode denunciar seu próprio anúncio.');
+      throw new BadRequestException(
+        'Você não pode denunciar seu próprio anúncio.',
+      );
 
     const existing = await this.prisma.report.findFirst({
-      where: { vehicleId: dto.vehicleId, reporterId, status: { in: ['OPEN', 'REVIEWING'] } },
+      where: {
+        vehicleId: dto.vehicleId,
+        reporterId,
+        status: { in: ['OPEN', 'REVIEWING'] },
+      },
     });
-    if (existing) throw new BadRequestException('Você já denunciou este anúncio.');
+    if (existing)
+      throw new BadRequestException('Você já denunciou este anúncio.');
 
     const reporter = await this.prisma.user.findUnique({
       where: { id: reporterId },
@@ -30,7 +37,12 @@ export class ReportsService {
     });
 
     const report = await this.prisma.report.create({
-      data: { vehicleId: dto.vehicleId, reporterId, reason: dto.reason, description: dto.description },
+      data: {
+        vehicleId: dto.vehicleId,
+        reporterId,
+        reason: dto.reason,
+        description: dto.description,
+      },
       select: { id: true, reason: true, status: true, createdAt: true },
     });
 
@@ -56,10 +68,23 @@ export class ReportsService {
         skip: (page - 1) * limit,
         take: limit,
         select: {
-          id: true, reason: true, description: true, status: true, adminNotes: true,
-          createdAt: true, resolvedAt: true,
-          vehicle: { select: { id: true, title: true, brand: true, model: true } },
-          reporter: { select: { id: true, email: true, profile: { select: { fullName: true } } } },
+          id: true,
+          reason: true,
+          description: true,
+          status: true,
+          adminNotes: true,
+          createdAt: true,
+          resolvedAt: true,
+          vehicle: {
+            select: { id: true, title: true, brand: true, model: true },
+          },
+          reporter: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { fullName: true } },
+            },
+          },
           resolvedBy: { select: { id: true, email: true } },
         },
       }),
@@ -68,16 +93,30 @@ export class ReportsService {
   }
 
   async getOpenReportsCount() {
-    return this.prisma.report.count({ where: { status: { in: ['OPEN', 'REVIEWING'] } } });
+    return this.prisma.report.count({
+      where: { status: { in: ['OPEN', 'REVIEWING'] } },
+    });
   }
 
-  async resolveReport(adminId: string, reportId: string, action: 'DISMISS' | 'RESOLVE', adminNotes?: string) {
-    const report = await this.prisma.report.findUniqueOrThrow({ where: { id: reportId } });
+  async resolveReport(
+    adminId: string,
+    reportId: string,
+    action: 'DISMISS' | 'RESOLVE',
+    adminNotes?: string,
+  ) {
+    const report = await this.prisma.report.findUniqueOrThrow({
+      where: { id: reportId },
+    });
     const newStatus = action === 'DISMISS' ? 'DISMISSED' : 'RESOLVED';
 
     await this.prisma.report.update({
       where: { id: reportId },
-      data: { status: newStatus as any, resolvedById: adminId, resolvedAt: new Date(), adminNotes },
+      data: {
+        status: newStatus as any,
+        resolvedById: adminId,
+        resolvedAt: new Date(),
+        adminNotes,
+      },
     });
 
     if (action === 'RESOLVE') {

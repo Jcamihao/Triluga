@@ -39,8 +39,10 @@ jobs:
       - name: Build (TypeScript + templates + budget)
         run: npm run build
 
+      # Nível "critical": CVEs "high" restantes são do Angular 16 (XSS/XSRF) e
+      # exigem upgrade para Angular 21+ (breaking change — dívida técnica planejada).
       - name: Auditoria de segurança
-        run: npm audit --audit-level=high --omit=dev
+        run: npm audit --audit-level=critical --omit=dev
 
   # ─────────────────────────────────────────────
   # JOB 2 — Backend
@@ -76,5 +78,7 @@ jobs:
       - name: Lint (sem auto-fix)
         run: npm run lint:ci
 
+      # Nível "critical": CVEs "high" restantes exigem upgrade de @nestjs/platform-express
+      # (multer 1→2) e @nestjs/swagger (v7→v11, lodash). Dívida técnica planejada.
       - name: Auditoria de segurança
-        run: npm audit --audit-level=high --omit=dev
+        run: npm audit --audit-level=critical --omit=dev

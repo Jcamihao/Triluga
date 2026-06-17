@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
@@ -11,7 +19,10 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post()
-  createReport(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateReportDto) {
+  createReport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateReportDto,
+  ) {
     return this.reportsService.createReport(user.sub, dto);
   }
 
@@ -32,6 +43,11 @@ export class ReportsController {
     @Param('id') id: string,
     @Body() body: { action: 'DISMISS' | 'RESOLVE'; adminNotes?: string },
   ) {
-    return this.reportsService.resolveReport(user.sub, id, body.action, body.adminNotes);
+    return this.reportsService.resolveReport(
+      user.sub,
+      id,
+      body.action,
+      body.adminNotes,
+    );
   }
 }

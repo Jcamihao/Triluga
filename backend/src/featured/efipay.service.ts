@@ -14,17 +14,22 @@ export class EfipayService {
   private readonly pixKey: string;
 
   constructor(private readonly config: ConfigService) {
-    this.pixKey = this.config.get<string>('efipay.pixKey', 'triluga@empresa.com.br');
+    this.pixKey = this.config.get<string>(
+      'efipay.pixKey',
+      'triluga@empresa.com.br',
+    );
     const clientId = this.config.get<string>('efipay.clientId');
     const clientSecret = this.config.get<string>('efipay.clientSecret');
 
     if (!clientId || !clientSecret) {
-      this.logger.warn('EFIPAY_CLIENT_ID/SECRET not set — using static PIX key fallback');
+      this.logger.warn(
+        'EFIPAY_CLIENT_ID/SECRET not set — using static PIX key fallback',
+      );
       return;
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const EfiPay = require('sdk-typescript-apis-efi').default;
       this.efipay = new EfiPay({
         client_id: clientId,
@@ -49,7 +54,10 @@ export class EfipayService {
     return !!this.efipay;
   }
 
-  async createPixCharge(amount: number, description: string): Promise<PixChargeResult | null> {
+  async createPixCharge(
+    amount: number,
+    description: string,
+  ): Promise<PixChargeResult | null> {
     if (!this.efipay) return null;
 
     try {
@@ -57,10 +65,14 @@ export class EfipayService {
         calendario: { expiracao: 86400 },
         valor: { original: amount.toFixed(2) },
         chave: this.pixKey,
-        infoAdicionais: [{ nome: 'Destaque Triluga', valor: description.slice(0, 200) }],
+        infoAdicionais: [
+          { nome: 'Destaque Triluga', valor: description.slice(0, 200) },
+        ],
       });
 
-      const qr = await this.efipay.pixGenerateQRCode({ id: String(charge.loc.id) });
+      const qr = await this.efipay.pixGenerateQRCode({
+        id: String(charge.loc.id),
+      });
 
       return {
         txid: charge.txid as string,

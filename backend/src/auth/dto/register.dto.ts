@@ -45,7 +45,9 @@ export class RegisterDto {
   @ApiProperty({ example: '13010-111' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\d{5}-?\d{3}$/, { message: 'CEP deve estar no formato 00000-000.' })
+  @Matches(/^\d{5}-?\d{3}$/, {
+    message: 'CEP deve estar no formato 00000-000.',
+  })
   zipCode: string;
 
   @ApiProperty({ example: 'Rua Conceição' })

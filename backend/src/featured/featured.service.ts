@@ -51,7 +51,10 @@ export class FeaturedService {
 
     const description = `Destaque Triluga — ${vehicle.title} (${plan.name})`;
 
-    const pixCharge = await this.efipay.createPixCharge(plan.price, description);
+    const pixCharge = await this.efipay.createPixCharge(
+      plan.price,
+      description,
+    );
 
     const order = await this.prisma.featuredOrder.create({
       data: {
@@ -84,7 +87,9 @@ export class FeaturedService {
 
   private async doActivateOrder(orderId: string) {
     const activatedAt = new Date();
-    const order = await this.prisma.featuredOrder.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.featuredOrder.findUnique({
+      where: { id: orderId },
+    });
     if (!order) throw new NotFoundException('Pedido não encontrado.');
 
     const expiresAt = new Date(activatedAt);
@@ -110,7 +115,8 @@ export class FeaturedService {
       throw new ForbiddenException('Invalid webhook token');
     }
 
-    const pixPayments: Array<{ txid?: string; status?: string }> = payload?.pix ?? [];
+    const pixPayments: Array<{ txid?: string; status?: string }> =
+      payload?.pix ?? [];
 
     let activated = 0;
     for (const pix of pixPayments) {
@@ -123,7 +129,9 @@ export class FeaturedService {
       try {
         await this.doActivateOrder(order.id);
         activated++;
-        this.logger.log(`Order ${order.id} activated via Efipay webhook (txid: ${pix.txid})`);
+        this.logger.log(
+          `Order ${order.id} activated via Efipay webhook (txid: ${pix.txid})`,
+        );
       } catch (err) {
         this.logger.error(`Failed to activate order ${order.id}`, err);
       }
@@ -139,7 +147,9 @@ export class FeaturedService {
     if (!order) throw new NotFoundException('Pedido não encontrado.');
     if (order.userId !== userId) throw new ForbiddenException();
     if (order.status !== 'PENDING')
-      throw new BadRequestException('Somente pedidos pendentes podem ser cancelados.');
+      throw new BadRequestException(
+        'Somente pedidos pendentes podem ser cancelados.',
+      );
 
     return this.prisma.featuredOrder.update({
       where: { id: orderId },

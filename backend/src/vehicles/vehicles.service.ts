@@ -9,7 +9,6 @@ import {
   FuelType,
   MotorcycleStyle,
   Prisma,
-  Role,
   Transmission,
   VehicleCategory,
   VehicleType,
@@ -40,7 +39,12 @@ export class VehiclesService {
       .replace(/^-+|-+$/g, '');
   }
 
-  private async generateUniqueSlug(brand: string, model: string, year: number, city: string): Promise<string> {
+  private async generateUniqueSlug(
+    brand: string,
+    model: string,
+    year: number,
+    city: string,
+  ): Promise<string> {
     const base = this.slugify(`${brand} ${model} ${year} ${city}`);
     let slug = base;
     let counter = 2;
@@ -203,9 +207,7 @@ export class VehiclesService {
       // When city is also provided, include vehicles in the same city that
       // don't have coordinates stored — they appear alongside geo-filtered results.
       andFilters.push(
-        query.city
-          ? { OR: [bboxClause, { latitude: null }] }
-          : bboxClause,
+        query.city ? { OR: [bboxClause, { latitude: null }] } : bboxClause,
       );
     }
 
@@ -217,22 +219,39 @@ export class VehiclesService {
 
     // Featured sempre aparecem primeiro quando sort=featured
     if (query.sort === 'featured') {
-      const [featuredItems, regularItems, total] = await this.prisma.$transaction([
-        this.prisma.vehicle.findMany({
-          where: { ...where, isFeatured: true } as any,
-          include: { images: { orderBy: { position: 'asc' }, take: 1 }, owner: { include: { profile: true, userReviewsReceived: { select: { rating: true } } } } },
-          orderBy: { featuredUntil: 'desc' } as any,
-          take: limit,
-        }),
-        this.prisma.vehicle.findMany({
-          where: { ...where, isFeatured: false } as any,
-          include: { images: { orderBy: { position: 'asc' }, take: 1 }, owner: { include: { profile: true, userReviewsReceived: { select: { rating: true } } } } },
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take: limit,
-        }),
-        this.prisma.vehicle.count({ where }),
-      ]);
+      const [featuredItems, regularItems, total] =
+        await this.prisma.$transaction([
+          this.prisma.vehicle.findMany({
+            where: { ...where, isFeatured: true } as any,
+            include: {
+              images: { orderBy: { position: 'asc' }, take: 1 },
+              owner: {
+                include: {
+                  profile: true,
+                  userReviewsReceived: { select: { rating: true } },
+                },
+              },
+            },
+            orderBy: { featuredUntil: 'desc' } as any,
+            take: limit,
+          }),
+          this.prisma.vehicle.findMany({
+            where: { ...where, isFeatured: false } as any,
+            include: {
+              images: { orderBy: { position: 'asc' }, take: 1 },
+              owner: {
+                include: {
+                  profile: true,
+                  userReviewsReceived: { select: { rating: true } },
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+          }),
+          this.prisma.vehicle.count({ where }),
+        ]);
       const merged = [...featuredItems, ...regularItems].slice(0, limit);
       const payload = {
         items: merged.map((v) => this.mapVehicleSummary(v)),
@@ -489,20 +508,28 @@ export class VehiclesService {
         where: { id: vehicle.id },
         data: { viewsCount: { increment: 1 } },
       })
-      .catch((err) => this.logger.error(`vehicle_views_increment_failed vehicleId=${vehicle.id} error=${err?.message}`));
+      .catch((err) =>
+        this.logger.error(
+          `vehicle_views_increment_failed vehicleId=${vehicle.id} error=${err?.message}`,
+        ),
+      );
 
     const basePayload = this.mapVehicleDetail(vehicle);
     const responseRate = await this.computeOwnerResponseRate(vehicle.ownerId);
     const payload = {
       ...basePayload,
-      owner: basePayload.owner ? { ...basePayload.owner, responseRate } : basePayload.owner,
+      owner: basePayload.owner
+        ? { ...basePayload.owner, responseRate }
+        : basePayload.owner,
     };
     await this.cacheQueueService.setJson(cacheKey, payload);
 
     return payload;
   }
 
-  private async computeOwnerResponseRate(ownerId: string): Promise<number | null> {
+  private async computeOwnerResponseRate(
+    ownerId: string,
+  ): Promise<number | null> {
     const [total, replied] = await Promise.all([
       this.prisma.chatConversation.count({
         where: { vehicle: { ownerId } },
@@ -520,7 +547,12 @@ export class VehiclesService {
 
   async create(ownerId: string, dto: CreateVehicleDto) {
     try {
-      const slug = await this.generateUniqueSlug(dto.brand, dto.model, dto.year, dto.city);
+      const slug = await this.generateUniqueSlug(
+        dto.brand,
+        dto.model,
+        dto.year,
+        dto.city,
+      );
       const vehicle = await this.prisma.vehicle.create({
         data: {
           ownerId,
@@ -760,7 +792,14 @@ export class VehiclesService {
   async getOwnerMetrics(ownerId: string, slugOrId: string) {
     const vehicle = await this.prisma.vehicle.findFirst({
       where: { ...this.resolveSlugOrId(slugOrId) } as any,
-      select: { id: true, ownerId: true, viewsCount: true, favoritesCount: true, title: true, createdAt: true } as any,
+      select: {
+        id: true,
+        ownerId: true,
+        viewsCount: true,
+        favoritesCount: true,
+        title: true,
+        createdAt: true,
+      } as any,
     });
     if (!vehicle) throw new NotFoundException('Veículo não encontrado.');
     const vehicleId = (vehicle as any).id;
@@ -795,7 +834,14 @@ export class VehiclesService {
   async findSimilar(slugOrId: string) {
     const vehicle = await this.prisma.vehicle.findFirst({
       where: this.resolveSlugOrId(slugOrId),
-      select: { id: true, brand: true, vehicleType: true, category: true, city: true, state: true },
+      select: {
+        id: true,
+        brand: true,
+        vehicleType: true,
+        category: true,
+        city: true,
+        state: true,
+      },
     });
     if (!vehicle) return [];
 
@@ -811,7 +857,12 @@ export class VehiclesService {
       },
       include: {
         images: { orderBy: { position: 'asc' }, take: 1 },
-        owner: { include: { profile: true, userReviewsReceived: { select: { rating: true } } } },
+        owner: {
+          include: {
+            profile: true,
+            userReviewsReceived: { select: { rating: true } },
+          },
+        },
       },
       orderBy: { viewsCount: 'desc' },
       take: 6,

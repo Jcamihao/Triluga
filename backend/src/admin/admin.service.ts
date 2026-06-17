@@ -74,7 +74,8 @@ export class AdminService {
               city: user.profile.city,
               state: user.profile.state,
               avatarUrl: user.profile.avatarUrl,
-              documentVerificationStatus: user.profile.documentVerificationStatus,
+              documentVerificationStatus:
+                user.profile.documentVerificationStatus,
               driverLicenseVerification: user.profile.driverLicenseVerification,
               hasDocumentImage: !!user.profile.documentImageUrl,
               hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
@@ -256,9 +257,23 @@ export class AdminService {
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {
-        id: true, title: true, brand: true, model: true, year: true,
-        city: true, state: true, isActive: true, isPublished: true, createdAt: true,
-        owner: { select: { id: true, email: true, profile: { select: { fullName: true } } } },
+        id: true,
+        title: true,
+        brand: true,
+        model: true,
+        year: true,
+        city: true,
+        state: true,
+        isActive: true,
+        isPublished: true,
+        createdAt: true,
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { fullName: true } },
+          },
+        },
       },
     });
   }
@@ -268,7 +283,11 @@ export class AdminService {
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {
-        id: true, email: true, role: true, status: true, createdAt: true,
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
         profile: { select: { fullName: true, city: true, state: true } },
       },
     });

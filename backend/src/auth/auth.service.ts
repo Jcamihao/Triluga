@@ -71,9 +71,16 @@ export class AuthService {
 
     this.emailService
       .sendEmailVerification(user.email, dto.fullName, verificationToken)
-      .catch((err) => this.logger.error(`verification_email_failed userId=${user.id} error=${err.message}`));
+      .catch((err) =>
+        this.logger.error(
+          `verification_email_failed userId=${user.id} error=${err.message}`,
+        ),
+      );
 
-    return this.issueTokens(user.id, user.email, user.role, { ...user, emailVerified: false });
+    return this.issueTokens(user.id, user.email, user.role, {
+      ...user,
+      emailVerified: false,
+    });
   }
 
   async login(dto: LoginDto) {
@@ -128,7 +135,7 @@ export class AuthService {
       payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
         secret: refreshSecret,
       });
-    } catch (error) {
+    } catch {
       this.logger.warn('refresh_invalid_token');
       throw new UnauthorizedException('Refresh token inválido.');
     }
@@ -175,7 +182,7 @@ export class AuthService {
       );
       await this.usersService.updateRefreshToken(payload.sub, null);
       this.logger.log(`logout_success userId=${payload.sub}`);
-    } catch (error) {
+    } catch {
       this.logger.warn('logout_refresh_token_invalid');
     }
 
@@ -189,7 +196,9 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.usersService.findByEmail(dto.email).catch(() => null);
+    const user = await this.usersService
+      .findByEmail(dto.email)
+      .catch(() => null);
 
     // Resposta genérica para não revelar se o email existe
     if (!user) {
@@ -230,8 +239,14 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.newPassword, 10);
 
     await Promise.all([
-      this.prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
-      this.prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
       // Invalida todas as sessões ativas
       this.usersService.updateRefreshToken(record.userId, null),
     ]);
@@ -253,8 +268,14 @@ export class AuthService {
       where: { emailVerificationToken: token },
     });
 
-    if (!user || !user.emailVerificationExpiresAt || user.emailVerificationExpiresAt < new Date()) {
-      throw new BadRequestException('Link de verificação inválido ou expirado.');
+    if (
+      !user ||
+      !user.emailVerificationExpiresAt ||
+      user.emailVerificationExpiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'Link de verificação inválido ou expirado.',
+      );
     }
 
     if (user.emailVerified) {
@@ -297,7 +318,11 @@ export class AuthService {
     const fullName = (user as any).profile?.fullName ?? user.email;
     this.emailService
       .sendEmailVerification(user.email, fullName, verificationToken)
-      .catch((err) => this.logger.error(`resend_verification_failed userId=${user.id} error=${err.message}`));
+      .catch((err) =>
+        this.logger.error(
+          `resend_verification_failed userId=${user.id} error=${err.message}`,
+        ),
+      );
 
     this.logger.log(`verification_resent userId=${user.id}`);
     return { success: true };
