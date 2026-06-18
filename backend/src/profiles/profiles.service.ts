@@ -614,24 +614,40 @@ export class ProfilesService {
       this.downloadBuffer(String(selfieUrl)),
     ]);
 
-    const result = await this.aiVerification.verifyKyc({
-      documentBuffer: docBuffer,
-      cnhBuffer: cnhBuffer,
-      selfieBuffer: selfieBuffer,
-      fullName: profile.fullName ?? '',
-    });
+    const [aiResult, faceResult] = await Promise.all([
+      this.aiVerification.verifyKyc({
+        documentBuffer: docBuffer,
+        cnhBuffer: cnhBuffer,
+        selfieBuffer: selfieBuffer,
+        fullName: profile.fullName ?? '',
+      }),
+      this.aiVerification.verifyFaceMatch({
+        selfieUrl: String(selfieUrl),
+        docUrl: String(docUrl),
+        cnhUrl: String(cnhUrl),
+      }),
+    ]);
+
+    // InsightFace tem precedência sobre o faceMatch do Ollama quando disponível
+    const docFaceMatch = faceResult?.docMatch ?? aiResult.faceMatch;
+    const cnhFaceMatch = faceResult?.cnhMatch ?? aiResult.faceMatch;
 
     this.logger.log(
-      `ai_verification_result userId=${userId} doc=${result.documentApproved} cnh=${result.cnhApproved} face=${result.faceMatch} reason="${result.reason}"`,
+      `ai_verification_result userId=${userId} ` +
+        `doc=${aiResult.documentApproved} cnh=${aiResult.cnhApproved} ` +
+        `ollama_face=${aiResult.faceMatch} ` +
+        `insightface_doc=${faceResult?.docMatch ?? 'n/a'}(${faceResult?.docSimilarity ?? 'n/a'}) ` +
+        `insightface_cnh=${faceResult?.cnhMatch ?? 'n/a'}(${faceResult?.cnhSimilarity ?? 'n/a'}) ` +
+        `reason="${aiResult.reason}"`,
     );
 
     const docStatus =
-      result.documentApproved && result.faceMatch
+      aiResult.documentApproved && docFaceMatch
         ? VerificationStatus.APPROVED
         : VerificationStatus.REJECTED;
 
     const cnhStatus =
-      result.cnhApproved && result.faceMatch
+      aiResult.cnhApproved && cnhFaceMatch
         ? VerificationStatus.APPROVED
         : VerificationStatus.REJECTED;
 
@@ -662,7 +678,7 @@ export class ProfilesService {
               user.email,
               fullName,
               'document',
-              result.reason,
+              aiResult.reason,
             ),
         cnhStatus === VerificationStatus.APPROVED
           ? this.emailService.sendDocumentApproved(
@@ -674,7 +690,7 @@ export class ProfilesService {
               user.email,
               fullName,
               'driver-license',
-              result.reason,
+              aiResult.reason,
             ),
       ]);
     }

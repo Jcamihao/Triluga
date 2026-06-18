@@ -11,6 +11,15 @@ export type KycResult = {
   reason: string;
 };
 
+export type FaceMatchResult = {
+  docMatch: boolean;
+  docSimilarity: number;
+  docFaceFound: boolean;
+  cnhMatch: boolean;
+  cnhSimilarity: number;
+  cnhFaceFound: boolean;
+};
+
 @Injectable()
 export class AiVerificationService {
   private readonly logger = new Logger(AiVerificationService.name);
@@ -36,6 +45,39 @@ export class AiVerificationService {
 
   get isEnabled() {
     return this.enabled;
+  }
+
+  async verifyFaceMatch(options: {
+    selfieUrl: string;
+    docUrl: string;
+    cnhUrl: string;
+  }): Promise<FaceMatchResult | null> {
+    const faceUrl = this.config.get<string>('FACE_VERIFICATION_URL', '');
+    if (!faceUrl) return null;
+
+    try {
+      const result = await this.postJson(
+        `${faceUrl}/verify`,
+        JSON.stringify({
+          selfie_url: options.selfieUrl,
+          doc_url: options.docUrl,
+          cnh_url: options.cnhUrl,
+        }),
+      );
+      return {
+        docMatch: Boolean(result.doc_match),
+        docSimilarity: Number(result.doc_similarity ?? 0),
+        docFaceFound: Boolean(result.doc_face_found),
+        cnhMatch: Boolean(result.cnh_match),
+        cnhSimilarity: Number(result.cnh_similarity ?? 0),
+        cnhFaceFound: Boolean(result.cnh_face_found),
+      };
+    } catch (err) {
+      this.logger.warn(
+        `face_match_failed error=${(err as Error).message}`,
+      );
+      return null;
+    }
   }
 
   async verifyKyc(options: {

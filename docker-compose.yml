@@ -86,6 +86,18 @@ services:
       /bin/sh -c "ollama pull ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b} && echo 'Modelo pronto.'"
     restart: 'no'
 
+  face-verification:
+    build:
+      context: ./face-verification
+    volumes:
+      - face-models:/models
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+
   backend:
     build:
       context: ./backend
@@ -97,6 +109,8 @@ services:
       minio-create-bucket:
         condition: service_completed_successfully
       ollama:
+        condition: service_healthy
+      face-verification:
         condition: service_healthy
     environment:
       PORT: ${PORT:-3000}
@@ -120,6 +134,7 @@ services:
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9004/triluga-public}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b}
+      FACE_VERIFICATION_URL: ${FACE_VERIFICATION_URL:-http://face-verification:8000}
     ports:
       - '${BACKEND_HOST_PORT:-3002}:3000'
 
@@ -139,3 +154,4 @@ volumes:
   postgres-data:
   minio-data:
   ollama-data:
+  face-models:
