@@ -224,7 +224,7 @@ export class VehiclesService {
           this.prisma.vehicle.findMany({
             where: { ...where, isFeatured: true } as any,
             include: {
-              images: { orderBy: { position: 'asc' }, take: 1 },
+              images: { orderBy: { position: 'asc' }, take: 4 },
               owner: {
                 include: {
                   profile: true,
@@ -238,7 +238,7 @@ export class VehiclesService {
           this.prisma.vehicle.findMany({
             where: { ...where, isFeatured: false } as any,
             include: {
-              images: { orderBy: { position: 'asc' }, take: 1 },
+              images: { orderBy: { position: 'asc' }, take: 4 },
               owner: {
                 include: {
                   profile: true,
@@ -285,7 +285,7 @@ export class VehiclesService {
             orderBy: {
               position: 'asc',
             },
-            take: 1,
+            take: 4,
           },
           owner: {
             include: {
@@ -364,6 +364,28 @@ export class VehiclesService {
       recentViewCounts.map((item) => [item.vehicleId, item._count.vehicleId]),
     );
 
+    const [favoriteCounts, contactCounts] = vehicleIds.length
+      ? await Promise.all([
+          this.prisma.favorite.groupBy({
+            by: ['vehicleId'],
+            where: { vehicleId: { in: vehicleIds } },
+            _count: { vehicleId: true },
+          }),
+          this.prisma.chatConversation.groupBy({
+            by: ['vehicleId'],
+            where: { vehicleId: { in: vehicleIds } },
+            _count: { vehicleId: true },
+          }),
+        ])
+      : [[], []];
+
+    const favoriteCountsByVehicleId = new Map(
+      favoriteCounts.map((item) => [item.vehicleId, item._count.vehicleId]),
+    );
+    const contactCountsByVehicleId = new Map(
+      contactCounts.map((item) => [item.vehicleId, item._count.vehicleId]),
+    );
+
     return vehicles.map((vehicle) => ({
       id: vehicle.id,
       title: vehicle.title,
@@ -408,6 +430,8 @@ export class VehiclesService {
       isFeatured: vehicle.isFeatured,
       featuredUntil: vehicle.featuredUntil?.toISOString() ?? null,
       viewsLast30Days: recentViewCountsByVehicleId.get(vehicle.id) ?? 0,
+      favoritesCount: favoriteCountsByVehicleId.get(vehicle.id) ?? 0,
+      contactsCount: contactCountsByVehicleId.get(vehicle.id) ?? 0,
     }));
   }
 
@@ -429,7 +453,7 @@ export class VehiclesService {
           orderBy: {
             position: 'asc',
           },
-          take: 1,
+          take: 4,
         },
         owner: {
           include: {
@@ -755,6 +779,7 @@ export class VehiclesService {
       reviewsCount: vehicle.reviewsCount,
       isFeatured: vehicle.isFeatured ?? false,
       coverImage: vehicle.images[0]?.url ?? null,
+      previewImages: vehicle.images.slice(0, 4).map((i: any) => i.url),
       owner: {
         ...this.mapOwnerSummary(vehicle.owner),
       },
@@ -856,7 +881,7 @@ export class VehiclesService {
         ],
       },
       include: {
-        images: { orderBy: { position: 'asc' }, take: 1 },
+        images: { orderBy: { position: 'asc' }, take: 4 },
         owner: {
           include: {
             profile: true,

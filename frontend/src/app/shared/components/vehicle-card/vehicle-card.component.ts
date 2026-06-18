@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../../core/models/domain.models';
 import { CompareService } from '../../../core/services/compare.service';
@@ -90,6 +90,20 @@ export class VehicleCardComponent {
     }
 
     return `${ratingAverage.toFixed(1)}`;
+  }
+
+  protected readonly currentSlide = signal(0);
+
+  protected get previewImages(): string[] {
+    const imgs = this.vehicle.previewImages ?? [];
+    return imgs.length > 0 ? imgs : (this.vehicle.coverImage ? [this.vehicle.coverImage] : []);
+  }
+
+  protected onSwipeScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+    if (el.clientWidth > 0) {
+      this.currentSlide.set(Math.round(el.scrollLeft / el.clientWidth));
+    }
   }
 
   protected get isContacted() {

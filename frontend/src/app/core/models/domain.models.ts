@@ -206,6 +206,7 @@ export interface VehicleCardItem {
   reviewsCount: number;
   isFeatured?: boolean;
   coverImage: string | null;
+  previewImages?: string[];
   owner?: {
     id: string;
     fullName: string | null;
@@ -255,6 +256,8 @@ export interface OwnerVehicleItem {
   reviewsCount: number;
   viewsCount: number;
   viewsLast30Days: number;
+  favoritesCount: number;
+  contactsCount: number;
   isFeatured?: boolean;
   featuredUntil?: string | null;
   coverImage: string | null;

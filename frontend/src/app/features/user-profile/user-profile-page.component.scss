@@ -10,8 +10,8 @@
   .public-profile-web {
     display: block;
     min-height: 100vh;
-    background: #f7f9ff;
-    color: #091d2e;
+    background: var(--md-surface);
+    color: var(--md-on-surface);
     font-family: 'Inter', sans-serif;
   }
 
@@ -56,7 +56,7 @@
   .public-profile-web__avatar-wrap img {
     width: 160px;
     height: 160px;
-    border: 4px solid #edf4ff;
+    border: 4px solid var(--md-surface-container-low);
     border-radius: 999px;
     object-fit: cover;
   }
@@ -71,7 +71,7 @@
     height: 34px;
     border: 2px solid #ffffff;
     border-radius: 999px;
-    background: #006d37;
+    background: var(--md-primary);
     color: #ffffff;
   }
 
@@ -81,7 +81,7 @@
   }
 
   .public-profile-web__identity h1 {
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: clamp(32px, 3vw, 44px) !important;
     line-height: 1.05 !important;
     letter-spacing: -0.04em;
@@ -90,7 +90,7 @@
 
   .public-profile-web__identity > p {
     margin-top: 8px;
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 16px;
     font-weight: 650;
   }
@@ -116,7 +116,7 @@
   .public-profile-web__rating-bars,
   .public-profile-web__review p,
   .public-profile-web__empty-list p {
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
   }
 
   .public-profile-web__metrics div > span {
@@ -132,21 +132,21 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 20px;
     line-height: 1.15;
     font-weight: 900;
   }
 
   .public-profile-web__metrics small {
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 14px;
     font-weight: 500;
   }
 
   .public-profile-web__stars {
     display: inline-flex;
-    color: #006d37;
+    color: var(--md-primary);
   }
 
   .public-profile-web__stars .material-symbols-outlined {
@@ -167,14 +167,14 @@
 
   .public-profile-web__actions button:first-child {
     border: 0;
-    background: linear-gradient(135deg, #006d37, #2ecc71);
+    background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
     color: #ffffff;
   }
 
   .public-profile-web__actions button:last-child {
     border: 1px solid rgba(187, 203, 187, 0.42);
     background: transparent;
-    color: #091d2e;
+    color: var(--md-on-surface);
   }
 
   .public-profile-web__vehicles {
@@ -192,7 +192,7 @@
 
   .public-profile-web__section-head h2,
   .public-profile-web__reviews-head h2 {
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 28px !important;
     line-height: 1.12 !important;
     letter-spacing: -0.03em;
@@ -202,7 +202,7 @@
   .public-profile-web__section-head p,
   .public-profile-web__reviews-head p {
     margin-top: 6px;
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 16px;
   }
 
@@ -212,7 +212,7 @@
     border: 0;
     border-radius: 999px;
     background: #d9eaff;
-    color: #091d2e;
+    color: var(--md-on-surface);
   }
 
   .public-profile-web__vehicle-grid {
@@ -255,7 +255,7 @@
     right: 16px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.92);
-    color: #006d37;
+    color: var(--md-primary);
     padding: 5px 12px;
     font-size: 11px;
     font-weight: 900;
@@ -275,21 +275,21 @@
   }
 
   .public-profile-web__vehicle-title h3 {
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 18px;
     line-height: 1.16;
     font-weight: 900;
   }
 
   .public-profile-web__vehicle-title strong {
-    color: #006d37;
+    color: var(--md-primary);
     font-size: 18px;
     font-weight: 900;
     white-space: nowrap;
   }
 
   .public-profile-web__vehicle-title small {
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 12px;
     font-weight: 500;
   }
@@ -321,7 +321,7 @@
     align-items: center;
     border-radius: 999px;
     background: #d9eaff;
-    color: #006d37;
+    color: var(--md-primary);
     font-size: 14px;
     font-weight: 900;
   }
@@ -345,7 +345,7 @@
 
   .public-profile-web__rating-card strong {
     display: block;
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 32px;
     line-height: 1;
     font-weight: 900;
@@ -379,7 +379,7 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #006d37;
+    background: var(--md-primary);
   }
 
   .public-profile-web__review-list {
@@ -416,24 +416,24 @@
     display: inline-grid;
     place-items: center;
     background: #e3efff;
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-weight: 900;
   }
 
   .public-profile-web__review h3 {
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 16px;
     font-weight: 900;
   }
 
   .public-profile-web__review-head p {
     margin-top: 4px;
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 12px;
   }
 
   .public-profile-web__review > p {
-    color: #3d4a3e;
+    color: var(--md-on-surface-variant);
     font-size: 15px;
     line-height: 1.65;
   }
@@ -455,13 +455,13 @@
 
   .public-profile-web__empty-list .material-symbols-outlined,
   .public-profile-web__error .material-symbols-outlined {
-    color: #006d37;
+    color: var(--md-primary);
     font-size: 44px;
   }
 
   .public-profile-web__empty-list strong,
   .public-profile-web__error h1 {
-    color: #091d2e;
+    color: var(--md-on-surface);
     font-size: 20px;
     font-weight: 900;
   }
@@ -471,7 +471,7 @@
     align-items: center;
     min-height: 44px;
     border-radius: 999px;
-    background: #006d37;
+    background: var(--md-primary);
     color: #ffffff;
     padding: 0 20px;
     font-weight: 900;

@@ -17,7 +17,7 @@
   appearance: none;
   width: 28px;
   height: 28px;
-  background: #2ecc71;
+  background: var(--md-primary-container);
   border: 4px solid #ffffff;
   border-radius: 50%;
   cursor: pointer;
@@ -30,7 +30,7 @@
   pointer-events: auto;
   width: 28px;
   height: 28px;
-  background: #2ecc71;
+  background: var(--md-primary-container);
   border: 4px solid #ffffff;
   border-radius: 50%;
   cursor: pointer;

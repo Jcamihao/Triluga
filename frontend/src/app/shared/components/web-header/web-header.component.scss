@@ -42,7 +42,7 @@
 }
 
 .web-header__brand {
-  color: #006d37;
+  color: var(--md-primary);
   font-size: 24px;
   font-style: italic;
   font-weight: 900;
@@ -73,7 +73,7 @@
 
 .web-header__link:hover,
 .web-header__link--active {
-  color: #006d37;
+  color: var(--md-primary);
 }
 
 .web-header__link:hover {
@@ -92,7 +92,7 @@
   left: 0;
   height: 3px;
   border-radius: 999px;
-  background: #006d37;
+  background: var(--md-primary);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 220ms ease;
@@ -130,7 +130,7 @@
 
 .web-header__icon:hover {
   background: #e3efff;
-  color: #006d37;
+  color: var(--md-primary);
 }
 
 .web-header__icon:active,
@@ -156,7 +156,7 @@
   height: 16px;
   border: 2px solid rgba(247, 249, 255, 0.95);
   border-radius: 999px;
-  background: #ba1a1a;
+  background: var(--md-error-color);
   color: #fff;
   font-size: 9px;
   font-weight: 900;
@@ -201,7 +201,7 @@
 }
 
 .web-notifications__head span {
-  color: #006d37;
+  color: var(--md-primary);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -210,7 +210,7 @@
 
 .web-notifications__head h2 {
   margin: 2px 0 0;
-  color: #091d2e;
+  color: var(--md-on-surface);
   font-size: 24px !important;
   font-weight: 900;
   line-height: 1.1 !important;
@@ -223,14 +223,14 @@
   height: 36px;
   border: 0;
   border-radius: 999px;
-  background: #edf4ff;
+  background: var(--md-surface-container-low);
   color: #203243;
 }
 
 .web-notifications__summary,
 .web-notifications__state {
   margin: 0;
-  color: #3d4a3e;
+  color: var(--md-on-surface-variant);
   font-size: 14px;
   font-weight: 700;
 }
@@ -263,12 +263,12 @@
 }
 
 .web-notification strong {
-  color: #091d2e;
+  color: var(--md-on-surface);
   font-size: 14px;
 }
 
 .web-notification p {
-  color: #3d4a3e;
+  color: var(--md-on-surface-variant);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -282,7 +282,7 @@
   justify-self: start;
   border: 0;
   border-radius: 999px;
-  background: #006d37;
+  background: var(--md-primary);
   color: #fff;
   padding: 8px 14px;
   font-size: 12px;
@@ -293,7 +293,7 @@
   min-height: 40px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #006d37, #2ecc71);
+  background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
   color: #fff;
   padding: 0 24px;
   font-size: 12px;
@@ -330,7 +330,7 @@
   width: 40px;
   height: 40px;
   overflow: hidden;
-  background: #d1e4fb;
+  background: var(--md-surface-variant);
 }
 
 .web-header__avatar img {

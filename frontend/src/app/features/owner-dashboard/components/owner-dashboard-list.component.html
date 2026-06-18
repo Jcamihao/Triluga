@@ -115,6 +115,36 @@
           </div>
         </div>
       </div>
+
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-3 shadow-sm border border-outline-variant/10"
+      >
+        <div class="flex justify-between items-start">
+          <span class="material-symbols-outlined text-rose-500 text-2xl">favorite</span>
+          <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">Favoritos</span>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">
+            Total de Favoritos
+          </p>
+          <h2 class="text-2xl font-black mt-1">{{ owner.totalFavorites }}</h2>
+        </div>
+      </div>
+
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-3 shadow-sm border border-outline-variant/10"
+      >
+        <div class="flex justify-between items-start">
+          <span class="material-symbols-outlined text-sky-500 text-2xl">chat_bubble</span>
+          <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">Contatos</span>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">
+            Total de Contatos
+          </p>
+          <h2 class="text-2xl font-black mt-1">{{ owner.totalContacts }}</h2>
+        </div>
+      </div>
     </section>
 
     <section class="bg-surface-container-low rounded-xl p-4 md:p-8">
@@ -231,6 +261,14 @@
                   >
                   {{ vehicle.viewsCount || 0 }}</span
                 >
+                <span class="flex items-center gap-1 text-rose-500"
+                  ><span class="material-symbols-outlined text-[14px]">favorite</span>
+                  {{ vehicle.favoritesCount || 0 }}</span
+                >
+                <span class="flex items-center gap-1 text-sky-500"
+                  ><span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                  {{ vehicle.contactsCount || 0 }}</span
+                >
               </div>
             </div>
           </div>
@@ -343,7 +381,7 @@
       </button>
     </div>
 
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
       <div
         class="bg-surface-container-lowest p-8 rounded-xl flex flex-col gap-4"
       >
@@ -414,6 +452,34 @@
             +{{ owner.totalAds - 3 }}
           </div>
         </div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-8 rounded-xl flex flex-col gap-4">
+        <div class="flex justify-between items-start">
+          <span class="material-symbols-outlined text-rose-500 text-3xl" style="font-variation-settings: 'FILL' 1">favorite</span>
+          <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">Favoritos</span>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-sm font-medium uppercase tracking-wider">Total de Favoritos</p>
+          <h2 class="text-3xl font-black mt-1">{{ owner.totalFavorites }}</h2>
+        </div>
+        <p class="text-xs text-on-surface-variant/60 font-medium">
+          {{ owner.totalFavorites === 1 ? 'Anúncio salvo por 1 pessoa' : 'Anúncios salvos por ' + owner.totalFavorites + ' pessoas' }}
+        </p>
+      </div>
+
+      <div class="bg-surface-container-lowest p-8 rounded-xl flex flex-col gap-4">
+        <div class="flex justify-between items-start">
+          <span class="material-symbols-outlined text-sky-500 text-3xl" style="font-variation-settings: 'FILL' 1">chat_bubble</span>
+          <span class="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-1 rounded-full">Contatos</span>
+        </div>
+        <div>
+          <p class="text-on-surface-variant text-sm font-medium uppercase tracking-wider">Total de Contatos</p>
+          <h2 class="text-3xl font-black mt-1">{{ owner.totalContacts }}</h2>
+        </div>
+        <p class="text-xs text-on-surface-variant/60 font-medium">
+          {{ owner.totalContacts === 1 ? '1 conversa iniciada' : owner.totalContacts + ' conversas iniciadas' }}
+        </p>
       </div>
     </section>
 
@@ -527,10 +593,16 @@
                 {{ vehicle.city }}, {{ vehicle.state }}
               </span>
               <span class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]"
-                  >visibility</span
-                >
+                <span class="material-symbols-outlined text-[14px]">visibility</span>
                 {{ owner.vehicleViewsLabel(vehicle) }}
+              </span>
+              <span class="flex items-center gap-1 text-rose-500">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1">favorite</span>
+                {{ vehicle.favoritesCount || 0 }} favorito{{ (vehicle.favoritesCount || 0) !== 1 ? 's' : '' }}
+              </span>
+              <span class="flex items-center gap-1 text-sky-500">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1">chat_bubble</span>
+                {{ vehicle.contactsCount || 0 }} contato{{ (vehicle.contactsCount || 0) !== 1 ? 's' : '' }}
               </span>
             </div>
           </div>

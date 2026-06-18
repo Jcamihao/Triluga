@@ -5,12 +5,37 @@
   role="link"
 >
   <div class="relative aspect-[4/3] overflow-hidden flex-shrink-0">
-    <img
-      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-      [src]="vehicle.coverImage || fallbackImage"
-      [alt]="vehicle.title"
-      loading="lazy"
-    />
+    <!-- Galeria swipeable -->
+    <div
+      class="swipe-track"
+      (scroll)="onSwipeScroll($event)"
+    >
+      <img
+        *ngFor="let img of previewImages"
+        class="swipe-slide"
+        [src]="img || fallbackImage"
+        [alt]="vehicle.title"
+        loading="lazy"
+      />
+      <img
+        *ngIf="previewImages.length === 0"
+        class="swipe-slide"
+        [src]="fallbackImage"
+        [alt]="vehicle.title"
+        loading="lazy"
+      />
+    </div>
+    <!-- Dots indicadores (só quando há mais de 1 foto) -->
+    <div
+      class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10"
+      *ngIf="previewImages.length > 1"
+    >
+      <span
+        *ngFor="let img of previewImages; let i = index"
+        class="block rounded-full transition-all duration-200"
+        [class]="i === currentSlide() ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'"
+      ></span>
+    </div>
 
     <!-- Top Left Badges -->
     <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">

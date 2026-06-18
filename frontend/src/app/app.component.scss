@@ -233,7 +233,7 @@
 .privacy-banner,
 .install-banner {
   position: fixed;
-  background-color: #f7f9ff;
+  background-color: var(--md-surface);
   left: 50%;
   bottom: 16px;
   z-index: 60;
@@ -339,7 +339,7 @@
   .install-banner {
     left: auto;
     width: min(420px, calc(100vw - 48px));
-    background-color: #f7f9ff;
+    background-color: var(--md-surface);
     bottom: 24px;
   }
 
@@ -352,7 +352,7 @@
     min-height: 40px;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #006d37, #2ecc71);
+    background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
     color: #fff;
     padding: 0 24px;
     font-size: 12px;
@@ -405,7 +405,7 @@
   inset: 0;
   z-index: 70;
   font-family: 'Inter', sans-serif;
-  color: #091d2e;
+  color: var(--md-on-surface);
 }
 
 .menu-stitch .menu-overlay__backdrop {
@@ -430,7 +430,7 @@
   overflow: hidden;
   border: 0;
   border-radius: 0 1.5rem 1.5rem 0;
-  background: #f7f9ff;
+  background: var(--md-surface);
   box-shadow: 32px 0 32px rgba(9, 29, 46, 0.06);
   animation: menu-drawer-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -476,8 +476,8 @@
 .menu-stitch .menu-drawer__avatar--fallback {
   display: grid;
   place-items: center;
-  background: #edf4ff;
-  color: #006d37;
+  background: var(--md-surface-container-low);
+  color: var(--md-primary);
   font-size: 20px;
   font-weight: 900;
   letter-spacing: 0;
@@ -493,7 +493,7 @@
   width: 24px;
   height: 24px;
   border-radius: 0.5rem;
-  background: #006d37;
+  background: var(--md-primary);
   color: #ffffff;
 }
 
@@ -505,14 +505,14 @@
 .menu-stitch .menu-drawer h2 {
   margin: 0;
   max-width: 100%;
-  color: #091d2e;
+  color: var(--md-on-surface);
   font-size: 20px !important;
   font-weight: 700;
   line-height: 1.2 !important;
 }
 
 .menu-stitch .menu-drawer__brand {
-  color: #006d37;
+  color: var(--md-primary);
   font-size: 24px !important;
   font-style: italic;
   font-weight: 900;
@@ -521,7 +521,7 @@
 
 .menu-drawer__member {
   margin: 4px 0 0;
-  color: #006d37;
+  color: var(--md-primary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -561,7 +561,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #091d2e;
+  color: var(--md-on-surface);
   font-size: 14px;
   font-weight: 500;
   text-align: left;
@@ -576,7 +576,7 @@
 }
 
 .menu-stitch .menu-link:hover {
-  background: #edf4ff;
+  background: var(--md-surface-container-low);
 }
 
 .menu-stitch .menu-link .material-symbols-outlined {
@@ -589,12 +589,12 @@
 }
 
 .menu-stitch .menu-link--active {
-  background: linear-gradient(90deg, #006d37 0%, #2ecc71 100%);
+  background: linear-gradient(90deg, var(--md-primary) 0%, var(--md-primary-container) 100%);
   color: #ffffff;
 }
 
 .menu-stitch .menu-link--active:hover {
-  background: linear-gradient(90deg, #006d37 0%, #2ecc71 100%);
+  background: linear-gradient(90deg, var(--md-primary) 0%, var(--md-primary-container) 100%);
   opacity: 0.9;
 }
 
@@ -612,7 +612,7 @@
   gap: 12px;
   padding: 16px;
   border-radius: 1rem;
-  background: #edf4ff;
+  background: var(--md-surface-container-low);
 }
 
 .menu-drawer__balance p,
@@ -629,13 +629,13 @@
 }
 
 .menu-drawer__balance strong {
-  color: #091d2e;
+  color: var(--md-on-surface);
   font-size: 14px;
   font-weight: 800;
 }
 
 .menu-drawer__balance .material-symbols-outlined {
-  color: #2ecc71;
+  color: var(--md-primary-container);
 }
 
 .menu-drawer__meta {
@@ -657,7 +657,7 @@
 }
 
 .menu-drawer__meta button:hover {
-  color: #006d37;
+  color: var(--md-primary);
 }
 
 .mobile-notifications {
@@ -697,7 +697,7 @@
 
 .mobile-notifications__head span {
   display: block;
-  color: #006d37;
+  color: var(--md-primary);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -773,7 +773,7 @@
   flex: 0 0 auto;
   border: 0;
   border-radius: 999px;
-  background: #006d37;
+  background: var(--md-primary);
   color: #fff;
   font-size: 11px;
   font-weight: 800;

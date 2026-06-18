@@ -8,8 +8,8 @@
 .chat-stitch {
   min-height: max(884px, 100dvh);
   font-family: 'Inter', sans-serif;
-  background: #f7f9ff !important;
-  color: #091d2e !important;
+  background: var(--md-surface) !important;
+  color: var(--md-on-surface) !important;
 }
 
 .chat-stitch .material-symbols-outlined {
@@ -50,7 +50,7 @@
 }
 
 .chat-stitch .bg-surface {
-  background-color: #f7f9ff !important;
+  background-color: var(--md-surface) !important;
 }
 
 .chat-stitch .bg-surface\/90 {
@@ -62,7 +62,7 @@
 }
 
 .chat-stitch .bg-surface-container-low {
-  background-color: #edf4ff !important;
+  background-color: var(--md-surface-container-low) !important;
 }
 
 .chat-stitch .bg-surface-container-lowest {
@@ -72,11 +72,11 @@
 .chat-stitch .bg-surface-container-high,
 .chat-stitch .bg-surface-container-highest,
 .chat-stitch .bg-surface-variant {
-  background-color: #d1e4fb !important;
+  background-color: var(--md-surface-variant) !important;
 }
 
 .chat-stitch .bg-primary {
-  background-color: #006d37 !important;
+  background-color: var(--md-primary) !important;
 }
 
 .chat-stitch .bg-primary\/10 {
@@ -84,7 +84,7 @@
 }
 
 .chat-stitch .bg-primary-container {
-  background-color: #2ecc71 !important;
+  background-color: var(--md-primary-container) !important;
 }
 
 .chat-stitch .bg-on-surface-variant\/30 {
@@ -93,7 +93,7 @@
 
 .chat-stitch .text-on-background,
 .chat-stitch .text-on-surface {
-  color: #091d2e !important;
+  color: var(--md-on-surface) !important;
 }
 
 .chat-stitch .text-on-background\/30 {
@@ -109,7 +109,7 @@
 }
 
 .chat-stitch .text-on-surface-variant {
-  color: #3d4a3e !important;
+  color: var(--md-on-surface-variant) !important;
 }
 
 .chat-stitch .text-on-surface-variant\/40 {
@@ -129,7 +129,7 @@
 }
 
 .chat-stitch .text-primary {
-  color: #006d37 !important;
+  color: var(--md-primary) !important;
 }
 
 .chat-stitch .text-primary\/30 {
@@ -157,29 +157,29 @@
 }
 
 .chat-stitch .from-primary {
-  --tw-gradient-from: #006d37 var(--tw-gradient-from-position) !important;
+  --tw-gradient-from: var(--md-primary) var(--tw-gradient-from-position) !important;
   --tw-gradient-to: rgba(0, 109, 55, 0) var(--tw-gradient-to-position) !important;
   --tw-gradient-stops:
     var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
 
 .chat-stitch .to-primary-container {
-  --tw-gradient-to: #2ecc71 var(--tw-gradient-to-position) !important;
+  --tw-gradient-to: var(--md-primary-container) var(--tw-gradient-to-position) !important;
 }
 
-.chat-stitch [class*='bg-[#f7f9ff]/80'] {
+.chat-stitch [class*='bg-[var(--md-surface)]/80'] {
   background-color: rgba(247, 249, 255, 0.8) !important;
 }
 
-.chat-stitch [class*='text-[#006d37]'] {
-  color: #006d37 !important;
+.chat-stitch [class*='text-[var(--md-primary)]'] {
+  color: var(--md-primary) !important;
 }
 
-.chat-stitch [class*='text-[#091d2e]'] {
-  color: #091d2e !important;
+.chat-stitch [class*='text-[var(--md-on-surface)]'] {
+  color: var(--md-on-surface) !important;
 }
 
-.chat-stitch [class*='shadow-[#006d37]/20'] {
+.chat-stitch [class*='shadow-[var(--md-primary)]/20'] {
   --tw-shadow-color: rgba(0, 109, 55, 0.2) !important;
 }
 

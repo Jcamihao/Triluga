@@ -185,6 +185,14 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     return this.vehicles.reduce((acc, v) => acc + (v.viewsLast30Days || 0), 0);
   }
 
+  protected get totalFavorites() {
+    return this.vehicles.reduce((acc, v) => acc + (v.favoritesCount || 0), 0);
+  }
+
+  protected get totalContacts() {
+    return this.vehicles.reduce((acc, v) => acc + (v.contactsCount || 0), 0);
+  }
+
   protected get ownerRating() {
     return 5.0;
   }

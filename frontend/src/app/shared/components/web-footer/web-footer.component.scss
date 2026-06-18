@@ -30,7 +30,7 @@
   }
 
   .web-footer__inner strong {
-    background: linear-gradient(135deg, #006d37, #2ecc71);
+    background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
     background-clip: text;
     color: transparent;
     -webkit-background-clip: text;

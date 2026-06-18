@@ -6,8 +6,8 @@
 .vehicle-detail-stitch {
   min-height: 100dvh;
   font-family: 'Inter', sans-serif;
-  background: #f7f9ff !important;
-  color: #091d2e !important;
+  background: var(--md-surface) !important;
+  color: var(--md-on-surface) !important;
 }
 
 .vehicle-detail-stitch .material-symbols-outlined {
@@ -44,11 +44,11 @@
 }
 
 .vehicle-detail-stitch .bg-surface {
-  background-color: #f7f9ff !important;
+  background-color: var(--md-surface) !important;
 }
 
 .vehicle-detail-stitch .bg-surface-container-low {
-  background-color: #edf4ff !important;
+  background-color: var(--md-surface-container-low) !important;
 }
 
 .vehicle-detail-stitch .bg-surface-container-lowest {
@@ -56,11 +56,11 @@
 }
 
 .vehicle-detail-stitch .bg-surface-container-highest {
-  background-color: #d1e4fb !important;
+  background-color: var(--md-surface-variant) !important;
 }
 
 .vehicle-detail-stitch .bg-primary {
-  background-color: #006d37 !important;
+  background-color: var(--md-primary) !important;
 }
 
 .vehicle-detail-stitch .bg-primary\/5 {
@@ -76,15 +76,15 @@
 }
 
 .vehicle-detail-stitch .bg-primary-container {
-  background-color: #2ecc71 !important;
+  background-color: var(--md-primary-container) !important;
 }
 
 .vehicle-detail-stitch .text-on-surface {
-  color: #091d2e !important;
+  color: var(--md-on-surface) !important;
 }
 
 .vehicle-detail-stitch .text-on-surface-variant {
-  color: #3d4a3e !important;
+  color: var(--md-on-surface-variant) !important;
 }
 
 .vehicle-detail-stitch .text-on-surface-variant\/60 {
@@ -92,11 +92,11 @@
 }
 
 .vehicle-detail-stitch .text-primary {
-  color: #006d37 !important;
+  color: var(--md-primary) !important;
 }
 
 .vehicle-detail-stitch .text-primary-container {
-  color: #2ecc71 !important;
+  color: var(--md-primary-container) !important;
 }
 
 .vehicle-detail-stitch .text-outline-variant {
