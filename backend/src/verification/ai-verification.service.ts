@@ -73,9 +73,7 @@ export class AiVerificationService {
         cnhFaceFound: Boolean(result.cnh_face_found),
       };
     } catch (err) {
-      this.logger.warn(
-        `face_match_failed error=${(err as Error).message}`,
-      );
+      this.logger.warn(`face_match_failed error=${(err as Error).message}`);
       return null;
     }
   }
