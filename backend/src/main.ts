@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
-import compression from 'compression';
+import * as compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { REQUEST_ID_HEADER } from './common/constants/request-trace.constants';
