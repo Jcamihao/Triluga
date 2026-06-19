@@ -135,6 +135,7 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b}
       FACE_VERIFICATION_URL: ${FACE_VERIFICATION_URL:-http://face-verification:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
     ports:
       - '${BACKEND_HOST_PORT:-3002}:3000'
 
