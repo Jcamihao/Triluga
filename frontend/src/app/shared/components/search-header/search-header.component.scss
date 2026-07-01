@@ -96,8 +96,8 @@
 }
 
 .sh__search:focus-within {
-  border-color: var(--mint-400);
-  box-shadow: 0 0 0 3px rgba(43, 184, 138, 0.1);
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 3px rgba(0, 109, 55, 0.1);
 }
 
 .sh__search-icon {
@@ -131,7 +131,7 @@
   padding: 0 18px;
   border: 0;
   border-radius: var(--radius-sm);
-  background: var(--mint-500);
+  background: var(--md-primary);
   color: var(--white);
   font-size: 13px;
   font-weight: 700;
@@ -141,7 +141,7 @@
 }
 
 .sh__search-btn:hover {
-  background: var(--mint-600);
+  background: var(--md-primary);
 }
 
 .sh__recent {
@@ -231,8 +231,8 @@
 }
 
 .sh__notif-btn:hover {
-  border-color: var(--mint-300);
-  color: var(--mint-600);
+  border-color: var(--md-outline);
+  color: var(--md-primary);
 }
 
 .sh__notif-badge {
@@ -310,9 +310,9 @@
 }
 
 .sh__filters-btn:hover {
-  border-color: var(--mint-300);
-  background: var(--mint-50);
-  color: var(--mint-700);
+  border-color: var(--md-outline);
+  background: var(--md-surface-container-low);
+  color: var(--md-on-primary-container);
 }
 
 .sh__filters-btn .material-icons {
@@ -475,8 +475,8 @@ p {
 }
 
 .notif-item--unread {
-  border-color: var(--mint-200);
-  background: var(--mint-50);
+  border-color: var(--md-outline-variant);
+  background: var(--md-surface-container-low);
 }
 
 /* ── Responsive ── */

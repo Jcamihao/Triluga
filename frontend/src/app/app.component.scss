@@ -99,13 +99,13 @@
   flex: 0 0 56px;
   border-radius: var(--radius-lg);
   object-fit: cover;
-  border: 2px solid var(--mint-100);
+  border: 2px solid var(--md-surface-container);
 }
 
 .menu-drawer__avatar--fallback {
   display: inline-grid;
   place-items: center;
-  background: linear-gradient(135deg, var(--mint-300), var(--mint-500));
+  background: linear-gradient(135deg, var(--md-secondary), var(--md-primary));
   color: var(--white);
   font-size: 18px;
   font-weight: 800;
@@ -125,9 +125,9 @@
   margin-bottom: 8px;
   padding: 5px 12px;
   border-radius: var(--radius-full);
-  background: var(--mint-50);
-  border: 1px solid var(--mint-100);
-  color: var(--mint-700);
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-surface-container);
+  color: var(--md-on-primary-container);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -144,7 +144,7 @@
   font-size: 32px !important;
   line-height: 0.9 !important;
   letter-spacing: 0.02em;
-  color: var(--mint-700);
+  color: var(--md-on-primary-container);
 }
 
 .menu-drawer__header p {
@@ -206,8 +206,8 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background: var(--mint-50);
-  color: var(--mint-600);
+  background: var(--md-surface-container-low);
+  color: var(--md-primary);
 }
 
 .menu-link small {

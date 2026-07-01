@@ -20,18 +20,6 @@
 :root {
   color-scheme: light;
 
-  /* ── Mint (Primary) ── */
-  --mint-50: #f0fbf7;
-  --mint-100: #d1f5e8;
-  --mint-200: #a3ebcf;
-  --mint-300: #6ddbb2;
-  --mint-400: #3cc99a;
-  --mint-500: #2bb88a;
-  --mint-600: #1f9b71;
-  --mint-700: #177d5b;
-  --mint-800: #125f45;
-  --mint-900: #0d4030;
-
   /* ── White / Gray (Base) ── */
   --white: #ffffff;
   --gray-50: #fafcfb;
@@ -219,12 +207,12 @@ button {
 }
 
 a {
-  color: var(--mint-600);
+  color: var(--md-primary);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--mint-700);
+  color: var(--md-on-primary-container);
 }
 
 img {
@@ -233,7 +221,7 @@ img {
 }
 
 ::selection {
-  background: var(--mint-100);
+  background: var(--md-surface-container);
   color: var(--graphite-700);
 }
 
@@ -295,7 +283,7 @@ small {
 /* .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); } */
 .text-mint {
-  color: var(--mint-600);
+  color: var(--md-primary);
 }
 .text-center {
   text-align: center;
@@ -316,9 +304,9 @@ small {
   gap: 6px;
   padding: 6px 14px;
   border-radius: var(--radius-full);
-  background: var(--mint-50);
-  border: 1px solid var(--mint-100);
-  color: var(--mint-700);
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-surface-container);
+  color: var(--md-on-primary-container);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -394,7 +382,7 @@ small {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--mint-600);
+  color: var(--md-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -403,7 +391,7 @@ small {
 }
 
 .section-link:hover {
-  color: var(--mint-700);
+  color: var(--md-on-primary-container);
 }
 
 .section-link .material-icons {
@@ -451,15 +439,15 @@ small {
 }
 
 .btn-primary {
-  background: var(--mint-500);
+  background: var(--md-primary);
   color: var(--white);
-  box-shadow: 0 2px 8px rgba(43, 184, 138, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 109, 55, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--mint-600);
+  background: var(--md-primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(43, 184, 138, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 109, 55, 0.3);
 }
 
 .btn-secondary {
@@ -470,21 +458,21 @@ small {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--mint-300);
-  background: var(--mint-50);
-  color: var(--mint-700);
+  border-color: var(--md-outline);
+  background: var(--md-surface-container-low);
+  color: var(--md-on-primary-container);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--mint-600);
+  color: var(--md-primary);
   padding: 0 12px;
   min-height: 40px;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--mint-50);
-  color: var(--mint-700);
+  background: var(--md-surface-container-low);
+  color: var(--md-on-primary-container);
 }
 
 .btn-sm {
@@ -552,8 +540,8 @@ small {
   select,
   textarea
 ):focus {
-  border-color: var(--mint-400);
-  box-shadow: 0 0 0 3px rgba(43, 184, 138, 0.12);
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 3px rgba(0, 109, 55, 0.12);
 }
 
 textarea {
@@ -598,7 +586,7 @@ label > span:first-child {
 }
 
 .card:hover {
-  border-color: var(--mint-200);
+  border-color: var(--md-outline-variant);
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
@@ -627,8 +615,8 @@ label > span:first-child {
 }
 
 .badge-mint {
-  background: var(--mint-100);
-  color: var(--mint-700);
+  background: var(--md-surface-container);
+  color: var(--md-on-primary-container);
 }
 
 .badge-muted {
@@ -679,15 +667,15 @@ label > span:first-child {
 }
 
 .chip:hover {
-  border-color: var(--mint-300);
-  background: var(--mint-50);
-  color: var(--mint-700);
+  border-color: var(--md-outline);
+  background: var(--md-surface-container-low);
+  color: var(--md-on-primary-container);
 }
 
 .chip--active {
-  border-color: var(--mint-400);
-  background: var(--mint-50);
-  color: var(--mint-700);
+  border-color: var(--md-primary);
+  background: var(--md-surface-container-low);
+  color: var(--md-on-primary-container);
 }
 
 /* ── Glass Panel (legacy compat) ── */
