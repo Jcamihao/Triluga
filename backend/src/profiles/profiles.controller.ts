@@ -199,4 +199,12 @@ export class ProfilesController {
   getMySelfieUrl(@CurrentUser() user: AuthenticatedUser) {
     return this.profilesService.getMySelfieUrl(user.sub);
   }
+
+  @Get('me/verification-status')
+  @ApiOperation({
+    summary: 'Retorna o status atual de verificação de identidade do usuário',
+  })
+  getMyVerificationStatus(@CurrentUser() user: AuthenticatedUser) {
+    return this.profilesService.getVerificationStatus(user.sub);
+  }
 }

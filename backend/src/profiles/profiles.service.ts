@@ -580,119 +580,134 @@ export class ProfilesService {
   }
 
   private async runAiVerification(userId: string) {
-    if (!this.aiVerification.isEnabled) return;
+    try {
+      const profile = await this.prisma.profile.findUnique({
+        where: { userId },
+        select: {
+          fullName: true,
+          documentImageUrl: true,
+          driverLicenseImageUrl: true,
+          selfieImageUrl: true,
+        },
+      });
 
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
-      select: {
-        fullName: true,
-        documentImageUrl: true,
-        driverLicenseImageUrl: true,
-        selfieImageUrl: true,
-      },
-    });
+      if (
+        !profile?.documentImageUrl ||
+        !profile?.driverLicenseImageUrl ||
+        !profile?.selfieImageUrl
+      ) {
+        this.logger.log(
+          `ai_verification_skipped userId=${userId} reason=missing_files`,
+        );
+        return;
+      }
 
-    if (
-      !profile?.documentImageUrl ||
-      !profile?.driverLicenseImageUrl ||
-      !profile?.selfieImageUrl
-    ) {
-      return;
-    }
+      if (!this.aiVerification.isEnabled) {
+        this.logger.log(
+          `ai_verification_skipped userId=${userId} reason=ollama_disabled — aguardando revisão manual`,
+        );
+        return;
+      }
 
-    this.logger.log(`ai_verification_started userId=${userId}`);
+      this.logger.log(`ai_verification_started userId=${userId}`);
 
-    const [docUrl, cnhUrl, selfieUrl] = await Promise.all([
-      this.storageService.getPrivateFileUrl(profile.documentImageUrl),
-      this.storageService.getPrivateFileUrl(profile.driverLicenseImageUrl),
-      this.storageService.getPrivateFileUrl(profile.selfieImageUrl),
-    ]);
-
-    const [docBuffer, cnhBuffer, selfieBuffer] = await Promise.all([
-      this.downloadBuffer(String(docUrl)),
-      this.downloadBuffer(String(cnhUrl)),
-      this.downloadBuffer(String(selfieUrl)),
-    ]);
-
-    const [aiResult, faceResult] = await Promise.all([
-      this.aiVerification.verifyKyc({
-        documentBuffer: docBuffer,
-        cnhBuffer: cnhBuffer,
-        selfieBuffer: selfieBuffer,
-        fullName: profile.fullName ?? '',
-      }),
-      this.aiVerification.verifyFaceMatch({
-        selfieUrl: String(selfieUrl),
-        docUrl: String(docUrl),
-        cnhUrl: String(cnhUrl),
-      }),
-    ]);
-
-    // InsightFace tem precedência sobre o faceMatch do Ollama quando disponível
-    const docFaceMatch = faceResult?.docMatch ?? aiResult.faceMatch;
-    const cnhFaceMatch = faceResult?.cnhMatch ?? aiResult.faceMatch;
-
-    this.logger.log(
-      `ai_verification_result userId=${userId} ` +
-        `doc=${aiResult.documentApproved} cnh=${aiResult.cnhApproved} ` +
-        `ollama_face=${aiResult.faceMatch} ` +
-        `insightface_doc=${faceResult?.docMatch ?? 'n/a'}(${faceResult?.docSimilarity ?? 'n/a'}) ` +
-        `insightface_cnh=${faceResult?.cnhMatch ?? 'n/a'}(${faceResult?.cnhSimilarity ?? 'n/a'}) ` +
-        `reason="${aiResult.reason}"`,
-    );
-
-    const docStatus =
-      aiResult.documentApproved && docFaceMatch
-        ? VerificationStatus.APPROVED
-        : VerificationStatus.REJECTED;
-
-    const cnhStatus =
-      aiResult.cnhApproved && cnhFaceMatch
-        ? VerificationStatus.APPROVED
-        : VerificationStatus.REJECTED;
-
-    await this.prisma.profile.update({
-      where: { userId },
-      data: {
-        documentVerificationStatus: docStatus,
-        driverLicenseVerification: cnhStatus,
-      },
-    });
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
-
-    if (user?.email) {
-      const fullName = profile.fullName ?? 'Usuário';
-
-      await Promise.allSettled([
-        docStatus === VerificationStatus.APPROVED
-          ? this.emailService.sendDocumentApproved(
-              user.email,
-              fullName,
-              'document',
-            )
-          : this.emailService.sendDocumentRejected(
-              user.email,
-              fullName,
-              'document',
-              aiResult.reason,
-            ),
-        cnhStatus === VerificationStatus.APPROVED
-          ? this.emailService.sendDocumentApproved(
-              user.email,
-              fullName,
-              'driver-license',
-            )
-          : this.emailService.sendDocumentRejected(
-              user.email,
-              fullName,
-              'driver-license',
-              aiResult.reason,
-            ),
+      const [docUrl, cnhUrl, selfieUrl] = await Promise.all([
+        this.storageService.getPrivateFileUrl(profile.documentImageUrl),
+        this.storageService.getPrivateFileUrl(profile.driverLicenseImageUrl),
+        this.storageService.getPrivateFileUrl(profile.selfieImageUrl),
       ]);
+
+      const [docBuffer, cnhBuffer, selfieBuffer] = await Promise.all([
+        this.downloadBuffer(String(docUrl)),
+        this.downloadBuffer(String(cnhUrl)),
+        this.downloadBuffer(String(selfieUrl)),
+      ]);
+
+      // Roda Ollama e InsightFace em paralelo; InsightFace pode retornar null
+      const [aiResult, faceResult] = await Promise.all([
+        this.aiVerification.verifyKyc({
+          documentBuffer: docBuffer,
+          cnhBuffer: cnhBuffer,
+          selfieBuffer: selfieBuffer,
+          fullName: profile.fullName ?? '',
+        }),
+        this.aiVerification.verifyFaceMatch({
+          selfieUrl: String(selfieUrl),
+          docUrl: String(docUrl),
+          cnhUrl: String(cnhUrl),
+        }),
+      ]);
+
+      // InsightFace tem precedência sobre o faceMatch do Ollama quando disponível
+      const docFaceMatch = faceResult?.docMatch ?? aiResult.faceMatch;
+      const cnhFaceMatch = faceResult?.cnhMatch ?? aiResult.faceMatch;
+
+      this.logger.log(
+        `ai_verification_result userId=${userId} ` +
+          `doc=${aiResult.documentApproved} cnh=${aiResult.cnhApproved} ` +
+          `ollama_face=${aiResult.faceMatch} ` +
+          `insightface_doc=${faceResult?.docMatch ?? 'n/a'}(${faceResult?.docSimilarity ?? 'n/a'}) ` +
+          `insightface_cnh=${faceResult?.cnhMatch ?? 'n/a'}(${faceResult?.cnhSimilarity ?? 'n/a'}) ` +
+          `reason="${aiResult.reason}"`,
+      );
+
+      const docStatus =
+        aiResult.documentApproved && docFaceMatch
+          ? VerificationStatus.APPROVED
+          : VerificationStatus.REJECTED;
+
+      const cnhStatus =
+        aiResult.cnhApproved && cnhFaceMatch
+          ? VerificationStatus.APPROVED
+          : VerificationStatus.REJECTED;
+
+      await this.prisma.profile.update({
+        where: { userId },
+        data: {
+          documentVerificationStatus: docStatus,
+          driverLicenseVerification: cnhStatus,
+        },
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+
+      if (user?.email) {
+        const fullName = profile.fullName ?? 'Usuário';
+        await Promise.allSettled([
+          docStatus === VerificationStatus.APPROVED
+            ? this.emailService.sendDocumentApproved(
+                user.email,
+                fullName,
+                'document',
+              )
+            : this.emailService.sendDocumentRejected(
+                user.email,
+                fullName,
+                'document',
+                aiResult.reason,
+              ),
+          cnhStatus === VerificationStatus.APPROVED
+            ? this.emailService.sendDocumentApproved(
+                user.email,
+                fullName,
+                'driver-license',
+              )
+            : this.emailService.sendDocumentRejected(
+                user.email,
+                fullName,
+                'driver-license',
+                aiResult.reason,
+              ),
+        ]);
+      }
+    } catch (err) {
+      this.logger.error(
+        `ai_verification_failed userId=${userId} error=${(err as Error).message} — status mantido como PENDING para revisão manual`,
+      );
+      // Não muda o status: documentos ficam PENDING para revisão manual
     }
   }
 
@@ -701,29 +716,102 @@ export class ProfilesService {
     fileKey: string,
     type: 'document' | 'driverLicense',
   ) {
-    const tempUrlResult = await this.storageService.getPrivateFileUrl(fileKey);
-    const tempUrl =
-      typeof tempUrlResult === 'string' ? tempUrlResult : String(tempUrlResult);
-    const buffer = await this.downloadBuffer(tempUrl);
-    const text = await this.ocrService.extractText(buffer);
+    try {
+      const tempUrlResult =
+        await this.storageService.getPrivateFileUrl(fileKey);
+      const tempUrl =
+        typeof tempUrlResult === 'string'
+          ? tempUrlResult
+          : String(tempUrlResult);
+      const buffer = await this.downloadBuffer(tempUrl);
+      const text = await this.ocrService.extractText(buffer);
 
-    await this.prisma.profile.update({
-      where: { userId },
-      data:
-        type === 'document' ? { documentOcrText: text } : { cnhOcrText: text },
-    });
+      if (!text) {
+        this.logger.warn(`ocr_empty_result userId=${userId} type=${type}`);
+        return;
+      }
+
+      await this.prisma.profile.update({
+        where: { userId },
+        data:
+          type === 'document'
+            ? { documentOcrText: text }
+            : { cnhOcrText: text },
+      });
+
+      this.logger.log(
+        `ocr_complete userId=${userId} type=${type} chars=${text.length}`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `ocr_failed userId=${userId} type=${type} error=${(err as Error).message}`,
+      );
+    }
   }
 
-  private downloadBuffer(url: string): Promise<Buffer> {
+  async getVerificationStatus(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        documentVerificationStatus: true,
+        driverLicenseVerification: true,
+        selfieImageUrl: true,
+        documentImageUrl: true,
+        driverLicenseImageUrl: true,
+      },
+    });
+
+    return {
+      documentStatus:
+        profile?.documentVerificationStatus ?? VerificationStatus.NOT_SUBMITTED,
+      driverLicenseStatus:
+        profile?.driverLicenseVerification ?? VerificationStatus.NOT_SUBMITTED,
+      hasSelfie: !!profile?.selfieImageUrl,
+      hasDocument: !!profile?.documentImageUrl,
+      hasDriverLicense: !!profile?.driverLicenseImageUrl,
+      overallStatus: this.resolveProfileVerificationStatus(
+        profile?.documentVerificationStatus ?? VerificationStatus.NOT_SUBMITTED,
+        profile?.driverLicenseVerification ?? VerificationStatus.NOT_SUBMITTED,
+      ),
+    };
+  }
+
+  private downloadBuffer(url: string, redirectCount = 0): Promise<Buffer> {
+    if (redirectCount > 5) {
+      return Promise.reject(new Error('Too many redirects'));
+    }
+
     const lib = url.startsWith('https://') ? https : http;
+
     return new Promise((resolve, reject) => {
       const req = lib.request(url, (res: import('http').IncomingMessage) => {
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          res.headers.location
+        ) {
+          resolve(
+            this.downloadBuffer(res.headers.location, redirectCount + 1),
+          );
+          return;
+        }
+
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`HTTP ${res.statusCode} ao baixar arquivo`));
+          return;
+        }
+
         const chunks: Buffer[] = [];
         res.on('data', (chunk: Buffer) => chunks.push(chunk));
         res.on('end', () => resolve(Buffer.concat(chunks)));
+        res.on('error', reject);
       });
+
       req.on('error', reject);
-      req.setTimeout(10000, () => req.destroy(new Error('timeout')));
+      req.setTimeout(30_000, () =>
+        req.destroy(new Error('Download timeout após 30s')),
+      );
       req.end();
     });
   }

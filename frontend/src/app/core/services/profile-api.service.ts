@@ -101,6 +101,17 @@ export class ProfileApiService {
     );
   }
 
+  getMyVerificationStatus() {
+    return this.http.get<{
+      documentStatus: string;
+      driverLicenseStatus: string;
+      hasSelfie: boolean;
+      hasDocument: boolean;
+      hasDriverLicense: boolean;
+      overallStatus: string;
+    }>(`${environment.apiBaseUrl}/profiles/me/verification-status`);
+  }
+
   getMyDocumentUrl() {
     return this.http
       .get<{

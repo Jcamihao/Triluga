@@ -8,7 +8,10 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { interval, Subscription, switchMap, take, takeWhile } from 'rxjs';
 import { ProfileApiService } from '../../../core/services/profile-api.service';
+
+type VerificationState = 'idle' | 'processing' | 'approved' | 'rejected' | 'pending-review';
 
 @Component({
   selector: 'app-verification-onboarding',
@@ -150,10 +153,37 @@ import { ProfileApiService } from '../../../core/services/profile-api.service';
             <button type="button" (click)="retakeSelfie()" class="w-full py-2 rounded-full border border-outline-variant/30 text-on-surface text-sm font-medium">Tirar novamente</button>
           </ng-container>
 
-          <!-- Feedback sucesso -->
-          <div *ngIf="feedback" class="flex items-center gap-3 p-4 rounded-xl bg-primary-container/20">
-            <span class="material-symbols-outlined text-primary">check_circle</span>
-            <p class="text-sm font-medium text-primary">{{ feedback }}</p>
+          <!-- Processando -->
+          <div *ngIf="verificationState === 'processing'" class="flex items-center gap-3 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+            <span class="material-symbols-outlined text-primary animate-spin">sync</span>
+            <p class="text-sm font-medium text-on-surface-variant">Analisando seus documentos...</p>
+          </div>
+
+          <!-- Aprovado -->
+          <div *ngIf="verificationState === 'approved'" class="flex items-center gap-3 p-4 rounded-xl" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2)">
+            <span class="material-symbols-outlined" style="color: #166534; font-variation-settings: 'FILL' 1">verified</span>
+            <div>
+              <p class="text-sm font-bold" style="color: #166534">Identidade verificada!</p>
+              <p class="text-xs" style="color: #166534; opacity: 0.8">Seus documentos foram aprovados com sucesso.</p>
+            </div>
+          </div>
+
+          <!-- Rejeitado -->
+          <div *ngIf="verificationState === 'rejected'" class="flex items-center gap-3 p-4 rounded-xl bg-error-container/20 border border-error-container/30">
+            <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1">cancel</span>
+            <div>
+              <p class="text-sm font-bold text-error">Verificação não aprovada</p>
+              <p class="text-xs text-error/80">Verifique se as fotos estão nítidas e tente novamente.</p>
+            </div>
+          </div>
+
+          <!-- Pendente (IA indisponível, revisão manual) -->
+          <div *ngIf="verificationState === 'pending-review'" class="flex items-center gap-3 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1">schedule</span>
+            <div>
+              <p class="text-sm font-bold text-on-surface">Em análise</p>
+              <p class="text-xs text-on-surface-variant">Você será notificado por e-mail em até 24h.</p>
+            </div>
           </div>
 
           <input #selfieInput type="file" accept="image/*" class="sr-only" (change)="onSelfieFileSelected($event)" />
@@ -163,13 +193,13 @@ import { ProfileApiService } from '../../../core/services/profile-api.service';
             <span class="text-xs text-error font-medium">{{ error }}</span>
           </div>
 
-          <button *ngIf="selfiePreview && !feedback" type="button" [disabled]="uploading" (click)="uploadSelfie()" class="w-full py-3 rounded-full bg-primary text-on-primary font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <button *ngIf="selfiePreview && verificationState === 'idle'" type="button" [disabled]="uploading" (click)="uploadSelfie()" class="w-full py-3 rounded-full bg-primary text-on-primary font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 transition-all">
             <span class="material-symbols-outlined text-base animate-spin" *ngIf="uploading">sync</span>
             <span>{{ uploading ? 'Enviando...' : 'Enviar Verificação' }}</span>
             <span class="material-symbols-outlined" *ngIf="!uploading">verified_user</span>
           </button>
 
-          <button *ngIf="feedback" type="button" (click)="close()" class="w-full py-3 rounded-full bg-primary text-on-primary font-bold">Concluir</button>
+          <button *ngIf="verificationState === 'approved' || verificationState === 'rejected' || verificationState === 'pending-review'" type="button" (click)="close()" class="w-full py-3 rounded-full bg-primary text-on-primary font-bold">Concluir</button>
         </div>
 
       </div>
@@ -182,11 +212,12 @@ export class VerificationOnboardingComponent implements OnDestroy {
   @ViewChild('canvasEl') canvasEl?: ElementRef<HTMLCanvasElement>;
 
   private readonly profileApi = inject(ProfileApiService);
+  private pollSub: Subscription | null = null;
 
   protected step = 1;
   protected uploading = false;
-  protected feedback = '';
   protected error = '';
+  protected verificationState: VerificationState = 'idle';
 
   protected documentFile: File | null = null;
   protected documentPreview: string | null = null;
@@ -197,10 +228,10 @@ export class VerificationOnboardingComponent implements OnDestroy {
   protected cameraError = '';
   protected selfieBlob: Blob | null = null;
   protected selfiePreview: string | null = null;
-  protected faceDetected = false;
 
   ngOnDestroy() {
     this.stopCamera();
+    this.pollSub?.unsubscribe();
   }
 
   protected onDocumentSelected(event: Event) {
@@ -311,17 +342,57 @@ export class VerificationOnboardingComponent implements OnDestroy {
       this.selfieBlob instanceof File
         ? this.selfieBlob
         : new File([this.selfieBlob], 'selfie.jpg', { type: 'image/jpeg' });
+
     this.profileApi.uploadMySelfie(file).subscribe({
       next: () => {
         this.uploading = false;
-        this.feedback =
-          'Verificação enviada! Nossa equipe irá analisar em até 24h.';
+        this.verificationState = 'processing';
+        this.startPolling();
       },
       error: () => {
         this.uploading = false;
         this.error = 'Erro ao enviar selfie. Tente novamente.';
       },
     });
+  }
+
+  private startPolling() {
+    const MAX_POLLS = 20; // 20 × 3s = 60s máximo
+    let polls = 0;
+
+    this.pollSub = interval(3_000)
+      .pipe(
+        take(MAX_POLLS),
+        switchMap(() => this.profileApi.getMyVerificationStatus()),
+        takeWhile((status) => {
+          polls++;
+          const done =
+            status.overallStatus === 'APPROVED' ||
+            status.overallStatus === 'REJECTED';
+          return !done && polls < MAX_POLLS;
+        }, true),
+      )
+      .subscribe({
+        next: (status) => {
+          if (status.overallStatus === 'APPROVED') {
+            this.verificationState = 'approved';
+            this.pollSub?.unsubscribe();
+          } else if (status.overallStatus === 'REJECTED') {
+            this.verificationState = 'rejected';
+            this.pollSub?.unsubscribe();
+          }
+        },
+        complete: () => {
+          if (this.verificationState === 'processing') {
+            this.verificationState = 'pending-review';
+          }
+        },
+        error: () => {
+          if (this.verificationState === 'processing') {
+            this.verificationState = 'pending-review';
+          }
+        },
+      });
   }
 
   protected stopCamera() {
