@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { AuditModule } from '../audit/audit.module';
+import { EmailModule } from '../email/email.module';
 import { PrivacyModule } from '../privacy/privacy.module';
 import { ProfilesModule } from '../profiles/profiles.module';
 import { ReportsModule } from '../reports/reports.module';
@@ -16,6 +17,7 @@ import { AdminService } from './admin.service';
     ReportsModule,
     AnalyticsModule,
     AuditModule,
+    EmailModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

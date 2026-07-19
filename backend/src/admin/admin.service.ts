@@ -5,6 +5,7 @@ import {
   VerificationStatus,
 } from '@prisma/client';
 import { CacheQueueService } from '../cache-queue/cache-queue.service';
+import { EmailService } from '../email/email.service';
 import { PrivacyService } from '../privacy/privacy.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProfilesService } from '../profiles/profiles.service';
@@ -16,6 +17,7 @@ export class AdminService {
     private readonly cacheQueueService: CacheQueueService,
     private readonly profilesService: ProfilesService,
     private readonly privacyService: PrivacyService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getDashboard() {
@@ -200,20 +202,37 @@ export class AdminService {
     field: 'documentVerificationStatus' | 'driverLicenseVerification',
     status: VerificationStatus,
   ) {
-    const profile = await this.prisma.profile.findUnique({
-      where: { userId },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        profile: { select: { fullName: true } },
+      },
     });
 
-    if (!profile) {
+    if (!user?.profile) {
       throw new NotFoundException('Perfil do usuário não encontrado.');
     }
 
-    return this.prisma.profile.update({
+    const updated = await this.prisma.profile.update({
       where: { userId },
-      data: {
-        [field]: status,
-      },
+      data: { [field]: status },
     });
+
+    const documentType =
+      field === 'driverLicenseVerification' ? 'driver-license' : 'document';
+
+    if (status === VerificationStatus.APPROVED) {
+      this.emailService
+        .sendDocumentApproved(user.email, user.profile.fullName, documentType)
+        .catch(() => {});
+    } else if (status === VerificationStatus.REJECTED) {
+      this.emailService
+        .sendDocumentRejected(user.email, user.profile.fullName, documentType)
+        .catch(() => {});
+    }
+
+    return updated;
   }
 
   async getFeaturedOrders(status?: string) {
