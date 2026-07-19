@@ -749,6 +749,51 @@ export class ProfilesService {
     }
   }
 
+  async retryVerification(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        documentImageUrl: true,
+        driverLicenseImageUrl: true,
+        selfieImageUrl: true,
+        documentVerificationStatus: true,
+        driverLicenseVerification: true,
+      },
+    });
+
+    if (!profile?.documentImageUrl || !profile?.driverLicenseImageUrl) {
+      throw new BadRequestException(
+        'Envie o documento e a CNH antes de tentar novamente.',
+      );
+    }
+
+    if (!profile.selfieImageUrl) {
+      throw new BadRequestException(
+        'Envie a selfie antes de tentar novamente.',
+      );
+    }
+
+    // Volta status para PENDING para indicar que está reprocessando
+    await this.prisma.profile.update({
+      where: { userId },
+      data: {
+        documentVerificationStatus: VerificationStatus.PENDING,
+        driverLicenseVerification: VerificationStatus.PENDING,
+      },
+    });
+
+    this.logger.log(`verification_retry_requested userId=${userId}`);
+
+    // Dispara verificação em background
+    this.runAiVerification(userId).catch((err) =>
+      this.logger.error(
+        `retry_verification_failed userId=${userId} error=${err?.message}`,
+      ),
+    );
+
+    return { retrying: true };
+  }
+
   async getVerificationStatus(userId: string) {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },

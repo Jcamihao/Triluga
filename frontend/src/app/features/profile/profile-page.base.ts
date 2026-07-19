@@ -51,6 +51,8 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected openingDocument = false;
   protected openingDriverLicense = false;
   protected showVerificationOnboarding = false;
+  protected retryingVerification = false;
+  protected retryVerificationFeedback = '';
   protected zipCodeHint = '';
   protected zipCodeError = '';
   protected resendingVerification = false;
@@ -419,6 +421,24 @@ export abstract class ProfilePageBase implements OnDestroy {
         this.zipCodeHint = '';
         this.zipCodeError =
           'Não foi possível localizar esse CEP. Você pode preencher o endereço manualmente.';
+      },
+    });
+  }
+
+  protected retryVerification() {
+    this.retryingVerification = true;
+    this.retryVerificationFeedback = '';
+    this.profileApiService.retryVerification().subscribe({
+      next: () => {
+        this.retryingVerification = false;
+        this.retryVerificationFeedback =
+          'Verificação reiniciada! Atualizaremos seu status em instantes.';
+        setTimeout(() => this.loadData(), 5_000);
+      },
+      error: () => {
+        this.retryingVerification = false;
+        this.retryVerificationFeedback =
+          'Não foi possível iniciar a verificação. Tente novamente.';
       },
     });
   }

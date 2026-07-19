@@ -115,13 +115,31 @@ type VerificationState = 'idle' | 'processing' | 'approved' | 'rejected' | 'pend
             <p class="text-sm text-on-surface-variant">Tire uma selfie com boa iluminação. Seu rosto deve estar centralizado e visível.</p>
           </div>
 
-          <!-- Nenhuma selfie ainda -->
-          <ng-container *ngIf="!selfiePreview">
+          <!-- === MOBILE: câmera nativa via input capture === -->
+          <ng-container *ngIf="isMobile && !selfiePreview && verificationState === 'idle'">
+            <div class="rounded-xl bg-surface-container-low border border-outline-variant/30 p-6 flex flex-col items-center gap-4 text-center">
+              <div class="w-20 h-20 rounded-full bg-primary-container/20 flex items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-primary">face</span>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-on-surface">Câmera frontal</p>
+                <p class="text-xs text-on-surface-variant mt-1">O app abrirá a câmera do seu celular diretamente.</p>
+              </div>
+              <button type="button" (click)="selfieInput.click()"
+                class="w-full py-3 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
+                <span class="material-symbols-outlined">photo_camera</span>
+                Tirar selfie
+              </button>
+              <p class="text-xs text-outline">Ou <button type="button" (click)="selfieGalleryInput.click()" class="underline text-primary">escolha da galeria</button></p>
+            </div>
+          </ng-container>
+
+          <!-- === DESKTOP: webcam via getUserMedia === -->
+          <ng-container *ngIf="!isMobile && !selfiePreview && verificationState === 'idle'">
             <!-- Preview da câmera -->
             <div *ngIf="!cameraError" class="relative rounded-xl overflow-hidden bg-black aspect-video">
               <video #videoEl autoplay playsinline muted class="w-full h-full object-cover"></video>
               <canvas #canvasEl class="sr-only"></canvas>
-              <!-- Overlay guia facial -->
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="w-40 h-52 border-4 border-primary/60 rounded-full"></div>
               </div>
@@ -134,7 +152,6 @@ type VerificationState = 'idle' | 'processing' | 'approved' | 'rejected' | 'pend
               <button type="button" (click)="selfieInput.click()" class="px-6 py-2 rounded-full bg-surface-container-high text-on-surface text-sm font-bold">Selecionar foto</button>
             </div>
 
-            <!-- Botão capturar (só se câmera ativa) -->
             <button *ngIf="!cameraError" type="button" (click)="captureSelfie()" class="w-full py-3 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
               <span class="material-symbols-outlined">camera</span>
               Capturar Selfie
@@ -146,7 +163,7 @@ type VerificationState = 'idle' | 'processing' | 'approved' | 'rejected' | 'pend
           </ng-container>
 
           <!-- Preview da selfie capturada -->
-          <ng-container *ngIf="selfiePreview">
+          <ng-container *ngIf="selfiePreview && verificationState === 'idle'">
             <div class="relative rounded-xl overflow-hidden">
               <img [src]="selfiePreview" class="w-full max-h-64 object-cover rounded-xl" alt="Preview da selfie" />
             </div>
@@ -186,7 +203,10 @@ type VerificationState = 'idle' | 'processing' | 'approved' | 'rejected' | 'pend
             </div>
           </div>
 
-          <input #selfieInput type="file" accept="image/*" class="sr-only" (change)="onSelfieFileSelected($event)" />
+          <!-- input câmera frontal mobile (capture=user) -->
+          <input #selfieInput type="file" accept="image/*" capture="user" class="sr-only" (change)="onSelfieFileSelected($event)" />
+          <!-- input galeria mobile / desktop fallback (sem capture) -->
+          <input #selfieGalleryInput type="file" accept="image/*" class="sr-only" (change)="onSelfieFileSelected($event)" />
 
           <div *ngIf="error" class="flex items-center gap-2 p-3 rounded-lg bg-error-container/20">
             <span class="material-symbols-outlined text-sm text-error">error</span>
@@ -213,6 +233,10 @@ export class VerificationOnboardingComponent implements OnDestroy {
 
   private readonly profileApi = inject(ProfileApiService);
   private pollSub: Subscription | null = null;
+
+  protected readonly isMobile =
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 1);
 
   protected step = 1;
   protected uploading = false;
@@ -272,7 +296,7 @@ export class VerificationOnboardingComponent implements OnDestroy {
       next: () => {
         this.uploading = false;
         this.step = 3;
-        this.startCamera();
+        if (!this.isMobile) this.startCamera();
       },
       error: () => {
         this.uploading = false;
@@ -331,7 +355,7 @@ export class VerificationOnboardingComponent implements OnDestroy {
   protected retakeSelfie() {
     this.selfieBlob = null;
     this.selfiePreview = null;
-    this.startCamera();
+    if (!this.isMobile) this.startCamera();
   }
 
   protected uploadSelfie() {

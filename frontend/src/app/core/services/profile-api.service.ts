@@ -101,6 +101,13 @@ export class ProfileApiService {
     );
   }
 
+  retryVerification() {
+    return this.http.post<{ retrying: boolean }>(
+      `${environment.apiBaseUrl}/profiles/me/retry-verification`,
+      {},
+    );
+  }
+
   getMyVerificationStatus() {
     return this.http.get<{
       documentStatus: string;

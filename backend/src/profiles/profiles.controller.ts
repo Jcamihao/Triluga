@@ -207,4 +207,12 @@ export class ProfilesController {
   getMyVerificationStatus(@CurrentUser() user: AuthenticatedUser) {
     return this.profilesService.getVerificationStatus(user.sub);
   }
+
+  @Post('me/retry-verification')
+  @ApiOperation({
+    summary: 'Re-dispara a verificação de identidade via IA',
+  })
+  retryVerification(@CurrentUser() user: AuthenticatedUser) {
+    return this.profilesService.retryVerification(user.sub);
+  }
 }
