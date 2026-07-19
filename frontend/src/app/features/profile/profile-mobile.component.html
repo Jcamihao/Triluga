@@ -477,6 +477,40 @@
             {{ openingDriverLicense ? 'Abrindo...' : 'Ver CNH enviada' }}
           </button>
         </div>
+
+        <!-- Selfie Card -->
+        <div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 space-y-3"
+          [class.border-primary/20]="profile.hasSelfieImage && !pendingSelfieFile">
+          <div class="flex items-center justify-between">
+            <div>
+              <strong class="text-sm font-bold text-on-surface">Selfie</strong>
+              <p class="text-xs text-on-surface-variant/60 mt-0.5">
+                {{ profile.hasSelfieImage ? 'Enviada' : 'Necessária para verificação' }}
+              </p>
+            </div>
+            <label class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer active:scale-95 transition-all hover:bg-primary/20">
+              <input type="file" accept="image/*" capture="user" class="hidden" (change)="onSelfieSelected($event)" />
+              {{ pendingSelfieFile ? 'Trocar' : profile.hasSelfieImage ? 'Refazer' : 'Tirar selfie' }}
+            </label>
+          </div>
+          <p class="text-xs text-primary font-semibold" *ngIf="pendingSelfieFile">
+            <span class="material-symbols-outlined text-sm align-text-bottom">face</span>
+            Selfie pronta — confirme abaixo para enviar
+          </p>
+          <p class="text-xs font-medium"
+            [class.text-primary]="selfieFeedback && !selfieFeedback.includes('Erro')"
+            [class.text-error]="selfieFeedback && selfieFeedback.includes('Erro')"
+            *ngIf="selfieFeedback">{{ selfieFeedback }}</p>
+          <button *ngIf="pendingSelfieFile" type="button" (click)="uploadSelfie()" [disabled]="selfieUploading"
+            class="w-full py-2 rounded-full bg-primary text-on-primary text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 transition-all">
+            <span *ngIf="selfieUploading" class="material-symbols-outlined text-sm animate-spin">sync</span>
+            {{ selfieUploading ? 'Enviando...' : 'Enviar selfie' }}
+          </button>
+          <div *ngIf="!profile.hasSelfieImage && !pendingSelfieFile" class="flex items-start gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200/60">
+            <span class="material-symbols-outlined text-sm text-amber-600 mt-0.5" style="font-variation-settings:'FILL' 1">warning</span>
+            <p class="text-xs text-amber-700">Selfie pendente — sem ela, a verificação de identidade não pode ser concluída.</p>
+          </div>
+        </div>
       </div>
 
       <!-- Shortcut Menu -->

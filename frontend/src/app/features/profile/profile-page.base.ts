@@ -53,6 +53,9 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected showVerificationOnboarding = false;
   protected retryingVerification = false;
   protected retryVerificationFeedback = '';
+  protected pendingSelfieFile: File | null = null;
+  protected selfieUploading = false;
+  protected selfieFeedback = '';
   protected zipCodeHint = '';
   protected zipCodeError = '';
   protected resendingVerification = false;
@@ -347,6 +350,31 @@ export abstract class ProfilePageBase implements OnDestroy {
       event,
       'Selecione uma imagem válida para a CNH.',
     );
+  }
+
+  protected onSelfieSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (!file || !file.type.startsWith('image/')) return;
+    this.pendingSelfieFile = file;
+    this.selfieFeedback = '';
+  }
+
+  protected uploadSelfie() {
+    if (!this.pendingSelfieFile) return;
+    this.selfieUploading = true;
+    this.selfieFeedback = '';
+    this.profileApiService.uploadMySelfie(this.pendingSelfieFile).subscribe({
+      next: () => {
+        this.selfieUploading = false;
+        this.pendingSelfieFile = null;
+        this.selfieFeedback = 'Selfie enviada! Verificação em andamento...';
+        setTimeout(() => this.loadData(), 3_000);
+      },
+      error: () => {
+        this.selfieUploading = false;
+        this.selfieFeedback = 'Erro ao enviar selfie. Tente novamente.';
+      },
+    });
   }
 
   protected verificationStatusLabel(
