@@ -129,6 +129,47 @@ export class EmailService {
     });
   }
 
+  async sendListingExpiring(
+    to: string,
+    fullName: string,
+    vehicleTitle: string,
+    expiresAt: Date,
+    vehicleId: string,
+  ) {
+    const expiresLabel = expiresAt.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+    const renewLink = `${this.frontendUrl}/anunciar-carro`;
+    const firstName = fullName.split(' ')[0];
+
+    await this.send({
+      to,
+      subject: `Seu anúncio "${vehicleTitle}" expira em breve – Triluga`,
+      html: this.templateBase(
+        'Anúncio expirando',
+        `
+        <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#b45309;">⏰ Anúncio expirando</h1>
+        <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">
+          Olá, ${firstName}. Seu anúncio <strong style="color:#1a2421;">${vehicleTitle}</strong> expira em <strong>${expiresLabel}</strong>.
+          Renove agora para continuar recebendo contatos de compradores.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;border-radius:12px;border-left:4px solid #f59e0b;margin-bottom:24px;">
+          <tr>
+            <td style="padding:16px 20px;">
+              <p style="margin:0;font-size:13px;color:#92400e;line-height:1.5;">
+                ⚠️ Após a expiração o anúncio fica inativo e não aparece nas buscas.
+              </p>
+            </td>
+          </tr>
+        </table>
+        <a href="${renewLink}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Renovar meu anúncio</a>
+        `,
+      ),
+    });
+  }
+
   async sendReviewNotification(params: {
     to: string;
     fullName: string;

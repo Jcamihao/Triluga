@@ -120,6 +120,13 @@ export class NotificationProcessorService implements OnModuleInit {
           break;
         }
 
+        case 'LISTING_EXPIRING': {
+          // E-mail disparado diretamente pelo scheduler no momento da criação.
+          // Este case evita que o tipo caia no default de log de erro,
+          // caso no futuro seja enfileirado via NotificationsService.
+          break;
+        }
+
         case 'SYSTEM_ALERT': {
           const meta = notification.metadata as Record<string, string> | null;
           if (
