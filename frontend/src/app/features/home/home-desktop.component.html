@@ -42,8 +42,58 @@
           <span class="material-symbols-outlined">arrow_forward</span>
         </button>
       </form>
+
+      <div class="home-web__hero-ctas">
+        <button type="button" class="home-web__hero-cta-secondary" (click)="openProtected('/owner-dashboard')">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">add_circle</span>
+          Anunciar meu veículo — é grátis
+        </button>
+        <span class="home-web__hero-cta-divider">ou</span>
+        <span class="home-web__hero-cta-hint">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">verified_user</span>
+          Usuários verificados com KYC biométrico
+        </span>
+      </div>
     </div>
   </header>
+
+  <!-- Como funciona -->
+  <section class="home-web__how">
+    <div class="home-web__container">
+      <div class="home-web__how-grid">
+        <div class="home-web__how-step">
+          <div class="home-web__how-icon">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">search</span>
+          </div>
+          <div class="home-web__how-num">01</div>
+          <h3>Busca</h3>
+          <p>Filtre por tipo de veículo, cidade, faixa de preço ou modelo. Resultados em tempo real.</p>
+        </div>
+        <div class="home-web__how-arrow">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </div>
+        <div class="home-web__how-step">
+          <div class="home-web__how-icon">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">chat_bubble</span>
+          </div>
+          <div class="home-web__how-num">02</div>
+          <h3>Contata</h3>
+          <p>Fale diretamente com o proprietário pelo chat integrado. Sem intermediários, sem burocracia.</p>
+        </div>
+        <div class="home-web__how-arrow">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </div>
+        <div class="home-web__how-step">
+          <div class="home-web__how-icon">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">handshake</span>
+          </div>
+          <div class="home-web__how-num">03</div>
+          <h3>Fecha</h3>
+          <p>Combine os detalhes diretamente com o dono. Você decide as condições do negócio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section class="home-web__section home-web__section--surface">
     <div class="home-web__container">
