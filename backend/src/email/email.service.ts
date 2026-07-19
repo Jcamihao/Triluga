@@ -129,6 +129,29 @@ export class EmailService {
     });
   }
 
+  async sendReviewNotification(params: {
+    to: string;
+    fullName: string;
+    rating: number;
+    comment: string | null;
+    reviewerName: string;
+    context: 'vehicle' | 'user';
+    contextLabel: string;
+    linkUrl: string;
+  }) {
+    const stars = '★'.repeat(params.rating) + '☆'.repeat(5 - params.rating);
+    const subject =
+      params.context === 'vehicle'
+        ? `Seu anúncio "${params.contextLabel}" recebeu uma avaliação – Triluga`
+        : `Seu perfil recebeu uma avaliação – Triluga`;
+
+    await this.send({
+      to: params.to,
+      subject,
+      html: this.templateReviewNotification(params, stars),
+    });
+  }
+
   async sendNewReportAlert(params: {
     vehicleTitle: string;
     vehicleId: string;
@@ -179,6 +202,45 @@ export class EmailService {
         `email_failed to=${options.to} error=${(error as Error).message}`,
       );
     }
+  }
+
+  private templateReviewNotification(
+    params: {
+      fullName: string;
+      rating: number;
+      comment: string | null;
+      reviewerName: string;
+      context: 'vehicle' | 'user';
+      contextLabel: string;
+      linkUrl: string;
+    },
+    stars: string,
+  ) {
+    const firstName = params.fullName.split(' ')[0];
+    const contextText =
+      params.context === 'vehicle'
+        ? `seu anúncio <strong style="color:#1a2421;">${params.contextLabel}</strong>`
+        : `seu perfil`;
+
+    return this.templateBase(
+      'Nova avaliação recebida',
+      `
+      <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Nova avaliação ⭐</h1>
+      <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">
+        Olá, ${firstName}. <strong style="color:#1a2421;">${params.reviewerName}</strong> avaliou ${contextText}.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fbf7;border-radius:12px;margin-bottom:24px;">
+        <tr>
+          <td style="padding:20px 24px;">
+            <p style="margin:0 0 8px;font-size:22px;color:#f59e0b;letter-spacing:2px;">${stars}</p>
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a2421;">${params.rating} de 5 estrelas</p>
+            ${params.comment ? `<p style="margin:8px 0 0;font-size:14px;color:#4d6b59;line-height:1.6;font-style:italic;">"${params.comment}"</p>` : '<p style="margin:8px 0 0;font-size:13px;color:#9ab0a3;">Avaliação sem comentário.</p>'}
+          </td>
+        </tr>
+      </table>
+      <a href="${params.linkUrl}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ver avaliação</a>
+    `,
+    );
   }
 
   private templateBase(title: string, content: string) {
