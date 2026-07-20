@@ -14,7 +14,7 @@ import { WebHeaderComponent } from '../../shared/components/web-header/web-heade
 export class AdminPageComponent {
   private readonly adminApiService = inject(AdminApiService);
 
-  protected activeTab: 'overview' | 'manage' = 'overview';
+  protected activeTab: 'overview' | 'manage' | 'audit' = 'overview';
 
   protected dashboard?: {
     totals: { users: number; vehicles: number; privacyRequests: number };
@@ -71,6 +71,11 @@ export class AdminPageComponent {
   protected reportFilter = '';
   protected resolvingReportId: string | null = null;
   protected reportNotesMap: Record<string, string> = {};
+
+  protected auditLogs: any[] = [];
+  protected auditLogsTotal = 0;
+  protected auditLogsPage = 1;
+  protected auditLogsLoading = false;
 
   constructor() {
     this.loadData();
@@ -255,17 +260,46 @@ export class AdminPageComponent {
 
   protected auditActionLabel(action: string) {
     const map: Record<string, string> = {
-      report_resolve: 'Report resolvido',
-      report_dismiss: 'Report descartado',
-      block_user: 'Usuário bloqueado',
-      approve_document: 'Documento aprovado',
-      reject_document: 'Documento recusado',
-      approve_driver_license: 'CNH aprovada',
-      reject_driver_license: 'CNH recusada',
-      deactivate_vehicle: 'Veículo desativado',
-      activate_featured: 'Destaque ativado',
+      user_blocked: 'Usuário bloqueado',
+      user_deleted: 'Usuário excluído',
+      document_approved: 'Documento aprovado',
+      document_rejected: 'Documento recusado',
+      driver_license_approved: 'CNH aprovada',
+      driver_license_rejected: 'CNH recusada',
+      vehicle_deactivated: 'Veículo desativado',
+      vehicle_deleted: 'Veículo excluído',
     };
-    return map[action] ?? action;
+    return map[action] ?? action.replace(/_/g, ' ');
+  }
+
+  protected auditActionClass(action: string) {
+    if (action.includes('deleted') || action.includes('rejected')) {
+      return 'bg-red-100 text-red-700';
+    }
+    if (action.includes('blocked') || action.includes('deactivated')) {
+      return 'bg-amber-100 text-amber-700';
+    }
+    if (action.includes('approved')) {
+      return 'bg-emerald-100 text-emerald-700';
+    }
+    return 'bg-surface-container-high text-on-surface-variant';
+  }
+
+  protected loadAuditLogs(page = 1) {
+    this.auditLogsPage = page;
+    this.auditLogsLoading = true;
+    this.adminApiService.getAuditLogs(page).subscribe({
+      next: (res) => {
+        this.auditLogs = res.items;
+        this.auditLogsTotal = res.total;
+        this.auditLogsLoading = false;
+      },
+      error: () => { this.auditLogsLoading = false; },
+    });
+  }
+
+  protected get auditLogsTotalPages() {
+    return Math.ceil(this.auditLogsTotal / 50);
   }
 
   protected setReportFilter(status: string) {
@@ -363,5 +397,6 @@ export class AdminPageComponent {
     this.loadFeaturedOrders();
     this.loadReports();
     this.loadOverview();
+    this.loadAuditLogs();
   }
 }

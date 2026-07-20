@@ -131,6 +131,13 @@ export class AdminApiService {
     return this.http.get<number>(`${environment.apiBaseUrl}/admin/reports/count`);
   }
 
+  getAuditLogs(page = 1, limit = 50) {
+    return this.http.get<{ total: number; page: number; limit: number; items: any[] }>(
+      `${environment.apiBaseUrl}/admin/audit-logs`,
+      { params: { page: String(page), limit: String(limit) } },
+    );
+  }
+
   resolveReport(reportId: string, action: 'DISMISS' | 'RESOLVE', adminNotes?: string) {
     return this.http.patch(
       `${environment.apiBaseUrl}/admin/reports/${reportId}/resolve`,

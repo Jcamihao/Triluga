@@ -33,6 +33,18 @@
         <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
         Gestão
       </button>
+      <button type="button"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+        [ngClass]="activeTab === 'audit' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+        (click)="activeTab = 'audit'">
+        <span class="material-symbols-outlined text-[18px]">history</span>
+        Auditoria
+        <span *ngIf="auditLogsTotal > 0"
+          class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black"
+          [ngClass]="activeTab === 'audit' ? 'bg-white/30 text-white' : 'bg-surface-container-highest text-on-surface-variant'">
+          {{ auditLogsTotal }}
+        </span>
+      </button>
     </div>
 
     <!-- =================== VISÃO GERAL =================== -->
@@ -485,6 +497,84 @@
 
     </ng-container>
     <!-- =================== /GESTÃO =================== -->
+
+    <!-- =================== AUDITORIA =================== -->
+    <ng-container *ngIf="activeTab === 'audit'">
+
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-1">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">history</span>
+            Log de Auditoria
+          </h2>
+          <span class="text-xs text-on-surface-variant font-medium">{{ auditLogsTotal }} registros</span>
+        </div>
+
+        <div *ngIf="auditLogsLoading" class="flex items-center justify-center py-10 gap-2 text-on-surface-variant">
+          <span class="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+          <span class="text-sm font-medium">Carregando...</span>
+        </div>
+
+        <p *ngIf="!auditLogsLoading && !auditLogs.length" class="text-sm text-on-surface-variant text-center py-8">
+          Nenhuma ação registrada ainda.
+        </p>
+
+        <div *ngIf="!auditLogsLoading && auditLogs.length" class="flex flex-col divide-y divide-outline-variant/20">
+          <div
+            *ngFor="let log of auditLogs"
+            class="flex items-start justify-between gap-4 py-3"
+          >
+            <div class="flex items-start gap-3 min-w-0">
+              <span
+                class="mt-0.5 shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide"
+                [ngClass]="auditActionClass(log.action)"
+              >{{ log.targetType }}</span>
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <span class="text-sm font-bold text-on-surface">{{ auditActionLabel(log.action) }}</span>
+                <span class="text-xs text-on-surface-variant truncate">
+                  {{ log.admin?.email ?? 'Sistema' }}
+                  <ng-container *ngIf="log.targetId">
+                    · ID: <code class="text-[10px] bg-surface-container-high rounded px-1">{{ log.targetId | slice:0:8 }}…</code>
+                  </ng-container>
+                </span>
+              </div>
+            </div>
+            <span class="shrink-0 text-xs text-on-surface-variant whitespace-nowrap">
+              {{ log.createdAt | date:'dd/MM/yy HH:mm' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="auditLogsTotalPages > 1" class="flex items-center justify-between pt-4 border-t border-outline-variant/20 mt-2">
+          <button
+            type="button"
+            class="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-30"
+            [ngClass]="auditLogsPage > 1 ? 'text-primary hover:bg-primary/5' : 'text-on-surface-variant'"
+            [disabled]="auditLogsPage <= 1"
+            (click)="loadAuditLogs(auditLogsPage - 1)"
+          >
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            Anterior
+          </button>
+          <span class="text-xs text-on-surface-variant font-medium">
+            Página {{ auditLogsPage }} de {{ auditLogsTotalPages }}
+          </span>
+          <button
+            type="button"
+            class="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-30"
+            [ngClass]="auditLogsPage < auditLogsTotalPages ? 'text-primary hover:bg-primary/5' : 'text-on-surface-variant'"
+            [disabled]="auditLogsPage >= auditLogsTotalPages"
+            (click)="loadAuditLogs(auditLogsPage + 1)"
+          >
+            Próxima
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
+      </section>
+
+    </ng-container>
+    <!-- =================== /AUDITORIA =================== -->
 
   </div>
 </main>
