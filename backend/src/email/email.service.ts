@@ -193,6 +193,76 @@ export class EmailService {
     });
   }
 
+  async sendFeaturedOrderActivated(
+    to: string,
+    fullName: string,
+    vehicleTitle: string,
+    expiresAt: Date,
+  ) {
+    const firstName = fullName.split(' ')[0];
+    const expiresLabel = expiresAt.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+    const dashboardLink = `${this.frontendUrl}/owner-dashboard`;
+
+    await this.send({
+      to,
+      subject: `Destaque ativado! "${vehicleTitle}" – Triluga`,
+      html: this.templateBase(
+        'Destaque ativado',
+        `
+        <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">⭐ Destaque ativado!</h1>
+        <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">
+          Olá, ${firstName}! Seu anúncio <strong style="color:#1a2421;">${vehicleTitle}</strong> está em destaque até <strong>${expiresLabel}</strong>.
+          Ele aparece com prioridade nas buscas e recebe muito mais visibilidade.
+        </p>
+        <a href="${dashboardLink}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ver meu painel</a>
+        `,
+      ),
+    });
+  }
+
+  async sendFeaturedOrderStaticPixAlert(params: {
+    vehicleTitle: string;
+    ownerEmail: string;
+    planName: string;
+    price: number;
+    orderId: string;
+  }) {
+    if (!this.adminEmail) return;
+    const adminLink = `${this.frontendUrl}/admin`;
+    const priceLabel = params.price.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+
+    await this.send({
+      to: this.adminEmail,
+      subject: `[Triluga] Pedido de destaque aguardando ativação manual`,
+      html: this.templateBase(
+        'Pedido de destaque manual',
+        `
+        <h1 style="margin:0 0 8px;font-size:24px;font-weight:900;color:#b45309;">⏳ Pedido aguardando ativação</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#4d6b59;line-height:1.6;">Um usuário criou um pedido de destaque via PIX estático. Ative manualmente após confirmar o pagamento.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;border-radius:12px;border-left:4px solid #f59e0b;margin-bottom:24px;">
+          <tr>
+            <td style="padding:16px 20px;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.5px;">Detalhes do pedido</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#1a2421;"><strong>Veículo:</strong> ${params.vehicleTitle}</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#1a2421;"><strong>Plano:</strong> ${params.planName}</p>
+              <p style="margin:0 0 4px;font-size:14px;color:#1a2421;"><strong>Valor:</strong> ${priceLabel}</p>
+              <p style="margin:0;font-size:14px;color:#1a2421;"><strong>E-mail do anunciante:</strong> ${params.ownerEmail}</p>
+            </td>
+          </tr>
+        </table>
+        <a href="${adminLink}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#b45309,#f59e0b);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:15px;font-weight:900;box-sizing:border-box;">Ativar no painel admin</a>
+        `,
+      ),
+    });
+  }
+
   async sendNewReportAlert(params: {
     vehicleTitle: string;
     vehicleId: string;

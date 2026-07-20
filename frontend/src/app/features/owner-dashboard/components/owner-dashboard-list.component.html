@@ -854,9 +854,21 @@
           </div>
         </ng-container>
 
-        <div class="flex items-center gap-2 bg-blue-50 rounded-xl p-3 border border-blue-200/50">
-          <span class="material-symbols-outlined text-blue-500 text-lg" style="font-variation-settings:'FILL' 1">pending</span>
-          <p class="text-[11px] text-blue-800 font-medium leading-snug">
+        <div
+          class="flex items-center gap-2 rounded-xl p-3 border"
+          [ngClass]="owner.promoteResult.payment.pixCopiaECola
+            ? 'bg-blue-50 border-blue-200/50'
+            : 'bg-amber-50 border-amber-200/50'"
+        >
+          <span
+            class="material-symbols-outlined text-lg"
+            [ngClass]="owner.promoteResult.payment.pixCopiaECola ? 'text-blue-500' : 'text-amber-500'"
+            style="font-variation-settings:'FILL' 1"
+          >{{ owner.promoteResult.payment.pixCopiaECola ? 'pending' : 'hourglass_top' }}</span>
+          <p
+            class="text-[11px] font-medium leading-snug"
+            [ngClass]="owner.promoteResult.payment.pixCopiaECola ? 'text-blue-800' : 'text-amber-800'"
+          >
             {{ owner.promoteResult.payment.instructions }}
           </p>
         </div>
@@ -867,7 +879,7 @@
           type="button"
           class="px-5 py-2.5 rounded-full border border-outline-variant/30 text-sm font-bold"
           (click)="owner.closePromoteModal()"
-        >Fechar (ativarei automaticamente)</button>
+        >{{ owner.promoteResult.payment.pixCopiaECola ? 'Fechar (ativarei automaticamente)' : 'Fechar (aguardando ativação manual)' }}</button>
       </div>
     </ng-container>
   </div>

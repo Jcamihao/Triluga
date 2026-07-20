@@ -162,9 +162,21 @@
               </div>
             </ng-container>
 
-            <div class="flex items-center gap-3 bg-blue-50 rounded-2xl p-4 border border-blue-200/50">
-              <span class="material-symbols-outlined text-blue-500 text-xl" style="font-variation-settings:'FILL' 1">pending</span>
-              <p class="text-xs text-blue-800 font-medium leading-snug">
+            <div
+              class="flex items-center gap-3 rounded-2xl p-4 border"
+              [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola
+                ? 'bg-blue-50 border-blue-200/50'
+                : 'bg-amber-50 border-amber-200/50'"
+            >
+              <span
+                class="material-symbols-outlined text-xl"
+                [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola ? 'text-blue-500' : 'text-amber-500'"
+                style="font-variation-settings:'FILL' 1"
+              >{{ owner.wizardFeaturedResult.payment.pixCopiaECola ? 'pending' : 'hourglass_top' }}</span>
+              <p
+                class="text-xs font-medium leading-snug"
+                [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola ? 'text-blue-800' : 'text-amber-800'"
+              >
                 {{ owner.wizardFeaturedResult.payment.instructions }}
               </p>
             </div>
@@ -174,7 +186,9 @@
               class="text-sm font-bold text-on-surface-variant text-center py-2"
               (click)="owner.loadData()"
             >
-              Ir para o painel (o destaque será ativado automaticamente)
+              {{ owner.wizardFeaturedResult.payment.pixCopiaECola
+                ? 'Ir para o painel (destaque será ativado automaticamente)'
+                : 'Ir para o painel (aguardando ativação manual)' }}
             </button>
           </div>
         </ng-container>

@@ -249,6 +249,15 @@ export class AdminService {
   async activateFeaturedOrder(orderId: string) {
     const order = await this.prisma.featuredOrder.findUnique({
       where: { id: orderId },
+      include: {
+        vehicle: { select: { id: true, title: true } },
+        user: {
+          select: {
+            email: true,
+            profile: { select: { fullName: true } },
+          },
+        },
+      },
     });
 
     if (!order) throw new NotFoundException('Pedido não encontrado.');
@@ -267,6 +276,17 @@ export class AdminService {
         data: { isFeatured: true, featuredUntil: expiresAt } as any,
       }),
     ]);
+
+    if (order.user?.profile?.fullName) {
+      this.emailService
+        .sendFeaturedOrderActivated(
+          order.user.email,
+          order.user.profile.fullName,
+          order.vehicle?.title ?? 'seu veículo',
+          expiresAt,
+        )
+        .catch(() => {});
+    }
 
     return { success: true, expiresAt };
   }

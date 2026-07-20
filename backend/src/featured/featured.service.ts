@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFeaturedOrderDto } from './dto/create-featured-order.dto';
 import { FEATURED_PLANS } from './featured.constants';
@@ -19,6 +20,7 @@ export class FeaturedService {
     private readonly prisma: PrismaService,
     private readonly efipay: EfipayService,
     private readonly config: ConfigService,
+    private readonly email: EmailService,
   ) {}
 
   getPlans() {
@@ -56,6 +58,8 @@ export class FeaturedService {
       description,
     );
 
+    const isStaticPix = !pixCharge;
+
     const order = await this.prisma.featuredOrder.create({
       data: {
         vehicleId: dto.vehicleId,
@@ -63,24 +67,40 @@ export class FeaturedService {
         planId: plan.id,
         durationDays: plan.durationDays,
         price: plan.price,
-        pixKey: pixCharge ? null : this.efipay.staticPixKey,
+        pixKey: isStaticPix ? this.efipay.staticPixKey : null,
         txid: pixCharge?.txid ?? null,
         pixCopiaECola: pixCharge?.pixCopiaECola ?? null,
       },
     });
 
+    if (isStaticPix) {
+      const owner = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      this.email
+        .sendFeaturedOrderStaticPixAlert({
+          vehicleTitle: vehicle.title,
+          ownerEmail: owner?.email ?? userId,
+          planName: plan.name,
+          price: plan.price,
+          orderId: order.id,
+        })
+        .catch(() => {});
+    }
+
     return {
       order,
       payment: {
-        pixKey: pixCharge ? null : this.efipay.staticPixKey,
-        pixKeyType: pixCharge ? null : 'email',
+        pixKey: isStaticPix ? this.efipay.staticPixKey : null,
+        pixKeyType: isStaticPix ? 'email' : null,
         amount: plan.price,
         description,
         pixCopiaECola: pixCharge?.pixCopiaECola ?? null,
         qrCodeImage: pixCharge?.qrCodeImage ?? null,
-        instructions: pixCharge
-          ? 'Escaneie o QR Code ou copie o código PIX para efetuar o pagamento. O destaque será ativado automaticamente após a confirmação.'
-          : 'Após o pagamento, aguarde a confirmação automática do destaque.',
+        instructions: isStaticPix
+          ? 'Após realizar o pagamento para a chave PIX acima, nossa equipe ativará seu destaque manualmente em até 1 dia útil após a confirmação.'
+          : 'Escaneie o QR Code ou copie o código PIX para efetuar o pagamento. O destaque será ativado automaticamente após a confirmação.',
       },
     };
   }
