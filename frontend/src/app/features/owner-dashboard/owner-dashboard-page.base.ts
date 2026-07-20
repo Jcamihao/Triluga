@@ -6,6 +6,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { FeaturedApiService } from '../../core/services/featured-api.service';
+import { PlateApiService } from '../../core/services/plate-api.service';
+import { FipeApiService, FipeBrand, FipeModel, FipeYear, FipePriceResult } from '../../core/services/fipe-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
 import { VehicleWizardComponent } from './components/vehicle-wizard.component';
@@ -55,6 +57,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   private readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
   private readonly featuredApiService = inject(FeaturedApiService);
+  private readonly plateApi = inject(PlateApiService);
+  private readonly fipeApi = inject(FipeApiService);
   private editingVehicleCacheSource: OwnerVehicleItem[] | null = null;
   private editingVehicleCacheId: string | null = null;
   private editingVehicleCache: OwnerVehicleItem | null = null;
@@ -150,6 +154,22 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   // My featured orders
   protected myFeaturedOrders: FeaturedOrder[] = [];
   protected cancellingOrderId: string | null = null;
+
+  // Plate lookup
+  protected plateLookupLoading = false;
+  protected plateLookupFilled = false;
+  protected plateStolenWarning = false;
+
+  // FIPE lookup
+  protected fipeOpen = false;
+  protected fipeBrands: FipeBrand[] = [];
+  protected fipeModels: FipeModel[] = [];
+  protected fipeYears: FipeYear[] = [];
+  protected fipeSelectedBrandCode = '';
+  protected fipeSelectedModelCode = '';
+  protected fipeSelectedYearCode = '';
+  protected fipePrice: FipePriceResult | null = null;
+  protected fipeLoading = false;
 
   constructor() {
     this.createMode =
@@ -292,6 +312,111 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     this.vehicleDraft.state = (statePart || this.vehicleDraft.state || '')
       .slice(0, 2)
       .toUpperCase();
+  }
+
+  protected lookupPlate() {
+    const plate = this.vehicleDraft.plate?.trim();
+    if (!plate || plate.replace(/[^a-zA-Z0-9]/g, '').length < 7) return;
+
+    this.plateLookupLoading = true;
+    this.plateLookupFilled = false;
+    this.plateStolenWarning = false;
+
+    this.plateApi.lookup(plate).subscribe((info) => {
+      this.plateLookupLoading = false;
+      if (!info) return;
+
+      let filled = false;
+      if (info.brand && !this.vehicleDraft.brand?.trim()) {
+        this.vehicleDraft.brand = info.brand;
+        filled = true;
+      }
+      if (info.model && !this.vehicleDraft.model?.trim()) {
+        this.vehicleDraft.model = info.model;
+        filled = true;
+      }
+      if (info.year && !this.vehicleDraft.year) {
+        this.vehicleDraft.year = info.year;
+        filled = true;
+      }
+      if (info.city && !this.vehicleDraft.city?.trim()) {
+        this.vehicleDraft.city = info.city;
+        filled = true;
+      }
+      if (info.state && !this.vehicleDraft.state?.trim()) {
+        this.vehicleDraft.state = info.state.slice(0, 2).toUpperCase();
+        filled = true;
+      }
+
+      this.plateLookupFilled = filled;
+      this.plateStolenWarning = info.stolen;
+    });
+  }
+
+  protected openFipe() {
+    this.fipeOpen = true;
+    this.fipePrice = null;
+    this.fipeSelectedBrandCode = '';
+    this.fipeSelectedModelCode = '';
+    this.fipeSelectedYearCode = '';
+    this.fipeBrands = [];
+    this.fipeModels = [];
+    this.fipeYears = [];
+
+    const type = this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
+    this.fipeLoading = true;
+    this.fipeApi.getBrands(type).subscribe((brands) => {
+      this.fipeLoading = false;
+      this.fipeBrands = brands ?? [];
+    });
+  }
+
+  protected onFipeBrandChange() {
+    this.fipeModels = [];
+    this.fipeYears = [];
+    this.fipeSelectedModelCode = '';
+    this.fipeSelectedYearCode = '';
+    this.fipePrice = null;
+    if (!this.fipeSelectedBrandCode) return;
+
+    const type = this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
+    this.fipeLoading = true;
+    this.fipeApi.getModels(type, this.fipeSelectedBrandCode).subscribe((models) => {
+      this.fipeLoading = false;
+      this.fipeModels = models ?? [];
+    });
+  }
+
+  protected onFipeModelChange() {
+    this.fipeYears = [];
+    this.fipeSelectedYearCode = '';
+    this.fipePrice = null;
+    if (!this.fipeSelectedModelCode) return;
+
+    const type = this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
+    this.fipeLoading = true;
+    this.fipeApi.getYears(type, this.fipeSelectedBrandCode, this.fipeSelectedModelCode).subscribe((years) => {
+      this.fipeLoading = false;
+      this.fipeYears = years ?? [];
+    });
+  }
+
+  protected onFipeYearChange() {
+    this.fipePrice = null;
+    if (!this.fipeSelectedYearCode) return;
+
+    const type = this.vehicleDraft.vehicleType === 'MOTORCYCLE' ? 'motorcycles' : 'cars';
+    this.fipeLoading = true;
+    this.fipeApi.getPrice(type, this.fipeSelectedBrandCode, this.fipeSelectedModelCode, this.fipeSelectedYearCode).subscribe((price) => {
+      this.fipeLoading = false;
+      this.fipePrice = price ?? null;
+    });
+  }
+
+  protected useFipePrice() {
+    if (!this.fipePrice) return;
+    this.vehicleDraft.weeklyRate = this.fipePrice.suggestedWeeklyRateMin;
+    this.fipeOpen = false;
   }
 
   protected setVehicleType(vehicleType: VehicleType) {

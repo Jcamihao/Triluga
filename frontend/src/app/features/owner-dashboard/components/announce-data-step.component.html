@@ -107,13 +107,32 @@
                   <label class="text-sm font-semibold text-on-surface-variant" for="plate">
                     Placa do Veículo
                   </label>
-                  <input
-                    id="plate"
-                    class="w-full bg-surface-container-low border-none rounded-xl p-4 text-on-surface font-medium uppercase focus:ring-2 focus:ring-primary/20 tracking-widest"
-                    placeholder="ABC-1234 ou BRA2E19"
-                    maxlength="8"
-                    [(ngModel)]="owner.vehicleDraft.plate"
-                  />
+                  <div class="relative">
+                    <input
+                      id="plate"
+                      class="w-full bg-surface-container-low border-none rounded-xl p-4 pr-12 text-on-surface font-medium uppercase focus:ring-2 focus:ring-primary/20 tracking-widest"
+                      placeholder="ABC-1234 ou BRA2E19"
+                      maxlength="8"
+                      [(ngModel)]="owner.vehicleDraft.plate"
+                      (blur)="owner.lookupPlate()"
+                    />
+                    <span
+                      *ngIf="owner.plateLookupLoading"
+                      class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg animate-spin"
+                    >progress_activity</span>
+                    <span
+                      *ngIf="owner.plateLookupFilled && !owner.plateLookupLoading"
+                      class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"
+                    >check_circle</span>
+                  </div>
+                  <p *ngIf="owner.plateLookupFilled && !owner.plateLookupLoading" class="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px]">auto_awesome</span>
+                    Dados preenchidos automaticamente pela placa
+                  </p>
+                  <p *ngIf="owner.plateStolenWarning" class="text-[11px] text-red-700 font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px]">warning</span>
+                    Veículo com ocorrências registradas — verifique antes de alugar
+                  </p>
                 </div>
                 <div class="space-y-2">
                   <label class="text-sm font-semibold text-on-surface-variant" for="city">
