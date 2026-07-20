@@ -404,6 +404,60 @@
               </p>
             </div>
           </ng-template>
+
+          <!-- Write a review -->
+          <div *ngIf="canReview" class="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-on-surface">Avaliar este anunciante</h4>
+              <button *ngIf="!showReviewForm" type="button"
+                class="text-xs font-bold text-primary"
+                (click)="showReviewForm = true">Escrever avaliação</button>
+              <button *ngIf="showReviewForm" type="button"
+                class="text-xs text-outline"
+                (click)="showReviewForm = false; reviewError = ''">Cancelar</button>
+            </div>
+
+            <div *ngIf="showReviewForm" class="space-y-3">
+              <div class="flex gap-1 justify-center">
+                <button
+                  *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                  type="button"
+                  class="transition-transform active:scale-90"
+                  (click)="reviewRating = star"
+                  (mouseenter)="reviewHoverRating = star"
+                  (mouseleave)="reviewHoverRating = 0"
+                >
+                  <span
+                    class="material-symbols-outlined text-3xl transition-colors"
+                    [ngClass]="(reviewHoverRating || reviewRating) >= star ? 'text-amber-400' : 'text-on-surface-variant/20'"
+                    style="font-variation-settings: 'FILL' 1"
+                  >star</span>
+                </button>
+              </div>
+
+              <textarea
+                class="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-on-surface-variant/40 resize-none focus:ring-2 focus:ring-primary/20"
+                rows="3"
+                placeholder="Conte como foi a experiência (opcional)"
+                [(ngModel)]="reviewComment"
+              ></textarea>
+
+              <p *ngIf="reviewError" class="text-xs text-error font-medium">{{ reviewError }}</p>
+
+              <button
+                type="button"
+                class="w-full py-3 rounded-full bg-primary text-on-primary text-sm font-black transition-opacity"
+                [class.opacity-50]="!reviewRating || reviewSubmitting"
+                [disabled]="!reviewRating || reviewSubmitting"
+                (click)="submitReview()"
+              >{{ reviewSubmitting ? 'Enviando...' : 'Enviar avaliação' }}</button>
+            </div>
+          </div>
+
+          <div *ngIf="reviewDone" class="bg-emerald-50 rounded-2xl p-4 border border-emerald-200/50 flex items-center gap-3">
+            <span class="material-symbols-outlined text-emerald-600" style="font-variation-settings: 'FILL' 1">check_circle</span>
+            <p class="text-sm font-bold text-emerald-800">Avaliação enviada com sucesso!</p>
+          </div>
         </section>
       </div>
 
@@ -718,6 +772,59 @@
             <p>Esse perfil ainda não recebeu avaliações públicas.</p>
           </div>
         </ng-template>
+
+        <!-- Write a review (desktop) -->
+        <div *ngIf="canReview" class="mt-8 border-t border-outline-variant/10 pt-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-on-surface">Avaliar este anunciante</h3>
+            <button *ngIf="!showReviewForm" type="button"
+              class="text-sm font-bold text-primary hover:underline"
+              (click)="showReviewForm = true">Escrever avaliação</button>
+            <button *ngIf="showReviewForm" type="button"
+              class="text-sm text-outline hover:text-on-surface transition-colors"
+              (click)="showReviewForm = false; reviewError = ''">Cancelar</button>
+          </div>
+
+          <div *ngIf="showReviewForm" class="space-y-4 max-w-lg">
+            <div class="flex gap-2">
+              <button
+                *ngFor="let star of ratingOptions; trackBy: trackByValue"
+                type="button"
+                class="transition-transform hover:scale-110 active:scale-95"
+                (click)="reviewRating = star"
+                (mouseenter)="reviewHoverRating = star"
+                (mouseleave)="reviewHoverRating = 0"
+              >
+                <span
+                  class="material-symbols-outlined text-4xl transition-colors"
+                  [ngClass]="(reviewHoverRating || reviewRating) >= star ? 'text-amber-400' : 'text-on-surface-variant/20'"
+                  style="font-variation-settings: 'FILL' 1"
+                >star</span>
+              </button>
+            </div>
+
+            <textarea
+              class="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl p-4 text-sm text-on-surface placeholder:text-on-surface-variant/40 resize-none focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              rows="3"
+              placeholder="Conte como foi a experiência (opcional)"
+              [(ngModel)]="reviewComment"
+            ></textarea>
+
+            <p *ngIf="reviewError" class="text-sm text-error font-medium">{{ reviewError }}</p>
+
+            <button
+              type="button"
+              class="px-8 py-3 rounded-full bg-primary text-on-primary text-sm font-black hover:opacity-90 transition-opacity disabled:opacity-50"
+              [disabled]="!reviewRating || reviewSubmitting"
+              (click)="submitReview()"
+            >{{ reviewSubmitting ? 'Enviando...' : 'Enviar avaliação' }}</button>
+          </div>
+        </div>
+
+        <div *ngIf="reviewDone" class="mt-6 flex items-center gap-3 bg-emerald-50 rounded-xl p-4 border border-emerald-200/50">
+          <span class="material-symbols-outlined text-emerald-600" style="font-variation-settings: 'FILL' 1">check_circle</span>
+          <p class="text-sm font-bold text-emerald-800">Avaliação enviada com sucesso!</p>
+        </div>
       </section>
     </ng-container>
   </main>

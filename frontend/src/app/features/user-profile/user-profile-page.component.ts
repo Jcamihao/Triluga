@@ -1,5 +1,6 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
@@ -8,14 +9,16 @@ import {
   VehicleCardItem,
   VerificationStatus,
 } from '../../core/models/domain.models';
+import { AuthService } from '../../core/services/auth.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
+import { ReviewsApiService } from '../../core/services/reviews-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
   selector: 'app-user-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, VehicleCardComponent, WebHeaderComponent],
+  imports: [CommonModule, FormsModule, RouterLink, VehicleCardComponent, WebHeaderComponent],
   templateUrl: './user-profile-page.component.html',
   styleUrls: ['./user-profile-page.component.scss'],
 })
@@ -24,6 +27,8 @@ export class UserProfilePageComponent {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly profileApiService = inject(ProfileApiService);
+  private readonly reviewsApiService = inject(ReviewsApiService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly fallbackAvatarImage =
@@ -34,6 +39,23 @@ export class UserProfilePageComponent {
   protected isLoading = true;
   protected errorMessage = '';
   protected linkCopied = false;
+
+  // Review form state
+  protected showReviewForm = false;
+  protected reviewRating = 0;
+  protected reviewHoverRating = 0;
+  protected reviewComment = '';
+  protected reviewSubmitting = false;
+  protected reviewError = '';
+  protected reviewDone = false;
+
+  protected get canReview() {
+    return (
+      this.authService.isAuthenticated() &&
+      this.profile?.id !== this.authService.currentUser()?.id &&
+      !this.reviewDone
+    );
+  }
 
   constructor() {
     this.route.paramMap
@@ -57,6 +79,32 @@ export class UserProfilePageComponent {
           this.isLoading = false;
           this.errorMessage =
             error?.error?.message || 'Não foi possível carregar esse perfil.';
+        },
+      });
+  }
+
+  protected submitReview() {
+    if (!this.reviewRating || !this.profile) return;
+    this.reviewSubmitting = true;
+    this.reviewError = '';
+
+    this.reviewsApiService
+      .createUserReview({
+        targetUserId: this.profile.id,
+        rating: this.reviewRating,
+        comment: this.reviewComment.trim() || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.reviewSubmitting = false;
+          this.reviewDone = true;
+          this.showReviewForm = false;
+          this.profile!.reviewsCount++;
+        },
+        error: (err: { error?: { message?: string } }) => {
+          this.reviewSubmitting = false;
+          this.reviewError =
+            err?.error?.message || 'Não foi possível enviar a avaliação.';
         },
       });
   }
