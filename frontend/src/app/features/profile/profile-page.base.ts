@@ -170,6 +170,7 @@ export abstract class ProfilePageBase implements OnDestroy {
       this.profile.driverLicenseNumber,
       this.profile.hasDocumentImage || this.pendingDocumentFile,
       this.profile.hasDriverLicenseImage || this.pendingDriverLicenseFile,
+      this.profile.hasSelfieImage || this.pendingSelfieFile,
     ];
 
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
@@ -234,6 +235,14 @@ export abstract class ProfilePageBase implements OnDestroy {
             ? 'check_circle'
             : 'error',
       },
+      {
+        title: 'Selfie de Verificação',
+        description: this.profile.hasSelfieImage
+          ? 'Enviada'
+          : 'Não enviada',
+        status: this.profile.hasSelfieImage ? 'approved' : 'pending',
+        icon: this.profile.hasSelfieImage ? 'check_circle' : 'error',
+      },
     ];
   }
 
@@ -245,7 +254,8 @@ export abstract class ProfilePageBase implements OnDestroy {
   protected get isFullyVerified(): boolean {
     return (
       this.profile.documentVerificationStatus === 'APPROVED' &&
-      this.profile.driverLicenseVerification === 'APPROVED'
+      this.profile.driverLicenseVerification === 'APPROVED' &&
+      this.profile.hasSelfieImage === true
     );
   }
 
@@ -540,6 +550,7 @@ export abstract class ProfilePageBase implements OnDestroy {
       driverLicenseImageUrl: profile.driverLicenseImageUrl ?? null,
       hasDocumentImage: profile.hasDocumentImage ?? false,
       hasDriverLicenseImage: profile.hasDriverLicenseImage ?? false,
+      hasSelfieImage: profile.hasSelfieImage ?? false,
       documentVerificationStatus:
         profile.documentVerificationStatus ?? 'NOT_SUBMITTED',
       driverLicenseVerification:

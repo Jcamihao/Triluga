@@ -876,6 +876,7 @@ export class ProfilesService {
       driverLicenseNumber?: string | null;
       documentImageUrl?: string | null;
       driverLicenseImageUrl?: string | null;
+      selfieImageUrl?: string | null;
       documentVerificationStatus?: VerificationStatus;
       driverLicenseVerification?: VerificationStatus;
     } | null,
@@ -898,6 +899,7 @@ export class ProfilesService {
       driverLicenseNumber: profile.driverLicenseNumber ?? null,
       hasDocumentImage: !!profile.documentImageUrl,
       hasDriverLicenseImage: !!profile.driverLicenseImageUrl,
+      hasSelfieImage: !!profile.selfieImageUrl,
       documentVerificationStatus:
         profile.documentVerificationStatus ?? VerificationStatus.NOT_SUBMITTED,
       driverLicenseVerification:

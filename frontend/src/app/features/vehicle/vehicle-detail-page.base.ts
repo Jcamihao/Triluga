@@ -48,7 +48,7 @@ export abstract class VehicleDetailPageBase {
   protected readonly fallbackAvatarImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='40' fill='%23f3eeee'/%3E%3Ccircle cx='80' cy='60' r='24' fill='%23b7aaac'/%3E%3Cpath d='M40 128c7-22 24-34 40-34s33 12 40 34' fill='%23b7aaac'/%3E%3C/svg%3E";
   protected readonly detailHeroFallbackImage =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCi-3uZATOWOX9tz1_IzfGpHBQmumrpcsJCeXKKS8bl7D09Rl1SSHHAK1WBb4Fhk0XHnZpI9gDNeKue0hoMVXNFY6CAFab13PORW644KQ90wrptX5mhvUP-5p4K4mWL5mScue3sJB65tNGqSpm0lb9iexnBKmXB8ctC_hCCLZcDoyv_TsrAyLBpN0a0qB6_V-T1SfH3GbxdA9HnaxtD8GGdL1V1PGDeu4mN6Sw6-CAZKErccTSpmmzwA6G848zoqfJhHCilS1WEqCIf';
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='280' viewBox='0 0 400 280'%3E%3Crect width='400' height='280' fill='%23f1f5f9'/%3E%3Cpath d='M60 180 L80 145 L110 108 L290 108 L320 145 L340 180 L340 196 L60 196Z' fill='%23cbd5e1'/%3E%3Cpath d='M115 108 L135 72 L265 72 L285 108Z' fill='%2394a3b8'/%3E%3Cpath d='M140 74 L154 74 L154 102 L130 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M162 70 L238 70 L248 102 L152 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M246 74 L260 74 L270 102 L246 102Z' fill='%23e2e8f0'/%3E%3Ccircle cx='115' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='115' cy='196' r='16' fill='%2394a3b8'/%3E%3Ccircle cx='285' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='285' cy='196' r='16' fill='%2394a3b8'/%3E%3C/svg%3E";
   private readonly route = inject(ActivatedRoute);
   private readonly vehiclesApiService = inject(VehiclesApiService);
   private readonly sanitizer = inject(DomSanitizer);
