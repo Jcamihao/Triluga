@@ -12,27 +12,33 @@ import {
   IsBoolean,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 export class CreateVehicleDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(120)
   title: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(60)
   brand: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(60)
   model: string;
 
@@ -42,19 +48,25 @@ export class CreateVehicleDto {
   @Max(2100)
   year: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'ABC1234 or ABC1D23 (Mercosul)' })
   @IsString()
-  @MaxLength(16)
+  @IsNotEmpty()
+  @Matches(/^[A-Z]{3}-?\d[A-Z0-9]\d{2}$/, {
+    message: 'Placa inválida. Use o formato ABC1234 (antigo) ou ABC1D23 (Mercosul).',
+  })
   plate: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(80)
   city: string;
 
   @ApiProperty()
   @IsString()
-  @MaxLength(2)
+  @IsNotEmpty()
+  @MinLength(2, { message: 'Estado deve ter exatamente 2 letras.' })
+  @MaxLength(2, { message: 'Estado deve ter exatamente 2 letras.' })
   state: string;
 
   @ApiPropertyOptional({ enum: VehicleType, default: VehicleType.CAR })
@@ -146,6 +158,7 @@ export class CreateVehicleDto {
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(1200)
   description: string;
 
