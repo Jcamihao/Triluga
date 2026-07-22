@@ -29,14 +29,20 @@
 
         <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
           <button
-            class="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold whitespace-nowrap"
+            [class]="!showUnreadOnly
+              ? 'px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold whitespace-nowrap'
+              : 'px-5 py-2.5 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium whitespace-nowrap hover:bg-surface-container-highest transition-colors'"
             type="button"
+            (click)="showUnreadOnly = false"
           >
             Tudo
           </button>
           <button
-            class="px-5 py-2.5 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium whitespace-nowrap hover:bg-surface-container-highest transition-colors"
+            [class]="showUnreadOnly
+              ? 'px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold whitespace-nowrap'
+              : 'px-5 py-2.5 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium whitespace-nowrap hover:bg-surface-container-highest transition-colors'"
             type="button"
+            (click)="showUnreadOnly = true"
           >
             Não lidas
           </button>
@@ -469,33 +475,119 @@
               <p class="font-bold text-sm">
                 {{ conversationParticipantName(conversation) }}
               </p>
-              <div class="flex items-center gap-1">
-                <span
-                  class="material-symbols-outlined text-[14px] text-yellow-500"
-                  style="font-variation-settings: 'FILL' 1"
-                >
-                  star
-                </span>
-                <span class="text-xs font-bold">4.9</span>
-                <span class="text-[10px] text-on-surface-variant">
-                  (12 locações)
-                </span>
-              </div>
+              <ng-container *ngIf="sidebarProfile; else sidebarLoading">
+                <div class="flex items-center gap-1">
+                  <span
+                    class="material-symbols-outlined text-[14px] text-yellow-500"
+                    style="font-variation-settings: 'FILL' 1"
+                  >star</span>
+                  <span class="text-xs font-bold">{{ sidebarProfile.ratingAverage | number: '1.1-1' }}</span>
+                  <span class="text-[10px] text-on-surface-variant">
+                    ({{ sidebarProfile.reviewsCount }} avaliações)
+                  </span>
+                </div>
+              </ng-container>
+              <ng-template #sidebarLoading>
+                <span class="text-[10px] text-on-surface-variant/50">Carregando...</span>
+              </ng-template>
             </div>
           </div>
-          <p class="text-xs text-on-surface-variant leading-relaxed italic">
-            "Entusiasta de clássicos e superesportivos. Prezo pela
-            pontualidade e conservação dos veículos."
+          <p
+            class="text-xs text-on-surface-variant leading-relaxed italic mb-3"
+            *ngIf="sidebarProfile?.bio"
+          >
+            "{{ sidebarProfile!.bio }}"
           </p>
+          <a
+            class="text-xs font-bold text-primary hover:underline"
+            [routerLink]="['/users', conversation.otherParticipant.id]"
+          >Ver perfil completo →</a>
         </div>
 
         <button
           class="w-full py-3 rounded-full border-2 border-outline-variant/30 text-sm font-bold text-on-surface-variant hover:bg-white transition-colors mt-auto"
           type="button"
+          (click)="openConversationReport()"
         >
           Denunciar conversa
         </button>
       </aside>
+
+      <!-- Report modal -->
+      <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        *ngIf="conversationReportOpen"
+        (click)="closeConversationReport()"
+      >
+        <div
+          class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8"
+          (click)="$event.stopPropagation()"
+        >
+          <ng-container *ngIf="!conversationReportDone; else reportSent">
+            <h3 class="text-lg font-black text-on-surface mb-1">Denunciar conversa</h3>
+            <p class="text-sm text-on-surface-variant mb-6">
+              Relate um problema com este anúncio ou negociação.
+            </p>
+
+            <label class="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-widest">
+              Motivo
+            </label>
+            <select
+              class="w-full border border-outline-variant/30 rounded-xl px-4 py-3 text-sm text-on-surface mb-4 focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              [(ngModel)]="conversationReportReason"
+              name="conversationReportReason"
+            >
+              <option value="">Selecione um motivo</option>
+              <option value="FRAUDULENT_SELLER">Vendedor fraudulento</option>
+              <option value="FAKE_LISTING">Anúncio falso</option>
+              <option value="OFFENSIVE_CONTENT">Conteúdo ofensivo</option>
+              <option value="SPAM">Spam</option>
+              <option value="OTHER">Outro</option>
+            </select>
+
+            <label class="block text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-widest">
+              Descrição (opcional)
+            </label>
+            <textarea
+              class="w-full border border-outline-variant/30 rounded-xl px-4 py-3 text-sm text-on-surface resize-none mb-6 focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              rows="3"
+              placeholder="Descreva o problema..."
+              [(ngModel)]="conversationReportDescription"
+              name="conversationReportDescription"
+              maxlength="500"
+            ></textarea>
+
+            <div class="flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-full border border-outline-variant/30 text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
+                type="button"
+                (click)="closeConversationReport()"
+              >Cancelar</button>
+              <button
+                class="flex-1 py-3 rounded-full bg-error text-white text-sm font-bold hover:bg-error/90 transition-colors disabled:opacity-50"
+                type="button"
+                [disabled]="!conversationReportReason || conversationReportSubmitting"
+                (click)="submitConversationReport()"
+              >
+                {{ conversationReportSubmitting ? 'Enviando...' : 'Enviar denúncia' }}
+              </button>
+            </div>
+          </ng-container>
+
+          <ng-template #reportSent>
+            <div class="text-center py-4">
+              <span class="material-symbols-outlined text-4xl text-emerald-500 mb-3 block" style="font-variation-settings: 'FILL' 1">check_circle</span>
+              <h3 class="text-lg font-black text-on-surface mb-2">Denúncia enviada</h3>
+              <p class="text-sm text-on-surface-variant mb-6">Nossa equipe irá analisar em breve.</p>
+              <button
+                class="px-8 py-3 rounded-full bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors"
+                type="button"
+                (click)="closeConversationReport()"
+              >Fechar</button>
+            </div>
+          </ng-template>
+        </div>
+      </div>
     </ng-container>
 
     <ng-template #desktopSelectState>

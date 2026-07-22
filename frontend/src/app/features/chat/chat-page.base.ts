@@ -12,13 +12,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ChatConversationItem,
   ChatMessage,
+  PublicUserProfile,
+  ReportReason,
 } from '../../core/models/domain.models';
 import { AppLoggerService } from '../../core/services/app-logger.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ChatApiService } from '../../core/services/chat-api.service';
 import { ChatInboxService } from '../../core/services/chat-inbox.service';
 import { ChatSocketService } from '../../core/services/chat-socket.service';
+import { ProfileApiService } from '../../core/services/profile-api.service';
 import { UiStateService } from '../../core/services/ui-state.service';
+import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 export const CHAT_IMPORTS = [
@@ -38,6 +42,8 @@ export abstract class ChatPageBase {
   private readonly router = inject(Router);
   private readonly chatApiService = inject(ChatApiService);
   private readonly chatInboxService = inject(ChatInboxService);
+  private readonly profileApiService = inject(ProfileApiService);
+  private readonly vehiclesApiService = inject(VehiclesApiService);
   private readonly logger = inject(AppLoggerService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly uiStateService = inject(UiStateService);
@@ -45,7 +51,7 @@ export abstract class ChatPageBase {
   protected readonly fallbackAvatarImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='40' fill='%23f3eeee'/%3E%3Ccircle cx='80' cy='60' r='24' fill='%23b7aaac'/%3E%3Cpath d='M40 128c7-22 24-34 40-34s33 12 40 34' fill='%23b7aaac'/%3E%3C/svg%3E";
   protected readonly vehicleFallbackImage =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuD-5CMBZUxKBjq4dV6OIv6jCIskL6ZMefW2QaELDIBGXJDHaPcGeNaM0QyVIQHM5sejbgxOcXb5PeohKC6voIgcg2RIZ-IAQPYOWHMm3pPTYhpkAYXvG8TwtBYPHeYZrnFoKPQ6YpWMtmRRngAcqyvttsX0ossSO1D2rD98NvuoBZ-sLiRAvxwRIvTcpfNnj3-9sL9DQME-VW91LXK1JGFKgI4nj3wWwNwpW9Aqti-1BGxBWV8Zj0scwXENExlTaoX328NStqdT-i34';
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='280' viewBox='0 0 400 280'%3E%3Crect width='400' height='280' fill='%23f1f5f9'/%3E%3Cpath d='M60 180 L80 145 L110 108 L290 108 L320 145 L340 180 L340 196 L60 196Z' fill='%23cbd5e1'/%3E%3Cpath d='M115 108 L135 72 L265 72 L285 108Z' fill='%2394a3b8'/%3E%3Cpath d='M140 74 L154 74 L154 102 L130 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M162 70 L238 70 L248 102 L152 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M246 74 L260 74 L270 102 L246 102Z' fill='%23e2e8f0'/%3E%3Ccircle cx='115' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='115' cy='196' r='16' fill='%2394a3b8'/%3E%3Ccircle cx='285' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='285' cy='196' r='16' fill='%2394a3b8'/%3E%3C/svg%3E";
 
   protected readonly quickReplies = [
     'Olá! Ainda disponível?',
@@ -63,6 +69,13 @@ export abstract class ChatPageBase {
   protected isLoadingMessages = false;
   protected isSending = false;
   protected conversationSearchTerm = '';
+  protected showUnreadOnly = false;
+  protected sidebarProfile: Pick<PublicUserProfile, 'ratingAverage' | 'reviewsCount' | 'bio'> | null = null;
+  protected conversationReportOpen = false;
+  protected conversationReportReason: ReportReason | '' = '';
+  protected conversationReportDescription = '';
+  protected conversationReportSubmitting = false;
+  protected conversationReportDone = false;
   protected attachmentMenuOpen = false;
   protected pendingAttachment: {
     file: File;
@@ -168,11 +181,15 @@ export abstract class ChatPageBase {
   protected get filteredConversations() {
     const searchTerm = this.conversationSearchTerm.trim().toLowerCase();
 
-    if (!searchTerm) {
-      return this.conversations;
-    }
-
     return this.conversations.filter((conversation) => {
+      if (this.showUnreadOnly && !conversation.unreadCount) {
+        return false;
+      }
+
+      if (!searchTerm) {
+        return true;
+      }
+
       const participantName =
         conversation.otherParticipant.fullName ||
         conversation.otherParticipant.email;
@@ -271,25 +288,25 @@ export abstract class ChatPageBase {
     );
 
     if (dayDifference === 0) {
-      return new Intl.DateTimeFormat('en-US', {
-        hour: 'numeric',
+      return new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
         minute: '2-digit',
       }).format(date);
     }
 
     if (dayDifference === 1) {
-      return 'Yesterday';
+      return 'Ontem';
     }
 
     if (dayDifference < 7) {
-      return new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(
+      return new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(
         date,
       );
     }
 
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
+    return new Intl.DateTimeFormat('pt-BR', {
       day: 'numeric',
+      month: 'short',
     }).format(date);
   }
 
@@ -312,14 +329,63 @@ export abstract class ChatPageBase {
       conversationId,
     });
     this.selectedConversationId = conversationId;
+    this.sidebarProfile = null;
 
     this.socketService.joinConversation(conversationId);
     this.zeroUnreadCount(conversationId);
     this.loadMessages(conversationId);
+
+    const participantId = this.conversations.find(
+      (c) => c.id === conversationId,
+    )?.otherParticipant.id;
+    if (participantId) {
+      this.profileApiService
+        .getPublicProfile(participantId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (p) => {
+            this.sidebarProfile = {
+              ratingAverage: p.ratingAverage,
+              reviewsCount: p.reviewsCount,
+              bio: p.bio ?? null,
+            };
+          },
+          error: () => {},
+        });
+    }
   }
 
   protected selectQuickReply(text: string) {
     this.draftMessage = text;
+  }
+
+  protected openConversationReport() {
+    this.conversationReportReason = '';
+    this.conversationReportDescription = '';
+    this.conversationReportDone = false;
+    this.conversationReportOpen = true;
+  }
+
+  protected closeConversationReport() {
+    this.conversationReportOpen = false;
+  }
+
+  protected submitConversationReport() {
+    const vehicleId = this.selectedConversation?.vehicle?.id;
+    if (!vehicleId || !this.conversationReportReason || this.conversationReportSubmitting) return;
+    this.conversationReportSubmitting = true;
+    this.vehiclesApiService
+      .createReport(vehicleId, this.conversationReportReason as ReportReason, this.conversationReportDescription || undefined)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.conversationReportSubmitting = false;
+          this.conversationReportDone = true;
+        },
+        error: () => {
+          this.conversationReportSubmitting = false;
+        },
+      });
   }
 
   protected sendMessage() {
