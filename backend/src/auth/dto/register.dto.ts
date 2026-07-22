@@ -10,7 +10,8 @@ import {
 
 export class RegisterDto {
   @ApiProperty({ example: 'user@triluga.local' })
-  @IsEmail()
+  @IsEmail({}, { message: 'Informe um e-mail válido.' })
+  @MaxLength(254)
   email: string;
 
   @ApiProperty({ example: 'User123!' })
@@ -23,15 +24,18 @@ export class RegisterDto {
   })
   password: string;
 
-  @ApiProperty({ example: '12345678909' })
+  @ApiProperty({ example: '12345678909', description: 'CPF (11 dígitos) ou CNPJ (14 dígitos), somente números.' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(14)
+  @MinLength(11, { message: 'CPF ou CNPJ inválido.' })
+  @MaxLength(14, { message: 'CPF ou CNPJ inválido.' })
+  @Matches(/^\d{11}$|^\d{14}$/, { message: 'Documento deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ).' })
   documentNumber: string;
 
   @ApiProperty({ example: 'Lucas Almeida' })
   @IsString()
   @IsNotEmpty()
+  @MinLength(2, { message: 'Nome completo deve ter ao menos 2 caracteres.' })
   @MaxLength(120)
   fullName: string;
 
@@ -71,6 +75,7 @@ export class RegisterDto {
   @ApiProperty({ example: 'SP' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(2)
+  @MinLength(2, { message: 'Estado deve ter exatamente 2 letras.' })
+  @MaxLength(2, { message: 'Estado deve ter exatamente 2 letras.' })
   state: string;
 }
