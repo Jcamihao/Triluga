@@ -100,6 +100,18 @@ export class VehiclesApiService {
     );
   }
 
+  getOwnerMetrics(vehicleId: string) {
+    return this.http.get<{
+      vehicleId: string;
+      title: string;
+      totalViews: number;
+      favoritesCount: number;
+      contactsCount: number;
+      recentViewsCount: number;
+      createdAt: string;
+    }>(`${environment.apiBaseUrl}/vehicles/${vehicleId}/metrics`);
+  }
+
   getSimilar(vehicleId: string) {
     return this.http
       .get<VehicleCardItem[]>(`${environment.apiBaseUrl}/vehicles/${vehicleId}/similar`)

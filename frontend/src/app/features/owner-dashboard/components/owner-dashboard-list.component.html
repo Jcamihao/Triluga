@@ -261,6 +261,10 @@
                   >
                   {{ vehicle.viewsCount || 0 }}</span
                 >
+                <span class="flex items-center gap-1 text-violet-500" title="Visualizações nos últimos 30 dias"
+                  ><span class="material-symbols-outlined text-[14px]">trending_up</span>
+                  {{ vehicle.viewsLast30Days || 0 }}</span
+                >
                 <span class="flex items-center gap-1 text-rose-500"
                   ><span class="material-symbols-outlined text-[14px]">favorite</span>
                   {{ vehicle.favoritesCount || 0 }}</span
@@ -595,6 +599,10 @@
               <span class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">visibility</span>
                 {{ owner.vehicleViewsLabel(vehicle) }}
+              </span>
+              <span class="flex items-center gap-1 text-violet-500">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                {{ owner.vehicleRecentViewsLabel(vehicle) }}
               </span>
               <span class="flex items-center gap-1 text-rose-500">
                 <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1">favorite</span>
