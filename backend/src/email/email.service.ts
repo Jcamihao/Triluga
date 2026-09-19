@@ -80,35 +80,6 @@ export class EmailService {
     });
   }
 
-  async sendDocumentApproved(
-    to: string,
-    fullName: string,
-    documentType: 'document' | 'driver-license',
-  ) {
-    const label =
-      documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
-    await this.send({
-      to,
-      subject: `Seu ${label} foi aprovado – Triluga`,
-      html: this.templateDocumentStatus(fullName, label, true),
-    });
-  }
-
-  async sendDocumentRejected(
-    to: string,
-    fullName: string,
-    documentType: 'document' | 'driver-license',
-    reason?: string,
-  ) {
-    const label =
-      documentType === 'driver-license' ? 'CNH' : 'documento de identidade';
-    await this.send({
-      to,
-      subject: `Ação necessária: ${label} não aprovado – Triluga`,
-      html: this.templateDocumentStatus(fullName, label, false, reason),
-    });
-  }
-
   async sendSearchAlertMatch(
     to: string,
     fullName: string,
@@ -453,33 +424,6 @@ export class EmailService {
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#006d37;">Nova mensagem 💬</h1>
       <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. Você recebeu uma nova mensagem sobre <strong style="color:#1a2421;">${vehicleTitle}</strong>.</p>
       <a href="${link}" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ver mensagem</a>
-    `,
-    );
-  }
-
-  private templateDocumentStatus(
-    fullName: string,
-    label: string,
-    approved: boolean,
-    reason?: string,
-  ) {
-    const firstName = fullName.split(' ')[0];
-    const color = approved ? '#006d37' : '#ba1a1a';
-    const icon = approved ? '✅' : '❌';
-    const title = approved
-      ? `${icon} ${label} aprovado`
-      : `${icon} ${label} não aprovado`;
-    const message = approved
-      ? `Seu ${label} foi verificado e aprovado com sucesso! Agora você tem acesso a todos os recursos da plataforma.`
-      : `Infelizmente seu ${label} não pôde ser aprovado. Por favor, envie novamente com uma foto nítida e legível.`;
-
-    return this.templateBase(
-      title,
-      `
-      <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:${color};">${title}</h1>
-      <p style="margin:0 0 24px;font-size:16px;color:#4d6b59;line-height:1.6;">Olá, ${firstName}. ${message}</p>
-      ${reason ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffdad6;border-radius:12px;border-left:4px solid #ba1a1a;margin-bottom:24px;"><tr><td style="padding:16px 20px;"><p style="margin:0;font-size:13px;color:#93000a;line-height:1.5;"><strong>Motivo:</strong> ${reason}</p></td></tr></table>` : ''}
-      <a href="${this.frontendUrl}/profile" style="display:block;width:100%;text-align:center;background:linear-gradient(135deg,#006d37,#2ecc71);color:#ffffff;text-decoration:none;padding:16px;border-radius:999px;font-size:16px;font-weight:900;box-sizing:border-box;">Ir para meu perfil</a>
     `,
     );
   }

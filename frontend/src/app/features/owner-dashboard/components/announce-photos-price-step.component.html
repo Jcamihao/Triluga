@@ -322,32 +322,46 @@
 
     <section class="bg-surface-container-low p-6 rounded-xl space-y-4">
       <h2 class="text-xl font-bold text-on-surface">Retirada e descrição</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label
-            class="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
-          >
-            Endereço de retirada
-          </label>
+      <div class="space-y-2">
+        <label
+          class="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+        >
+          Endereço de retirada
+        </label>
+        <p class="text-[11px] text-on-surface-variant opacity-70 -mt-1">
+          Cidade e estado já definidos no primeiro passo ({{ owner.cityStateValue || '—' }}). Informe aqui só a rua/bairro/ponto de encontro.
+        </p>
+        <div class="relative">
           <input
-            class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/20"
+            class="w-full bg-surface-container-lowest border-none rounded-xl p-4 pr-12 text-on-surface font-medium focus:ring-2 focus:ring-primary/20"
             placeholder="Bairro, avenida ou ponto de encontro"
-            [(ngModel)]="owner.vehicleDraft.addressLine"
+            [ngModel]="owner.vehicleDraft.addressLine"
+            (ngModelChange)="owner.onAddressLineChange($event)"
+            (blur)="owner.lookupAddressCoordinates()"
           />
+          <span
+            *ngIf="owner.addressLookupLoading"
+            class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg animate-spin"
+          >progress_activity</span>
+          <span
+            *ngIf="owner.addressLookupStatus === 'found' && !owner.addressLookupLoading"
+            class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"
+          >check_circle</span>
         </div>
-        <div class="space-y-2">
-          <label
-            class="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
-          >
-            Estado
-          </label>
-          <input
-            class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/20 uppercase"
-            placeholder="SP"
-            maxlength="2"
-            [(ngModel)]="owner.vehicleDraft.state"
-          />
-        </div>
+        <p
+          *ngIf="owner.addressLookupStatus === 'found' && !owner.addressLookupLoading"
+          class="text-[11px] text-emerald-700 font-medium flex items-center gap-1"
+        >
+          <span class="material-symbols-outlined text-[13px]">location_on</span>
+          Localização encontrada — o mapa do anúncio vai apontar pra esse endereço.
+        </p>
+        <p
+          *ngIf="owner.addressLookupStatus === 'not-found' && !owner.addressLookupLoading"
+          class="text-[11px] text-amber-700 font-medium flex items-center gap-1"
+        >
+          <span class="material-symbols-outlined text-[13px]">warning</span>
+          Não encontramos esse endereço. Tente ser mais específico (ex: rua e número, ou um ponto de referência conhecido).
+        </p>
       </div>
       <div class="space-y-2">
         <label

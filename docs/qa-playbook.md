@@ -28,7 +28,7 @@ Existem 3 papeis principais:
 
 - `USER`: navega, favorita, anuncia e conversa com outros usuarios
 - `OWNER`: papel de negocio usado para quem publica anuncios
-- `ADMIN`: modera usuarios, veiculos, verificacao documental e pedidos de privacidade
+- `ADMIN`: modera usuarios, veiculos e pedidos de privacidade
 
 ## Estado atual do produto
 
@@ -48,7 +48,7 @@ Limites importantes para QA:
 - nao existe fluxo transacional operacional.
 - o produto atual e um classificado: a negociacao acontece pelo chat.
 - a criacao de review existe no backend, mas nao ha um fluxo dedicado e visivel no frontend para o usuario enviar avaliacao.
-- documento e CNH agora sao privados; o acesso acontece por URL temporaria assinada.
+- a verificacao de identidade (KYC: selfie, documento e CNH) foi removida do produto; nao existe mais upload/aprovacao desses arquivos nem badge de "membro verificado".
 
 ## Dados seed
 
@@ -83,14 +83,12 @@ npm --prefix frontend start
 
 ### Variaveis que o QA deve adicionar manualmente
 
-Os exemplos de `.env` ainda nao trazem todas as chaves do pacote de privacidade/storage privado. Adicione estas entradas em `backend/.env` e, se usar `docker compose up`, tambem no `.env` da raiz:
+Os exemplos de `.env` ainda nao trazem todas as chaves do pacote de privacidade. Adicione estas entradas em `backend/.env` e, se usar `docker compose up`, tambem no `.env` da raiz:
 
 ```env
 JWT_REFRESH_COOKIE_NAME=triluga_refresh_token
 JWT_REFRESH_COOKIE_SECURE=false
 JWT_REFRESH_COOKIE_SAME_SITE=lax
-MINIO_PRIVATE_BUCKET=triluga-private
-MINIO_PRIVATE_URL_EXPIRES_IN_SECONDS=600
 PRIVACY_CONTACT_EMAIL=privacidade@triluga.local
 PRIVACY_POLICY_VERSION=2026-03-27
 ```
@@ -146,7 +144,6 @@ npx prisma studio
 
 - dashboard administrativo
 - bloqueio de usuario
-- aprovacao/recusa de documento e CNH
 - desativacao de veiculo
 - tratamento de solicitacoes LGPD
 
@@ -193,14 +190,12 @@ npx prisma studio
 
 - o banner de analytics deve aparecer quando o usuario ainda nao respondeu a preferencia
 - analytics nao essencial so pode disparar com consentimento
-- documentos de verificacao nao devem circular em URL publica permanente
 - central de privacidade permite exportacao e abertura de solicitacoes
 - admin pode listar e mudar status das solicitacoes
 
 ## Areas de risco que merecem atencao extra
 
 - rotas protegidas: testar navegacao logada e anonima para chat, favoritos, profile, owner dashboard, admin e privacy center.
-- arquivos privados: validar que documento/CNH abrem por endpoint de URL temporaria, nao por campo publico direto.
 - sessao: validar restauracao apos reload, expiracao de token e logout.
 
 ## Smoke test recomendado
@@ -218,9 +213,8 @@ Execute este roteiro sempre que houver build nova:
 9. Avançar para um passo seguinte deixando dados obrigatórios vazios, para validar a exibição de ícone de (⚠️) "Alerta Laranja" apontando campos incompletos.
 10. Preencher tudo corretamente, testar o limite de 7 imagens da galeria, publicar e checar na busca online.
 11. Fazer login com `ADMIN` e validar dashboard, usuarios, veiculos e privacidade.
-12. Aprovar ou recusar documento/CNH e validar status no perfil do usuario.
-13. Abrir `/privacy` e `/privacy-center`, mudar consentimento de analytics, exportar dados e criar uma solicitacao LGPD.
-14. Em `/admin`, validar que a solicitacao LGPD aparece e pode mudar para `IN_REVIEW` e `COMPLETED`.
+12. Abrir `/privacy` e `/privacy-center`, mudar consentimento de analytics, exportar dados e criar uma solicitacao LGPD.
+13. Em `/admin`, validar que a solicitacao LGPD aparece e pode mudar para `IN_REVIEW` e `COMPLETED`.
 
 ## Roteiro de regressao por perfil
 
@@ -257,7 +251,6 @@ Execute este roteiro sempre que houver build nova:
 - bloquear usuario
 - listar veiculos
 - desativar veiculo
-- abrir doc/CNH por link temporario
 - listar pedidos LGPD
 - mudar status de pedido LGPD
 
@@ -268,7 +261,6 @@ Execute este roteiro sempre que houver build nova:
 - tentar criar review duplicada para o mesmo anuncio ou usuario
 - tentar salvar alerta de busca sem filtro
 - tentar abrir rota protegida sem login
-- tentar abrir arquivo de verificacao inexistente
 
 ## Validacoes tecnicas no navegador
 

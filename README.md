@@ -8,7 +8,7 @@
 
 <br/>
 
-![versão](https://img.shields.io/badge/Versão-2.6.0-84cc16?style=for-the-badge&labelColor=1e293b)
+![versão](https://img.shields.io/badge/Versão-2.7.0-84cc16?style=for-the-badge&labelColor=1e293b)
 
 <br/>
 
@@ -29,7 +29,6 @@
 - 🔍 **Busca avançada** com filtros por tipo, categoria, câmbio, combustível, ano, preço e localização geográfica.
 - 📸 **Galeria responsiva** com zoom, navegação por toque, carrossel de miniaturas e crop de avatar.
 - 💬 **Chat em tempo real** via WebSocket entre comprador e anunciante.
-- 🤖 **Verificação de identidade com IA** — OCR + InsightFace para comparação biométrica selfie ↔ documento.
 - ⭐ **Avaliações e reputação** pública de anunciantes e veículos.
 - 🔔 **Notificações e alertas de busca** por e-mail e push via BullMQ.
 - 💰 **Destaque pago** de anúncios integrado com EfiPay (PIX).
@@ -49,9 +48,6 @@
 | **Storage** | MinIO (S3-compatible) |
 | **Real-time** | Socket.io (WebSocket) |
 | **Auth** | JWT Bearer + refresh token httpOnly cookie |
-| **IA — OCR** | Tesseract.js |
-| **IA — Visão** | Ollama (`qwen2.5-vl`) |
-| **IA — Faces** | InsightFace `buffalo_s` (microserviço Python/FastAPI) |
 | **Infra local** | Docker Compose |
 | **CI/CD** | GitHub Actions → SSH deploy VPS |
 
@@ -66,7 +62,7 @@
 │   └── src/
 │       ├── auth/             JWT, refresh, e-mail verification
 │       ├── users/
-│       ├── profiles/         KYC, selfie, documentos
+│       ├── profiles/         Perfil, avatar e dados de contato
 │       ├── vehicles/         CRUD de anúncios
 │       ├── vehicle-images/   Upload de fotos
 │       ├── chat/             WebSocket + mensagens
@@ -79,14 +75,12 @@
 │       ├── featured/         Destaque pago (EfiPay/PIX)
 │       ├── privacy/          LGPD
 │       ├── storage/          MinIO abstraction
-│       ├── cache-queue/      Redis + BullMQ abstraction
-│       └── verification/     OCR + Ollama + InsightFace
+│       └── cache-queue/      Redis + BullMQ abstraction
 ├── frontend/                 Angular PWA
 │   └── src/app/
 │       ├── core/             Guards, interceptors, services, models
 │       ├── shared/           Componentes reutilizáveis
 │       └── features/         Páginas da aplicação
-├── face-verification/        Microserviço Python — InsightFace
 ├── docs/                     Documentação adicional
 │   └── releases/             Notas de versão
 └── docker-compose.yml
@@ -105,7 +99,7 @@
 | `/chat` | Lista de conversas | `auth` |
 | `/chat/:id` | Conversa individual | `auth` |
 | `/favorites` | Favoritos | `auth` |
-| `/profile` | Perfil + KYC + verificação | `auth` |
+| `/profile` | Perfil do usuário | `auth` |
 | `/privacy-center` | Central LGPD | `auth` |
 | `/anunciar-carro` | Painel do anunciante | `auth` |
 | `/users/:id` | Perfil público do anunciante | — |
@@ -127,8 +121,8 @@ POST   /auth/logout                Logout
 GET    /auth/me                    Usuário autenticado
 POST   /auth/forgot-password       Solicita reset
 POST   /auth/reset-password        Redefine senha com token
-GET    /auth/confirm-email         Confirma e-mail
-POST   /auth/resend-confirmation   Reenvia confirmação
+GET    /auth/verify-email          Confirma e-mail
+POST   /auth/resend-verification   Reenvia confirmação
 ```
 
 ### 🚗 Vehicles
@@ -176,17 +170,12 @@ GET    /search-alerts/my           Lista alertas
 DELETE /search-alerts/:id          Remove alerta
 ```
 
-### 👤 Profiles & KYC
+### 👤 Profiles
 ```
 GET    /profiles/me                     Perfil do usuário
 PATCH  /profiles/me                     Atualiza perfil
 GET    /profiles/:userId                Perfil público (público)
 POST   /profiles/me/avatar              Upload de avatar
-POST   /profiles/me/document            Upload de documento (KYC)
-POST   /profiles/me/driver-license      Upload de CNH (KYC)
-POST   /profiles/me/selfie              Upload de selfie → dispara verificação IA
-GET    /profiles/me/document/url        URL temporária do documento
-GET    /profiles/me/driver-license/url  URL temporária da CNH
 ```
 
 ### 🛡️ Privacy / LGPD
@@ -205,10 +194,6 @@ GET    /admin/users                              Lista usuários
 GET    /admin/vehicles                           Lista veículos
 PATCH  /admin/users/:id/block                   Bloqueia usuário
 DELETE /admin/users/:id                         Exclui usuário permanentemente
-PATCH  /admin/users/:id/document/approve        Aprova documento
-PATCH  /admin/users/:id/document/reject         Recusa documento
-PATCH  /admin/users/:id/driver-license/approve  Aprova CNH
-PATCH  /admin/users/:id/driver-license/reject   Recusa CNH
 PATCH  /admin/vehicles/:id/deactivate           Desativa veículo
 DELETE /admin/vehicles/:id                      Exclui veículo
 PATCH  /admin/vehicles/:id/featured             Configura destaque
@@ -258,7 +243,7 @@ docker compose up --build
 
 ```bash
 cp backend/.env.example backend/.env
-npm run dev:infra       # sobe PostgreSQL, Redis, MinIO, Ollama
+npm run dev:infra       # sobe PostgreSQL, Redis, MinIO
 npm run dev:backend     # NestJS em watch mode
 npm --prefix frontend start
 ```
@@ -291,26 +276,6 @@ npm run db:rebuild
 | Admin | `admin@triluga.local` | `Admin123!` |
 | Anunciante | `mariana@triluga.local` | `User123!` |
 | Comprador | `lucas@triluga.local` | `User123!` |
-
----
-
-## 🤖 Verificação de Identidade (KYC)
-
-O fluxo de KYC combina dois modelos em paralelo:
-
-1. **Ollama** (`qwen2.5-vl`) — analisa legibilidade e autenticidade dos documentos.
-2. **InsightFace** (`buffalo_s`) — compara biometricamente a selfie com a foto do documento e da CNH via cosine similarity (threshold `≥ 0.40`).
-
-O InsightFace tem precedência no resultado de face match. Se indisponível, o sistema degrada graciosamente para o resultado do Ollama.
-
-```
-Upload selfie
-    ├── Ollama → doc genuíno? CNH genuína? rosto corresponde?
-    └── InsightFace → selfie ↔ doc sim? selfie ↔ CNH sim?
-                          ↓ paralelo
-            Combina resultados → APPROVED / REJECTED
-            Dispara e-mail para o usuário
-```
 
 ---
 
@@ -351,6 +316,7 @@ Secrets necessários no repositório:
 
 | Versão | Destaques |
 |--------|-----------|
+| [v2.7.0](./docs/releases/v2.7.0.md) | Remoção do KYC · geocoding real no mapa do anúncio · foto da home restaurada |
 | [v2.6.0](./docs/releases/v2.6.0.md) | CI/CD · InsightFace KYC · badge contatado · taxa de resposta |
 | [v2.5.0](./docs/releases/v2.5.0.md) | KYC completo · verificação de e-mail · recuperação de senha · FIPE |
 | [v2.4.14](./docs/releases/v2.4.14.md) | Galeria com zoom · localização automática |

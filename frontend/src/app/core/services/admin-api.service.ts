@@ -31,34 +31,6 @@ export class AdminApiService {
     return this.http.delete(`${environment.apiBaseUrl}/admin/users/${userId}`);
   }
 
-  approveUserDocument(userId: string) {
-    return this.http.patch(
-      `${environment.apiBaseUrl}/admin/users/${userId}/document/approve`,
-      {},
-    );
-  }
-
-  rejectUserDocument(userId: string) {
-    return this.http.patch(
-      `${environment.apiBaseUrl}/admin/users/${userId}/document/reject`,
-      {},
-    );
-  }
-
-  approveUserDriverLicense(userId: string) {
-    return this.http.patch(
-      `${environment.apiBaseUrl}/admin/users/${userId}/driver-license/approve`,
-      {},
-    );
-  }
-
-  rejectUserDriverLicense(userId: string) {
-    return this.http.patch(
-      `${environment.apiBaseUrl}/admin/users/${userId}/driver-license/reject`,
-      {},
-    );
-  }
-
   deactivateVehicle(vehicleId: string) {
     return this.http.patch(
       `${environment.apiBaseUrl}/admin/vehicles/${vehicleId}/deactivate`,
@@ -68,18 +40,6 @@ export class AdminApiService {
 
   deleteVehicle(vehicleId: string) {
     return this.http.delete(`${environment.apiBaseUrl}/admin/vehicles/${vehicleId}`);
-  }
-
-  getUserVerificationFileUrl(
-    userId: string,
-    type: 'document' | 'driverLicense',
-  ) {
-    return this.http.get<{ url: string }>(
-      `${environment.apiBaseUrl}/admin/users/${userId}/verification-file`,
-      {
-        params: { type },
-      },
-    );
   }
 
   getPrivacyRequests() {

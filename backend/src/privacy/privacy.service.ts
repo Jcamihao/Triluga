@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  PrivacyRequestStatus,
-  UserStatus,
-  VerificationStatus,
-} from '@prisma/client';
+import { PrivacyRequestStatus, UserStatus } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrivacyRequestDto } from './dto/create-privacy-request.dto';
@@ -219,14 +215,6 @@ export class PrivacyService {
               avatarUrl: user.profile.avatarUrl,
               documentNumber: user.profile.documentNumber,
               driverLicenseNumber: user.profile.driverLicenseNumber,
-              hasDocumentImage: !!user.profile.documentImageUrl,
-              hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
-              documentVerificationStatus:
-                user.profile.documentVerificationStatus ??
-                VerificationStatus.NOT_SUBMITTED,
-              driverLicenseVerification:
-                user.profile.driverLicenseVerification ??
-                VerificationStatus.NOT_SUBMITTED,
             }
           : null,
       },
@@ -319,11 +307,6 @@ export class PrivacyService {
           avatarUrl: null,
           documentNumber: null,
           driverLicenseNumber: null,
-          documentImageUrl: null,
-          driverLicenseImageUrl: null,
-          selfieImageUrl: null,
-          documentOcrText: null,
-          cnhOcrText: null,
         },
       }),
     ]);

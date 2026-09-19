@@ -228,26 +228,13 @@
               </span>
             </div>
             <span class="text-xs text-on-surface-variant">{{ user.email }}</span>
-            <span class="text-xs text-on-surface-variant">
-              {{ user.profile?.city }}{{ user.profile?.city ? ' · ' : '' }}Doc: {{ verificationLabel(user.profile?.documentVerificationStatus) }} · CNH: {{ verificationLabel(user.profile?.driverLicenseVerification) }}
+            <span class="text-xs text-on-surface-variant" *ngIf="user.profile?.city">
+              {{ user.profile?.city }}
             </span>
           </div>
 
           <!-- Actions -->
           <div class="flex flex-wrap gap-2 shrink-0">
-            <button *ngIf="user.profile?.hasDocumentImage" type="button"
-              class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
-              (click)="openVerificationFile(user.id, 'document')">Ver doc</button>
-            <button *ngIf="user.profile?.hasDriverLicenseImage" type="button"
-              class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
-              (click)="openVerificationFile(user.id, 'driverLicense')">Ver CNH</button>
-            <button type="button"
-              class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-emerald-500 hover:text-emerald-600 transition-colors"
-              (click)="approveDocument(user.id)">✓ Doc</button>
-            <button type="button"
-              class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-emerald-500 hover:text-emerald-600 transition-colors"
-              (click)="approveDriverLicense(user.id)">✓ CNH</button>
-
             <ng-container *ngIf="deleteUserConfirmId !== user.id; else userDeleteConfirm">
               <button type="button"
                 class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-error hover:text-error transition-colors"

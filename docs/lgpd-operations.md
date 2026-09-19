@@ -1,13 +1,13 @@
 # Operação LGPD da Triluga
 
-Versão: `2026-03-27`
+Versão: `2026-09-12`
 
 ## 1. Papéis mínimos
 
 - produto/engenharia: manter controles técnicos, logs e expurgo
 - atendimento/operação: receber e acompanhar solicitações do titular
 - jurídico/encarregado: validar bases legais, retenção, incidentes e respostas formais
-- admin autorizado: revisar documentos e pedidos LGPD dentro do painel administrativo
+- admin autorizado: revisar pedidos LGPD dentro do painel administrativo
 
 ## 2. Fluxo sugerido para solicitações do titular
 
@@ -18,16 +18,7 @@ Versão: `2026-03-27`
 5. Executar a ação técnica ou justificar eventual limitação legal/contratual.
 6. Responder ao titular e encerrar o pedido com trilha documental.
 
-## 3. Fluxo sugerido para documentos e CNH
-
-1. Usuário envia arquivo pela área autenticada.
-2. Arquivo vai para bucket privado.
-3. Admin autorizado acessa somente por link temporário.
-4. Documento é aprovado, recusado ou substituído.
-5. Arquivo anterior é removido.
-6. Aplicar retenção e descarte conforme [data-retention.md](./data-retention.md).
-
-## 4. Fluxo sugerido para incidente
+## 3. Fluxo sugerido para incidente
 
 1. Identificar incidente ou suspeita.
 2. Conter acesso e preservar evidências.
@@ -36,7 +27,7 @@ Versão: `2026-03-27`
 5. Avaliar necessidade de comunicação à ANPD e aos titulares.
 6. Executar correção e registrar plano de prevenção.
 
-## 5. Checklist recorrente
+## 4. Checklist recorrente
 
 - revisar acessos administrativos
 - revisar buckets, permissões e segredos

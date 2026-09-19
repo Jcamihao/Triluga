@@ -50,53 +50,8 @@ services:
       /bin/sh -c "
       until /usr/bin/mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin}; do sleep 1; done &&
       /usr/bin/mc mb --ignore-existing local/${MINIO_BUCKET:-triluga-public} &&
-      /usr/bin/mc mb --ignore-existing local/${MINIO_PRIVATE_BUCKET:-triluga-private} &&
       /usr/bin/mc anonymous set download local/${MINIO_BUCKET:-triluga-public}
       "
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - '${OLLAMA_HOST_PORT:-11434}:11434'
-    volumes:
-      - ollama-data:/root/.ollama
-    healthcheck:
-      test: ['CMD-SHELL', 'ollama list > /dev/null 2>&1 || exit 1']
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 30s
-    # Para usar GPU NVIDIA, descomente as linhas abaixo:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
-
-  ollama-pull:
-    image: ollama/ollama:latest
-    depends_on:
-      ollama:
-        condition: service_healthy
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-    entrypoint: >
-      /bin/sh -c "ollama pull ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b} && echo 'Modelo pronto.'"
-    restart: 'no'
-
-  face-verification:
-    build:
-      context: ./face-verification
-    volumes:
-      - face-models:/models
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 180s
 
   backend:
     build:
@@ -108,10 +63,6 @@ services:
         condition: service_healthy
       minio-create-bucket:
         condition: service_completed_successfully
-      ollama:
-        condition: service_healthy
-      face-verification:
-        condition: service_healthy
     environment:
       PORT: ${PORT:-3000}
       APP_URL: ${APP_URL:-http://localhost:3002}
@@ -130,11 +81,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-triluga-public}
-      MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:-triluga-private}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9004/triluga-public}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-qwen2.5-vl:3b}
-      FACE_VERIFICATION_URL: ${FACE_VERIFICATION_URL:-http://face-verification:8000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
     ports:
       - '${BACKEND_HOST_PORT:-3002}:3000'
@@ -154,5 +101,3 @@ services:
 volumes:
   postgres-data:
   minio-data:
-  ollama-data:
-  face-models:

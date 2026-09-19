@@ -25,11 +25,6 @@ export type FuelType =
   | 'HYBRID';
 export type TransmissionType = 'MANUAL' | 'AUTOMATIC' | 'CVT';
 export type MechanicsCondition = 'REVIEW' | 'GOOD' | 'EXCELLENT';
-export type VerificationStatus =
-  | 'NOT_SUBMITTED'
-  | 'PENDING'
-  | 'APPROVED'
-  | 'REJECTED';
 export type PrivacyRequestType =
   | 'ACCESS'
   | 'PORTABILITY'
@@ -73,14 +68,6 @@ export interface Profile {
   avatarUrl?: string | null;
   documentNumber?: string | null;
   driverLicenseNumber?: string | null;
-  documentImageUrl?: string | null;
-  driverLicenseImageUrl?: string | null;
-  hasDocumentImage?: boolean;
-  hasDriverLicenseImage?: boolean;
-  documentVerificationStatus?: VerificationStatus;
-  driverLicenseVerification?: VerificationStatus;
-  hasSelfieImage?: boolean;
-  selfieImageUrl?: string | null;
 }
 
 export interface User {
@@ -115,11 +102,6 @@ export interface PublicUserProfile {
     averageRating: number;
   };
   reviews: UserReviewItem[];
-  verification: {
-    documentStatus: VerificationStatus;
-    driverLicenseStatus: VerificationStatus;
-    profileStatus: VerificationStatus;
-  };
   vehicles: VehicleCardItem[];
 }
 
@@ -216,7 +198,6 @@ export interface VehicleCardItem {
     phone?: string | null;
     ratingAverage?: number;
     reviewsCount?: number;
-    isVerified?: boolean;
     responseRate?: number | null;
   };
 }

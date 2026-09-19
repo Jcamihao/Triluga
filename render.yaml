@@ -49,10 +49,6 @@ services:
         sync: false
       - key: MINIO_BUCKET
         value: triluga-public
-      - key: MINIO_PRIVATE_BUCKET
-        value: triluga-private
-      - key: MINIO_PRIVATE_URL_EXPIRES_IN_SECONDS
-        value: '600'
       - key: MINIO_PUBLIC_URL
         sync: false
   - type: web

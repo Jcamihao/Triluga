@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role, UserStatus, VerificationStatus } from '@prisma/client';
+import { Prisma, Role, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 type CreateUserInput = {
@@ -168,8 +168,6 @@ export class UsersService {
           city: string;
           state: string;
           avatarUrl: string | null;
-          documentVerificationStatus: VerificationStatus;
-          driverLicenseVerification: VerificationStatus;
         }
       | null
       | undefined,
@@ -187,8 +185,6 @@ export class UsersService {
       city: profile.city,
       state: profile.state,
       avatarUrl: profile.avatarUrl,
-      documentVerificationStatus: profile.documentVerificationStatus,
-      driverLicenseVerification: profile.driverLicenseVerification,
     };
   }
 }

@@ -11,13 +11,12 @@ import { UiStateService } from '../../core/services/ui-state.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
 import { Profile } from '../../core/models/domain.models';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
-import { VerificationOnboardingComponent } from './components/verification-onboarding.component';
 import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent, VerificationOnboardingComponent],
+  imports: [CommonModule, FormsModule, RouterLink, WebHeaderComponent],
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.scss'],
 })
@@ -43,11 +42,6 @@ export class ProfilePageComponent implements OnDestroy {
   protected feedback = '';
   protected errorMessage = '';
   protected pendingAvatarFile: File | null = null;
-  protected pendingDocumentFile: File | null = null;
-  protected pendingDriverLicenseFile: File | null = null;
-  protected openingDocument = false;
-  protected openingDriverLicense = false;
-  protected showVerificationOnboarding = false;
   protected zipCodeHint = '';
   protected zipCodeError = '';
   protected onboardingDismissed = localStorage.getItem('triluga.onboarding.dismissed') === '1';
@@ -173,8 +167,6 @@ export class ProfilePageComponent implements OnDestroy {
       this.profile.avatarUrl || this.pendingAvatarFile,
       this.profile.documentNumber,
       this.profile.driverLicenseNumber,
-      this.profile.hasDocumentImage || this.pendingDocumentFile,
-      this.profile.hasDriverLicenseImage || this.pendingDriverLicenseFile,
     ];
 
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
@@ -191,7 +183,6 @@ export class ProfilePageComponent implements OnDestroy {
       { label: 'Adicionar foto de perfil', done: !!(this.profile.avatarUrl || this.pendingAvatarFile), action: 'photo' },
       { label: 'Preencher nome e telefone', done: !!(this.profile.fullName && this.profile.phone), action: 'name' },
       { label: 'Informar cidade e estado', done: !!(this.profile.city && this.profile.state), action: 'address' },
-      { label: 'Enviar documento (CPF/RG)', done: !!(this.profile.documentNumber && this.profile.hasDocumentImage), action: 'doc' },
     ];
   }
 
@@ -218,73 +209,6 @@ export class ProfilePageComponent implements OnDestroy {
     return parts.length ? parts.join(', ') : 'Localização não informada';
   }
 
-  protected get verificationRows() {
-    return [
-      {
-        title: 'Email Verificado',
-        description: this.authService.currentUser()?.email || 'Email da conta',
-        status: this.authService.currentUser()?.emailVerified ? 'approved' : 'pending',
-        icon: this.authService.currentUser()?.emailVerified ? 'check_circle' : 'error',
-      },
-      {
-        title: 'Documento',
-        description: this.verificationStatusLabel(
-          this.profile.documentVerificationStatus,
-        ),
-        status:
-          this.profile.documentVerificationStatus === 'APPROVED'
-            ? 'approved'
-            : this.profile.documentVerificationStatus === 'REJECTED'
-              ? 'rejected'
-              : 'pending',
-        icon:
-          this.profile.documentVerificationStatus === 'APPROVED'
-            ? 'check_circle'
-            : this.profile.documentVerificationStatus === 'REJECTED'
-              ? 'cancel'
-              : 'pending',
-      },
-      {
-        title: 'CNH',
-        description: this.verificationStatusLabel(
-          this.profile.driverLicenseVerification,
-        ),
-        status:
-          this.profile.driverLicenseVerification === 'APPROVED'
-            ? 'approved'
-            : this.profile.driverLicenseVerification === 'REJECTED'
-              ? 'rejected'
-              : 'pending',
-        icon:
-          this.profile.driverLicenseVerification === 'APPROVED'
-            ? 'check_circle'
-            : this.profile.driverLicenseVerification === 'REJECTED'
-              ? 'cancel'
-              : 'pending',
-      },
-    ];
-  }
-
-  protected get isFullyVerified(): boolean {
-    return (
-      this.profile.documentVerificationStatus === 'APPROVED' &&
-      this.profile.driverLicenseVerification === 'APPROVED'
-    );
-  }
-
-  protected get verificationCta(): 'start' | 'pending' | 'done' {
-    if (this.isFullyVerified) return 'done';
-    if (
-      this.profile.documentVerificationStatus === 'PENDING' ||
-      this.profile.driverLicenseVerification === 'PENDING'
-    ) return 'pending';
-    return 'start';
-  }
-
-  protected get hasPendingDocuments(): boolean {
-    return !!(this.pendingDocumentFile || this.pendingDriverLicenseFile);
-  }
-
   protected get unreadChatBadge() {
     const count = this.chatInboxService.unreadCount();
     return count > 99 ? '99+' : String(count);
@@ -295,8 +219,6 @@ export class ProfilePageComponent implements OnDestroy {
     this.feedback = '';
     this.errorMessage = '';
     const pendingAvatarFile = this.pendingAvatarFile;
-    const pendingDocumentFile = this.pendingDocumentFile;
-    const pendingDriverLicenseFile = this.pendingDriverLicenseFile;
 
     this.profileApiService
       .updateMyProfile(this.buildEditableProfile(this.profile))
@@ -307,39 +229,26 @@ export class ProfilePageComponent implements OnDestroy {
             avatar: pendingAvatarFile
               ? this.profileApiService.uploadMyAvatar(pendingAvatarFile)
               : of(null),
-            document: pendingDocumentFile
-              ? this.profileApiService.uploadMyDocument(pendingDocumentFile)
-              : of(null),
-            driverLicense: pendingDriverLicenseFile
-              ? this.profileApiService.uploadMyDriverLicense(
-                  pendingDriverLicenseFile,
-                )
-              : of(null),
           };
 
           return forkJoin(uploads);
         }),
       )
       .subscribe({
-        next: ({ profile, avatar, document, driverLicense }) => {
+        next: ({ profile, avatar }) => {
           const normalizedProfile = this.buildEditableProfile({
             ...this.profile,
             ...profile,
             ...avatar,
-            ...document,
-            ...driverLicense,
           });
 
           this.profile = normalizedProfile;
           this.authService.syncProfile(normalizedProfile);
           this.pendingAvatarFile = null;
-          this.pendingDocumentFile = null;
-          this.pendingDriverLicenseFile = null;
           this.revokeAvatarPreview();
-          this.feedback =
-            pendingAvatarFile || pendingDocumentFile || pendingDriverLicenseFile
-              ? 'Perfil e arquivos atualizados com sucesso.'
-              : 'Perfil atualizado com sucesso.';
+          this.feedback = pendingAvatarFile
+            ? 'Perfil e foto atualizados com sucesso.'
+            : 'Perfil atualizado com sucesso.';
           this.saving = false;
         },
         error: (error) => {
@@ -365,33 +274,6 @@ export class ProfilePageComponent implements OnDestroy {
 
     this.errorMessage = '';
     this.openCropModal(file);
-  }
-
-  protected onDocumentSelected(event: Event) {
-    this.pendingDocumentFile = this.extractImageFile(
-      event,
-      'Selecione uma imagem válida para o documento.',
-    );
-  }
-
-  protected onDriverLicenseSelected(event: Event) {
-    this.pendingDriverLicenseFile = this.extractImageFile(
-      event,
-      'Selecione uma imagem válida para a CNH.',
-    );
-  }
-
-  protected verificationStatusLabel(
-    status?: Profile['documentVerificationStatus'],
-  ) {
-    const labels = {
-      APPROVED: 'Aprovado',
-      PENDING: 'Em análise',
-      REJECTED: 'Recusado',
-      NOT_SUBMITTED: 'Não enviado',
-    } as const;
-
-    return labels[status || 'NOT_SUBMITTED'] || 'Não enviado';
   }
 
   protected formatState(value: string) {
@@ -493,44 +375,7 @@ export class ProfilePageComponent implements OnDestroy {
       avatarUrl: profile.avatarUrl ?? null,
       documentNumber: profile.documentNumber ?? null,
       driverLicenseNumber: profile.driverLicenseNumber ?? null,
-      documentImageUrl: profile.documentImageUrl ?? null,
-      driverLicenseImageUrl: profile.driverLicenseImageUrl ?? null,
-      hasDocumentImage: profile.hasDocumentImage ?? false,
-      hasDriverLicenseImage: profile.hasDriverLicenseImage ?? false,
-      documentVerificationStatus:
-        profile.documentVerificationStatus ?? 'NOT_SUBMITTED',
-      driverLicenseVerification:
-        profile.driverLicenseVerification ?? 'NOT_SUBMITTED',
     };
-  }
-
-  protected openVerificationFile(type: 'document' | 'driverLicense') {
-    const request$ =
-      type === 'document'
-        ? this.profileApiService.getMyDocumentUrl()
-        : this.profileApiService.getMyDriverLicenseUrl();
-
-    if (type === 'document') {
-      this.openingDocument = true;
-    } else {
-      this.openingDriverLicense = true;
-    }
-
-    request$.subscribe({
-      next: ({ url }) => {
-        window.open(url, '_blank', 'noopener,noreferrer');
-        this.openingDocument = false;
-        this.openingDriverLicense = false;
-      },
-      error: (error) => {
-        this.errorMessage = this.resolveErrorMessage(
-          error,
-          'Não foi possível abrir o arquivo solicitado.',
-        );
-        this.openingDocument = false;
-        this.openingDriverLicense = false;
-      },
-    });
   }
 
   private resolveErrorMessage(
@@ -550,25 +395,6 @@ export class ProfilePageComponent implements OnDestroy {
   private setAvatarPreview(file: File) {
     this.revokeAvatarPreview();
     this.avatarPreviewUrl = URL.createObjectURL(file);
-  }
-
-  private extractImageFile(event: Event, errorMessage: string) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
-
-    if (!file) {
-      return null;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      this.errorMessage = errorMessage;
-      input.value = '';
-      return null;
-    }
-
-    this.errorMessage = '';
-    input.value = '';
-    return file;
   }
 
   private revokeAvatarPreview() {

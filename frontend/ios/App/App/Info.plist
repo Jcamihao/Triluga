@@ -28,11 +28,11 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>A Triluga usa a camera para enviar fotos de perfil, veiculos e documentos.</string>
+	<string>A Triluga usa a camera para enviar fotos de perfil e veiculos.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>A Triluga precisa acessar a rede local para conversar com o backend em desenvolvimento no seu computador.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>A Triluga acessa sua biblioteca para selecionar fotos de perfil, veiculos e documentos.</string>
+	<string>A Triluga acessa sua biblioteca para selecionar fotos de perfil e veiculos.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

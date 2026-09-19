@@ -88,17 +88,6 @@ export class AdminController {
     );
   }
 
-  @Get('users/:id/verification-file')
-  @ApiOperation({
-    summary: 'Gera uma URL temporária para o documento ou CNH de um usuário',
-  })
-  getUserVerificationFileUrl(
-    @Param('id') userId: string,
-    @Query('type') type: 'document' | 'driverLicense' | 'selfie',
-  ) {
-    return this.adminService.getUserVerificationFileUrl(userId, type);
-  }
-
   @Get('privacy/requests')
   @ApiOperation({
     summary: 'Lista solicitações LGPD para tratamento administrativo',
@@ -150,60 +139,6 @@ export class AdminController {
     }
     const result = await this.adminService.deleteUser(userId);
     await this.auditService.log(admin.sub, 'user_deleted', 'User', userId);
-    return result;
-  }
-
-  @Patch('users/:id/document/approve')
-  @ApiOperation({ summary: 'Aprova o documento enviado pelo usuário' })
-  async approveUserDocument(
-    @CurrentUser() admin: AuthenticatedUser,
-    @Param('id') userId: string,
-  ) {
-    const result = await this.adminService.approveUserDocument(userId);
-    await this.auditService.log(admin.sub, 'document_approved', 'User', userId);
-    return result;
-  }
-
-  @Patch('users/:id/document/reject')
-  @ApiOperation({ summary: 'Recusa o documento enviado pelo usuário' })
-  async rejectUserDocument(
-    @CurrentUser() admin: AuthenticatedUser,
-    @Param('id') userId: string,
-  ) {
-    const result = await this.adminService.rejectUserDocument(userId);
-    await this.auditService.log(admin.sub, 'document_rejected', 'User', userId);
-    return result;
-  }
-
-  @Patch('users/:id/driver-license/approve')
-  @ApiOperation({ summary: 'Aprova a CNH enviada pelo usuário' })
-  async approveUserDriverLicense(
-    @CurrentUser() admin: AuthenticatedUser,
-    @Param('id') userId: string,
-  ) {
-    const result = await this.adminService.approveUserDriverLicense(userId);
-    await this.auditService.log(
-      admin.sub,
-      'driver_license_approved',
-      'User',
-      userId,
-    );
-    return result;
-  }
-
-  @Patch('users/:id/driver-license/reject')
-  @ApiOperation({ summary: 'Recusa a CNH enviada pelo usuário' })
-  async rejectUserDriverLicense(
-    @CurrentUser() admin: AuthenticatedUser,
-    @Param('id') userId: string,
-  ) {
-    const result = await this.adminService.rejectUserDriverLicense(userId);
-    await this.auditService.log(
-      admin.sub,
-      'driver_license_rejected',
-      'User',
-      userId,
-    );
     return result;
   }
 

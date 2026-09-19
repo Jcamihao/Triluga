@@ -7,6 +7,7 @@ import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { FeaturedApiService } from '../../core/services/featured-api.service';
 import { PlateApiService } from '../../core/services/plate-api.service';
+import { GeocodeApiService } from '../../core/services/geocode-api.service';
 import { FipeApiService, FipeBrand, FipeModel, FipeYear, FipePriceResult } from '../../core/services/fipe-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
@@ -58,6 +59,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   private readonly vehiclesApiService = inject(VehiclesApiService);
   private readonly featuredApiService = inject(FeaturedApiService);
   private readonly plateApi = inject(PlateApiService);
+  private readonly geocodeApi = inject(GeocodeApiService);
   private readonly fipeApi = inject(FipeApiService);
   private editingVehicleCacheSource: OwnerVehicleItem[] | null = null;
   private editingVehicleCacheId: string | null = null;
@@ -159,6 +161,10 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected plateLookupLoading = false;
   protected plateLookupFilled = false;
   protected plateStolenWarning = false;
+
+  // Address geocoding (localização exata do anúncio no mapa)
+  protected addressLookupLoading = false;
+  protected addressLookupStatus: 'idle' | 'found' | 'not-found' = 'idle';
 
   // FIPE lookup
   protected fipeOpen = false;
@@ -312,6 +318,47 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     this.vehicleDraft.state = (statePart || this.vehicleDraft.state || '')
       .slice(0, 2)
       .toUpperCase();
+
+    this.invalidateAddressCoordinates();
+  }
+
+  protected onAddressLineChange(value: string) {
+    this.vehicleDraft.addressLine = value;
+    this.invalidateAddressCoordinates();
+  }
+
+  protected lookupAddressCoordinates() {
+    const addressLine = this.vehicleDraft.addressLine?.trim();
+    const city = this.vehicleDraft.city?.trim();
+    const state = this.vehicleDraft.state?.trim();
+
+    if (!addressLine || !city || !state) return;
+
+    const query = `${addressLine}, ${city} - ${state}, Brasil`;
+
+    this.addressLookupLoading = true;
+    this.addressLookupStatus = 'idle';
+
+    this.geocodeApi.lookup(query).subscribe({
+      next: (result) => {
+        this.addressLookupLoading = false;
+        this.addressLookupStatus = 'found';
+        this.vehicleDraft.latitude = result.latitude;
+        this.vehicleDraft.longitude = result.longitude;
+      },
+      error: () => {
+        this.addressLookupLoading = false;
+        this.addressLookupStatus = 'not-found';
+        this.vehicleDraft.latitude = undefined;
+        this.vehicleDraft.longitude = undefined;
+      },
+    });
+  }
+
+  private invalidateAddressCoordinates() {
+    this.addressLookupStatus = 'idle';
+    this.vehicleDraft.latitude = undefined;
+    this.vehicleDraft.longitude = undefined;
   }
 
   protected lookupPlate() {
@@ -865,8 +912,12 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       trunkSize: vehicle.trunkSize || undefined,
       description: vehicle.description,
       addressLine: vehicle.addressLine || '',
+      latitude: vehicle.latitude ?? undefined,
+      longitude: vehicle.longitude ?? undefined,
       isPublished: vehicle.isPublished,
     };
+    this.addressLookupStatus =
+      vehicle.latitude != null && vehicle.longitude != null ? 'found' : 'idle';
     this.clearPendingVehicleFiles();
     this.vehicleFeedback = '';
     this.vehicleError = '';

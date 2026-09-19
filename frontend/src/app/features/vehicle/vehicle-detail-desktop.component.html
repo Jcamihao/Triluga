@@ -379,11 +379,6 @@
               </div>
             </div>
 
-            <div *ngIf="vehicle.owner?.isVerified" class="vehicle-detail-web__owner-badge">
-              <span class="material-symbols-outlined">verified_user</span>
-              Identidade verificada
-            </div>
-
             <div *ngIf="vehicle.owner?.responseRate != null" class="vehicle-detail-web__owner-badge" style="background: rgba(0,109,55,0.06); color: #006d37; border: none;">
               <span class="material-symbols-outlined">reply</span>
               Responde {{ vehicle.owner!.responseRate }}% das mensagens

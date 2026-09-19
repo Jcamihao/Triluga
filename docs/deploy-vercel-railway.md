@@ -41,8 +41,6 @@ MINIO_USE_SSL=true
 MINIO_ACCESS_KEY=...
 MINIO_SECRET_KEY=...
 MINIO_BUCKET=triluga-public
-MINIO_PRIVATE_BUCKET=triluga-private
-MINIO_PRIVATE_URL_EXPIRES_IN_SECONDS=600
 MINIO_PUBLIC_URL=https://SEU_BUCKET_PUBLICO
 ```
 
@@ -50,7 +48,7 @@ MINIO_PUBLIC_URL=https://SEU_BUCKET_PUBLICO
 
 - `DATABASE_URL` deve vir do PostgreSQL do Railway.
 - `REDIS_URL` deve vir do Redis do Railway.
-- O projeto precisa de storage compatível com S3 para upload de imagens públicas e documentos privados. Se você não for usar MinIO fora do Docker, pode apontar essas variáveis para Cloudflare R2, AWS S3 ou outro provedor S3 compatível.
+- O projeto precisa de storage compatível com S3 para upload de imagens públicas (avatar e fotos de veículo). Se você não for usar MinIO fora do Docker, pode apontar essas variáveis para Cloudflare R2, AWS S3 ou outro provedor S3 compatível.
 - O `APP_URL` precisa ser a URL pública final do backend no Railway.
 - O container já sobe executando `prisma db push` antes da API.
 

@@ -14,9 +14,7 @@ type UploadFile = Pick<
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
   private readonly publicBucket: string;
-  private readonly privateBucket: string;
   private readonly publicUrl: string;
-  private readonly privateFileUrlExpiresInSeconds: number;
   private readonly endpoint: string;
   private readonly client: MinioClient;
 
@@ -25,17 +23,9 @@ export class StorageService {
       'storage.bucket',
       'triluga-public',
     );
-    this.privateBucket = this.configService.get<string>(
-      'storage.privateBucket',
-      'triluga-private',
-    );
     this.publicUrl = this.configService.get<string>(
       'storage.publicUrl',
       'http://localhost:9000/triluga-public',
-    );
-    this.privateFileUrlExpiresInSeconds = this.configService.get<number>(
-      'storage.privateFileUrlExpiresInSeconds',
-      600,
     );
     this.endpoint = this.configService.get<string>(
       'storage.endpoint',
@@ -59,18 +49,17 @@ export class StorageService {
   async ensureBucketExists() {
     try {
       await this.ensureBucket(this.publicBucket);
-      await this.ensureBucket(this.privateBucket);
 
       if (this.isCloudflareR2()) {
         this.logger.log(
-          `Storage conectado via Cloudflare R2. Buckets validados: ${this.publicBucket}, ${this.privateBucket}.`,
+          `Storage conectado via Cloudflare R2. Bucket validado: ${this.publicBucket}.`,
         );
         return;
       }
 
       await this.ensureBucketIsPublic(this.publicBucket);
       this.logger.log(
-        `Storage conectado. Buckets validados: ${this.publicBucket}, ${this.privateBucket}.`,
+        `Storage conectado. Bucket validado: ${this.publicBucket}.`,
       );
     } catch (error) {
       this.logger.warn(
@@ -83,7 +72,7 @@ export class StorageService {
 
   async uploadPublicFile(
     file: Express.Multer.File,
-    folder: 'vehicles' | 'users' | 'documents',
+    folder: 'vehicles' | 'users',
   ) {
     const optimizedFile = await this.optimizePublicImage(file, folder);
     const extension = this.getUploadExtension(optimizedFile);
@@ -94,17 +83,6 @@ export class StorageService {
     return {
       key: objectKey,
       url: `${this.publicUrl}/${objectKey}`,
-    };
-  }
-
-  async uploadPrivateFile(file: Express.Multer.File, folder: 'documents') {
-    const extension = extname(file.originalname || '');
-    const objectKey = `${folder}/${uuidv4()}${extension}`;
-
-    await this.putObject(this.privateBucket, objectKey, file);
-
-    return {
-      key: objectKey,
     };
   }
 
@@ -120,50 +98,6 @@ export class StorageService {
 
   async deleteObject(objectKey: string) {
     await this.deleteObjectFromBucket(this.publicBucket, objectKey);
-  }
-
-  async deletePrivateFileByStoredValue(value: string | null | undefined) {
-    if (!value) {
-      return;
-    }
-
-    const legacyPublicObjectKey = this.extractObjectKeyFromPublicUrl(value);
-
-    if (legacyPublicObjectKey) {
-      await this.deleteObjectFromBucket(
-        this.publicBucket,
-        legacyPublicObjectKey,
-      );
-      return;
-    }
-
-    await this.deleteObjectFromBucket(this.privateBucket, value).catch(
-      (error) => {
-        this.logger.warn(
-          `Nao foi possivel remover o arquivo privado ${value}: ${
-            error instanceof Error ? error.message : 'Erro desconhecido'
-          }`,
-        );
-      },
-    );
-  }
-
-  async getPrivateFileUrl(value: string | null | undefined) {
-    if (!value) {
-      return null;
-    }
-
-    const legacyPublicUrl = this.normalizeLegacyPublicUrl(value);
-
-    if (legacyPublicUrl) {
-      return legacyPublicUrl;
-    }
-
-    return this.client.presignedGetObject(
-      this.privateBucket,
-      value,
-      this.privateFileUrlExpiresInSeconds,
-    );
   }
 
   private async ensureBucket(bucket: string) {
@@ -212,9 +146,9 @@ export class StorageService {
 
   private async optimizePublicImage(
     file: Express.Multer.File,
-    folder: 'vehicles' | 'users' | 'documents',
+    folder: 'vehicles' | 'users',
   ): Promise<UploadFile> {
-    if (!file.mimetype.startsWith('image/') || folder === 'documents') {
+    if (!file.mimetype.startsWith('image/')) {
       return file;
     }
 
@@ -302,13 +236,5 @@ export class StorageService {
       );
       return null;
     }
-  }
-
-  private normalizeLegacyPublicUrl(value: string) {
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      return value;
-    }
-
-    return null;
   }
 }

@@ -31,8 +31,6 @@ async function createUserWithProfile({
   email, password, role, fullName, phone,
   zipCode, addressLine, addressComplement, city, state,
   emailVerified = false,
-  documentVerificationStatus = 'NOT_SUBMITTED',
-  driverLicenseVerification = 'NOT_SUBMITTED',
 }) {
   const passwordHash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({
@@ -41,14 +39,14 @@ async function createUserWithProfile({
       role, status: 'ACTIVE', passwordHash, emailVerified,
       profile: {
         upsert: {
-          update: { fullName, phone, zipCode, addressLine, addressComplement, city, state, documentVerificationStatus, driverLicenseVerification },
-          create: { fullName, phone, zipCode, addressLine, addressComplement, city, state, documentVerificationStatus, driverLicenseVerification },
+          update: { fullName, phone, zipCode, addressLine, addressComplement, city, state },
+          create: { fullName, phone, zipCode, addressLine, addressComplement, city, state },
         },
       },
     },
     create: {
       email, passwordHash, role, emailVerified,
-      profile: { create: { fullName, phone, zipCode, addressLine, addressComplement, city, state, documentVerificationStatus, driverLicenseVerification } },
+      profile: { create: { fullName, phone, zipCode, addressLine, addressComplement, city, state } },
     },
     include: { profile: true },
   });
@@ -61,42 +59,36 @@ async function main() {
       fullName: 'Admin Triluga', phone: '+55 11 90000-0001',
       zipCode: '01001-000', addressLine: 'Praça da Sé', addressComplement: 'Sala administrativa',
       city: 'São Paulo', state: 'SP', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'mariana@triluga.local', password: 'User123!', role: Role.USER,
       fullName: 'Mariana Costa', phone: '+55 11 91111-0002',
       zipCode: '01310-100', addressLine: 'Avenida Paulista, 1374', addressComplement: 'Apto 84',
       city: 'São Paulo', state: 'SP', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'lucas@triluga.local', password: 'User123!', role: Role.USER,
       fullName: 'Lucas Almeida', phone: '+55 19 92222-0003',
       zipCode: '13010-111', addressLine: 'Rua Conceição, 550', addressComplement: 'Casa 2',
       city: 'Campinas', state: 'SP', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'fernanda@triluga.local', password: 'User123!', role: Role.USER,
       fullName: 'Fernanda Ribeiro', phone: '+55 21 93333-0004',
       zipCode: '22070-900', addressLine: 'Avenida Atlântica, 1702', addressComplement: 'Cobertura',
       city: 'Rio de Janeiro', state: 'RJ', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'rafael@triluga.local', password: 'User123!', role: Role.USER,
       fullName: 'Rafael Souza', phone: '+55 41 94444-0005',
       zipCode: '80010-010', addressLine: 'Rua XV de Novembro, 341',
       city: 'Curitiba', state: 'PR', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
     createUserWithProfile({
       email: 'camila@triluga.local', password: 'User123!', role: Role.USER,
       fullName: 'Camila Ferreira', phone: '+55 31 95555-0006',
       zipCode: '30112-000', addressLine: 'Avenida do Contorno, 8000',
       city: 'Belo Horizonte', state: 'MG', emailVerified: true,
-      documentVerificationStatus: 'APPROVED', driverLicenseVerification: 'APPROVED',
     }),
   ]);
 

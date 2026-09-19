@@ -255,16 +255,6 @@
             class="w-16 h-16 rounded-full border-2 border-white shadow-sm object-cover"
             [src]="vehicle.owner?.avatarUrl || fallbackAvatarImage"
           />
-          <div
-            *ngIf="vehicle.owner?.isVerified"
-            class="absolute -bottom-1 -right-1 bg-primary-container p-1 rounded-full border-2 border-white"
-          >
-            <span
-              class="material-symbols-outlined text-[12px] text-white"
-              style="font-variation-settings: 'FILL' 1"
-              >verified</span
-            >
-          </div>
         </div>
 
         <div class="min-w-0">
@@ -272,8 +262,6 @@
             {{ ownerName }}
           </h4>
           <div class="flex items-center space-x-1.5">
-            <span *ngIf="vehicle.owner?.isVerified" class="text-xs text-primary font-bold">Membro Premium</span>
-            <span *ngIf="vehicle.owner?.isVerified" class="text-outline-variant">•</span>
             <div class="flex items-center">
               <span
                 class="material-symbols-outlined text-[12px] text-[#FFB800]"

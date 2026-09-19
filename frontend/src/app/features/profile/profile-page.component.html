@@ -284,101 +284,6 @@
         </label>
       </div>
 
-      <!-- Verification Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Document Card -->
-        <div
-          class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 space-y-3"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <strong class="text-sm font-bold text-on-surface"
-                >Documento</strong
-              >
-              <p class="text-xs text-on-surface-variant/60 mt-0.5">
-                {{
-                  verificationStatusLabel(profile.documentVerificationStatus)
-                }}
-              </p>
-            </div>
-            <label
-              class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer active:scale-95 transition-all hover:bg-primary/20"
-            >
-              <input
-                type="file"
-                accept="image/*"
-                class="hidden"
-                (change)="onDocumentSelected($event)"
-              />
-              {{ pendingDocumentFile ? 'Trocar' : 'Enviar' }}
-            </label>
-          </div>
-          <p
-            class="text-xs text-primary font-semibold"
-            *ngIf="pendingDocumentFile"
-          >
-            <span class="material-symbols-outlined text-sm align-text-bottom"
-              >attach_file</span
-            >
-            {{ pendingDocumentFile.name }}
-          </p>
-          <button
-            *ngIf="profile.hasDocumentImage"
-            type="button"
-            class="text-xs text-primary font-bold hover:underline flex items-center gap-1"
-            [disabled]="openingDocument"
-            (click)="openVerificationFile('document')"
-          >
-            <span class="material-symbols-outlined text-sm">visibility</span>
-            {{ openingDocument ? 'Abrindo...' : 'Ver documento enviado' }}
-          </button>
-        </div>
-
-        <!-- CNH Card -->
-        <div
-          class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 space-y-3"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <strong class="text-sm font-bold text-on-surface">CNH</strong>
-              <p class="text-xs text-on-surface-variant/60 mt-0.5">
-                {{ verificationStatusLabel(profile.driverLicenseVerification) }}
-              </p>
-            </div>
-            <label
-              class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer active:scale-95 transition-all hover:bg-primary/20"
-            >
-              <input
-                type="file"
-                accept="image/*"
-                class="hidden"
-                (change)="onDriverLicenseSelected($event)"
-              />
-              {{ pendingDriverLicenseFile ? 'Trocar' : 'Enviar' }}
-            </label>
-          </div>
-          <p
-            class="text-xs text-primary font-semibold"
-            *ngIf="pendingDriverLicenseFile"
-          >
-            <span class="material-symbols-outlined text-sm align-text-bottom"
-              >attach_file</span
-            >
-            {{ pendingDriverLicenseFile.name }}
-          </p>
-          <button
-            *ngIf="profile.hasDriverLicenseImage"
-            type="button"
-            class="text-xs text-primary font-bold hover:underline flex items-center gap-1"
-            [disabled]="openingDriverLicense"
-            (click)="openVerificationFile('driverLicense')"
-          >
-            <span class="material-symbols-outlined text-sm">visibility</span>
-            {{ openingDriverLicense ? 'Abrindo...' : 'Ver CNH enviada' }}
-          </button>
-        </div>
-      </div>
-
       <!-- Shortcut Menu -->
       <section class="space-y-2 pt-4">
         <h4
@@ -609,18 +514,6 @@
         </button>
       </div>
 
-      <section class="profile-web__hero" *ngIf="!isFullyVerified">
-        <div>
-          <h1>Olá, {{ displayName.split(' ')[0] || 'usuário' }}!</h1>
-          <p>
-            Seu perfil está quase pronto. Verifique sua identidade para aumentar
-            a confiança em suas negociações.
-          </p>
-          <button type="button" (click)="showVerificationOnboarding = true">Verificar agora</button>
-        </div>
-        <span class="material-symbols-outlined">shield</span>
-      </section>
-
       <section
         class="profile-web__onboarding"
         *ngIf="profileCompletion < 100 && !onboardingDismissed"
@@ -764,26 +657,6 @@
           >
             {{ errorMessage }}
           </p>
-        </article>
-
-        <article class="profile-web__card">
-          <h2>Status de Verificação</h2>
-
-          <div class="profile-web__verification-list">
-            <div
-              class="profile-web__verification"
-              *ngFor="let row of verificationRows"
-              [class.profile-web__verification--pending]="
-                row.status === 'pending'
-              "
-            >
-              <span class="material-symbols-outlined">{{ row.icon }}</span>
-              <div>
-                <strong>{{ row.title }}</strong>
-                <p>{{ row.description }}</p>
-              </div>
-            </div>
-          </div>
 
           <!-- Reenvio de email de confirmação -->
           <div
@@ -816,24 +689,6 @@
               {{ resendingVerification ? 'Enviando...' : 'Reenviar email' }}
             </button>
           </div>
-
-          <!-- CTA verificação -->
-          <div *ngIf="verificationCta === 'start'" class="mt-4 p-4 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center gap-4">
-            <span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
-            <div class="flex-1">
-              <p class="text-sm font-bold text-primary">Verifique sua identidade</p>
-              <p class="text-xs text-on-surface-variant">Documento, CNH e selfie são necessários para o badge de membro verificado.</p>
-            </div>
-            <button type="button" (click)="showVerificationOnboarding = true" class="px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-bold whitespace-nowrap active:scale-95 transition-all">Verificar</button>
-          </div>
-          <div *ngIf="verificationCta === 'pending'" class="mt-4 p-4 rounded-xl bg-surface-container-low flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary animate-spin">sync</span>
-            <p class="text-sm text-on-surface-variant">Seus documentos estão em análise. Retorno em até 24h.</p>
-          </div>
-          <div *ngIf="verificationCta === 'done'" class="mt-4 p-4 rounded-xl bg-primary-container/10 flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">verified</span>
-            <p class="text-sm font-bold text-primary">Identidade verificada — você é um Membro Premium Triluga.</p>
-          </div>
         </article>
       </section>
     </section>
@@ -845,11 +700,6 @@
       <strong>Carregando seu perfil...</strong>
     </section>
   </ng-template>
-
-  <app-verification-onboarding
-    *ngIf="showVerificationOnboarding"
-    (closed)="showVerificationOnboarding = false; loadData()"
-  ></app-verification-onboarding>
 </div>
 
 <div class="avatar-crop" *ngIf="cropModalOpen" role="dialog" aria-modal="true">

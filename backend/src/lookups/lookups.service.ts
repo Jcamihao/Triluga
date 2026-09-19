@@ -32,6 +32,18 @@ type FipeYear = {
   name: string;
 };
 
+type NominatimResult = {
+  lat?: string;
+  lon?: string;
+  display_name?: string;
+};
+
+export type GeocodeResult = {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+};
+
 type FipePriceRaw = {
   fipeCode?: string;
   brand?: string;
@@ -102,6 +114,49 @@ export class LookupsService {
         'Não foi possível consultar o serviço de CEP.',
       );
     }
+  }
+
+  async geocodeAddress(address: string): Promise<GeocodeResult> {
+    const query = String(address ?? '').trim();
+
+    if (query.length < 5) {
+      throw new BadRequestException(
+        'Informe um endereço mais completo para localizar no mapa.',
+      );
+    }
+
+    const cacheKey = `geocode:${query.toLowerCase()}`;
+    const cached = await this.cacheQueue.getJson<GeocodeResult>(cacheKey);
+
+    if (cached !== null) {
+      return cached;
+    }
+
+    const response = await this.fetchNominatim(query);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw new BadGatewayException(
+        'Não foi possível localizar o endereço no mapa.',
+      );
+    }
+
+    const [match] = response.payload;
+
+    if (!match?.lat || !match?.lon) {
+      throw new NotFoundException(
+        'Não encontramos esse endereço. Tente ser mais específico.',
+      );
+    }
+
+    const result: GeocodeResult = {
+      latitude: parseFloat(match.lat),
+      longitude: parseFloat(match.lon),
+      displayName: match.display_name ?? query,
+    };
+
+    await this.cacheQueue.setJson(cacheKey, result, 2592000);
+
+    return result;
   }
 
   async getFipeBrands(type: 'cars' | 'motorcycles'): Promise<FipeBrand[]> {
@@ -318,6 +373,54 @@ export class LookupsService {
         req.end();
       },
     );
+  }
+
+  private fetchNominatim(
+    query: string,
+  ): Promise<{ statusCode: number; payload: NominatimResult[] }> {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('q', query);
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('countrycodes', 'br');
+
+    return new Promise((resolve, reject) => {
+      const req = request(
+        url,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            // Exigido pela política de uso do Nominatim: identificar a aplicação.
+            'User-Agent': 'Triluga/1.0 (contato: noreply@triluga.com.br)',
+          },
+        },
+        (response) => {
+          let rawBody = '';
+
+          response.setEncoding('utf8');
+          response.on('data', (chunk) => {
+            rawBody += chunk;
+          });
+          response.on('end', () => {
+            try {
+              resolve({
+                statusCode: response.statusCode ?? 502,
+                payload: rawBody ? JSON.parse(rawBody) : [],
+              });
+            } catch (error) {
+              reject(error);
+            }
+          });
+        },
+      );
+
+      req.setTimeout(8000, () => {
+        req.destroy(new Error('Geocoding lookup timed out.'));
+      });
+      req.on('error', reject);
+      req.end();
+    });
   }
 
   private formatZipCode(value: string) {

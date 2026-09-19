@@ -10,5 +10,5 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./terms-page.component.scss'],
 })
 export class TermsPageComponent {
-  readonly lastUpdated = '08 de junho de 2026';
+  readonly lastUpdated = '12 de setembro de 2026';
 }

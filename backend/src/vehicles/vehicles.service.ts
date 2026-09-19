@@ -950,8 +950,6 @@ export class VehiclesService {
       city?: string | null;
       state?: string | null;
       phone?: string | null;
-      documentVerificationStatus?: string | null;
-      driverLicenseVerification?: string | null;
     } | null;
     userReviewsReceived?: Array<{ rating: number }>;
   }) {
@@ -970,10 +968,6 @@ export class VehiclesService {
         )
       : 0;
 
-    const isVerified =
-      owner.profile?.documentVerificationStatus === 'APPROVED' &&
-      owner.profile?.driverLicenseVerification === 'APPROVED';
-
     return {
       id: owner.id,
       fullName: owner.profile?.fullName ?? null,
@@ -983,7 +977,6 @@ export class VehiclesService {
       phone: owner.profile?.phone ?? null,
       ratingAverage,
       reviewsCount,
-      isVerified,
     };
   }
 }

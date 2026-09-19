@@ -20,12 +20,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl curl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Baixa os dados de língua do Tesseract em build time para evitar download em runtime
-RUN mkdir -p /app/tessdata \
-  && curl -fsSL -o /app/tessdata/por.traineddata \
-     https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/por.traineddata \
-  && gzip -k /app/tessdata/por.traineddata
-
 COPY package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules

@@ -1,21 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  PrivacyRequestStatus,
-  UserStatus,
-  VerificationStatus,
-} from '@prisma/client';
+import { PrivacyRequestStatus, UserStatus } from '@prisma/client';
 import { CacheQueueService } from '../cache-queue/cache-queue.service';
 import { EmailService } from '../email/email.service';
 import { PrivacyService } from '../privacy/privacy.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ProfilesService } from '../profiles/profiles.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cacheQueueService: CacheQueueService,
-    private readonly profilesService: ProfilesService,
     private readonly privacyService: PrivacyService,
     private readonly emailService: EmailService,
   ) {}
@@ -48,13 +42,6 @@ export class AdminService {
               city: true,
               state: true,
               avatarUrl: true,
-              documentVerificationStatus: true,
-              driverLicenseVerification: true,
-              documentImageUrl: true,
-              driverLicenseImageUrl: true,
-              selfieImageUrl: true,
-              documentOcrText: true,
-              cnhOcrText: true,
             },
           },
         },
@@ -76,14 +63,6 @@ export class AdminService {
               city: user.profile.city,
               state: user.profile.state,
               avatarUrl: user.profile.avatarUrl,
-              documentVerificationStatus:
-                user.profile.documentVerificationStatus,
-              driverLicenseVerification: user.profile.driverLicenseVerification,
-              hasDocumentImage: !!user.profile.documentImageUrl,
-              hasDriverLicenseImage: !!user.profile.driverLicenseImageUrl,
-              hasSelfieImage: !!user.profile.selfieImageUrl,
-              documentOcrText: user.profile.documentOcrText ?? null,
-              cnhOcrText: user.profile.cnhOcrText ?? null,
             }
           : null,
       })),
@@ -121,38 +100,6 @@ export class AdminService {
     return this.prisma.user.delete({ where: { id: userId } });
   }
 
-  async approveUserDocument(userId: string) {
-    return this.updateVerificationStatus(
-      userId,
-      'documentVerificationStatus',
-      VerificationStatus.APPROVED,
-    );
-  }
-
-  async rejectUserDocument(userId: string) {
-    return this.updateVerificationStatus(
-      userId,
-      'documentVerificationStatus',
-      VerificationStatus.REJECTED,
-    );
-  }
-
-  async approveUserDriverLicense(userId: string) {
-    return this.updateVerificationStatus(
-      userId,
-      'driverLicenseVerification',
-      VerificationStatus.APPROVED,
-    );
-  }
-
-  async rejectUserDriverLicense(userId: string) {
-    return this.updateVerificationStatus(
-      userId,
-      'driverLicenseVerification',
-      VerificationStatus.REJECTED,
-    );
-  }
-
   async deactivateVehicle(vehicleId: string) {
     const vehicle = await this.prisma.vehicle.update({
       where: { id: vehicleId },
@@ -174,13 +121,6 @@ export class AdminService {
     return this.prisma.vehicle.delete({ where: { id: vehicleId } });
   }
 
-  async getUserVerificationFileUrl(
-    userId: string,
-    type: 'document' | 'driverLicense' | 'selfie',
-  ) {
-    return this.profilesService.getVerificationFileUrl(userId, type);
-  }
-
   async getPrivacyRequests() {
     return this.privacyService.getAdminRequests();
   }
@@ -195,44 +135,6 @@ export class AdminService {
       status,
       resolutionNotes,
     });
-  }
-
-  private async updateVerificationStatus(
-    userId: string,
-    field: 'documentVerificationStatus' | 'driverLicenseVerification',
-    status: VerificationStatus,
-  ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        email: true,
-        profile: { select: { fullName: true } },
-      },
-    });
-
-    if (!user?.profile) {
-      throw new NotFoundException('Perfil do usuário não encontrado.');
-    }
-
-    const updated = await this.prisma.profile.update({
-      where: { userId },
-      data: { [field]: status },
-    });
-
-    const documentType =
-      field === 'driverLicenseVerification' ? 'driver-license' : 'document';
-
-    if (status === VerificationStatus.APPROVED) {
-      this.emailService
-        .sendDocumentApproved(user.email, user.profile.fullName, documentType)
-        .catch(() => {});
-    } else if (status === VerificationStatus.REJECTED) {
-      this.emailService
-        .sendDocumentRejected(user.email, user.profile.fullName, documentType)
-        .catch(() => {});
-    }
-
-    return updated;
   }
 
   async getFeaturedOrders(status?: string) {

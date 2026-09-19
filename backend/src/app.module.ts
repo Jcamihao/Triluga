@@ -33,7 +33,6 @@ import { LookupsModule } from './lookups/lookups.module';
 import { EmailModule } from './email/email.module';
 import { emailConfig } from './config/email.config';
 import { efipayConfig } from './config/efipay.config';
-import { VerificationModule } from './verification/verification.module';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { ReportsModule } from './reports/reports.module';
@@ -77,7 +76,6 @@ import { FeaturedModule } from './featured/featured.module';
     ReviewsModule,
     AdminModule,
     EmailModule,
-    VerificationModule,
     SitemapModule,
     SchedulerModule,
     ReportsModule,

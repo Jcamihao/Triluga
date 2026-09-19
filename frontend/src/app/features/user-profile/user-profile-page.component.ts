@@ -7,7 +7,6 @@ import { switchMap } from 'rxjs/operators';
 import {
   PublicUserProfile,
   VehicleCardItem,
-  VerificationStatus,
 } from '../../core/models/domain.models';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
@@ -253,59 +252,11 @@ export class UserProfilePageComponent {
     return Math.max(0, Math.min(5, Math.round(value)));
   }
 
-  protected verificationLabel(status: VerificationStatus) {
-    const labels: Record<VerificationStatus, string> = {
-      APPROVED: 'Verificado',
-      PENDING: 'Em análise',
-      REJECTED: 'Reprovado',
-      NOT_SUBMITTED: 'Ainda não enviado',
-    };
-
-    return labels[status];
-  }
-
-  protected verificationSummary(status: VerificationStatus) {
-    const labels: Record<VerificationStatus, string> = {
-      APPROVED: 'Perfil verificado',
-      PENDING: 'Verificação em análise',
-      REJECTED: 'Verificação reprovada',
-      NOT_SUBMITTED: 'Perfil não verificado',
-    };
-
-    return labels[status];
-  }
-
-  protected verificationIcon(status: VerificationStatus) {
-    const icons: Record<VerificationStatus, string> = {
-      APPROVED: 'verified',
-      PENDING: 'schedule',
-      REJECTED: 'gpp_bad',
-      NOT_SUBMITTED: 'pending_actions',
-    };
-
-    return icons[status];
-  }
-
   protected trackById(_: number, item: { id: string }) {
     return item.id;
   }
 
   protected trackByValue(_: number, value: number) {
     return value;
-  }
-
-  protected get verificationLevel(): 'error' | 'warning' | 'success' {
-    if (!this.profile) return 'error';
-
-    const docStatus = this.profile.verification.documentStatus;
-    const cnhStatus = this.profile.verification.driverLicenseStatus;
-
-    const sentCount =
-      (docStatus !== 'NOT_SUBMITTED' ? 1 : 0) +
-      (cnhStatus !== 'NOT_SUBMITTED' ? 1 : 0);
-
-    if (sentCount === 0) return 'error';
-    if (sentCount === 1) return 'warning';
-    return 'success';
   }
 }

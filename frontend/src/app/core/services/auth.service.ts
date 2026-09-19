@@ -334,24 +334,6 @@ export class AuthService {
         avatarUrl: profile.avatarUrl ?? currentUser.profile?.avatarUrl ?? null,
         documentNumber: null,
         driverLicenseNumber: null,
-        documentImageUrl: null,
-        driverLicenseImageUrl: null,
-        hasDocumentImage:
-          profile.hasDocumentImage ??
-          currentUser.profile?.hasDocumentImage ??
-          false,
-        hasDriverLicenseImage:
-          profile.hasDriverLicenseImage ??
-          currentUser.profile?.hasDriverLicenseImage ??
-          false,
-        documentVerificationStatus:
-          profile.documentVerificationStatus ??
-          currentUser.profile?.documentVerificationStatus ??
-          'NOT_SUBMITTED',
-        driverLicenseVerification:
-          profile.driverLicenseVerification ??
-          currentUser.profile?.driverLicenseVerification ??
-          'NOT_SUBMITTED',
       },
     });
   }
@@ -542,14 +524,6 @@ export class AuthService {
             avatarUrl: normalizeNetworkUrl(user.profile.avatarUrl ?? null),
             documentNumber: null,
             driverLicenseNumber: null,
-            documentImageUrl: null,
-            driverLicenseImageUrl: null,
-            hasDocumentImage: user.profile.hasDocumentImage ?? false,
-            hasDriverLicenseImage: user.profile.hasDriverLicenseImage ?? false,
-            documentVerificationStatus:
-              user.profile.documentVerificationStatus ?? 'NOT_SUBMITTED',
-            driverLicenseVerification:
-              user.profile.driverLicenseVerification ?? 'NOT_SUBMITTED',
           }
         : null,
     };

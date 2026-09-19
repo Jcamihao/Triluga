@@ -483,25 +483,6 @@
   letter-spacing: 0;
 }
 
-.menu-drawer__verified {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 0.5rem;
-  background: var(--md-primary);
-  color: #ffffff;
-}
-
-.menu-drawer__verified .material-symbols-outlined {
-  font-size: 14px;
-  font-variation-settings: 'FILL' 1;
-}
-
 .menu-stitch .menu-drawer h2 {
   margin: 0;
   max-width: 100%;

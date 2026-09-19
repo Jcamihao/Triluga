@@ -1,4 +1,10 @@
-import { BadRequestException, Controller, Get, Param } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { LookupsService } from './lookups.service';
@@ -13,6 +19,16 @@ export class LookupsController {
   @ApiOperation({ summary: 'Consulta endereço por CEP' })
   lookupZipCode(@Param('zipCode') zipCode: string) {
     return this.lookupsService.lookupZipCode(zipCode);
+  }
+
+  @Public()
+  @Get('geocode')
+  @ApiOperation({ summary: 'Localiza latitude/longitude a partir de um endereço' })
+  geocodeAddress(@Query('address') address: string) {
+    if (!address?.trim()) {
+      throw new BadRequestException('Informe o endereço a ser localizado.');
+    }
+    return this.lookupsService.geocodeAddress(address);
   }
 
   @Public()

@@ -106,41 +106,6 @@ export class AdminPageComponent {
     });
   }
 
-  protected approveDocument(userId: string) {
-    this.adminApiService
-      .approveUserDocument(userId)
-      .subscribe(() => this.loadData());
-  }
-
-  protected rejectDocument(userId: string) {
-    this.adminApiService
-      .rejectUserDocument(userId)
-      .subscribe(() => this.loadData());
-  }
-
-  protected approveDriverLicense(userId: string) {
-    this.adminApiService
-      .approveUserDriverLicense(userId)
-      .subscribe(() => this.loadData());
-  }
-
-  protected rejectDriverLicense(userId: string) {
-    this.adminApiService
-      .rejectUserDriverLicense(userId)
-      .subscribe(() => this.loadData());
-  }
-
-  protected verificationLabel(status?: string) {
-    const labels: Record<string, string> = {
-      APPROVED: 'Aprovado',
-      PENDING: 'Em análise',
-      REJECTED: 'Recusado',
-      NOT_SUBMITTED: 'Não enviado',
-    };
-
-    return labels[status || 'NOT_SUBMITTED'] || status || 'Não enviado';
-  }
-
   protected deactivateVehicle(vehicleId: string) {
     this.adminApiService
       .deactivateVehicle(vehicleId)
@@ -165,17 +130,6 @@ export class AdminPageComponent {
         this.loadData();
       },
       error: () => { this.deletingVehicleId = null; },
-    });
-  }
-
-  protected openVerificationFile(
-    userId: string,
-    type: 'document' | 'driverLicense',
-  ) {
-    this.adminApiService.getUserVerificationFileUrl(userId, type).subscribe({
-      next: ({ url }) => {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      },
     });
   }
 
