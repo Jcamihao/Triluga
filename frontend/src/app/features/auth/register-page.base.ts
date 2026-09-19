@@ -202,12 +202,7 @@ export abstract class RegisterPageBase implements OnDestroy {
   protected get zipCodeIsValid() {
     const digits = this.zipCode.replace(/\D/g, '');
 
-    return (
-      digits.length === 8 &&
-      !this.zipCodeError &&
-      this.lastRequestedZipCode === digits &&
-      this.zipCodeHint !== 'Buscando endereço pelo CEP...'
-    );
+    return digits.length === 8;
   }
 
   protected get shouldShowZipCodeValidation() {
