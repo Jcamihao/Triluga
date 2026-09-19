@@ -24,12 +24,17 @@ export class RegisterDto {
   })
   password: string;
 
-  @ApiProperty({ example: '12345678909', description: 'CPF (11 dígitos) ou CNPJ (14 dígitos), somente números.' })
+  @ApiProperty({
+    example: '12345678909',
+    description: 'CPF (11 dígitos) ou CNPJ (14 dígitos), somente números.',
+  })
   @IsString()
   @IsNotEmpty()
   @MinLength(11, { message: 'CPF ou CNPJ inválido.' })
   @MaxLength(14, { message: 'CPF ou CNPJ inválido.' })
-  @Matches(/^\d{11}$|^\d{14}$/, { message: 'Documento deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ).' })
+  @Matches(/^\d{11}$|^\d{14}$/, {
+    message: 'Documento deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ).',
+  })
   documentNumber: string;
 
   @ApiProperty({ example: 'Lucas Almeida' })

@@ -78,7 +78,9 @@ export class NotificationProcessorService implements OnModuleInit {
               select: {
                 rating: true,
                 comment: true,
-                author: { include: { profile: { select: { fullName: true } } } },
+                author: {
+                  include: { profile: { select: { fullName: true } } },
+                },
                 vehicle: { select: { title: true, slug: true } },
               },
             });
@@ -101,7 +103,9 @@ export class NotificationProcessorService implements OnModuleInit {
               select: {
                 rating: true,
                 comment: true,
-                author: { include: { profile: { select: { fullName: true } } } },
+                author: {
+                  include: { profile: { select: { fullName: true } } },
+                },
               },
             });
             if (!userReview) break;
@@ -111,7 +115,8 @@ export class NotificationProcessorService implements OnModuleInit {
               fullName,
               rating: userReview.rating,
               comment: userReview.comment ?? null,
-              reviewerName: userReview.author?.profile?.fullName ?? 'Um usuário',
+              reviewerName:
+                userReview.author?.profile?.fullName ?? 'Um usuário',
               context: 'user',
               contextLabel: fullName,
               linkUrl: `${this.frontendUrl}/profile`,

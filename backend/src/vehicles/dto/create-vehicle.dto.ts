@@ -52,7 +52,8 @@ export class CreateVehicleDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^[A-Z]{3}-?\d[A-Z0-9]\d{2}$/, {
-    message: 'Placa inválida. Use o formato ABC1234 (antigo) ou ABC1D23 (Mercosul).',
+    message:
+      'Placa inválida. Use o formato ABC1234 (antigo) ou ABC1D23 (Mercosul).',
   })
   plate: string;
 

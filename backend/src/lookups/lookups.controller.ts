@@ -23,7 +23,9 @@ export class LookupsController {
 
   @Public()
   @Get('geocode')
-  @ApiOperation({ summary: 'Localiza latitude/longitude a partir de um endereço' })
+  @ApiOperation({
+    summary: 'Localiza latitude/longitude a partir de um endereço',
+  })
   geocodeAddress(@Query('address') address: string) {
     if (!address?.trim()) {
       throw new BadRequestException('Informe o endereço a ser localizado.');

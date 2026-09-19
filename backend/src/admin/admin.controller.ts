@@ -190,10 +190,7 @@ export class AdminController {
 
   @Get('audit-logs')
   @ApiOperation({ summary: 'Lista paginada do log de auditoria' })
-  getAuditLogs(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
+  getAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.auditService.getLogs(
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 50,

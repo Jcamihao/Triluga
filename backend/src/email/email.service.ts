@@ -105,7 +105,6 @@ export class EmailService {
     fullName: string,
     vehicleTitle: string,
     expiresAt: Date,
-    vehicleId: string,
   ) {
     const expiresLabel = expiresAt.toLocaleDateString('pt-BR', {
       day: '2-digit',

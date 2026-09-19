@@ -92,7 +92,6 @@ export class ListingExpiryService {
             vehicle.owner.profile.fullName,
             vehicle.title,
             vehicle.expiresAt,
-            vehicle.id,
           )
           .catch((err: Error) =>
             this.logger.error(
