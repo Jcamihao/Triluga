@@ -33,7 +33,6 @@
 - 🔔 **Notificações e alertas de busca** por e-mail e push via BullMQ.
 - 💰 **Destaque pago** de anúncios integrado com EfiPay (PIX).
 - 🛡️ **Conformidade LGPD** com exportação de dados e solicitações de exclusão.
-- 🚀 **CI/CD automático** com GitHub Actions — testes antes de cada deploy na VPS.
 
 ---
 
@@ -49,7 +48,7 @@
 | **Real-time** | Socket.io (WebSocket) |
 | **Auth** | JWT Bearer + refresh token httpOnly cookie |
 | **Infra local** | Docker Compose |
-| **CI/CD** | GitHub Actions → SSH deploy VPS |
+| **Deploy** | Manual na VPS (`docker compose up --build -d`) |
 
 ---
 
@@ -279,21 +278,18 @@ npm run db:rebuild
 
 ---
 
-## 🔄 CI/CD
+## 🚀 Deploy
 
-GitHub Actions com dois workflows:
+Sem CI/CD automático — o deploy é manual, na VPS:
 
-- **CI** (`ci.yml`) — roda em todo push: build Angular + build NestJS + lint + audit de segurança.
-- **CD** (`cd.yml`) — dispara após CI verde no `master`: SSH na VPS → `git pull` → `docker compose up --build` → limpeza de cache.
+```bash
+cd <caminho-do-projeto>
+git pull origin master
+docker compose up --build -d --remove-orphans
+docker builder prune --force   # limpa cache de build acumulado
+```
 
-Secrets necessários no repositório:
-
-| Secret | Descrição |
-|--------|-----------|
-| `VPS_HOST` | IP ou domínio da VPS |
-| `VPS_USER` | Usuário SSH |
-| `VPS_SSH_KEY` | Chave privada Ed25519 |
-| `VPS_PROJECT_PATH` | Caminho absoluto do projeto na VPS |
+Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:ci` (back).
 
 ---
 
