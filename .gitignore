@@ -16,3 +16,7 @@
 .DS_Store
 
 RedesignTriluga
+# saída de ferramentas locais
+/graphify-out
+/brag-output
+/brag-output-cinematic

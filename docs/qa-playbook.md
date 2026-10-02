@@ -47,7 +47,7 @@ Limites importantes para QA:
 
 - nao existe fluxo transacional operacional.
 - o produto atual e um classificado: a negociacao acontece pelo chat.
-- a criacao de review existe no backend, mas nao ha um fluxo dedicado e visivel no frontend para o usuario enviar avaliacao.
+- a criacao de review tem fluxo completo no frontend: avaliar o veiculo (estrelas + comentario) na pagina de detalhe (`vehicle-detail-desktop`/`-mobile`) e avaliar o anunciante no perfil publico dele (`user-profile-page`).
 - a verificacao de identidade (KYC: selfie, documento e CNH) foi removida do produto; nao existe mais upload/aprovacao desses arquivos nem badge de "membro verificado".
 
 ## Dados seed
@@ -182,9 +182,9 @@ npx prisma studio
 
 ### Reviews
 
-- reviews podem ser criadas para um anuncio ou para um usuario
-- o backend impede autoavaliacao e duplicidade do mesmo autor para o mesmo alvo
-- hoje isso e mais facil de validar via API do que via UI
+- reviews podem ser criadas para um anuncio (na pagina de detalhe do veiculo) ou para um usuario (no perfil publico do anunciante)
+- autoavaliacao ja e bloqueada no frontend (formulario nem aparece pro dono do veiculo/perfil); duplicidade do mesmo autor pro mesmo alvo so e barrada no backend, aparecendo como erro apos o envio
+- validar ambos os fluxos direto pela UI: abrir o formulario exige login, preencher estrelas + comentario, confirmar que dono nao ve o formulario, e testar o erro de duplicidade reenviando para o mesmo alvo
 
 ### Privacidade/LGPD
 

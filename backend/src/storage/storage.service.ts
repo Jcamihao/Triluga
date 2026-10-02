@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import { Client as MinioClient } from 'minio';
 import { extname } from 'path';
 import sharp from 'sharp';
-import { v4 as uuidv4 } from 'uuid';
 
 type UploadFile = Pick<
   Express.Multer.File,
@@ -76,7 +76,7 @@ export class StorageService {
   ) {
     const optimizedFile = await this.optimizePublicImage(file, folder);
     const extension = this.getUploadExtension(optimizedFile);
-    const objectKey = `${folder}/${uuidv4()}${extension}`;
+    const objectKey = `${folder}/${randomUUID()}${extension}`;
 
     await this.putObject(this.publicBucket, objectKey, optimizedFile);
 
