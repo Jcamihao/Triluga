@@ -42,13 +42,15 @@
 }
 
 .web-header__brand {
-  color: var(--md-primary);
-  font-size: 24px;
-  font-style: italic;
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.web-header__brand img {
+  display: block;
+  width: auto;
+  height: 48px;
 }
 
 .web-header__links {

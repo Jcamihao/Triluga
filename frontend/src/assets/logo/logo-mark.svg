@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Triluga">
+  <title>Triluga</title>
+  <g>
+    <path fill="#006d37" d="M4 12Q4 8 8 8L24 8Q28 8 28 12L28 20Q28 24 24 24L8 24Q4 24 4 20ZM36 12Q36 8 40 8L56 8Q60 8 60 12L60 20Q60 24 56 24L40 24Q36 24 36 20Z"/>
+    <path fill="#2ecc71" d="M24 34Q24 30 28 30L36 30Q40 30 40 34L40 54Q40 58 36 58L28 58Q24 58 24 54Z"/>
+  </g>
+</svg>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triluga — Brand Identity</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#006d37;--accent:#2ecc71;--bg-light:#FAFAFA;--bg-dark:#0A0A0A;--surface:#FFFFFF;--border:#D9E3DC;--muted:#5B6B62;--text:#0F1A14}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg-light);color:var(--text);line-height:1.6}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+  .label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  section{padding:72px 0}
+  h2{font-size:32px;font-weight:800;letter-spacing:-.02em;margin:8px 0 28px}
+  .hero{background:var(--bg-dark);color:#fff;text-align:center;padding:96px 0}
+  .hero .label{color:var(--accent)}
+  .hero svg{width:200px;height:auto;margin:32px auto 8px;display:block;filter:drop-shadow(0 0 28px rgba(46,204,113,.35))}
+  .hero h1{font-size:56px;font-weight:800;letter-spacing:-.03em}
+  .hero p{color:#A1A1A1;max-width:520px;margin:12px auto 0}
+  .concept{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .annot{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 6px 24px rgba(0,0,0,.05)}
+  .annot img{width:100%;display:block}
+  .annot ul{list-style:none;padding:0;margin-top:20px;display:grid;gap:10px;font-size:14px}
+  .annot li b{color:var(--primary)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .card{border-radius:16px;padding:20px 20px 14px;display:flex;flex-direction:column;gap:16px;transition:transform .2s}
+  .card:hover{transform:translateY(-3px)}
+  .card.light{background:var(--surface);border:1px solid var(--border);box-shadow:0 6px 24px rgba(0,0,0,.05)}
+  .card.dark{background:var(--bg-dark);color:#fff}
+  .card.wide{grid-column:1/-1}
+  .card .name{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+  .card .stage{display:flex;justify-content:center;align-items:center;min-height:120px}
+  .card .stage img{max-width:100%;height:96px}
+  .card .stage img.tall{height:140px}
+  .card .stage img.small{height:64px}
+  .card .file{align-self:flex-end;font-size:12px;opacity:.6}
+  .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .chip .sw{height:88px;display:flex;align-items:flex-end;padding:10px;font-size:12px;color:#fff}
+  .chip .tx{padding:12px 14px;font-size:13px}
+  .chip .tx b{display:block}
+  .chip .tx span{color:var(--muted)}
+  .type{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .type .box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px}
+  pre{background:var(--bg-dark);color:#d4d4d4;border-radius:14px;padding:22px;overflow:auto;font-size:13px;line-height:1.7}
+  pre .k{color:var(--accent)}
+  .tree{margin-top:20px;font-size:13px;color:var(--muted)}
+  footer{background:var(--bg-dark);color:#A1A1A1;text-align:center;padding:40px 0;font-size:14px}
+  footer b{color:#fff}
+  @media(max-width:760px){.concept,.grid,.type{grid-template-columns:1fr}.chips{grid-template-columns:1fr 1fr}.hero h1{font-size:40px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="label">Brand Identity</span>
+    <svg viewBox="0 0 64 64" role="img" aria-label="Triluga">
+      <path fill="#FFFFFF" d="M4 12Q4 8 8 8L24 8Q28 8 28 12L28 20Q28 24 24 24L8 24Q4 24 4 20ZM36 12Q36 8 40 8L56 8Q60 8 60 12L60 20Q60 24 56 24L40 24Q36 24 36 20Z"/>
+      <path fill="#2ecc71" d="M24 34Q24 30 28 30L36 30Q40 30 40 34L40 54Q40 58 36 58L28 58Q24 58 24 54Z"/>
+    </svg>
+    <h1 style="font-weight:700;letter-spacing:-.03em">Triluga</h1>
+    <p>O carro certo, perto de você. Pessoa a pessoa, sem intermediário.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="label">Design Concept</span>
+    <h2>Três peças, uma letra.</h2>
+    <div class="concept">
+      <div class="annot">
+        <img src="logo-full.svg" alt="Logo Triluga anotada">
+        <ul>
+          <li><b>Duas peças no topo</b> — duas pessoas, dois lados: quem tem o carro e quem precisa dele.</li>
+          <li><b>Uma peça embaixo</b> — o encontro entre elas. Em verde claro, é o único acento do símbolo.</li>
+          <li><b>Juntas formam o T</b> — de Triluga, sem precisar de ilustração. Funciona sozinho como ícone do app e favicon.</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin-bottom:14px"><b>Por que três peças?</b> O Triluga não intermedeia: ele junta duas pontas. O símbolo conta isso construindo a letra com blocos separados que se encaixam.</p>
+        <p style="margin-bottom:14px"><b>Por que Inter Bold reto?</b> Leitura limpa em qualquer tamanho, e continuidade com a fonte já usada no app. Em tamanhos muito pequenos, o símbolo sozinho (<span class="mono">logo-mark.svg</span>) é melhor que o logo completo.</p>
+        <p><b>Cores:</b> o verde escuro <span class="mono">#006d37</span> é o primário do app, com ótimo contraste no branco. O verde claro <span class="mono">#2ecc71</span> aparece só na peça de baixo do T. A fonte, Inter Bold, é livre para uso comercial (licença OFL).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <span class="label">Logo Variants</span>
+    <h2>Variantes</h2>
+    <div class="grid">
+      <div class="card light wide"><span class="name">Full</span><div class="stage"><img src="logo-full.svg" alt="Logo completo"></div><span class="file mono">logo-full.svg</span></div>
+      <div class="card dark wide"><span class="name">White</span><div class="stage"><img src="logo-white.svg" alt="Logo branco"></div><span class="file mono">logo-white.svg</span></div>
+      <div class="card dark"><span class="name">Símbolo</span><div class="stage"><img class="tall" src="logo-mark.svg" alt="Símbolo"></div><span class="file mono">logo-mark.svg</span></div>
+      <div class="card light"><span class="name">App icon</span><div class="stage"><img class="tall" src="logo-icon.svg" alt="Ícone do app"></div><span class="file mono">logo-icon.svg</span></div>
+      <div class="card light"><span class="name">Só o texto · sem símbolo</span><div class="stage"><img src="logo-wordmark.svg" alt="Wordmark"></div><span class="file mono">logo-wordmark.svg</span></div>
+      <div class="card dark"><span class="name">Favicon · 16×16 px</span><div class="stage"><img class="small" src="favicon.svg" alt="Favicon"></div><span class="file mono">favicon.svg</span></div>
+      <div class="card light wide"><span class="name">Black</span><div class="stage"><img src="logo-black.svg" alt="Logo preto"></div><span class="file mono">logo-black.svg</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="label">Color Palette</span>
+    <h2>Paleta</h2>
+    <div class="chips">
+      <div class="chip"><div class="sw" style="background:#006d37">#006D37</div><div class="tx"><b>Primary</b><span>Símbolo e wordmark</span></div></div>
+      <div class="chip"><div class="sw" style="background:#2ecc71">#2ECC71</div><div class="tx"><b>Accent</b><span>Destaques de UI (fora do símbolo)</span></div></div>
+      <div class="chip"><div class="sw" style="background:#0A0A0A">#0A0A0A</div><div class="tx"><b>Background Dark</b><span>Fundos escuros, versão preta</span></div></div>
+      <div class="chip"><div class="sw" style="background:#FAFAFA;color:#0F1A14;border-bottom:1px solid #D9E3DC">#FAFAFA</div><div class="tx"><b>Background Light</b><span>Fundos claros</span></div></div>
+      <div class="chip"><div class="sw" style="background:#FFFFFF;color:#0F1A14;border-bottom:1px solid #D9E3DC">#FFFFFF</div><div class="tx"><b>Surface</b><span>Cards e superfícies</span></div></div>
+      <div class="chip"><div class="sw" style="background:#D9E3DC;color:#0F1A14">#D9E3DC</div><div class="tx"><b>Border</b><span>Bordas e divisórias</span></div></div>
+      <div class="chip"><div class="sw" style="background:#5B6B62">#5B6B62</div><div class="tx"><b>Muted</b><span>Texto secundário</span></div></div>
+      <div class="chip"><div class="sw" style="background:#0F1A14">#0F1A14</div><div class="tx"><b>Text</b><span>Texto principal</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <span class="label">Typography</span>
+    <h2>Tipografia</h2>
+    <div class="type">
+      <div class="box"><div class="label" style="margin-bottom:10px">Inter Bold — títulos / logotipo</div><div style="font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1.1">Alugue de gente como você.</div></div>
+      <div class="box"><div class="label" style="margin-bottom:10px">Inter Regular — texto</div><p style="font-size:17px">O Triluga conecta quem tem um veículo parado a quem precisa de um. Combine direto, sem burocracia e sem intermediários.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="label">Developer Reference</span>
+    <h2>Para quem implementa</h2>
+<pre class="mono"><span class="k">// tailwind.config.js</span>
+colors: {
+  brand: {
+    primary: '#006d37',
+    surface: '#FFFFFF',
+    border:  '#D9E3DC',
+    muted:   '#5B6B62',
+    accent:  '#2ecc71',
+  }
+}</pre>
+    <div class="tree mono">
+      frontend/src/assets/logo/<br>
+      ├── logo-mark.svg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— símbolo 64×64 (fonte da verdade da geometria)<br>
+      ├── logo-full.svg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— símbolo + wordmark (logo principal)<br>
+      ├── logo-wordmark.svg — só o texto, sem símbolo<br>
+      ├── logo-icon.svg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— ícone do app 512×512<br>
+      ├── favicon.svg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— 16×16 em tile verde<br>
+      ├── logo-white.svg &nbsp;&nbsp;&nbsp;&nbsp;— para fundos escuros<br>
+      └── logo-black.svg &nbsp;&nbsp;&nbsp;&nbsp;— para fundos claros
+    </div>
+  </div>
+</section>
+
+<footer><b>Triluga</b> · Brand Identity · codeStage</footer>
+</body>
+</html>

@@ -15,7 +15,7 @@ type State = 'loading' | 'success' | 'error' | 'already';
     <div class="min-h-screen flex items-center justify-center bg-surface px-4">
       <div class="w-full max-w-md text-center">
 
-        <p class="text-4xl font-black italic tracking-tight text-primary mb-8">Triluga</p>
+        <img src="assets/logo/logo-full.svg" alt="Triluga" class="h-9 w-auto" />
 
         <div class="bg-white rounded-2xl shadow-sm p-10 space-y-6">
 
