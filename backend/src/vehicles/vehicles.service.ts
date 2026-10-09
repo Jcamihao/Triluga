@@ -908,38 +908,17 @@ export class VehiclesService {
   }
 
   async getHomeStats() {
-    const [sportCount, electricCount, motorcycleCount, suvPickupCount] =
-      await Promise.all([
-        this.prisma.vehicle.count({
-          where: { category: 'SPORT', isActive: true, isPublished: true },
-        }),
+    const base = { isActive: true, isPublished: true };
+    const [electric, economy, sedan, suvPickup] = await Promise.all([
+      this.prisma.vehicle.count({ where: { ...base, fuelType: 'ELECTRIC' } }),
+      this.prisma.vehicle.count({ where: { ...base, category: 'ECONOMY' } }),
+      this.prisma.vehicle.count({ where: { ...base, category: 'SEDAN' } }),
+      this.prisma.vehicle.count({
+        where: { ...base, category: { in: ['SUV', 'PICKUP'] } },
+      }),
+    ]);
 
-        this.prisma.vehicle.count({
-          where: { fuelType: 'ELECTRIC', isActive: true, isPublished: true },
-        }),
-
-        this.prisma.vehicle.count({
-          where: {
-            vehicleType: 'MOTORCYCLE',
-            isActive: true,
-            isPublished: true,
-          },
-        }),
-        this.prisma.vehicle.count({
-          where: {
-            category: { in: ['SUV', 'PICKUP'] },
-            isActive: true,
-            isPublished: true,
-          },
-        }),
-      ]);
-
-    return {
-      sport: sportCount,
-      electric: electricCount,
-      motorcycle: motorcycleCount,
-      suvPickup: suvPickupCount,
-    };
+    return { electric, economy, sedan, suvPickup };
   }
 
   private mapOwnerSummary(owner: {

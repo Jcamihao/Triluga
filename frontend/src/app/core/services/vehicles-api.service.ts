@@ -48,10 +48,9 @@ export class VehiclesApiService {
 
   getStats() {
     return this.http.get<{
-      luxury: number;
-      sport: number;
       electric: number;
-      motorcycle: number;
+      economy: number;
+      sedan: number;
       suvPickup: number;
     }>(`${environment.apiBaseUrl}/vehicles/stats`);
   }

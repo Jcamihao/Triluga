@@ -88,7 +88,7 @@
           *ngFor="let shortcut of quickShortcuts"
           type="button"
           class="flex flex-col items-center gap-2 group"
-          (click)="goToSearch({ vehicleType: shortcut.filterValue })"
+          (click)="goToSearch(shortcut.params)"
         >
           <div
             class="w-16 h-16 rounded-2xl bg-white shadow-sm border border-surface-container-high flex items-center justify-center group-hover:border-primary/50 group-hover:bg-primary/5 transition-all duration-300"
@@ -144,7 +144,7 @@
         <div
           *ngFor="let cat of featuredCategoryCards"
           class="relative h-36 rounded-2xl overflow-hidden group shadow-sm cursor-pointer"
-          (click)="goToSearch({ category: cat.value })"
+          (click)="goToSearch(cat.params)"
         >
           <img
             [alt]="cat.label"

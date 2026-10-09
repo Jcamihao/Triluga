@@ -13,12 +13,12 @@ import { WebHeaderComponent } from '../../shared/components/web-header/web-heade
 type QuickShortcut = {
   label: string;
   icon: string;
-  filterValue: string;
+  params: Record<string, string>;
 };
 
 type CategoryCard = {
   label: string;
-  value: string;
+  params: Record<string, string>;
   image: string;
 };
 
@@ -37,61 +37,61 @@ type TrustCard = {
 };
 
 const QUICK_SHORTCUTS: QuickShortcut[] = [
-  { label: 'Carros', icon: 'directions_car', filterValue: 'CAR' },
-  { label: 'Motos', icon: 'two_wheeler', filterValue: 'MOTORCYCLE' },
-  { label: 'Híbridos', icon: 'eco', filterValue: 'HYBRID' },
-  { label: 'SUVs', icon: 'airport_shuttle', filterValue: 'SUV' },
-  { label: 'Luxo', icon: 'workspace_premium', filterValue: 'LUXURY' },
+  { label: 'Elétricos', icon: 'electric_car', params: { fuelType: 'ELECTRIC' } },
+  { label: 'Híbridos', icon: 'eco', params: { fuelType: 'HYBRID' } },
+  { label: 'Econômicos', icon: 'savings', params: { category: 'ECONOMY' } },
+  { label: 'Carros', icon: 'directions_car', params: { vehicleType: 'CAR' } },
+  { label: 'Motos', icon: 'two_wheeler', params: { vehicleType: 'MOTORCYCLE' } },
 ];
 
 const FEATURED_CATEGORY_CARDS: CategoryCard[] = [
   {
-    label: 'Luxo & Executivos',
-    value: 'LUXURY',
-    image: 'assets/categories/luxury_exec.png',
+    label: 'Elétricos',
+    params: { fuelType: 'ELECTRIC' },
+    image: 'assets/categories/electric.png',
   },
   {
     label: 'Econômicos',
-    value: 'ECONOMY',
+    params: { category: 'ECONOMY' },
     image: 'assets/categories/economy.png',
   },
   {
-    label: 'Para Viagem',
-    value: 'TRAVEL',
-    image: 'assets/categories/travel.png',
+    label: 'Sedans',
+    params: { category: 'SEDAN' },
+    image: 'assets/categories/luxury_exec.png',
   },
   {
-    label: 'Clássicos',
-    value: 'CLASSIC',
-    image: 'assets/categories/classic.png',
+    label: 'SUVs & Pickups',
+    params: { category: 'SUV' },
+    image: 'assets/categories/suv.png',
   },
 ];
 
 const COLLECTIONS: CollectionCard[] = [
   {
-    label: 'Esportivos',
-    count: '420 veículos',
-    icon: 'directions_car',
-    params: { category: 'SPORT' },
-    fallbackImage: 'assets/categories/luxury.png',
-  },
-  {
     label: 'Elétricos',
-    count: '185 veículos',
+    count: '',
     icon: 'electric_car',
     params: { fuelType: 'ELECTRIC' },
     fallbackImage: 'assets/categories/electric.png',
   },
   {
-    label: 'Motos Premium',
-    count: '310 veículos',
-    icon: 'two_wheeler',
-    params: { vehicleType: 'MOTORCYCLE' },
-    fallbackImage: 'assets/categories/motorcycle.png',
+    label: 'Econômicos',
+    count: '',
+    icon: 'savings',
+    params: { category: 'ECONOMY' },
+    fallbackImage: 'assets/categories/economy.png',
+  },
+  {
+    label: 'Sedans',
+    count: '',
+    icon: 'directions_car',
+    params: { category: 'SEDAN' },
+    fallbackImage: 'assets/categories/luxury_exec.png',
   },
   {
     label: 'SUVs & Pickups',
-    count: '890 veículos',
+    count: '',
     icon: 'airport_shuttle',
     params: { category: 'SUV' },
     fallbackImage: 'assets/categories/suv.png',
@@ -281,10 +281,11 @@ export abstract class HomePageBase {
   private loadCollectionStats() {
     this.vehiclesApiService.getStats().subscribe({
       next: (stats) => {
-        this.collections[0].count = `${stats.sport} veículos`;
-        this.collections[1].count = `${stats.electric} veículos`;
-        this.collections[2].count = `${stats.motorcycle} veículos`;
-        this.collections[3].count = `${stats.suvPickup} veículos`;
+        const counts = [stats.electric, stats.economy, stats.sedan, stats.suvPickup];
+        counts.forEach((n, i) => {
+          this.collections[i].count =
+            n === 0 ? 'Em breve' : `${n} ${n === 1 ? 'veículo' : 'veículos'}`;
+        });
       },
     });
   }
