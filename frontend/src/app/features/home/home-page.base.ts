@@ -144,6 +144,7 @@ export abstract class HomePageBase {
 
   protected readonly quickShortcuts = QUICK_SHORTCUTS;
   protected readonly featuredCategoryCards = FEATURED_CATEGORY_CARDS;
+  protected readonly cities$ = this.vehiclesApiService.cities$;
   protected collections = [...COLLECTIONS];
   protected readonly trustCards = TRUST_CARDS;
   protected readonly heroImage = '/assets/branding/hero-car.png';

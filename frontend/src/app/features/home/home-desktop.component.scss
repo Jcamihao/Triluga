@@ -271,7 +271,8 @@
   box-shadow: 0 0 0 2px var(--md-primary-container);
 }
 
-.home-web__search input {
+.home-web__search input,
+.home-web__search select {
   width: 100%;
   min-width: 0;
   border: 0;

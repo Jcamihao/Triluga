@@ -52,27 +52,21 @@
                 class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-outline"
                 >location_on</span
               >
-              <input
+              <select
                 #cityFilter
                 class="w-full bg-surface-container-low border-none rounded-lg pl-9 text-xs py-2 focus:ring-primary/20"
-                placeholder="Escolher cidade"
-                type="text"
-                list="web-city-options"
-                [value]="query.city"
-                (keydown.enter)="
-                  applyFilters({ city: $any($event.target).value })
-                "
-              />
-              <datalist id="web-city-options">
-                <option value="São Paulo"></option>
-                <option value="Rio de Janeiro"></option>
-                <option value="Belo Horizonte"></option>
-                <option value="Curitiba"></option>
-                <option value="Porto Alegre"></option>
-                <option value="Brasília"></option>
-                <option value="Salvador"></option>
-                <option value="Fortaleza"></option>
-              </datalist>
+                aria-label="Cidade"
+                (change)="applyFilters({ city: cityFilter.value })"
+              >
+                <option value="">Todas as cidades</option>
+                <option
+                  *ngFor="let c of citiesWithCurrent(cities$ | async)"
+                  [value]="c.city"
+                  [selected]="c.city.toLowerCase() === query.city.toLowerCase()"
+                >
+                  {{ c.city }}{{ c.state ? ', ' + c.state : '' }}{{ c.count ? ' (' + c.count + ')' : '' }}
+                </option>
+              </select>
             </div>
 
           </div>

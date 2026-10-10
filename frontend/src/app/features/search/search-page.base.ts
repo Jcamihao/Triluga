@@ -51,6 +51,7 @@ export abstract class SearchPageBase {
   private readonly route = inject(ActivatedRoute);
   protected readonly router = inject(Router);
   private readonly vehiclesApiService = inject(VehiclesApiService);
+  protected readonly cities$ = this.vehiclesApiService.cities$;
   protected readonly uiStateService = inject(UiStateService);
   protected readonly locationService = inject(LocationService);
   protected readonly authService = inject(AuthService);
@@ -203,6 +204,15 @@ export abstract class SearchPageBase {
 
   protected toggleNotifications() {
     this.uiStateService.toggleNotifications();
+  }
+
+  // Mantém a cidade da URL (ex.: vinda da geolocalização) visível no select
+  // mesmo quando ela ainda não tem anúncios.
+  protected citiesWithCurrent(cities: { city: string; state: string; count: number }[] | null) {
+    const list = cities ?? [];
+    const current = this.query.city;
+    const known = list.some((c) => c.city.toLowerCase() === current.toLowerCase());
+    return current && !known ? [{ city: current, state: '', count: 0 }, ...list] : list;
   }
 
   protected applyFilters(filters: any) {

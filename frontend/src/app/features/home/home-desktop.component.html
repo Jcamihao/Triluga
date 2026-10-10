@@ -34,7 +34,12 @@
 
         <label>
           <span class="material-symbols-outlined">location_on</span>
-          <input #cityInput type="search" placeholder="Cidade" />
+          <select #cityInput aria-label="Cidade">
+            <option value="">Todas as cidades</option>
+            <option *ngFor="let c of cities$ | async" [value]="c.city">
+              {{ c.city }}, {{ c.state }} ({{ c.count }})
+            </option>
+          </select>
         </label>
 
         <button type="submit">

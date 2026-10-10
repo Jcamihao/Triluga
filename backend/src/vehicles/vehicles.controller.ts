@@ -36,6 +36,13 @@ export class VehiclesController {
     return this.vehiclesService.getHomeStats();
   }
 
+  @Public()
+  @Get('cities')
+  @ApiOperation({ summary: 'Cidades com anúncios ativos e quantidade' })
+  getCities() {
+    return this.vehiclesService.getCities();
+  }
+
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Lista veículos do usuário autenticado' })

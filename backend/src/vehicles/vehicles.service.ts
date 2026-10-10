@@ -921,6 +921,24 @@ export class VehiclesService {
     return { electric, economy, sedan, suvPickup };
   }
 
+  async getCities() {
+    const rows = await this.prisma.vehicle.groupBy({
+      by: ['city', 'state'],
+      where: { isActive: true, isPublished: true },
+      _count: { _all: true },
+    });
+
+    return rows
+      .map((row) => ({
+        city: row.city,
+        state: row.state,
+        count: row._count._all,
+      }))
+      .sort(
+        (a, b) => b.count - a.count || a.city.localeCompare(b.city, 'pt-BR'),
+      );
+  }
+
   private mapOwnerSummary(owner: {
     id: string;
     profile?: {

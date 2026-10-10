@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { map } from 'rxjs';
+import { catchError, map, of, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CreateVehiclePayload,
@@ -45,6 +45,15 @@ export class VehiclesApiService {
       .get<OwnerVehicleItem[]>(`${environment.apiBaseUrl}/vehicles/me`)
       .pipe(map((vehicles) => normalizeApiPayloadUrls(vehicles)));
   }
+
+  readonly cities$ = this.http
+    .get<{ city: string; state: string; count: number }[]>(
+      `${environment.apiBaseUrl}/vehicles/cities`,
+    )
+    .pipe(
+      catchError(() => of([] as { city: string; state: string; count: number }[])),
+      shareReplay(1),
+    );
 
   getStats() {
     return this.http.get<{
