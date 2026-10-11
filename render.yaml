@@ -51,6 +51,14 @@ services:
         value: triluga-public
       - key: MINIO_PUBLIC_URL
         sync: false
+      - key: ASAAS_API_KEY
+        sync: false
+      - key: ASAAS_BASE_URL
+        value: https://api-sandbox.asaas.com/v3
+      - key: ASAAS_WEBHOOK_TOKEN
+        sync: false
+      - key: ASAAS_TIMEOUT_MS
+        value: '10000'
   - type: web
     name: triluga-web
     runtime: static

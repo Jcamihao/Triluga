@@ -8,7 +8,7 @@
 
 <br/>
 
-![versão](https://img.shields.io/badge/Versão-2.7.0-84cc16?style=for-the-badge&labelColor=1e293b)
+![versão](https://img.shields.io/badge/Versão-2.8.0-84cc16?style=for-the-badge&labelColor=1e293b)
 
 <br/>
 
@@ -31,7 +31,7 @@
 - 💬 **Chat em tempo real** via WebSocket entre comprador e anunciante.
 - ⭐ **Avaliações e reputação** pública de anunciantes e veículos.
 - 🔔 **Notificações e alertas de busca** por e-mail e push via BullMQ.
-- 💰 **Destaque pago** de anúncios integrado com EfiPay (PIX).
+- 💰 **Destaque pago** de anúncios via Asaas (PIX no app, ativação automática).
 - 🛡️ **Conformidade LGPD** com exportação de dados e solicitações de exclusão.
 
 ---
@@ -71,7 +71,7 @@
 │       ├── reviews/
 │       ├── analytics/
 │       ├── admin/            Painel administrativo
-│       ├── featured/         Destaque pago (EfiPay/PIX)
+│       ├── featured/         Destaque pago (Asaas/PIX)
 │       ├── privacy/          LGPD
 │       ├── storage/          MinIO abstraction
 │       └── cache-queue/      Redis + BullMQ abstraction
@@ -202,6 +202,15 @@ GET    /admin/privacy/requests                  Solicitações LGPD
 PATCH  /admin/privacy/requests/:id              Atualiza solicitação
 ```
 
+### 💰 Featured (destaque pago)
+```
+GET    /featured/plans                  Planos de destaque (público)
+POST   /featured/orders                 Cria pedido + cobrança PIX (Asaas)
+GET    /featured/orders/mine            Pedidos do usuário
+DELETE /featured/orders/:id             Cancela pedido pendente
+POST   /featured/webhook/asaas          Webhook do Asaas (header asaas-access-token)
+```
+
 ### 📊 Analytics & Lookups
 ```
 POST   /analytics/visits                Rastreia visita
@@ -291,6 +300,20 @@ docker builder prune --force   # limpa cache de build acumulado
 
 Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:ci` (back).
 
+### 💰 Destaque pago (Asaas)
+
+1. No `.env` da VPS, defina (o `docker-compose.yml` só repassa ao backend o que está listado nele):
+
+   | Variável | Valor |
+   |----------|-------|
+   | `ASAAS_API_KEY` | chave da API do Asaas (sandbox ou produção) |
+   | `ASAAS_BASE_URL` | `https://api-sandbox.asaas.com/v3` (padrão) · produção: `https://api.asaas.com/v3` |
+   | `ASAAS_WEBHOOK_TOKEN` | segredo inventado por você (ex.: `openssl rand -base64 32`) |
+   | `ASAAS_TIMEOUT_MS` | `10000` (padrão) |
+
+2. No painel do Asaas, cadastre o webhook em `<API>/api/v1/featured/webhook/asaas` com o **mesmo** valor de `ASAAS_WEBHOOK_TOKEN` (enviado no header `asaas-access-token`). Sem o token configurado o backend recusa todo webhook com 403.
+3. Migrations: o container já roda `prisma migrate deploy` na subida (ver `backend/Dockerfile`); não é preciso rodar à mão. Se o banco não tiver a tabela `_prisma_migrations`, o Dockerfile cai no caminho de baseline (P3005) — leia os avisos em [v2.8.0](./docs/releases/v2.8.0.md) antes de subir.
+
 ---
 
 ## 📚 Documentação adicional
@@ -312,6 +335,7 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
 
 | Versão | Destaques |
 |--------|-----------|
+| [v2.8.0](./docs/releases/v2.8.0.md) | Destaque via Asaas (PIX no app, ativação automática) · webhook seguro · destaques passam a expirar |
 | [v2.7.0](./docs/releases/v2.7.0.md) | Remoção do KYC · geocoding real no mapa do anúncio · foto da home restaurada |
 | [v2.6.0](./docs/releases/v2.6.0.md) | CI/CD · InsightFace KYC · badge contatado · taxa de resposta |
 | [v2.5.0](./docs/releases/v2.5.0.md) | KYC completo · verificação de e-mail · recuperação de senha · FIPE |
