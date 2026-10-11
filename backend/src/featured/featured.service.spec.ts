@@ -46,9 +46,11 @@ function buildPrisma() {
     ),
     updateMany: jest.fn().mockResolvedValue({ count: 1 }),
   };
+  const vehicleUpdate = jest.fn().mockResolvedValue({});
   const tx = {
     $executeRaw: jest.fn().mockResolvedValue(1),
     featuredOrder,
+    vehicle: { update: vehicleUpdate },
   };
   return {
     $transaction: jest.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
@@ -59,6 +61,7 @@ function buildPrisma() {
         isActive: true,
         title: 'Civic 2020',
       }),
+      update: vehicleUpdate,
     },
     featuredOrder,
     user: {
@@ -91,6 +94,7 @@ describe('FeaturedService', () => {
   let prisma: ReturnType<typeof buildPrisma>;
   let asaas: ReturnType<typeof buildAsaas>;
   let service: FeaturedService;
+  let configGet: jest.Mock;
   let warnSpy: jest.SpyInstance;
   let errorSpy: jest.SpyInstance;
 
@@ -98,7 +102,8 @@ describe('FeaturedService', () => {
     jest.useFakeTimers({ now: new Date('2026-10-11T15:00:00Z') });
     prisma = buildPrisma();
     asaas = buildAsaas();
-    const config = { get: jest.fn() } as unknown as ConfigService;
+    configGet = jest.fn();
+    const config = { get: configGet } as unknown as ConfigService;
     service = new FeaturedService(
       prisma as unknown as PrismaService,
       asaas as unknown as AsaasClient,
@@ -700,6 +705,371 @@ describe('FeaturedService', () => {
 
       expect(await service.cancelStalePendingOrders()).toBe(1);
       expect(errorSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleAsaasWebhook', () => {
+    const TOKEN = 'secret-token';
+    const pendingOrder = {
+      id: ORDER_ID,
+      vehicleId: VEHICLE_ID,
+      userId: USER_ID,
+      durationDays: 7,
+      price: 29.9,
+      status: 'PENDING',
+      paymentId: 'pay_1',
+    };
+    const event = (
+      overrides: Record<string, unknown> = {},
+      evt = 'PAYMENT_RECEIVED',
+    ) => ({
+      event: evt,
+      payment: {
+        id: 'pay_1',
+        value: 29.9,
+        externalReference: ORDER_ID,
+        ...overrides,
+      },
+    });
+    beforeEach(() => {
+      configGet.mockImplementation((key: string) =>
+        key === 'asaas.webhookToken' ? TOKEN : undefined,
+      );
+      prisma.featuredOrder.findUnique.mockResolvedValue(pendingOrder);
+      jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+      jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    });
+
+    const expectNothingTouched = () => {
+      expect(prisma.featuredOrder.findUnique).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+    };
+
+    describe('token', () => {
+      it('rejects with 403 when token is wrong', async () => {
+        await expect(
+          service.handleAsaasWebhook('wrong-token!', event()),
+        ).rejects.toThrow(new ForbiddenException('Invalid webhook token'));
+        expectNothingTouched();
+      });
+
+      it('rejects with 403 when header is missing', async () => {
+        await expect(
+          service.handleAsaasWebhook(undefined as unknown as string, event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        await expect(
+          service.handleAsaasWebhook('', event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        expectNothingTouched();
+      });
+
+      it('rejects with 403 when ASAAS_WEBHOOK_TOKEN is not configured', async () => {
+        configGet.mockReturnValue(undefined);
+        await expect(
+          service.handleAsaasWebhook(TOKEN, event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        configGet.mockReturnValue(null);
+        await expect(
+          service.handleAsaasWebhook(TOKEN, event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        expectNothingTouched();
+      });
+
+      it('rejects with 403 when both env token and header are empty strings', async () => {
+        configGet.mockReturnValue('');
+        await expect(
+          service.handleAsaasWebhook('', event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        expectNothingTouched();
+      });
+
+      it('rejects with 403 (no throw from timingSafeEqual) when token has a different length', async () => {
+        await expect(
+          service.handleAsaasWebhook(TOKEN + 'x', event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        await expect(
+          service.handleAsaasWebhook('s', event()),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+        expectNothingTouched();
+      });
+
+      it('rejects with 403 before reading a null payload when token is invalid', async () => {
+        await expect(
+          service.handleAsaasWebhook('nope', null),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+
+    describe('activation', () => {
+      it('activates a PENDING order on PAYMENT_RECEIVED', async () => {
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 1 });
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledWith({
+          where: { id: ORDER_ID, status: 'PENDING' },
+          data: {
+            status: 'ACTIVE',
+            activatedAt: new Date('2026-10-11T15:00:00Z'),
+            expiresAt: new Date('2026-10-18T15:00:00Z'),
+          },
+        });
+        expect(prisma.vehicle.update).toHaveBeenCalledWith({
+          where: { id: VEHICLE_ID },
+          data: {
+            isFeatured: true,
+            featuredUntil: new Date('2026-10-18T15:00:00Z'),
+          },
+        });
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+
+      it('activates a PENDING order on PAYMENT_CONFIRMED', async () => {
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({}, 'PAYMENT_CONFIRMED'),
+        );
+        expect(result).toEqual({ ok: true, activated: 1 });
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+      });
+
+      it('updates the order and the vehicle in the same transaction', async () => {
+        await service.handleAsaasWebhook(TOKEN, event());
+        expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      });
+
+      it('finds the order by payment.externalReference', async () => {
+        await service.handleAsaasWebhook(TOKEN, event());
+        expect(prisma.featuredOrder.findUnique).toHaveBeenCalledWith({
+          where: { id: ORDER_ID },
+        });
+      });
+
+      it('falls back to paymentId when externalReference matches no order', async () => {
+        prisma.featuredOrder.findUnique
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(pendingOrder);
+
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({ externalReference: 'ghost' }),
+        );
+
+        expect(prisma.featuredOrder.findUnique).toHaveBeenNthCalledWith(1, {
+          where: { id: 'ghost' },
+        });
+        expect(prisma.featuredOrder.findUnique).toHaveBeenNthCalledWith(2, {
+          where: { paymentId: 'pay_1' },
+        });
+        expect(result).toEqual({ ok: true, activated: 1 });
+      });
+
+      it('falls back to paymentId when externalReference is absent', async () => {
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({ externalReference: undefined }),
+        );
+        expect(prisma.featuredOrder.findUnique).toHaveBeenCalledTimes(1);
+        expect(prisma.featuredOrder.findUnique).toHaveBeenCalledWith({
+          where: { paymentId: 'pay_1' },
+        });
+        expect(result).toEqual({ ok: true, activated: 1 });
+      });
+
+      it('treats 29.9 and 29.90 as equal (cents comparison)', async () => {
+        for (const price of [29.9, '29.90', '29.9']) {
+          prisma.featuredOrder.findUnique.mockResolvedValue({
+            ...pendingOrder,
+            price,
+          });
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            event({ value: 29.9 }),
+          );
+          expect(result).toEqual({ ok: true, activated: 1 });
+        }
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+
+      it('works with a Decimal-like order.price (object with toString/valueOf)', async () => {
+        const decimalLike = {
+          toString: () => '29.9',
+          valueOf: () => '29.9',
+          toNumber: () => 29.9,
+        };
+        prisma.featuredOrder.findUnique.mockResolvedValue({
+          ...pendingOrder,
+          price: decimalLike,
+        });
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 1 });
+      });
+
+      it('does not activate when payment.value differs from order.price and logs error with orderId and both values', async () => {
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({ value: 10 }),
+        );
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const msg = String(errorSpy.mock.calls[0][0]);
+        expect(msg).toContain(ORDER_ID);
+        expect(msg).toContain('10');
+        expect(msg).toContain('29.9');
+      });
+
+      it('does not activate when payment.value is missing or not numeric', async () => {
+        for (const value of [undefined, null, 'abc', {}]) {
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            event({ value }),
+          );
+          expect(result).toEqual({ ok: true, activated: 0 });
+        }
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+      });
+
+      it('is idempotent: a second delivery for an ACTIVE order activates nothing and does not log error', async () => {
+        prisma.featuredOrder.findUnique.mockResolvedValue({
+          ...pendingOrder,
+          status: 'ACTIVE',
+        });
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+
+      it('is a quiet no-op for an EXPIRED order', async () => {
+        prisma.featuredOrder.findUnique.mockResolvedValue({
+          ...pendingOrder,
+          status: 'EXPIRED',
+        });
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+
+      it('does not activate a CANCELLED order that was paid later and logs error with orderId, paymentId and value', async () => {
+        prisma.featuredOrder.findUnique.mockResolvedValue({
+          ...pendingOrder,
+          status: 'CANCELLED',
+        });
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(prisma.vehicle.update).not.toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const msg = String(errorSpy.mock.calls[0][0]);
+        expect(msg).toContain(ORDER_ID);
+        expect(msg).toContain('pay_1');
+        expect(msg).toContain('29.9');
+      });
+
+      it('does not activate when the guarded update matches nothing (concurrent cancel or duplicate delivery)', async () => {
+        prisma.featuredOrder.updateMany.mockResolvedValue({ count: 0 });
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+        expect(prisma.vehicle.update).not.toHaveBeenCalled();
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('malformed payloads', () => {
+      const cases: Array<[string, unknown]> = [
+        ['null payload', null],
+        ['undefined payload', undefined],
+        ['string payload', 'oops'],
+        ['empty object', {}],
+        ['unknown event', event({}, 'PAYMENT_CREATED')],
+        ['missing event', { payment: { id: 'pay_1', value: 29.9 } }],
+        ['missing payment', { event: 'PAYMENT_RECEIVED' }],
+        ['null payment', { event: 'PAYMENT_RECEIVED', payment: null }],
+        ['string payment', { event: 'PAYMENT_RECEIVED', payment: 'x' }],
+        [
+          'null externalReference and no payment id',
+          {
+            event: 'PAYMENT_RECEIVED',
+            payment: { value: 29.9, externalReference: null },
+          },
+        ],
+        [
+          'empty externalReference and no payment id',
+          {
+            event: 'PAYMENT_RECEIVED',
+            payment: { value: 29.9, externalReference: '' },
+          },
+        ],
+        [
+          'non-string externalReference',
+          {
+            event: 'PAYMENT_RECEIVED',
+            payment: { value: 29.9, externalReference: { $ne: 1 } },
+          },
+        ],
+      ];
+
+      it.each(cases)(
+        'returns { ok: true, activated: 0 } for %s',
+        async (_name, payload) => {
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            payload as never,
+          );
+          expect(result).toEqual({ ok: true, activated: 0 });
+          expect(prisma.$transaction).not.toHaveBeenCalled();
+          expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        },
+      );
+
+      it('returns { ok: true, activated: 0 } for an unknown order', async () => {
+        prisma.featuredOrder.findUnique.mockResolvedValue(null);
+
+        const result = await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('error semantics', () => {
+      it('propagates a transient failure while activating (so Asaas retries) and logs it', async () => {
+        (prisma.$transaction as jest.Mock).mockRejectedValueOnce(
+          new Error('db down'),
+        );
+
+        await expect(
+          service.handleAsaasWebhook(TOKEN, event()),
+        ).rejects.toThrow('db down');
+        expect(errorSpy).toHaveBeenCalled();
+        expect(String(errorSpy.mock.calls[0][0])).toContain(ORDER_ID);
+      });
+
+      it('propagates a failure while looking up the order (so Asaas retries)', async () => {
+        prisma.featuredOrder.findUnique.mockRejectedValue(new Error('db down'));
+
+        await expect(
+          service.handleAsaasWebhook(TOKEN, event()),
+        ).rejects.toThrow('db down');
+      });
     });
   });
 });

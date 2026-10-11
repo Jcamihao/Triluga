@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
@@ -43,5 +51,18 @@ export class FeaturedController {
     @Param('id') orderId: string,
   ) {
     return this.featuredService.cancelOrder(user.sub, orderId);
+  }
+
+  @Public()
+  @Post('webhook/asaas')
+  @ApiOperation({
+    summary: 'Webhook Asaas — confirmação de pagamento PIX do destaque',
+  })
+  handleAsaasWebhook(
+    @Headers('asaas-access-token') token: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @Body() payload: any,
+  ) {
+    return this.featuredService.handleAsaasWebhook(token ?? '', payload);
   }
 }

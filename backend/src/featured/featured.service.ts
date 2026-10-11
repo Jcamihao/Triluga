@@ -7,6 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AsaasClient, AsaasClientError } from './asaas.client';
 import { CreateFeaturedOrderDto } from './dto/create-featured-order.dto';
@@ -23,6 +24,20 @@ const CANCEL_FAILURE_MESSAGE =
 const STALE_ORDER_MS = 24 * 60 * 60 * 1000;
 const BRAZIL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+const WEBHOOK_ACTIVATING_EVENTS = ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'];
+
+export interface AsaasWebhookPayload {
+  event?: string;
+  payment?: {
+    id?: string;
+    value?: number;
+    externalReference?: string | null;
+  } | null;
+}
+
+const nonEmptyString = (v: unknown): v is string =>
+  typeof v === 'string' && v.length > 0;
 
 /** "Amanhã" no Brasil (UTC-3) como YYYY-MM-DD, independente do fuso do servidor. */
 function tomorrowInBrazil(): string {
@@ -193,28 +208,129 @@ export class FeaturedService {
     }
   }
 
-  private async doActivateOrder(orderId: string) {
+  /**
+   * Ativa o pedido só se ele ainda estiver PENDING (update condicional dentro da
+   * transação, junto com o veículo). Retorna false se outra operação (cancelamento
+   * ou entrega duplicada do webhook) já mudou o pedido: nada é alterado.
+   */
+  private async doActivateOrder(order: {
+    id: string;
+    vehicleId: string;
+    durationDays: number;
+  }): Promise<boolean> {
     const activatedAt = new Date();
-    const order = await this.prisma.featuredOrder.findUnique({
-      where: { id: orderId },
-    });
-    if (!order) throw new NotFoundException('Pedido não encontrado.');
-
     const expiresAt = new Date(activatedAt);
     expiresAt.setDate(expiresAt.getDate() + order.durationDays);
 
-    const [updatedOrder] = await this.prisma.$transaction([
-      this.prisma.featuredOrder.update({
-        where: { id: orderId },
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.featuredOrder.updateMany({
+        where: { id: order.id, status: 'PENDING' },
         data: { status: 'ACTIVE', activatedAt, expiresAt },
-      }),
-      this.prisma.vehicle.update({
+      });
+      if (result.count === 0) return false;
+
+      await tx.vehicle.update({
         where: { id: order.vehicleId },
         data: { isFeatured: true, featuredUntil: expiresAt },
-      }),
-    ]);
+      });
+      return true;
+    });
+  }
 
-    return updatedOrder;
+  /** Comparação em tempo constante; token vazio/ausente nunca autoriza. */
+  private isValidWebhookToken(received: unknown): boolean {
+    const expected: unknown = this.config.get('asaas.webhookToken');
+    if (!nonEmptyString(expected) || !nonEmptyString(received)) return false;
+    const a = Buffer.from(received);
+    const b = Buffer.from(expected);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }
+
+  /**
+   * Webhook do Asaas (público). Token primeiro, antes de olhar payload ou banco.
+   * Problemas de payload/estado do pedido respondem 200 (o Asaas não deve
+   * reenviar); falha transitória (banco) propaga como 5xx para o Asaas reenviar.
+   */
+  async handleAsaasWebhook(
+    token: string,
+    payload: AsaasWebhookPayload | null | undefined,
+  ): Promise<{ ok: true; activated: number }> {
+    if (!this.isValidWebhookToken(token))
+      throw new ForbiddenException('Invalid webhook token');
+
+    const noop = { ok: true as const, activated: 0 };
+    if (!payload || typeof payload !== 'object') return noop;
+    if (
+      !nonEmptyString(payload.event) ||
+      !WEBHOOK_ACTIVATING_EVENTS.includes(payload.event)
+    )
+      return noop;
+    const payment = payload.payment;
+    if (!payment || typeof payment !== 'object') return noop;
+
+    const externalReference = nonEmptyString(payment.externalReference)
+      ? payment.externalReference
+      : null;
+    const paymentId = nonEmptyString(payment.id) ? payment.id : null;
+    if (!externalReference && !paymentId) return noop;
+
+    try {
+      const order =
+        (externalReference
+          ? await this.prisma.featuredOrder.findUnique({
+              where: { id: externalReference },
+            })
+          : null) ??
+        (paymentId
+          ? await this.prisma.featuredOrder.findUnique({ where: { paymentId } })
+          : null);
+
+      if (!order) {
+        this.logger.warn(
+          `Webhook Asaas ${payload.event}: pedido não encontrado (externalReference=${externalReference}, paymentId=${paymentId})`,
+        );
+        return noop;
+      }
+
+      const paidValue = Number(payment.value);
+      const orderPrice = Number(order.price);
+
+      if (order.status === 'CANCELLED') {
+        this.logger.error(
+          `Pagamento recebido para pedido CANCELLED: orderId=${order.id} paymentId=${paymentId} value=${paidValue}. Não ativado; reconciliar manualmente (estorno ou ativação pelo admin).`,
+        );
+        return noop;
+      }
+      if (order.status !== 'PENDING') {
+        this.logger.log(
+          `Webhook Asaas ${payload.event}: pedido ${order.id} já está ${order.status}; nada a fazer`,
+        );
+        return noop;
+      }
+      if (Math.round(paidValue * 100) !== Math.round(orderPrice * 100)) {
+        this.logger.error(
+          `Webhook Asaas com valor divergente: orderId=${order.id} paymentId=${paymentId} pago=${paidValue} esperado=${orderPrice}. Pedido não ativado.`,
+        );
+        return noop;
+      }
+
+      const activated = await this.doActivateOrder(order);
+      if (!activated) {
+        this.logger.log(
+          `Webhook Asaas: pedido ${order.id} deixou de ser PENDING durante a ativação; nada alterado`,
+        );
+        return noop;
+      }
+      this.logger.log(
+        `Pedido ${order.id} ativado via webhook Asaas (paymentId=${paymentId})`,
+      );
+      return { ok: true, activated: 1 };
+    } catch (err) {
+      this.logger.error(
+        `Falha ao processar webhook Asaas (externalReference=${externalReference}, paymentId=${paymentId}); respondendo 5xx para o Asaas reenviar: ${(err as Error).message}`,
+      );
+      throw err;
+    }
   }
 
   async cancelOrder(userId: string, orderId: string) {
