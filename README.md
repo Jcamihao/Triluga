@@ -312,6 +312,8 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
    | `ASAAS_TIMEOUT_MS` | `10000` (padrão) |
 
 2. No painel do Asaas, cadastre o webhook em `<API>/api/v1/featured/webhook/asaas` com o **mesmo** valor de `ASAAS_WEBHOOK_TOKEN` (enviado no header `asaas-access-token`). Sem o token configurado o backend recusa todo webhook com 403.
+   - Eventos a assinar no painel: `PAYMENT_RECEIVED` e `PAYMENT_CONFIRMED` (**ativam** o destaque) e, para reconciliação, `PAYMENT_REFUNDED`, `PAYMENT_REVERSED`, `PAYMENT_CHARGEBACK_*` e `PAYMENT_DELETED` (só **logados**; `PAYMENT_DELETED` de pedido não ativo é apenas informativo, pois é o eco dos nossos próprios cancelamentos).
+   - Confirmar no painel do Asaas se a conta precisa ter uma chave Pix cadastrada para gerar cobranças PIX (não verificado).
 3. Migrations: o container já roda `prisma migrate deploy` na subida (ver `backend/Dockerfile`); não é preciso rodar à mão. Se o banco não tiver a tabela `_prisma_migrations`, o Dockerfile cai no caminho de baseline (P3005) — leia os avisos em [v2.8.0](./docs/releases/v2.8.0.md) antes de subir.
 
 ---
