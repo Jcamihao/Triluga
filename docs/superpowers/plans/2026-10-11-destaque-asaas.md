@@ -192,6 +192,17 @@ Decisões aplicadas sobre a Task 2 após revisão independente (riscos de dinhei
 
 ---
 
+### Task 3b — correções da revisão de segurança do webhook
+
+1. `@SkipThrottle()` na rota do webhook: o token é a autenticação e uma rajada do Asaas não pode receber 429.
+2. Cruzamento cobrança x pedido: `payment.id` diferente de `order.paymentId` (ambos presentes) → não ativa, loga `error` com os dois ids; `order.paymentId` nulo ou `payment.id` ausente → segue por `externalReference` + valor.
+3. Logs de strings não confiáveis (`externalReference`, `paymentId`, evento) passam por `safeLog`: sem caracteres de controle e truncados em 64 chars.
+4. Eventos `PAYMENT_REFUNDED`/`DELETED`/`REVERSED` e `PAYMENT_CHARGEBACK*`: não alteram estado; localizam o pedido e logam `error` (orderId, paymentId, evento) para reconciliação; pedido inexistente → `warn`; sempre 200 noop.
+5. `FeaturedService.onModuleInit` loga `warn` quando `asaas.apiKey` está definida mas `asaas.webhookToken` vazio (webhooks seriam recusados com 403 em silêncio).
+6. `FeaturedService.expireFeaturedListings(now)` (transação única): pedidos `ACTIVE` vencidos → `EXPIRED` e veículos com `featuredUntil` vencido perdem `isFeatured`/`featuredUntil`; destaque manual do admin (`featuredUntil` nulo) é preservado (`not: null`). Cron horário em `ListingExpiryService` loga `featured_listings_expired orders=N vehicles=M` só quando algo expirou.
+
+---
+
 ### Task 4: Frontend — tela de pagamento sem ramo estático e com erros visíveis
 
 **Files:**

@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
@@ -54,6 +55,7 @@ export class FeaturedController {
   }
 
   @Public()
+  @SkipThrottle() // o token é a autenticação; rajada do Asaas não pode receber 429
   @Post('webhook/asaas')
   @ApiOperation({
     summary: 'Webhook Asaas — confirmação de pagamento PIX do destaque',

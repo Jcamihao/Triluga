@@ -118,4 +118,16 @@ export class ListingExpiryService {
       this.logger.log(`featured_orders_cancelled_stale count=${count}`);
     }
   }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async expireFeaturedListings() {
+    const { orders, vehicles } =
+      await this.featuredService.expireFeaturedListings();
+
+    if (orders > 0 || vehicles > 0) {
+      this.logger.log(
+        `featured_listings_expired orders=${orders} vehicles=${vehicles}`,
+      );
+    }
+  }
 }

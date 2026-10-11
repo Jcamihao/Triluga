@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -26,6 +27,22 @@ const BRAZIL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WEBHOOK_ACTIVATING_EVENTS = ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'];
+const WEBHOOK_REVERSAL_EVENTS = [
+  'PAYMENT_REFUNDED',
+  'PAYMENT_DELETED',
+  'PAYMENT_REVERSED',
+];
+const isReversalEvent = (event: string) =>
+  WEBHOOK_REVERSAL_EVENTS.includes(event) ||
+  event.startsWith('PAYMENT_CHARGEBACK');
+
+/** Texto vindo do payload (não confiável) seguro para log: sem controles, até 64 chars. */
+function safeLog(value: unknown): string {
+  // eslint-disable-next-line no-control-regex
+  return String(value)
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, '')
+    .slice(0, 64);
+}
 
 export interface AsaasWebhookPayload {
   event?: string;
@@ -58,7 +75,7 @@ function isCustomerDataError(err: unknown): boolean {
 }
 
 @Injectable()
-export class FeaturedService {
+export class FeaturedService implements OnModuleInit {
   private readonly logger = new Logger(FeaturedService.name);
 
   constructor(
@@ -66,6 +83,15 @@ export class FeaturedService {
     private readonly asaas: AsaasClient,
     private readonly config: ConfigService,
   ) {}
+
+  onModuleInit() {
+    const apiKey: unknown = this.config.get('asaas.apiKey');
+    const webhookToken: unknown = this.config.get('asaas.webhookToken');
+    if (nonEmptyString(apiKey) && !nonEmptyString(webhookToken))
+      this.logger.warn(
+        'ASAAS_API_KEY definida mas ASAAS_WEBHOOK_TOKEN vazio: webhooks serão recusados com 403 e pedidos pagos não serão ativados',
+      );
+  }
 
   getPlans() {
     return FEATURED_PLANS;
@@ -260,11 +286,11 @@ export class FeaturedService {
 
     const noop = { ok: true as const, activated: 0 };
     if (!payload || typeof payload !== 'object') return noop;
-    if (
-      !nonEmptyString(payload.event) ||
-      !WEBHOOK_ACTIVATING_EVENTS.includes(payload.event)
-    )
-      return noop;
+    const event = payload.event;
+    if (!nonEmptyString(event)) return noop;
+    const isActivation = WEBHOOK_ACTIVATING_EVENTS.includes(event);
+    const isReversal = isReversalEvent(event);
+    if (!isActivation && !isReversal) return noop;
     const payment = payload.payment;
     if (!payment || typeof payment !== 'object') return noop;
 
@@ -273,6 +299,10 @@ export class FeaturedService {
       : null;
     const paymentId = nonEmptyString(payment.id) ? payment.id : null;
     if (!externalReference && !paymentId) return noop;
+
+    const refLog = safeLog(externalReference);
+    const payLog = safeLog(paymentId);
+    const eventLog = safeLog(event);
 
     try {
       const order =
@@ -287,7 +317,21 @@ export class FeaturedService {
 
       if (!order) {
         this.logger.warn(
-          `Webhook Asaas ${payload.event}: pedido não encontrado (externalReference=${externalReference}, paymentId=${paymentId})`,
+          `Webhook Asaas ${eventLog}: pedido não encontrado (externalReference=${refLog}, paymentId=${payLog})`,
+        );
+        return noop;
+      }
+
+      if (isReversal) {
+        this.logger.error(
+          `Webhook Asaas ${eventLog} (estorno/cancelamento): orderId=${order.id} paymentId=${payLog}. Nenhum estado alterado; reconciliar manualmente.`,
+        );
+        return noop;
+      }
+
+      if (paymentId && order.paymentId && paymentId !== order.paymentId) {
+        this.logger.error(
+          `Webhook Asaas com cobrança diferente da do pedido: orderId=${order.id} paymentId esperado=${order.paymentId} recebido=${payLog}. Pedido não ativado.`,
         );
         return noop;
       }
@@ -297,19 +341,19 @@ export class FeaturedService {
 
       if (order.status === 'CANCELLED') {
         this.logger.error(
-          `Pagamento recebido para pedido CANCELLED: orderId=${order.id} paymentId=${paymentId} value=${paidValue}. Não ativado; reconciliar manualmente (estorno ou ativação pelo admin).`,
+          `Pagamento recebido para pedido CANCELLED: orderId=${order.id} paymentId=${payLog} value=${paidValue}. Não ativado; reconciliar manualmente (estorno ou ativação pelo admin).`,
         );
         return noop;
       }
       if (order.status !== 'PENDING') {
         this.logger.log(
-          `Webhook Asaas ${payload.event}: pedido ${order.id} já está ${order.status}; nada a fazer`,
+          `Webhook Asaas ${eventLog}: pedido ${order.id} já está ${order.status}; nada a fazer`,
         );
         return noop;
       }
       if (Math.round(paidValue * 100) !== Math.round(orderPrice * 100)) {
         this.logger.error(
-          `Webhook Asaas com valor divergente: orderId=${order.id} paymentId=${paymentId} pago=${paidValue} esperado=${orderPrice}. Pedido não ativado.`,
+          `Webhook Asaas com valor divergente: orderId=${order.id} paymentId=${payLog} pago=${paidValue} esperado=${orderPrice}. Pedido não ativado.`,
         );
         return noop;
       }
@@ -322,15 +366,39 @@ export class FeaturedService {
         return noop;
       }
       this.logger.log(
-        `Pedido ${order.id} ativado via webhook Asaas (paymentId=${paymentId})`,
+        `Pedido ${order.id} ativado via webhook Asaas (paymentId=${payLog})`,
       );
       return { ok: true, activated: 1 };
     } catch (err) {
       this.logger.error(
-        `Falha ao processar webhook Asaas (externalReference=${externalReference}, paymentId=${paymentId}); respondendo 5xx para o Asaas reenviar: ${(err as Error).message}`,
+        `Falha ao processar webhook Asaas (externalReference=${refLog}, paymentId=${payLog}); respondendo 5xx para o Asaas reenviar: ${(err as Error).message}`,
       );
       throw err;
     }
+  }
+
+  /**
+   * Encerra destaques vencidos numa transação: pedidos ACTIVE vencidos viram
+   * EXPIRED e veículos com featuredUntil vencido perdem o destaque. Veículos com
+   * isFeatured e featuredUntil nulo (destaque manual do admin) não são tocados.
+   */
+  async expireFeaturedListings(
+    now = new Date(),
+  ): Promise<{ orders: number; vehicles: number }> {
+    return this.prisma.$transaction(async (tx) => {
+      const orders = await tx.featuredOrder.updateMany({
+        where: { status: 'ACTIVE', expiresAt: { lt: now } },
+        data: { status: 'EXPIRED' },
+      });
+      const vehicles = await tx.vehicle.updateMany({
+        where: {
+          isFeatured: true,
+          featuredUntil: { not: null, lt: now },
+        },
+        data: { isFeatured: false, featuredUntil: null },
+      });
+      return { orders: orders.count, vehicles: vehicles.count };
+    });
   }
 
   async cancelOrder(userId: string, orderId: string) {
