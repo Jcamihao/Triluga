@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
@@ -51,12 +43,5 @@ export class FeaturedController {
     @Param('id') orderId: string,
   ) {
     return this.featuredService.cancelOrder(user.sub, orderId);
-  }
-
-  @Public()
-  @Post('webhook/pix')
-  @ApiOperation({ summary: 'Webhook Efipay — notificação de pagamento PIX' })
-  handlePixWebhook(@Query('token') token: string, @Body() payload: any) {
-    return this.featuredService.handlePixWebhook(token ?? '', payload);
   }
 }

@@ -4,13 +4,27 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AsaasClient } from './asaas.client';
 import { CreateFeaturedOrderDto } from './dto/create-featured-order.dto';
 import { FEATURED_PLANS } from './featured.constants';
-import { EfipayService } from './efipay.service';
+
+const MISSING_DOCUMENT_MESSAGE =
+  'Complete seu CPF/CNPJ no perfil para pagar o destaque.';
+const PIX_FAILURE_MESSAGE =
+  'Não foi possível gerar o PIX agora. Tente novamente em instantes.';
+
+function tomorrowIsoDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 @Injectable()
 export class FeaturedService {
@@ -18,9 +32,8 @@ export class FeaturedService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly efipay: EfipayService,
+    private readonly asaas: AsaasClient,
     private readonly config: ConfigService,
-    private readonly email: EmailService,
   ) {}
 
   getPlans() {
@@ -51,14 +64,21 @@ export class FeaturedService {
         'Este veículo já possui um destaque ativo ou pendente de pagamento.',
       );
 
+    if (!this.asaas.isConfigured())
+      throw new ServiceUnavailableException(PIX_FAILURE_MESSAGE);
+
+    const owner = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        profile: { select: { fullName: true, documentNumber: true } },
+      },
+    });
+    const cpfCnpj = (owner?.profile?.documentNumber ?? '').replace(/\D/g, '');
+    if (!owner || !cpfCnpj)
+      throw new BadRequestException(MISSING_DOCUMENT_MESSAGE);
+
     const description = `Destaque Triluga — ${vehicle.title} (${plan.name})`;
-
-    const pixCharge = await this.efipay.createPixCharge(
-      plan.price,
-      description,
-    );
-
-    const isStaticPix = !pixCharge;
 
     const order = await this.prisma.featuredOrder.create({
       data: {
@@ -67,42 +87,82 @@ export class FeaturedService {
         planId: plan.id,
         durationDays: plan.durationDays,
         price: plan.price,
-        pixKey: isStaticPix ? this.efipay.staticPixKey : null,
-        txid: pixCharge?.txid ?? null,
-        pixCopiaECola: pixCharge?.pixCopiaECola ?? null,
       },
     });
 
-    if (isStaticPix) {
-      const owner = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true },
-      });
-      this.email
-        .sendFeaturedOrderStaticPixAlert({
-          vehicleTitle: vehicle.title,
-          ownerEmail: owner?.email ?? userId,
-          planName: plan.name,
-          price: plan.price,
-          orderId: order.id,
-        })
-        .catch(() => {});
-    }
+    let asaasPaymentId: string | null = null;
+    try {
+      const customer =
+        (await this.asaas.findCustomerByExternalReference(userId)) ??
+        (await this.asaas.createCustomer({
+          name: owner.profile?.fullName ?? owner.email,
+          cpfCnpj,
+          email: owner.email,
+          externalReference: userId,
+        }));
 
-    return {
-      order,
-      payment: {
-        pixKey: isStaticPix ? this.efipay.staticPixKey : null,
-        pixKeyType: isStaticPix ? 'email' : null,
-        amount: plan.price,
+      const pixPayment = await this.asaas.createPixPayment({
+        customer: customer.id,
+        value: plan.price,
+        dueDate: tomorrowIsoDate(),
         description,
-        pixCopiaECola: pixCharge?.pixCopiaECola ?? null,
-        qrCodeImage: pixCharge?.qrCodeImage ?? null,
-        instructions: isStaticPix
-          ? 'Após realizar o pagamento para a chave PIX acima, nossa equipe ativará seu destaque manualmente em até 1 dia útil após a confirmação.'
-          : 'Escaneie o QR Code ou copie o código PIX para efetuar o pagamento. O destaque será ativado automaticamente após a confirmação.',
-      },
-    };
+        externalReference: order.id,
+      });
+      asaasPaymentId = pixPayment.id;
+
+      const qr = await this.asaas.getPixQrCode(pixPayment.id);
+
+      const updatedOrder = await this.prisma.featuredOrder.update({
+        where: { id: order.id },
+        data: { paymentId: pixPayment.id, pixCopiaECola: qr.payload },
+      });
+
+      return {
+        order: updatedOrder,
+        payment: {
+          amount: plan.price,
+          description,
+          pixCopiaECola: qr.payload,
+          qrCodeImage: qr.encodedImage
+            ? `data:image/png;base64,${qr.encodedImage}`
+            : null,
+          instructions:
+            'Escaneie o QR Code ou copie o código PIX para efetuar o pagamento. O destaque será ativado automaticamente após a confirmação.',
+        },
+      };
+    } catch (err) {
+      this.logger.error(
+        `Falha ao gerar PIX Asaas para o pedido ${order.id}: ${(err as Error).message}`,
+      );
+      await this.rollbackFailedOrder(order.id, asaasPaymentId);
+      throw new ServiceUnavailableException(PIX_FAILURE_MESSAGE);
+    }
+  }
+
+  /** Best-effort: apaga a cobrança (se existir) e cancela o pedido para não deixar PENDING órfão. */
+  private async rollbackFailedOrder(
+    orderId: string,
+    asaasPaymentId: string | null,
+  ) {
+    if (asaasPaymentId) {
+      try {
+        await this.asaas.deletePayment(asaasPaymentId);
+      } catch (err) {
+        this.logger.warn(
+          `Não foi possível apagar a cobrança Asaas ${asaasPaymentId} do pedido ${orderId}: ${(err as Error).message}`,
+        );
+      }
+    }
+    try {
+      await this.prisma.featuredOrder.update({
+        where: { id: orderId },
+        data: { status: 'CANCELLED' },
+      });
+    } catch (err) {
+      this.logger.error(
+        `Não foi possível cancelar o pedido ${orderId} após falha no Asaas: ${(err as Error).message}`,
+      );
+    }
   }
 
   private async doActivateOrder(orderId: string) {
@@ -129,37 +189,6 @@ export class FeaturedService {
     return updatedOrder;
   }
 
-  async handlePixWebhook(token: string, payload: any) {
-    const expectedToken = this.config.get<string>('efipay.webhookToken');
-    if (expectedToken && token !== expectedToken) {
-      throw new ForbiddenException('Invalid webhook token');
-    }
-
-    const pixPayments: Array<{ txid?: string; status?: string }> =
-      payload?.pix ?? [];
-
-    let activated = 0;
-    for (const pix of pixPayments) {
-      if (!pix.txid || pix.status !== 'CONCLUIDA') continue;
-      const order = await this.prisma.featuredOrder.findFirst({
-        where: { txid: pix.txid, status: 'PENDING' },
-      });
-      if (!order) continue;
-
-      try {
-        await this.doActivateOrder(order.id);
-        activated++;
-        this.logger.log(
-          `Order ${order.id} activated via Efipay webhook (txid: ${pix.txid})`,
-        );
-      } catch (err) {
-        this.logger.error(`Failed to activate order ${order.id}`, err);
-      }
-    }
-
-    return { ok: true, activated };
-  }
-
   async cancelOrder(userId: string, orderId: string) {
     const order = await this.prisma.featuredOrder.findUnique({
       where: { id: orderId },
@@ -170,6 +199,16 @@ export class FeaturedService {
       throw new BadRequestException(
         'Somente pedidos pendentes podem ser cancelados.',
       );
+
+    if (order.paymentId) {
+      try {
+        await this.asaas.deletePayment(order.paymentId);
+      } catch (err) {
+        this.logger.warn(
+          `Não foi possível apagar a cobrança Asaas ${order.paymentId} do pedido ${orderId}: ${(err as Error).message}`,
+        );
+      }
+    }
 
     return this.prisma.featuredOrder.update({
       where: { id: orderId },

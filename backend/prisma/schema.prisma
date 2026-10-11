@@ -542,8 +542,7 @@ model FeaturedOrder {
   durationDays Int
   price        Decimal             @db.Decimal(10, 2)
   status       FeaturedOrderStatus @default(PENDING)
-  pixKey        String?
-  txid          String?   @unique
+  paymentId     String?   @unique
   pixCopiaECola String?
   activatedAt   DateTime?
   expiresAt    DateTime?

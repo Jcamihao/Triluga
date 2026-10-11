@@ -32,7 +32,6 @@ import { SearchAlertsModule } from './search-alerts/search-alerts.module';
 import { LookupsModule } from './lookups/lookups.module';
 import { EmailModule } from './email/email.module';
 import { emailConfig } from './config/email.config';
-import { efipayConfig } from './config/efipay.config';
 import { asaasConfig } from './config/asaas.config';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
@@ -55,7 +54,6 @@ import { FeaturedModule } from './featured/featured.module';
         cacheConfig,
         storageConfig,
         emailConfig,
-        efipayConfig,
         asaasConfig,
       ],
     }),
