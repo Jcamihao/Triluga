@@ -44,8 +44,9 @@ export class WebHeaderComponent {
 
       this.inboxWarmupScheduled = true;
       globalThis.setTimeout(() => this.warmupInbox(), 600);
+      // ensureLoaded grava signals do serviço de notificações (NG0600 sem allowSignalWrites).
       this.notificationsService.ensureLoaded().subscribe();
-    });
+    }, { allowSignalWrites: true });
   }
 
   protected goToSearch(params: Record<string, string | undefined>) {

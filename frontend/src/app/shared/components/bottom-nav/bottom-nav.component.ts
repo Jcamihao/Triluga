@@ -25,11 +25,13 @@ export class BottomNavComponent {
   private readonly authService = inject(AuthService);
   private readonly chatInboxService = inject(ChatInboxService);
   private readonly logger = inject(AppLoggerService);
+  // bind: chamado como this.idleScheduler(...), o requestIdleCallback nativo perde o window e o
+  // Chrome lança "Illegal invocation" — o pré-carregamento da caixa de mensagens nunca rodava.
   private readonly idleScheduler = (
     globalThis as typeof globalThis & {
       requestIdleCallback?: (callback: () => void) => number;
     }
-  ).requestIdleCallback;
+  ).requestIdleCallback?.bind(globalThis);
   private inboxWarmupScheduled = false;
 
   @Input() menuOpen = false;
