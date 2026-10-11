@@ -369,12 +369,10 @@ export interface FeaturedPlan {
 }
 
 export interface FeaturedOrderPayment {
-  pixKey: string | null;
-  pixKeyType: string | null;
   amount: number;
   description: string;
   instructions: string;
-  pixCopiaECola: string | null;
+  pixCopiaECola: string;
   qrCodeImage: string | null;
 }
 
@@ -385,8 +383,7 @@ export interface FeaturedOrder {
   durationDays: number;
   price: number;
   status: 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
-  pixKey: string | null;
-  txid: string | null;
+  paymentId: string | null;
   pixCopiaECola: string | null;
   activatedAt: string | null;
   expiresAt: string | null;

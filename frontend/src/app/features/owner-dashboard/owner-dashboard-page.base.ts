@@ -152,6 +152,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected wizardFeaturedSubmitting = false;
   protected promoteSubmitting = false;
   protected promoteResult: FeaturedOrderResult | null = null;
+  protected promoteError = '';
 
   // My featured orders
   protected myFeaturedOrders: FeaturedOrder[] = [];
@@ -845,9 +846,11 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
               this.editingVehicleId = vehicleId;
               window.scrollTo({ top: 0, behavior: 'smooth' });
             },
-            error: () => {
+            error: (error) => {
               this.wizardFeaturedSubmitting = false;
-              this.vehicleFeedback = 'Anúncio publicado! O destaque não pôde ser criado agora.';
+              this.vehicleFeedback =
+                'Anúncio publicado! ' +
+                (error?.error?.message || 'O destaque não pôde ser criado agora.');
               this.loadData(vehicleId);
             },
           });
@@ -1210,6 +1213,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     this.promotingVehicle = vehicle;
     this.selectedPlanId = '';
     this.promoteResult = null;
+    this.promoteError = '';
     if (!this.featuredPlans.length) {
       this.featuredApiService.getPlans().subscribe({
         next: (plans) => (this.featuredPlans = plans),
@@ -1221,12 +1225,14 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected closePromoteModal() {
     this.promotingVehicle = null;
     this.promoteResult = null;
+    this.promoteError = '';
     this.selectedPlanId = '';
   }
 
   protected submitPromote() {
     if (!this.promotingVehicle || !this.selectedPlanId || this.promoteSubmitting) return;
     this.promoteSubmitting = true;
+    this.promoteError = '';
     this.featuredApiService
       .createOrder(this.promotingVehicle.id, this.selectedPlanId)
       .subscribe({
@@ -1234,8 +1240,9 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
           this.promoteResult = result;
           this.promoteSubmitting = false;
         },
-        error: () => {
+        error: (error) => {
           this.promoteSubmitting = false;
+          this.promoteError = error?.error?.message || 'Não foi possível gerar o PIX agora.';
         },
       });
   }

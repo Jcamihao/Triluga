@@ -124,59 +124,34 @@
               </div>
             </div>
 
-            <!-- Dynamic QR Code (Efipay) -->
-            <ng-container *ngIf="owner.wizardFeaturedResult.payment.pixCopiaECola">
-              <div class="flex flex-col items-center gap-4">
-                <img
-                  *ngIf="owner.wizardFeaturedResult.payment.qrCodeImage"
-                  [src]="owner.wizardFeaturedResult.payment.qrCodeImage"
-                  alt="QR Code PIX"
-                  class="w-48 h-48 rounded-xl border border-outline-variant/30"
-                />
-                <div class="w-full bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/20 flex flex-col gap-2">
-                  <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">PIX Copia e Cola</p>
-                  <p class="font-mono text-xs text-on-surface break-all leading-relaxed">{{ owner.wizardFeaturedResult.payment.pixCopiaECola }}</p>
-                  <button
-                    type="button"
-                    class="mt-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-primary text-on-primary text-xs font-black w-full"
-                    (click)="owner.copyPixCopiaECola(owner.wizardFeaturedResult.payment.pixCopiaECola!)"
-                  >
-                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
-                    Copiar código PIX
-                  </button>
-                </div>
+            <!-- QR Code PIX -->
+            <div class="flex flex-col items-center gap-4">
+              <img
+                *ngIf="owner.wizardFeaturedResult.payment.qrCodeImage"
+                [src]="owner.wizardFeaturedResult.payment.qrCodeImage"
+                alt="QR Code PIX"
+                class="w-48 h-48 rounded-xl border border-outline-variant/30"
+              />
+              <div class="w-full bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/20 flex flex-col gap-2">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">PIX Copia e Cola</p>
+                <p class="font-mono text-xs text-on-surface break-all leading-relaxed">{{ owner.wizardFeaturedResult.payment.pixCopiaECola }}</p>
+                <button
+                  type="button"
+                  class="mt-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-primary text-on-primary text-xs font-black w-full"
+                  (click)="owner.copyPixCopiaECola(owner.wizardFeaturedResult.payment.pixCopiaECola)"
+                >
+                  <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                  Copiar código PIX
+                </button>
               </div>
-            </ng-container>
+            </div>
 
-            <!-- Static PIX key fallback -->
-            <ng-container *ngIf="!owner.wizardFeaturedResult.payment.pixCopiaECola">
-              <div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/20 flex flex-col gap-3">
-                <div>
-                  <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Chave PIX</p>
-                  <p class="font-mono font-bold text-primary text-sm">{{ owner.wizardFeaturedResult.payment.pixKey }}</p>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Valor</p>
-                  <p class="text-2xl font-black text-on-surface">{{ owner.wizardFeaturedResult.payment.amount | currency:'BRL':'symbol':'1.2-2' }}</p>
-                </div>
-              </div>
-            </ng-container>
-
-            <div
-              class="flex items-center gap-3 rounded-2xl p-4 border"
-              [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola
-                ? 'bg-blue-50 border-blue-200/50'
-                : 'bg-amber-50 border-amber-200/50'"
-            >
+            <div class="flex items-center gap-3 rounded-2xl p-4 border bg-blue-50 border-blue-200/50">
               <span
-                class="material-symbols-outlined text-xl"
-                [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola ? 'text-blue-500' : 'text-amber-500'"
+                class="material-symbols-outlined text-xl text-blue-500"
                 style="font-variation-settings:'FILL' 1"
-              >{{ owner.wizardFeaturedResult.payment.pixCopiaECola ? 'pending' : 'hourglass_top' }}</span>
-              <p
-                class="text-xs font-medium leading-snug"
-                [ngClass]="owner.wizardFeaturedResult.payment.pixCopiaECola ? 'text-blue-800' : 'text-amber-800'"
-              >
+              >pending</span>
+              <p class="text-xs font-medium leading-snug text-blue-800">
                 {{ owner.wizardFeaturedResult.payment.instructions }}
               </p>
             </div>
@@ -186,9 +161,7 @@
               class="text-sm font-bold text-on-surface-variant text-center py-2"
               (click)="owner.loadData()"
             >
-              {{ owner.wizardFeaturedResult.payment.pixCopiaECola
-                ? 'Ir para o painel (destaque será ativado automaticamente)'
-                : 'Ir para o painel (aguardando ativação manual)' }}
+              Ir para o painel (destaque será ativado automaticamente)
             </button>
           </div>
         </ng-container>
