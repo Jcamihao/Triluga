@@ -137,6 +137,19 @@
 
 ---
 
+### Task 2b — correções da revisão
+
+Decisões aplicadas sobre a Task 2 após revisão independente (riscos de dinheiro):
+
+1. `cancelOrder` só ignora 404 do Asaas ao apagar a cobrança; qualquer outro erro mantém o pedido `PENDING` e responde 503; o cancelamento usa `updateMany` com guarda `status = PENDING` (count 0 → 400, o webhook pode ter ativado no meio).
+2. O cron horário passa a ser `FeaturedService.cancelStalePendingOrders()`, que apaga a cobrança Asaas antes de cancelar (mesmo helper do `cancelOrder`); se o Asaas falhar, pula o pedido e tenta de novo na próxima hora.
+3. Check de "já existe PENDING/ACTIVE" + criação do pedido rodam em `$transaction` com `pg_advisory_xact_lock(hashtext(vehicleId))` (sem índice parcial único: o Prisma não declara e o `db push` o derrubaria); chamadas ao Asaas ficam fora da transação.
+4. Falha 4xx do Asaas ao achar/criar o cliente (exceto 401/403/429, que são problema nosso) → 400 "CPF/CNPJ inválido. Corrija no perfil e tente novamente." com rollback do pedido; demais falhas seguem 503.
+5. `qrCodeImage`: usa `encodedImage` como veio se já começar com `data:`, senão prefixa `data:image/png;base64,`; vazio → `null`.
+6. `dueDate` = amanhã no Brasil (UTC-3), calculado de `Date.now() - 3h + 1 dia` em UTC, sem depender do fuso do servidor.
+
+---
+
 ### Task 3: Webhook do Asaas
 
 **Files:**
@@ -156,6 +169,8 @@
   - `does not activate when payment.value differs from order.price` (ex.: 10 vs 29.9; loga erro com orderId e valores); `treats 29.9 and 29.90 as equal` (comparação em centavos).
   - **Review Focus 2:** `does not activate a CANCELLED order that was paid later` (loga `warn` com orderId).
   - **Review Focus 3:** `returns { ok: true, activated: 0 } for unknown event, missing payment, null externalReference, unknown order, and null payload` (sem lançar).
+
+- Pagamento recebido para pedido CANCELLED deve ser logado com `error` (orderId, paymentId, valor) para reconciliação manual.
 
 - [ ] **Step 2: Run to verify failure.**
   Run: `cd backend && npx jest src/featured/featured.service.spec.ts -t handleAsaasWebhook`

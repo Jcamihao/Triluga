@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { FeaturedOrderStatus } from '@prisma/client';
 import { EmailService } from '../email/email.service';
+import { FeaturedService } from '../featured/featured.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class ListingExpiryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly featuredService: FeaturedService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -111,18 +112,10 @@ export class ListingExpiryService {
 
   @Cron(CronExpression.EVERY_HOUR)
   async cancelStalePendingOrders() {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const count = await this.featuredService.cancelStalePendingOrders();
 
-    const result = await this.prisma.featuredOrder.updateMany({
-      where: {
-        status: FeaturedOrderStatus.PENDING,
-        createdAt: { lt: cutoff },
-      },
-      data: { status: FeaturedOrderStatus.CANCELLED },
-    });
-
-    if (result.count > 0) {
-      this.logger.log(`featured_orders_cancelled_stale count=${result.count}`);
+    if (count > 0) {
+      this.logger.log(`featured_orders_cancelled_stale count=${count}`);
     }
   }
 }
