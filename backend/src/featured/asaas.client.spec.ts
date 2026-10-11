@@ -1,3 +1,5 @@
+import * as http from 'node:http';
+import { AddressInfo } from 'node:net';
 import { ConfigService } from '@nestjs/config';
 import { AsaasClient, AsaasClientError } from './asaas.client';
 
@@ -74,6 +76,7 @@ describe('AsaasClient', () => {
       cpfCnpj: '12345678909',
       email: 'ana@example.com',
       externalReference: 'user-1',
+      notificationDisabled: true,
     });
     expect(result).toEqual({ id: 'cus_1' });
   });
@@ -194,5 +197,55 @@ describe('AsaasClient', () => {
     expect(perform).toHaveBeenCalledTimes(1);
     expect(error).toBeInstanceOf(AsaasClientError);
     expect((error as AsaasClientError).statusCode).toBe(400);
+  });
+});
+
+describe('AsaasClient HTTP headers', () => {
+  let server: http.Server;
+  let seenHeaders: http.IncomingHttpHeaders[];
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    seenHeaders = [];
+    server = http.createServer((req, res) => {
+      seenHeaders.push(req.headers);
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ id: 'cus_1', data: [] }));
+    });
+    await new Promise<void>((resolve) =>
+      server.listen(0, '127.0.0.1', resolve),
+    );
+    baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('sends User-Agent Triluga/<package version> (Node.js) and the access token on GET and POST', async () => {
+    const config = {
+      get: (key: string) =>
+        ({ 'asaas.apiKey': 'key', 'asaas.baseUrl': baseUrl })[key],
+    } as unknown as ConfigService;
+    const client = new AsaasClient(config);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { version } = require('../../package.json');
+
+    await client.findCustomerByExternalReference('user-1');
+    await client.createCustomer({
+      name: 'Ana',
+      cpfCnpj: '12345678909',
+      email: 'ana@example.com',
+      externalReference: 'user-1',
+    });
+
+    expect(seenHeaders).toHaveLength(2);
+    for (const headers of seenHeaders) {
+      expect(headers['user-agent']).toBe(`Triluga/${version} (Node.js)`);
+      expect(headers['user-agent']).toMatch(
+        /^Triluga\/\d+\.\d+\.\d+ \(Node\.js\)$/,
+      );
+      expect(headers['access_token']).toBe('key');
+    }
   });
 });

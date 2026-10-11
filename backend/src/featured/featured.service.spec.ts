@@ -48,10 +48,17 @@ function buildPrisma() {
   };
   const vehicleUpdate = jest.fn().mockResolvedValue({});
   const vehicleUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
+  const vehicleFindUniqueTx = jest
+    .fn()
+    .mockResolvedValue({ featuredUntil: null });
   const tx = {
     $executeRaw: jest.fn().mockResolvedValue(1),
     featuredOrder,
-    vehicle: { update: vehicleUpdate, updateMany: vehicleUpdateMany },
+    vehicle: {
+      findUnique: vehicleFindUniqueTx,
+      update: vehicleUpdate,
+      updateMany: vehicleUpdateMany,
+    },
   };
   return {
     $transaction: jest.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
@@ -827,6 +834,50 @@ describe('FeaturedService', () => {
         expect(errorSpy).not.toHaveBeenCalled();
       });
 
+      it('keeps a later existing featuredUntil (never shortens) while the order gets now + durationDays', async () => {
+        const later = new Date('2026-12-31T00:00:00Z');
+        prisma.tx.vehicle.findUnique.mockResolvedValue({
+          featuredUntil: later,
+        });
+
+        await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(prisma.tx.vehicle.findUnique).toHaveBeenCalledWith({
+          where: { id: VEHICLE_ID },
+          select: { featuredUntil: true },
+        });
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              expiresAt: new Date('2026-10-18T15:00:00Z'),
+            }),
+          }),
+        );
+        expect(prisma.vehicle.update).toHaveBeenCalledWith({
+          where: { id: VEHICLE_ID },
+          data: { isFeatured: true, featuredUntil: later },
+        });
+      });
+
+      it.each([
+        ['no existing featuredUntil', null],
+        ['an earlier featuredUntil', new Date('2026-10-12T00:00:00Z')],
+      ])('uses the new expiresAt with %s', async (_n, existing) => {
+        prisma.tx.vehicle.findUnique.mockResolvedValue({
+          featuredUntil: existing,
+        });
+
+        await service.handleAsaasWebhook(TOKEN, event());
+
+        expect(prisma.vehicle.update).toHaveBeenCalledWith({
+          where: { id: VEHICLE_ID },
+          data: {
+            isFeatured: true,
+            featuredUntil: new Date('2026-10-18T15:00:00Z'),
+          },
+        });
+      });
+
       it('activates a PENDING order on PAYMENT_CONFIRMED', async () => {
         const result = await service.handleAsaasWebhook(
           TOKEN,
@@ -1128,33 +1179,94 @@ describe('FeaturedService', () => {
     });
 
     describe('reversal events', () => {
-      const reversalEvents = [
+      const alwaysError = [
         'PAYMENT_REFUNDED',
-        'PAYMENT_DELETED',
         'PAYMENT_REVERSED',
         'PAYMENT_CHARGEBACK_REQUESTED',
         'PAYMENT_CHARGEBACK_DISPUTE',
       ];
+      const statuses = ['PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED'];
+      let logSpy: jest.SpyInstance;
 
-      it.each(reversalEvents)(
-        '%s changes no state and logs error with orderId, paymentId and event',
-        async (evt) => {
+      beforeEach(() => {
+        logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+      });
+
+      const expectNoStateChange = () => {
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.update).not.toHaveBeenCalled();
+        expect(prisma.vehicle.update).not.toHaveBeenCalled();
+        expect(prisma.vehicle.updateMany).not.toHaveBeenCalled();
+      };
+
+      const cases = alwaysError.flatMap((evt) =>
+        statuses.map((status) => [evt, status] as const),
+      );
+
+      it.each(cases)(
+        '%s on a %s order changes no state and logs error with orderId, paymentId and event',
+        async (evt, status) => {
+          prisma.featuredOrder.findUnique.mockResolvedValue({
+            ...pendingOrder,
+            status,
+          });
+
           const result = await service.handleAsaasWebhook(
             TOKEN,
             event({}, evt),
           );
 
           expect(result).toEqual({ ok: true, activated: 0 });
-          expect(prisma.$transaction).not.toHaveBeenCalled();
-          expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
-          expect(prisma.featuredOrder.update).not.toHaveBeenCalled();
-          expect(prisma.vehicle.update).not.toHaveBeenCalled();
-          expect(prisma.vehicle.updateMany).not.toHaveBeenCalled();
+          expectNoStateChange();
           expect(errorSpy).toHaveBeenCalledTimes(1);
           const msg = String(errorSpy.mock.calls[0][0]);
           expect(msg).toContain(ORDER_ID);
           expect(msg).toContain('pay_1');
           expect(msg).toContain(evt);
+        },
+      );
+
+      it('PAYMENT_DELETED on an ACTIVE order logs error for manual reconciliation', async () => {
+        prisma.featuredOrder.findUnique.mockResolvedValue({
+          ...pendingOrder,
+          status: 'ACTIVE',
+        });
+
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({}, 'PAYMENT_DELETED'),
+        );
+
+        expect(result).toEqual({ ok: true, activated: 0 });
+        expectNoStateChange();
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const msg = String(errorSpy.mock.calls[0][0]);
+        expect(msg).toContain(ORDER_ID);
+        expect(msg).toContain('pay_1');
+        expect(msg).toContain('PAYMENT_DELETED');
+      });
+
+      it.each(['PENDING', 'CANCELLED', 'EXPIRED'])(
+        'PAYMENT_DELETED on a %s order is informational only (no error)',
+        async (status) => {
+          prisma.featuredOrder.findUnique.mockResolvedValue({
+            ...pendingOrder,
+            status,
+          });
+
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            event({}, 'PAYMENT_DELETED'),
+          );
+
+          expect(result).toEqual({ ok: true, activated: 0 });
+          expectNoStateChange();
+          expect(errorSpy).not.toHaveBeenCalled();
+          expect(logSpy).toHaveBeenCalledTimes(1);
+          expect(String(logSpy.mock.calls[0][0])).toContain(
+            'cobrança removida; nada a fazer',
+          );
         },
       );
 
@@ -1169,18 +1281,21 @@ describe('FeaturedService', () => {
         expect(errorSpy).toHaveBeenCalledTimes(1);
       });
 
-      it('warns and returns noop for an unknown order', async () => {
-        prisma.featuredOrder.findUnique.mockResolvedValue(null);
+      it.each(['PAYMENT_REFUNDED', 'PAYMENT_DELETED'])(
+        '%s for an unknown order warns and returns noop',
+        async (evt) => {
+          prisma.featuredOrder.findUnique.mockResolvedValue(null);
 
-        const result = await service.handleAsaasWebhook(
-          TOKEN,
-          event({}, 'PAYMENT_REFUNDED'),
-        );
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            event({}, evt),
+          );
 
-        expect(result).toEqual({ ok: true, activated: 0 });
-        expect(warnSpy).toHaveBeenCalled();
-        expect(errorSpy).not.toHaveBeenCalled();
-      });
+          expect(result).toEqual({ ok: true, activated: 0 });
+          expect(warnSpy).toHaveBeenCalled();
+          expect(errorSpy).not.toHaveBeenCalled();
+        },
+      );
     });
 
     describe('error semantics', () => {

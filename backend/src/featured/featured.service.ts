@@ -255,9 +255,20 @@ export class FeaturedService implements OnModuleInit {
       });
       if (result.count === 0) return false;
 
+      // Nunca encurta um período já existente (ex.: extensão do admin).
+      const vehicle = await tx.vehicle.findUnique({
+        where: { id: order.vehicleId },
+        select: { featuredUntil: true },
+      });
+      const current = vehicle?.featuredUntil ?? null;
+      const featuredUntil =
+        current && current.getTime() > expiresAt.getTime()
+          ? current
+          : expiresAt;
+
       await tx.vehicle.update({
         where: { id: order.vehicleId },
-        data: { isFeatured: true, featuredUntil: expiresAt },
+        data: { isFeatured: true, featuredUntil },
       });
       return true;
     });
@@ -323,6 +334,14 @@ export class FeaturedService implements OnModuleInit {
       }
 
       if (isReversal) {
+        // Nossos cancelamentos apagam a cobrança no Asaas, que emite PAYMENT_DELETED:
+        // em pedido não ativo isso é esperado e não exige reconciliação.
+        if (event === 'PAYMENT_DELETED' && order.status !== 'ACTIVE') {
+          this.logger.log(
+            `Webhook Asaas ${eventLog}: cobrança removida; nada a fazer (orderId=${order.id} status=${order.status} paymentId=${payLog})`,
+          );
+          return noop;
+        }
         this.logger.error(
           `Webhook Asaas ${eventLog} (estorno/cancelamento): orderId=${order.id} paymentId=${payLog}. Nenhum estado alterado; reconciliar manualmente.`,
         );

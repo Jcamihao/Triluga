@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrivacyRequestStatus, UserStatus } from '@prisma/client';
 import { CacheQueueService } from '../cache-queue/cache-queue.service';
 import { EmailService } from '../email/email.service';
@@ -163,6 +167,10 @@ export class AdminService {
     });
 
     if (!order) throw new NotFoundException('Pedido não encontrado.');
+    if (order.status !== 'PENDING')
+      throw new BadRequestException(
+        'Somente pedidos pendentes podem ser ativados.',
+      );
 
     const expiresAt = new Date(
       Date.now() + order.durationDays * 24 * 60 * 60 * 1000,

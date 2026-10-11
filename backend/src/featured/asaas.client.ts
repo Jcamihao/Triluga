@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import * as http from 'node:http';
 import * as https from 'node:https';
+import { join } from 'node:path';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -24,6 +26,22 @@ const MAX_ATTEMPTS = 3; // 1 tentativa inicial + 2 retentativas (só GET/DELETE)
 const RETRY_BACKOFF_MS = 250;
 // Só métodos idempotentes repetem: repetir um POST pode duplicar a cobrança.
 const RETRYABLE_METHODS = new Set(['GET', 'DELETE']);
+
+/** Asaas rejeita requisições sem User-Agent (contas criadas após 2024-06-13). */
+function buildUserAgent(): string {
+  let version = 'unknown';
+  try {
+    // src/featured e dist/featured ficam ambos a dois níveis do package.json.
+    const pkg = JSON.parse(
+      readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+    ) as { version?: string };
+    if (pkg.version) version = pkg.version;
+  } catch {
+    // mantém 'unknown': o header ainda é enviado
+  }
+  return `Triluga/${version} (Node.js)`;
+}
+const USER_AGENT = buildUserAgent();
 
 export class AsaasClientError extends Error {
   constructor(
@@ -66,7 +84,8 @@ export class AsaasClient {
     const result = await this.request<{ id: string }>(
       'POST',
       '/customers',
-      params,
+      // Sem isso o Asaas envia e-mail/SMS de cobrança direto ao cliente por conta própria.
+      { ...params, notificationDisabled: true },
     );
     return { id: result.id };
   }
@@ -191,6 +210,7 @@ export class AsaasClient {
       const headers: Record<string, string> = {
         access_token: this.getApiKey(),
         Accept: 'application/json',
+        'User-Agent': USER_AGENT,
       };
       if (payload !== undefined) {
         headers['Content-Type'] = 'application/json';
