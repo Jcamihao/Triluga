@@ -157,6 +157,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   // My featured orders
   protected myFeaturedOrders: FeaturedOrder[] = [];
   protected cancellingOrderId: string | null = null;
+  protected cancelOrderError = '';
 
   // Plate lookup
   protected plateLookupLoading = false;
@@ -1333,12 +1334,18 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected cancelFeaturedOrder(orderId: string) {
     if (this.cancellingOrderId) return;
     this.cancellingOrderId = orderId;
+    this.cancelOrderError = '';
     this.featuredApiService.cancelOrder(orderId).subscribe({
       next: () => {
         this.cancellingOrderId = null;
         this.loadMyFeaturedOrders();
       },
-      error: () => { this.cancellingOrderId = null; },
+      error: (error) => {
+        this.cancellingOrderId = null;
+        this.cancelOrderError =
+          error?.error?.message ||
+          'Não foi possível cancelar agora. Tente novamente em instantes.';
+      },
     });
   }
 

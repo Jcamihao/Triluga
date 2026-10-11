@@ -703,9 +703,10 @@
       <div class="flex flex-col gap-3">
         <div
           *ngFor="let order of owner.myFeaturedOrders"
-          class="p-4 rounded-2xl border flex items-start justify-between gap-3"
+          class="p-4 rounded-2xl border flex flex-col gap-3"
           [ngClass]="order.status === 'ACTIVE' ? 'bg-amber-50 border-amber-200/60' : 'bg-surface-container-low border-outline-variant/20'"
         >
+          <div class="flex items-start justify-between gap-3">
           <div class="flex items-start gap-3 min-w-0">
             <span
               class="material-symbols-outlined text-xl mt-0.5"
@@ -716,7 +717,7 @@
               <p class="font-bold text-sm text-on-surface">{{ owner.featuredOrderStatusLabel(order.status) }}</p>
               <p class="text-xs text-on-surface-variant mt-0.5">
                 <span *ngIf="order.status === 'ACTIVE' && order.expiresAt">Expira em {{ order.expiresAt | date:'dd/MM/yyyy' }}</span>
-                <span *ngIf="order.status === 'PENDING'">Aguardando ativação · R$ {{ order.price | number:'1.2-2' }}</span>
+                <span *ngIf="order.status === 'PENDING'">Aguardando pagamento · R$ {{ order.price | number:'1.2-2' }}</span>
                 <span *ngIf="order.status === 'EXPIRED'">Encerrado em {{ order.expiresAt | date:'dd/MM/yyyy' }}</span>
                 <span *ngIf="order.status === 'CANCELLED'">Cancelado</span>
               </p>
@@ -731,8 +732,29 @@
           >
             {{ owner.cancellingOrderId === order.id ? '...' : 'Cancelar' }}
           </button>
+          </div>
+
+          <!-- Código PIX do pedido pendente (o QR não é guardado) -->
+          <div
+            *ngIf="order.status === 'PENDING' && order.pixCopiaECola"
+            class="w-full bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/20 flex flex-col gap-2"
+          >
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">PIX Copia e Cola</p>
+            <p class="font-mono text-xs text-on-surface break-all leading-relaxed">{{ order.pixCopiaECola }}</p>
+            <button
+              type="button"
+              class="mt-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-primary text-on-primary text-xs font-black w-full"
+              (click)="owner.copyPixCopiaECola(order.pixCopiaECola)"
+            >
+              <span class="material-symbols-outlined text-[14px]">content_copy</span>
+              Copiar código PIX
+            </button>
+          </div>
         </div>
       </div>
+      <p class="mt-3 text-xs text-error font-bold" *ngIf="owner.cancelOrderError">
+        {{ owner.cancelOrderError }}
+      </p>
     </section>
   </main>
 </div>

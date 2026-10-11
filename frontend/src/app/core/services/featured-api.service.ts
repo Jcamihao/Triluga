@@ -22,13 +22,6 @@ export class FeaturedApiService {
     );
   }
 
-  confirmPayment(orderId: string) {
-    return this.http.patch<FeaturedOrder>(
-      `${environment.apiBaseUrl}/featured/orders/${orderId}/confirm`,
-      {},
-    );
-  }
-
   cancelOrder(orderId: string) {
     return this.http.delete<FeaturedOrder>(
       `${environment.apiBaseUrl}/featured/orders/${orderId}`,
