@@ -27,6 +27,8 @@ const BRAZIL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WEBHOOK_ACTIVATING_EVENTS = ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'];
+/** Só cobranças ainda em aberto podem ser apagadas ao cancelar o pedido. */
+const DELETABLE_PAYMENT_STATUSES = ['PENDING', 'OVERDUE'];
 const WEBHOOK_REVERSAL_EVENTS = [
   'PAYMENT_REFUNDED',
   'PAYMENT_DELETED',
@@ -466,25 +468,54 @@ export class FeaturedService implements OnModuleInit {
   }
 
   /**
-   * Apaga a cobrança Asaas (se houver) e só então cancela o pedido, com guarda
-   * `status = PENDING` (o webhook pode ter ativado no meio). Só 404 do Asaas é
-   * ignorado (cobrança já inexistente). Retorna null se a cobrança não pôde ser
-   * apagada (pedido segue PENDING), senão o número de pedidos cancelados (0 = já
-   * não estava PENDING).
+   * Cancela o pedido PENDING com guarda `status = PENDING` (o webhook pode ter
+   * ativado no meio), mas antes consulta a cobrança no Asaas: o Asaas pode aceitar
+   * apagar uma cobrança já paga, então NUNCA confiamos nele para recusar.
+   * - sem cobrança, cobrança inexistente (404) ou `deleted`: cancela direto;
+   * - PENDING/OVERDUE: apaga (404 ignorado) e cancela;
+   * - qualquer outro status (RECEIVED, CONFIRMED, ...): não apaga nem cancela,
+   *   loga `error`; o pedido segue PENDING para ativação/reconciliação;
+   * - falha ao consultar ou apagar: pedido segue PENDING (nunca cancela às cegas).
+   * Retorna null quando o pedido foi mantido PENDING, senão o número de pedidos
+   * cancelados (0 = já não estava PENDING).
    */
   private async cancelPendingOrderGuarded(order: {
     id: string;
     paymentId: string | null;
   }): Promise<number | null> {
     if (order.paymentId) {
+      const paymentId = order.paymentId;
+      let mustDelete = false;
       try {
-        await this.asaas.deletePayment(order.paymentId);
+        const payment = await this.asaas.getPaymentStatus(paymentId);
+        if (!payment.deleted) {
+          if (!DELETABLE_PAYMENT_STATUSES.includes(payment.status)) {
+            this.logger.error(
+              `Pedido não cancelado: cobrança já paga/confirmada; pedido mantido PENDING para ativação/reconciliação: orderId=${order.id} paymentId=${safeLog(paymentId)} status=${safeLog(payment.status)}`,
+            );
+            return null;
+          }
+          mustDelete = true;
+        }
       } catch (err) {
         if (!(err instanceof AsaasClientError && err.statusCode === 404)) {
           this.logger.warn(
-            `Não foi possível apagar a cobrança Asaas ${order.paymentId} do pedido ${order.id}; pedido segue PENDING: ${(err as Error).message}`,
+            `Não foi possível consultar a cobrança Asaas ${safeLog(paymentId)} do pedido ${order.id}; pedido segue PENDING: ${(err as Error).message}`,
           );
           return null;
+        }
+      }
+
+      if (mustDelete) {
+        try {
+          await this.asaas.deletePayment(paymentId);
+        } catch (err) {
+          if (!(err instanceof AsaasClientError && err.statusCode === 404)) {
+            this.logger.warn(
+              `Não foi possível apagar a cobrança Asaas ${safeLog(paymentId)} do pedido ${order.id}; pedido segue PENDING: ${(err as Error).message}`,
+            );
+            return null;
+          }
         }
       }
     }

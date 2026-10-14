@@ -120,6 +120,16 @@ export class AsaasClient {
     };
   }
 
+  async getPaymentStatus(
+    paymentId: string,
+  ): Promise<{ status: string; deleted: boolean }> {
+    const result = await this.request<{ status: string; deleted?: boolean }>(
+      'GET',
+      `/payments/${paymentId}`,
+    );
+    return { status: result.status, deleted: result.deleted ?? false };
+  }
+
   async deletePayment(paymentId: string): Promise<void> {
     await this.request<unknown>('DELETE', `/payments/${paymentId}`);
   }

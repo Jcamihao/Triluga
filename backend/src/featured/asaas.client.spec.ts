@@ -119,6 +119,48 @@ describe('AsaasClient', () => {
     });
   });
 
+  it('getPaymentStatus calls GET /payments/{id} and maps status and deleted', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue(
+      ok({ id: 'pay_1', status: 'RECEIVED', deleted: false, value: 29.9 }),
+    );
+
+    const result = await client.getPaymentStatus('pay_1');
+
+    expect(perform).toHaveBeenCalledWith('GET', '/payments/pay_1', undefined);
+    expect(result).toEqual({ status: 'RECEIVED', deleted: false });
+  });
+
+  it('getPaymentStatus reports deleted true and defaults deleted to false when absent', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValueOnce(
+      ok({ id: 'pay_1', status: 'PENDING', deleted: true }),
+    );
+    expect(await client.getPaymentStatus('pay_1')).toEqual({
+      status: 'PENDING',
+      deleted: true,
+    });
+
+    perform.mockResolvedValueOnce(ok({ id: 'pay_1', status: 'PENDING' }));
+    expect(await client.getPaymentStatus('pay_1')).toEqual({
+      status: 'PENDING',
+      deleted: false,
+    });
+  });
+
+  it('getPaymentStatus retries on 5xx like any GET', async () => {
+    const { client, perform } = makeClient();
+    perform
+      .mockResolvedValueOnce({ statusCode: 500, body: '' })
+      .mockResolvedValueOnce(ok({ status: 'PENDING' }));
+
+    expect(await client.getPaymentStatus('pay_1')).toEqual({
+      status: 'PENDING',
+      deleted: false,
+    });
+    expect(perform).toHaveBeenCalledTimes(2);
+  });
+
   it('deletePayment calls DELETE /payments/{id}', async () => {
     const { client, perform } = makeClient();
     perform.mockResolvedValue(ok({ deleted: true, id: 'pay_1' }));

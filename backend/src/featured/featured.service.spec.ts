@@ -95,6 +95,9 @@ function buildAsaas() {
       payload: '000201pixcopiaecola',
       expirationDate: '2026-10-13 23:59:59',
     }),
+    getPaymentStatus: jest
+      .fn()
+      .mockResolvedValue({ status: 'PENDING', deleted: false }),
     deletePayment: jest.fn().mockResolvedValue(undefined),
   };
 }
@@ -562,6 +565,121 @@ describe('FeaturedService', () => {
       });
     });
 
+    it('checks the charge status before deleting it', async () => {
+      await service.cancelOrder(USER_ID, ORDER_ID);
+
+      expect(asaas.getPaymentStatus).toHaveBeenCalledWith('pay_1');
+      expect(asaas.getPaymentStatus.mock.invocationCallOrder[0]).toBeLessThan(
+        asaas.deletePayment.mock.invocationCallOrder[0],
+      );
+    });
+
+    it.each(['PENDING', 'OVERDUE'])(
+      'deletes the charge and then cancels when its status is %s',
+      async (status) => {
+        asaas.getPaymentStatus.mockResolvedValue({ status, deleted: false });
+
+        await service.cancelOrder(USER_ID, ORDER_ID);
+
+        expect(asaas.deletePayment).toHaveBeenCalledWith('pay_1');
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledWith({
+          where: { id: ORDER_ID, status: 'PENDING' },
+          data: { status: 'CANCELLED' },
+        });
+      },
+    );
+
+    it.each([
+      'RECEIVED',
+      'CONFIRMED',
+      'RECEIVED_IN_CASH',
+      'REFUND_REQUESTED',
+      'CHARGEBACK_REQUESTED',
+      'AWAITING_RISK_ANALYSIS',
+      'SOMETHING_NEW',
+    ])(
+      'does not delete nor cancel, logs error and throws 503 when the charge status is %s',
+      async (status) => {
+        asaas.getPaymentStatus.mockResolvedValue({ status, deleted: false });
+
+        const err = await service
+          .cancelOrder(USER_ID, ORDER_ID)
+          .catch((e) => e);
+
+        expect(err).toBeInstanceOf(ServiceUnavailableException);
+        expect(err.message).toBe(CANCEL_FAILURE_MESSAGE);
+        expect(asaas.deletePayment).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.update).not.toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const msg = String(errorSpy.mock.calls[0][0]);
+        expect(msg).toContain('cobrança já paga/confirmada');
+        expect(msg).toContain(ORDER_ID);
+        expect(msg).toContain('pay_1');
+        expect(msg).toContain(status);
+      },
+    );
+
+    it('sanitizes an untrusted status in the error log', async () => {
+      asaas.getPaymentStatus.mockResolvedValue({
+        status: 'X\nFORGED' + 'z'.repeat(500),
+        deleted: false,
+      });
+
+      await service.cancelOrder(USER_ID, ORDER_ID).catch(() => undefined);
+
+      const msg = String(errorSpy.mock.calls[0][0]);
+      expect(msg).not.toContain('\n');
+      expect(msg).not.toContain('z'.repeat(65));
+    });
+
+    it('cancels without deleting when the charge is already deleted on Asaas', async () => {
+      asaas.getPaymentStatus.mockResolvedValue({
+        status: 'RECEIVED_IN_CASH',
+        deleted: true,
+      });
+
+      await service.cancelOrder(USER_ID, ORDER_ID);
+
+      expect(asaas.deletePayment).not.toHaveBeenCalled();
+      expect(prisma.featuredOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: ORDER_ID, status: 'PENDING' },
+        data: { status: 'CANCELLED' },
+      });
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('cancels without deleting when getPaymentStatus answers 404 (charge already gone)', async () => {
+      asaas.getPaymentStatus.mockRejectedValue(
+        new AsaasClientError('not found', 404),
+      );
+
+      await service.cancelOrder(USER_ID, ORDER_ID);
+
+      expect(asaas.deletePayment).not.toHaveBeenCalled();
+      expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['5xx', new AsaasClientError('boom', 500)],
+      ['other 4xx', new AsaasClientError('forbidden', 403)],
+      ['network error', new Error('ETIMEDOUT')],
+    ])(
+      'never cancels blindly: getPaymentStatus failing with %s keeps the order PENDING (503) and warns',
+      async (_label, failure) => {
+        asaas.getPaymentStatus.mockRejectedValue(failure);
+
+        const err = await service
+          .cancelOrder(USER_ID, ORDER_ID)
+          .catch((e) => e);
+
+        expect(err).toBeInstanceOf(ServiceUnavailableException);
+        expect(asaas.deletePayment).not.toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalled();
+      },
+    );
+
     it.each([
       ['5xx', new AsaasClientError('boom', 500)],
       [
@@ -683,6 +801,64 @@ describe('FeaturedService', () => {
         data: { status: 'CANCELLED' },
       });
       expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it.each(['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH', 'SOMETHING_NEW'])(
+      'skips an order whose charge is %s (no delete, no cancel, error logged) and keeps going',
+      async (status) => {
+        prisma.featuredOrder.findMany.mockResolvedValue([
+          { id: 'o1', paymentId: 'pay_1' },
+          { id: 'o2', paymentId: 'pay_2' },
+        ]);
+        asaas.getPaymentStatus.mockImplementation((id: string) =>
+          Promise.resolve({
+            status: id === 'pay_1' ? status : 'PENDING',
+            deleted: false,
+          }),
+        );
+
+        const count = await service.cancelStalePendingOrders();
+
+        expect(count).toBe(1);
+        expect(asaas.deletePayment).toHaveBeenCalledTimes(1);
+        expect(asaas.deletePayment).toHaveBeenCalledWith('pay_2');
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledWith({
+          where: { id: 'o2', status: 'PENDING' },
+          data: { status: 'CANCELLED' },
+        });
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(String(errorSpy.mock.calls[0][0])).toContain('o1');
+      },
+    );
+
+    it('skips an order when getPaymentStatus fails with 5xx and never cancels blindly', async () => {
+      prisma.featuredOrder.findMany.mockResolvedValue([
+        { id: 'o1', paymentId: 'pay_1' },
+      ]);
+      asaas.getPaymentStatus.mockRejectedValue(
+        new AsaasClientError('boom', 500),
+      );
+
+      expect(await service.cancelStalePendingOrders()).toBe(0);
+      expect(asaas.deletePayment).not.toHaveBeenCalled();
+      expect(prisma.featuredOrder.updateMany).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it('cancels an order whose charge is gone per getPaymentStatus (404 or deleted:true) without deleting', async () => {
+      prisma.featuredOrder.findMany.mockResolvedValue([
+        { id: 'o1', paymentId: 'pay_1' },
+        { id: 'o2', paymentId: 'pay_2' },
+      ]);
+      asaas.getPaymentStatus.mockImplementation((id: string) =>
+        id === 'pay_1'
+          ? Promise.reject(new AsaasClientError('nf', 404))
+          : Promise.resolve({ status: 'PENDING', deleted: true }),
+      );
+
+      expect(await service.cancelStalePendingOrders()).toBe(2);
+      expect(asaas.deletePayment).not.toHaveBeenCalled();
     });
 
     it('cancels an order whose charge is already gone (404)', async () => {
