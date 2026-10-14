@@ -195,7 +195,7 @@ PATCH  /admin/users/:id/block                   Bloqueia usuário
 DELETE /admin/users/:id                         Exclui usuário permanentemente
 PATCH  /admin/vehicles/:id/deactivate           Desativa veículo
 DELETE /admin/vehicles/:id                      Exclui veículo
-PATCH  /admin/vehicles/:id/featured             Configura destaque
+PATCH  /admin/vehicles/:id/feature             Configura destaque
 GET    /admin/reports                           Lista denúncias
 PATCH  /admin/reports/:id                       Resolve denúncia
 GET    /admin/privacy/requests                  Solicitações LGPD
