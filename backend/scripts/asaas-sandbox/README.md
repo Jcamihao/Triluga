@@ -8,7 +8,7 @@ Objetivo: capturar um webhook **real** do sandbox do Asaas e conferir o header e
 
 ## Regras de segurança
 - A chave de **sandbox** vai só em variável de ambiente (`ASAAS_API_KEY`). Nunca em arquivo, `.env` ou log. Os scripts recusam `ASAAS_BASE_URL` que não seja de sandbox.
-- Trate a chave que foi colada em chat como exposta: gere outra no painel do sandbox antes de começar e revogue ao terminar.
+- A chave de sandbox pode ser a mesma já usada nos testes locais (decisão do dono: o histórico do chat e a máquina dele não são acessíveis a terceiros). Só rotacione se isso mudar.
 - O caminho público do webhook é um segredo longo e aleatório; o servidor responde 404 para qualquer outro caminho/método. O valor do token **nunca** é gravado (só se bate ou não).
 - A VPS é compartilhada com Lumen e SelahIA e tem outro agente atuando: **não rodar deploy ao mesmo tempo, não mexer em nada deles**, fazer backup de qualquer arquivo do nginx antes de editar.
 
@@ -55,7 +55,6 @@ Objetivo: capturar um webhook **real** do sandbox do Asaas e conferir o header e
    # guardar uma cópia do captured.jsonl (não contém o token) e então apagar /root/asaas-validation
    unset WEBHOOK_TOKEN CAPTURE_PATH ASAAS_API_KEY
    ```
-   E revogar a chave de sandbox no painel do Asaas.
 
 ## O que o `captured.jsonl` deve responder
 | Pergunta | Onde olhar | O código assume |

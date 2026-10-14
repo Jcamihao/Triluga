@@ -217,7 +217,9 @@
                     fuelTypeLabel(vehicle.fuelType)
                   }}</span>
                 </div>
-                <div class="flex flex-col pb-4">
+                <div
+                  class="flex flex-col border-b border-outline-variant/10 pb-4"
+                >
                   <span
                     class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
                     >Assentos</span
@@ -225,6 +227,48 @@
                   <span class="text-md font-medium"
                     >{{ vehicle.seats }} lugares</span
                   >
+                </div>
+                <div
+                  class="flex flex-col border-b border-outline-variant/10 pb-4"
+                >
+                  <span
+                    class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
+                    >Política de KM</span
+                  >
+                  <span class="text-md font-medium">{{
+                    kmPolicyLabel(vehicle)
+                  }}</span>
+                </div>
+                <div
+                  class="flex flex-col border-b border-outline-variant/10 pb-4"
+                >
+                  <span
+                    class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
+                    >Seguro</span
+                  >
+                  <span class="text-md font-medium">{{
+                    insuranceLabel(vehicle)
+                  }}</span>
+                </div>
+                <div
+                  class="flex flex-col border-b border-outline-variant/10 pb-4"
+                >
+                  <span
+                    class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
+                    >Condição mecânica</span
+                  >
+                  <span class="text-md font-medium">{{
+                    mechanicsConditionLabel(vehicle)
+                  }}</span>
+                </div>
+                <div class="flex flex-col pb-4">
+                  <span
+                    class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant/50 mb-1"
+                    >Status Detran</span
+                  >
+                  <span class="text-md font-medium">{{
+                    detranStatusLabel(vehicle)
+                  }}</span>
                 </div>
               </div>
 
