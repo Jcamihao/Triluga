@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
   Param,
   Post,
 } from '@nestjs/common';
@@ -57,6 +58,7 @@ export class FeaturedController {
   @Public()
   @SkipThrottle() // o token é a autenticação; rajada do Asaas não pode receber 429
   @Post('webhook/asaas')
+  @HttpCode(200) // o Asaas documenta 200; sem isso o @Post responde 201
   @ApiOperation({
     summary: 'Webhook Asaas — confirmação de pagamento PIX do destaque',
   })
