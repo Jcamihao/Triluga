@@ -225,11 +225,7 @@
 .home-web__hero h1 span,
 .home-web__trust-copy h2 span {
   display: block;
-  background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
+  color: var(--md-primary);
 }
 
 .home-web__hero p {

@@ -18,7 +18,7 @@
       </button>
       <div class="flex flex-col leading-none">
         <img src="assets/logo/logo-full.svg" alt="Triluga" class="h-9 w-auto" />
-        <span class="text-[10px] font-semibold text-on-surface-variant tracking-wide mt-0.5">Classificados de veículos P2P</span>
+        <span class="text-[12px] font-semibold text-on-surface-variant tracking-wide mt-0.5">Classificados de veículos P2P</span>
       </div>
     </div>
     <div class="flex items-center gap-4">
@@ -36,12 +36,12 @@
     </div>
   </header>
 
-  <main class="space-y-8 pt-2">
+  <div class="space-y-8 pt-2">
     <section class="px-6">
       <div
         class="bg-surface-container-low p-5 rounded-2xl shadow-sm border border-surface-container"
       >
-        <p class="text-[11px] font-bold text-primary uppercase tracking-widest mb-1">Encontre direto com o dono</p>
+        <p class="text-[12px] font-bold text-primary uppercase tracking-widest mb-1">Encontre direto com o dono</p>
         <h2
           class="!text-[22px] !font-bold tracking-tight text-on-surface mb-4 !leading-tight"
         >
@@ -99,7 +99,7 @@
               >{{ shortcut.icon }}</span
             >
           </div>
-          <span class="text-[12px] font-semibold text-on-surface-variant">{{
+          <span class="text-[13px] font-semibold text-on-surface-variant">{{
             shortcut.label
           }}</span>
         </button>
@@ -109,30 +109,30 @@
     <!-- Como funciona -->
     <section class="px-6">
       <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5">
-        <p class="text-[11px] font-bold text-primary uppercase tracking-widest mb-4">Como funciona</p>
+        <p class="text-[12px] font-bold text-primary uppercase tracking-widest mb-4">Como funciona</p>
         <div class="flex items-start gap-2">
           <div class="flex flex-col items-center flex-1 gap-2">
             <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background: rgba(0,109,55,0.1)">
               <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1">search</span>
             </div>
-            <span class="text-[12px] font-bold text-on-surface text-center leading-tight">Busca</span>
-            <span class="text-[11px] text-on-surface-variant text-center leading-tight">Filtre por tipo, cidade ou modelo</span>
+            <span class="text-[13px] font-bold text-on-surface text-center leading-tight">Busca</span>
+            <span class="text-[12px] text-on-surface-variant text-center leading-tight">Filtre por tipo, cidade ou modelo</span>
           </div>
           <span class="material-symbols-outlined text-outline-variant mt-3 flex-shrink-0">arrow_forward</span>
           <div class="flex flex-col items-center flex-1 gap-2">
             <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background: rgba(0,109,55,0.1)">
               <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1">chat_bubble</span>
             </div>
-            <span class="text-[12px] font-bold text-on-surface text-center leading-tight">Contata</span>
-            <span class="text-[11px] text-on-surface-variant text-center leading-tight">Fale direto com o proprietário</span>
+            <span class="text-[13px] font-bold text-on-surface text-center leading-tight">Contata</span>
+            <span class="text-[12px] text-on-surface-variant text-center leading-tight">Fale direto com o proprietário</span>
           </div>
           <span class="material-symbols-outlined text-outline-variant mt-3 flex-shrink-0">arrow_forward</span>
           <div class="flex flex-col items-center flex-1 gap-2">
             <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background: rgba(0,109,55,0.1)">
               <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1">handshake</span>
             </div>
-            <span class="text-[12px] font-bold text-on-surface text-center leading-tight">Fecha</span>
-            <span class="text-[11px] text-on-surface-variant text-center leading-tight">Combine tudo diretamente</span>
+            <span class="text-[13px] font-bold text-on-surface text-center leading-tight">Fecha</span>
+            <span class="text-[12px] text-on-surface-variant text-center leading-tight">Combine tudo diretamente</span>
           </div>
         </div>
       </div>
@@ -237,7 +237,7 @@
         Você chegou ao fim da lista!
       </p>
     </section>
-  </main>
+  </div>
 
   <footer
     class="bg-surface-container-lowest border-t border-outline-variant/30 mt-6 px-6 pt-8 pb-10 space-y-6"
@@ -252,44 +252,30 @@
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-3">
         <h4 class="font-bold text-sm text-on-surface uppercase tracking-wider">
-          Empresa
+          Plataforma
         </h4>
         <ul class="space-y-2">
           <li>
             <a
-              routerLink="/privacy"
+              routerLink="/search"
               class="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >Sobre nós</a
+              >Catálogo</a
             >
           </li>
           <li>
             <a
-              routerLink="/privacy"
+              routerLink="/anunciar-carro"
               class="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >Como funciona</a
-            >
-          </li>
-          <li>
-            <a
-              routerLink="/privacy"
-              class="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >Carreiras</a
+              >Anunciar veículo</a
             >
           </li>
         </ul>
       </div>
       <div class="space-y-3">
         <h4 class="font-bold text-sm text-on-surface uppercase tracking-wider">
-          Ajuda
+          Legal
         </h4>
         <ul class="space-y-2">
-          <li>
-            <a
-              routerLink="/privacy"
-              class="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >Central de Ajuda</a
-            >
-          </li>
           <li>
             <a
               routerLink="/privacy"
