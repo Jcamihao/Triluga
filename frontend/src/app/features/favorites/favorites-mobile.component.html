@@ -7,6 +7,11 @@
       <span
         class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
         (click)="toggleMenu()"
+        role="button"
+        tabindex="0"
+        aria-label="Abrir menu"
+        (keydown.enter)="toggleMenu()"
+        (keydown.space)="$event.preventDefault(); toggleMenu()"
         >menu</span
       >
       <img src="assets/logo/logo-full.svg" alt="Triluga" class="h-9 w-auto" />

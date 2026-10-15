@@ -20,6 +20,7 @@
           Filtrar Resultados
         </h2>
         <button
+          aria-label="Fechar filtros"
           class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors"
           (click)="close.emit()"
         >
@@ -177,6 +178,7 @@
             [style.width.%]="priceTrackWidth"
           ></div>
           <input
+            aria-label="Preço mínimo"
             class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20"
             max="1000"
             min="50"
@@ -186,6 +188,7 @@
             (ngModelChange)="syncPriceSliders('min')"
           />
           <input
+            aria-label="Preço máximo"
             class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20"
             max="1000"
             min="50"
@@ -218,6 +221,7 @@
               class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors"
             >
               <input
+                aria-label="Cilindrada mínima"
                 type="number"
                 [(ngModel)]="draft.minEngineCc"
                 class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50"
@@ -233,6 +237,7 @@
               class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors"
             >
               <input
+                aria-label="Cilindrada máxima"
                 type="number"
                 [(ngModel)]="draft.maxEngineCc"
                 class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50"
@@ -259,6 +264,7 @@
           class="flex items-center bg-surface-container rounded-xl px-4 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-colors"
         >
           <input
+            aria-label="Raio de busca (km)"
             type="number"
             [(ngModel)]="draft.radiusKm"
             class="w-full bg-transparent border-none p-0 outline-none focus:ring-0 text-on-surface font-black placeholder:font-medium placeholder:text-on-surface-variant/50"

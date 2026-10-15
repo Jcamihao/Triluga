@@ -7,6 +7,7 @@
   >
     <div class="flex items-center gap-4">
       <button
+        aria-label="Voltar para o início"
         class="hover:opacity-80 transition-opacity scale-95 active:transition-all"
         type="button"
         routerLink="/"
@@ -103,6 +104,7 @@
               [disabled]="loading"
             />
             <button
+              [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
               class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40"
               type="button"
               (click)="showPassword = !showPassword"

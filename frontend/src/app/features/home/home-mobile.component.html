@@ -55,6 +55,7 @@
             >search</span
           >
           <input
+            aria-label="Buscar por cidade, modelo ou marca"
             class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest rounded-full border border-outline-variant/30 focus:border-primary focus:ring-0 text-base text-on-surface placeholder:text-outline/60 shadow-sm"
             placeholder="Cidade, modelo ou marca..."
             type="text"
@@ -145,6 +146,9 @@
           *ngFor="let cat of featuredCategoryCards"
           class="relative h-36 rounded-2xl overflow-hidden group shadow-sm cursor-pointer"
           (click)="goToSearch(cat.params)"
+          role="link"
+          tabindex="0"
+          (keydown.enter)="goToSearch(cat.params)"
         >
           <img
             [alt]="cat.label"

@@ -232,6 +232,7 @@
                 <!-- Stars -->
                 <div class="flex items-center gap-1">
                   <button
+                    [attr.aria-label]="'Nota ' + star + ' de 5'"
                     *ngFor="let star of [1,2,3,4,5]"
                     type="button"
                     (click)="setReviewRating(star)"
@@ -250,6 +251,7 @@
                 </div>
 
                 <textarea
+                  aria-label="Comentário da avaliação (opcional)"
                   class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 resize-none"
                   placeholder="Conte sua experiência (opcional)"
                   rows="3"
@@ -477,7 +479,7 @@
 
       <div class="vehicle-detail-web__modal-body">
         <label class="vehicle-detail-web__modal-label">Motivo</label>
-        <select class="vehicle-detail-web__modal-select" [(ngModel)]="reportReason">
+        <select aria-label="Motivo" class="vehicle-detail-web__modal-select" [(ngModel)]="reportReason">
           <option value="">Selecione um motivo</option>
           <option value="FAKE_LISTING">Anúncio falso</option>
           <option value="WRONG_PRICE">Preço incorreto</option>
@@ -490,6 +492,7 @@
 
         <label class="vehicle-detail-web__modal-label">Descrição (opcional)</label>
         <textarea
+          aria-label="Descrição (opcional)"
           class="vehicle-detail-web__modal-textarea"
           [(ngModel)]="reportDescription"
           placeholder="Descreva o problema..."

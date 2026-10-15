@@ -129,6 +129,7 @@
           </ng-container>
           <ng-template #pricePhotoSlotEmpty>
             <button
+              aria-label="Adicionar fotos"
               class="absolute inset-0 grid place-items-center"
               type="button"
               (click)="vehiclePhotosInput.click()"
@@ -179,6 +180,7 @@
           <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tabela FIPE</p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select
+              aria-label="Marca na tabela FIPE"
               [(ngModel)]="owner.fipeSelectedBrandCode"
               (ngModelChange)="owner.onFipeBrandChange()"
               [disabled]="!owner.fipeBrands.length"
@@ -188,6 +190,7 @@
               <option *ngFor="let b of owner.fipeBrands" [value]="b.code">{{ b.name }}</option>
             </select>
             <select
+              aria-label="Modelo na tabela FIPE"
               [(ngModel)]="owner.fipeSelectedModelCode"
               (ngModelChange)="owner.onFipeModelChange()"
               [disabled]="!owner.fipeModels.length"
@@ -197,6 +200,7 @@
               <option *ngFor="let m of owner.fipeModels" [value]="m.code">{{ m.name }}</option>
             </select>
             <select
+              aria-label="Ano na tabela FIPE"
               [(ngModel)]="owner.fipeSelectedYearCode"
               (ngModelChange)="owner.onFipeYearChange()"
               [disabled]="!owner.fipeYears.length"
@@ -255,6 +259,7 @@
               >R$</span
             >
             <input
+              aria-label="Valor pedido por semana (R$)"
               class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary-container text-lg font-semibold text-on-surface"
               placeholder="0,00"
               type="number"
@@ -333,6 +338,7 @@
         </p>
         <div class="relative">
           <input
+            aria-label="Endereço de retirada"
             class="w-full bg-surface-container-lowest border-none rounded-xl p-4 pr-12 text-on-surface font-medium focus:ring-2 focus:ring-primary/20"
             placeholder="Bairro, avenida ou ponto de encontro"
             [ngModel]="owner.vehicleDraft.addressLine"
@@ -370,6 +376,7 @@
           Descrição
         </label>
         <textarea
+          aria-label="Descrição"
           class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/20"
           rows="4"
           placeholder="Conte os diferenciais do carro, regras básicas e itens inclusos."

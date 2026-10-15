@@ -7,6 +7,7 @@
   >
     <div class="flex items-center gap-4">
       <button
+        aria-label="Voltar para o login"
         class="hover:opacity-80 transition-opacity scale-95 active:transition-all"
         type="button"
         routerLink="/auth/login"
@@ -411,6 +412,7 @@
             required
           />
           <button
+            [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
             class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
             type="button"
             (click)="showPassword = !showPassword"
@@ -502,6 +504,7 @@
               {{ passwordsMatch ? 'check_circle' : 'cancel' }}
             </span>
             <button
+              [attr.aria-label]="showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'"
               class="text-on-surface-variant leading-none"
               type="button"
               (click)="showConfirmPassword = !showConfirmPassword"

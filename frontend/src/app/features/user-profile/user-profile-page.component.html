@@ -7,6 +7,11 @@
       <span
         class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
         (click)="goBack()"
+        role="button"
+        tabindex="0"
+        aria-label="Voltar"
+        (keydown.enter)="goBack()"
+        (keydown.space)="$event.preventDefault(); goBack()"
         >arrow_back</span
       >
       <h1
@@ -19,6 +24,11 @@
       <span
         class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
         (click)="copyProfileLink()"
+        role="button"
+        tabindex="0"
+        aria-label="Copiar link do perfil"
+        (keydown.enter)="copyProfileLink()"
+        (keydown.space)="$event.preventDefault(); copyProfileLink()"
         >{{ linkCopied ? 'check' : 'share' }}</span
       >
     </div>
@@ -396,6 +406,7 @@
             <div *ngIf="showReviewForm" class="space-y-3">
               <div class="flex gap-1 justify-center">
                 <button
+                  [attr.aria-label]="'Nota ' + star + ' de 5'"
                   *ngFor="let star of ratingOptions; trackBy: trackByValue"
                   type="button"
                   class="transition-transform active:scale-90"
@@ -412,6 +423,7 @@
               </div>
 
               <textarea
+                aria-label="Comentário da avaliação (opcional)"
                 class="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm text-on-surface placeholder:text-on-surface-variant/40 resize-none focus:ring-2 focus:ring-primary/20"
                 rows="3"
                 placeholder="Conte como foi a experiência (opcional)"
@@ -696,6 +708,7 @@
           <div *ngIf="showReviewForm" class="space-y-4 max-w-lg">
             <div class="flex gap-2">
               <button
+                [attr.aria-label]="'Nota ' + star + ' de 5'"
                 *ngFor="let star of ratingOptions; trackBy: trackByValue"
                 type="button"
                 class="transition-transform hover:scale-110 active:scale-95"
@@ -712,6 +725,7 @@
             </div>
 
             <textarea
+              aria-label="Comentário da avaliação (opcional)"
               class="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl p-4 text-sm text-on-surface placeholder:text-on-surface-variant/40 resize-none focus:ring-2 focus:ring-primary/20 focus:outline-none"
               rows="3"
               placeholder="Conte como foi a experiência (opcional)"

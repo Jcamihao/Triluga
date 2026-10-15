@@ -71,6 +71,11 @@
       <span
         class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
         (click)="owner.uiStateService.toggleMenu()"
+        role="button"
+        tabindex="0"
+        aria-label="Abrir menu"
+        (keydown.enter)="owner.uiStateService.toggleMenu()"
+        (keydown.space)="$event.preventDefault(); owner.uiStateService.toggleMenu()"
         >menu</span
       >
       <img src="assets/logo/logo-full.svg" alt="Triluga" class="h-9 w-auto" />
@@ -784,7 +789,7 @@
           {{ owner.promotingVehicle.title }}
         </p>
       </div>
-      <button type="button" (click)="owner.closePromoteModal()" class="text-on-surface-variant p-1">
+      <button aria-label="Fechar" type="button" (click)="owner.closePromoteModal()" class="text-on-surface-variant p-1">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>

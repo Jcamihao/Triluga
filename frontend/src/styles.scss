@@ -816,6 +816,13 @@ label > span:first-child {
   }
 }
 
+/* ── Foco de teclado (só aparece para navegação por teclado) ── */
+
+:where(a, button, summary, [role='button'], [role='link'], [tabindex='0']):focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
 /* ── Reduced motion ── */
 
 @media (prefers-reduced-motion: reduce) {

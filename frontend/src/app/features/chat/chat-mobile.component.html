@@ -45,6 +45,7 @@
               search
             </span>
             <input
+              aria-label="Pesquisar mensagens ou veículos"
               class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40"
               placeholder="Pesquisar mensagens ou veículos..."
               type="text"
@@ -104,6 +105,9 @@
               class="p-4 rounded-xl flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden"
               [ngClass]="conversationItemClasses(conversation)"
               (click)="openConversation(conversation.id)"
+              role="link"
+              tabindex="0"
+              (keydown.enter)="$event.target === $event.currentTarget ? openConversation(conversation.id) : null"
             >
               <div
                 class="absolute left-0 top-0 bottom-0 w-1 bg-primary transform transition-transform duration-300"
@@ -186,6 +190,7 @@
           >
             <div class="flex items-center gap-4">
               <button
+                aria-label="Voltar para as conversas"
                 class="text-on-background active:scale-95 duration-200"
                 routerLink="/chat"
                 type="button"
@@ -459,6 +464,7 @@
 
               <div class="flex-1 relative">
                 <input
+                  aria-label="Escreva sua mensagem"
                   name="draftMessage"
                   [(ngModel)]="draftMessage"
                   class="w-full bg-surface-container border-none rounded-full py-3.5 px-6 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-background/30 text-on-background"
@@ -468,6 +474,7 @@
                 />
               </div>
               <button
+                [attr.aria-label]="isSending ? 'Enviando mensagem' : 'Enviar mensagem'"
                 type="submit"
                 class="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-lg shadow-primary/20 active:scale-90 transition-transform disabled:opacity-50 disabled:grayscale"
                 [disabled]="!canSendMessage"

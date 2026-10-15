@@ -89,6 +89,7 @@
           Estilo da moto
         </label>
         <select
+          aria-label="Estilo da moto"
           class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/20 transition-all"
           [(ngModel)]="owner.vehicleDraft.motorcycleStyle"
         >
@@ -106,6 +107,7 @@
           Cilindrada
         </label>
         <input
+          aria-label="Cilindrada"
           class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/20 transition-all"
           type="number"
           min="50"
@@ -183,6 +185,7 @@
           </div>
         </div>
         <select
+          aria-label="Status Detran"
           class="w-full bg-surface-container-low border-none rounded-xl py-4 px-4 text-sm font-medium focus:ring-2 focus:ring-primary"
           [ngModel]="owner.detranStatus"
           (ngModelChange)="owner.setDetranStatus($event)"

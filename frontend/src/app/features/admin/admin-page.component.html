@@ -195,7 +195,7 @@
           <!-- Search -->
           <div class="flex items-center gap-2 bg-surface-container rounded-xl px-3.5 py-2.5">
             <span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
-            <input type="text"
+            <input aria-label="Buscar usuários" type="text"
               class="flex-1 bg-transparent text-sm outline-none placeholder:text-on-surface-variant/60 text-on-surface"
               placeholder="Buscar por nome, e-mail ou cidade…"
               [(ngModel)]="userSearch">
@@ -284,7 +284,7 @@
           <!-- Search -->
           <div class="flex items-center gap-2 bg-surface-container rounded-xl px-3.5 py-2.5">
             <span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
-            <input type="text"
+            <input aria-label="Buscar veículos" type="text"
               class="flex-1 bg-transparent text-sm outline-none placeholder:text-on-surface-variant/60 text-on-surface"
               placeholder="Buscar por título, cidade ou proprietário…"
               [(ngModel)]="vehicleSearch">
@@ -454,6 +454,7 @@
             </span>
             <span *ngIf="r.adminNotes" class="text-xs text-on-surface-variant">Nota: {{ r.adminNotes }}</span>
             <textarea
+              aria-label="Notas internas (opcional)"
               *ngIf="r.status === 'OPEN' || r.status === 'REVIEWING'"
               class="mt-1 w-full text-xs border border-outline-variant/40 rounded-xl p-2.5 resize-none bg-surface-container-low outline-none focus:border-primary transition-colors"
               rows="2"

@@ -72,6 +72,7 @@
     <!-- Actions (Compare & Favorite) -->
     <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
       <button
+        [attr.aria-label]="isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
         type="button"
         class="w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center transition-all active:scale-90 hover:bg-surface-container-high"
         [class.text-error]="isFavorite"
@@ -90,6 +91,7 @@
       </button>
 
       <button
+        [attr.aria-label]="isCompared ? 'Remover da comparação' : 'Adicionar à comparação'"
         type="button"
         class="w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center transition-all active:scale-90 hover:bg-surface-container-high"
         [class.text-primary]="isCompared"
@@ -166,6 +168,7 @@
         </span>
       </div>
       <button
+        tabindex="-1" aria-hidden="true"
         class="bg-surface-container-low p-3 rounded-full hover:bg-primary hover:text-on-primary transition-all duration-300"
         type="button"
       >
