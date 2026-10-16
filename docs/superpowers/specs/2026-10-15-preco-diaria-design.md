@@ -44,7 +44,7 @@ Desconto para semana/mês, preço semanal ou mensal definido pelo dono, **filtro
 
 **Respostas** de anúncio (detalhe, listagem, favoritos, chat, perfil público): `dailyRate`, `minRentalDays`, `weeklyEstimate`, `monthlyEstimate` e `minPeriodTotal`. **Compatibilidade por uma versão:** continuam devolvendo `weeklyRate` (= `weeklyEstimate`), para um frontend antigo — que lê `weeklyRate ?? dailyRate` e escreve "/semana" — **seguir mostrando o preço certo**.
 
-**Requisições** de criação/edição: `dailyRate` (obrigatório) e `minRentalDays` (opcional). Por uma versão, `weeklyRate` ainda é aceito quando `dailyRate` não vem (convertido ÷ 7); se vêm os dois, `dailyRate` vale.
+**Requisições** de criação/edição: `dailyRate` (obrigatório) e `minRentalDays` (opcional). **A presença de `weeklyRate` na requisição identifica um cliente legado:** por uma versão ele ainda é aceito e vale ÷ 7, e um `dailyRate` enviado junto é **ignorado** (no contrato antigo o `dailyRate` já significava o valor semanal; tratá-lo como diária multiplicaria o preço por 7). Clientes novos nunca enviam `weeklyRate`.
 
 **Busca:** novos parâmetros `minDailyRate` / `maxDailyRate` filtram a diária. Os antigos `minPrice` / `maxPrice` continuam por uma versão com o **significado antigo (semanal, convertido ÷ 7)** e saem na seguinte — mudar o significado sem trocar o nome faria clientes antigos buscarem errado em silêncio. A ordenação por preço passa a usar `dailyRate`. Alertas de busca comparam a diária com o filtro (já convertido pela migration).
 
