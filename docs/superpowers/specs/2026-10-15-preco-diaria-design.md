@@ -34,7 +34,7 @@ Desconto para semana/mês, preço semanal ou mensal definido pelo dono, **filtro
 1. `UPDATE "Vehicle" SET "dailyRate" = ROUND(COALESCE("weeklyRate","dailyRate") / 7, 2);` — `weeklyRate` é a fonte do preço hoje (campo obrigatório na criação; o filtro e a ordenação leem ele). O `COALESCE` cobre linhas antigas sem `weeklyRate`.
 2. `ALTER TABLE "Vehicle" ADD COLUMN "minRentalDays" INTEGER;`
 3. `ALTER TABLE "Vehicle" DROP COLUMN "weeklyRate";`
-4. **Alertas de busca** (`SearchAlert.filters` é JSON com `minPrice`/`maxPrice` em valor semanal): converter esses dois campos ÷ 7 (`jsonb_set`). O `queryHash` **não** é recalculado (depende do código); consequência aceita: a pessoa pode criar um alerta equivalente a um antigo sem o sistema perceber o duplicado.
+4. **Alertas de busca** (`SearchAlert.filters` é JSON com `minPrice`/`maxPrice` em valor semanal): remover essas duas chaves e gravar `minDailyRate`/`maxDailyRate` com o valor ÷ 7 (`jsonb_set`/`jsonb_build_object`). O `queryHash` (hoje `JSON.stringify` dos filtros normalizados) **não** é recalculado (depende do código); consequência aceita: a pessoa pode criar um alerta equivalente a um antigo sem o sistema perceber o duplicado.
 
 **Verificações obrigatórias antes do deploy (na produção, só leitura):** quantos anúncios têm `dailyRate` ≠ `weeklyRate` (se houver, qual dos dois o dono enxerga hoje na tela — a conversão parte do `weeklyRate`; confirmar), quantos alertas têm faixa de preço, e o dump do banco. Diferença de arredondamento: R$ 699/semana vira R$ 99,86/dia e a estimativa semanal mostra R$ 699,02 — documentado.
 
@@ -46,7 +46,7 @@ Desconto para semana/mês, preço semanal ou mensal definido pelo dono, **filtro
 
 **Requisições** de criação/edição: `dailyRate` (obrigatório) e `minRentalDays` (opcional). **A presença de `weeklyRate` na requisição identifica um cliente legado:** por uma versão ele ainda é aceito e vale ÷ 7, e um `dailyRate` enviado junto é **ignorado** (no contrato antigo o `dailyRate` já significava o valor semanal; tratá-lo como diária multiplicaria o preço por 7). Clientes novos nunca enviam `weeklyRate`.
 
-**Busca:** novos parâmetros `minDailyRate` / `maxDailyRate` filtram a diária. Os antigos `minPrice` / `maxPrice` continuam por uma versão com o **significado antigo (semanal, convertido ÷ 7)** e saem na seguinte — mudar o significado sem trocar o nome faria clientes antigos buscarem errado em silêncio. A ordenação por preço passa a usar `dailyRate`. Alertas de busca comparam a diária com o filtro (já convertido pela migration).
+**Busca:** novos parâmetros `minDailyRate` / `maxDailyRate` filtram a diária. Os antigos `minPrice` / `maxPrice` continuam por uma versão com o **significado antigo (semanal, convertido ÷ 7)** e saem na seguinte — mudar o significado sem trocar o nome faria clientes antigos buscarem errado em silêncio. A ordenação por preço passa a usar `dailyRate`. Alertas de busca passam a guardar `minDailyRate`/`maxDailyRate` (entrada legada `minPrice`/`maxPrice` é convertida ÷ 7) e comparam com a diária do anúncio.
 
 ## 6. Experiência
 
