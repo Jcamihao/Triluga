@@ -220,7 +220,7 @@ model Vehicle {
   fuelType           FuelType
   seats              Int
   dailyRate          Decimal            @db.Decimal(10, 2)
-  weeklyRate         Decimal?           @db.Decimal(10, 2)
+  minRentalDays      Int?
   kmPolicy           KmPolicy           @default(FREE)
   motorcycleStyle    MotorcycleStyle?
   engineCc           Int?
