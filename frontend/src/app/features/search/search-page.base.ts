@@ -16,6 +16,13 @@ import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehic
 import { LocationService } from 'src/app/core/services/location.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SearchAlertsApiService } from '../../core/services/search-alerts-api.service';
+import {
+  applyPriceChange,
+  buildAlertFilters,
+  priceTrackLeft,
+  priceTrackWidth,
+  readDailyRateParams,
+} from './search-price.util';
 
 type SearchQuery = {
   q: string;
@@ -25,8 +32,8 @@ type SearchQuery = {
   motorcycleStyle: string;
   minEngineCc: string;
   maxEngineCc: string;
-  minPrice: string;
-  maxPrice: string;
+  minDailyRate: string;
+  maxDailyRate: string;
   latitude: string;
   longitude: string;
   radiusKm: string;
@@ -100,8 +107,8 @@ export abstract class SearchPageBase {
     motorcycleStyle: '',
     minEngineCc: '',
     maxEngineCc: '',
-    minPrice: '',
-    maxPrice: '',
+    minDailyRate: '',
+    maxDailyRate: '',
     latitude: '',
     longitude: '',
     radiusKm: '',
@@ -128,8 +135,8 @@ export abstract class SearchPageBase {
         motorcycleStyle: params.get('motorcycleStyle') || '',
         minEngineCc: params.get('minEngineCc') || '',
         maxEngineCc: params.get('maxEngineCc') || '',
-        minPrice: params.get('minPrice') || '',
-        maxPrice: params.get('maxPrice') || '',
+        // minPrice/maxPrice (semanais) só são lidos aqui, para URLs antigas.
+        ...readDailyRateParams(params),
         latitude: params.get('latitude') || '',
         longitude: params.get('longitude') || '',
         radiusKm: params.get('radiusKm') || '',
@@ -300,30 +307,15 @@ export abstract class SearchPageBase {
   }
 
   protected setWebPrice(changed: 'min' | 'max', value: string) {
-    const normalizedValue = String(
-      Math.max(0, Math.min(2000, Number(value) || 0)),
-    );
-    const currentMin = Number(this.query.minPrice || 0);
-    const currentMax = Number(this.query.maxPrice || 2000);
-
-    if (changed === 'min') {
-      const nextMin = Math.min(Number(normalizedValue), currentMax);
-      this.query.minPrice = nextMin > 0 ? String(nextMin) : '';
-      return;
-    }
-
-    const nextMax = Math.max(Number(normalizedValue), currentMin);
-    this.query.maxPrice = nextMax < 2000 ? String(nextMax) : '';
+    this.query = { ...this.query, ...applyPriceChange(this.query, changed, value) };
   }
 
   protected get webPriceTrackLeft() {
-    return (Number(this.query.minPrice || 0) / 2000) * 100;
+    return priceTrackLeft(this.query);
   }
 
   protected get webPriceTrackWidth() {
-    const min = Number(this.query.minPrice || 0);
-    const max = Number(this.query.maxPrice || 2000);
-    return ((max - min) / 2000) * 100;
+    return priceTrackWidth(this.query);
   }
 
   protected loadMore() {
@@ -362,8 +354,11 @@ export abstract class SearchPageBase {
       pills.push({ key: 'vehicleType', label: 'Motos' });
     }
 
-    if (this.query.maxPrice) {
-      pills.push({ key: 'maxPrice', label: `Até R$ ${this.query.maxPrice}` });
+    if (this.query.maxDailyRate) {
+      pills.push({
+        key: 'maxDailyRate',
+        label: `Até R$ ${this.query.maxDailyRate}/dia`,
+      });
     }
 
     if (this.hasLocationFilter) {
@@ -506,8 +501,8 @@ export abstract class SearchPageBase {
   protected get hasActiveFilters() {
     const q = this.query;
     return !!(
-      q.q || q.city || q.vehicleType || q.category || q.minPrice ||
-      q.maxPrice || q.transmission || q.fuelType || q.minYear ||
+      q.q || q.city || q.vehicleType || q.category || q.minDailyRate ||
+      q.maxDailyRate || q.transmission || q.fuelType || q.minYear ||
       q.maxYear || q.motorcycleStyle || q.latitude
     );
   }
@@ -530,21 +525,7 @@ export abstract class SearchPageBase {
     if (this.savingAlert) return;
     this.savingAlert = true;
 
-    const filters: Record<string, unknown> = {};
-    const q = this.query;
-    if (q.q) filters['q'] = q.q;
-    if (q.city) filters['city'] = q.city;
-    if (q.vehicleType) filters['vehicleType'] = q.vehicleType;
-    if (q.category) filters['category'] = q.category;
-    if (q.minPrice) filters['minPrice'] = q.minPrice;
-    if (q.maxPrice) filters['maxPrice'] = q.maxPrice;
-    if (q.transmission) filters['transmission'] = q.transmission;
-    if (q.fuelType) filters['fuelType'] = q.fuelType;
-    if (q.minYear) filters['minYear'] = q.minYear;
-    if (q.maxYear) filters['maxYear'] = q.maxYear;
-    if (q.latitude) filters['latitude'] = q.latitude;
-    if (q.longitude) filters['longitude'] = q.longitude;
-    if (q.radiusKm) filters['radiusKm'] = q.radiusKm;
+    const filters = buildAlertFilters(this.query);
 
     this.searchAlertsApiService
       .create({ title: this.alertTitle || undefined, filters })

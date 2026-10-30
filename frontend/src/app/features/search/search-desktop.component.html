@@ -127,7 +127,7 @@
             <label
               class="text-xs font-bold uppercase tracking-widest text-outline"
             >
-              Faixa de Preço (Semana)
+              Faixa de Preço (Dia)
             </label>
             <div class="search-web__price-range px-2 pt-4">
               <div class="search-web__range-track"></div>
@@ -140,9 +140,9 @@
                 aria-label="Preço mínimo"
                 type="range"
                 min="0"
-                max="2000"
-                step="50"
-                [value]="query.minPrice || '0'"
+                max="300"
+                step="10"
+                [value]="query.minDailyRate || '0'"
                 (input)="setWebPrice('min', $any($event.target).value)"
                 class="search-web__range-input"
               />
@@ -150,18 +150,18 @@
                 aria-label="Preço máximo"
                 type="range"
                 min="0"
-                max="2000"
-                step="50"
-                [value]="query.maxPrice || '2000'"
+                max="300"
+                step="10"
+                [value]="query.maxDailyRate || '300'"
                 (input)="setWebPrice('max', $any($event.target).value)"
                 class="search-web__range-input"
               />
               <div class="flex justify-between mt-4">
                 <span class="text-xs font-bold"
-                  >R$ {{ query.minPrice || '0' }}</span
+                  >R$ {{ query.minDailyRate || '0' }}/dia</span
                 >
                 <span class="text-xs font-bold">
-                  R$ {{ query.maxPrice || '2.000+' }}
+                  R$ {{ query.maxDailyRate || '300+' }}/dia
                 </span>
               </div>
             </div>
@@ -322,8 +322,8 @@
                 vehicleType: query.vehicleType,
                 city: cityFilter.value,
                 q: query.q,
-                minPrice: query.minPrice,
-                maxPrice: query.maxPrice,
+                minDailyRate: query.minDailyRate,
+                maxDailyRate: query.maxDailyRate,
                 transmission: query.transmission,
                 fuelType: query.fuelType,
                 minYear: query.minYear,

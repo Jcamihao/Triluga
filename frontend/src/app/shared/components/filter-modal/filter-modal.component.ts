@@ -7,8 +7,17 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import {
+  PRICE_RANGE_MAX,
+  priceTrackLeft,
+  priceTrackWidth,
+  toPriceFilters,
+} from '../../../features/search/search-price.util';
 
-type FilterDraft = {
+const PRICE_MODAL_DEFAULT_MIN = 10;
+const PRICE_MODAL_DEFAULT_MAX = 80;
+
+export type FilterDraft = {
   vehicleType: string;
   category: string;
   motorcycleStyle: string;
@@ -16,8 +25,8 @@ type FilterDraft = {
   fuelType: string;
   minEngineCc: string;
   maxEngineCc: string;
-  minPrice: string;
-  maxPrice: string;
+  minDailyRate: string;
+  maxDailyRate: string;
   radiusKm: string;
 };
 
@@ -60,9 +69,13 @@ export class FilterModalComponent implements OnDestroy {
     if (!this.draft.vehicleType) {
       this.draft.vehicleType = 'CAR';
     }
-    if (!this.draft.minPrice && !this.draft.maxPrice) {
-      this.draft.minPrice = '50';
-      this.draft.maxPrice = '500';
+    if (!this.draft.minDailyRate && !this.draft.maxDailyRate) {
+      this.draft.minDailyRate = String(PRICE_MODAL_DEFAULT_MIN);
+      this.draft.maxDailyRate = String(PRICE_MODAL_DEFAULT_MAX);
+    } else {
+      // Máximo vazio = sem teto: o controle fica no topo ("R$ 300+").
+      this.draft.minDailyRate = this.draft.minDailyRate || '0';
+      this.draft.maxDailyRate = this.draft.maxDailyRate || String(PRICE_RANGE_MAX);
     }
   }
 
@@ -81,10 +94,14 @@ export class FilterModalComponent implements OnDestroy {
       fuelType: '',
       minEngineCc: '',
       maxEngineCc: '',
-      minPrice: '',
-      maxPrice: '',
+      minDailyRate: '',
+      maxDailyRate: '',
       radiusKm: '',
     });
+  }
+
+  protected applyDraft() {
+    this.apply.emit(toPriceFilters(this.draft));
   }
 
   protected onVehicleTypeChange() {
@@ -136,27 +153,28 @@ export class FilterModalComponent implements OnDestroy {
   }
 
   protected syncPriceSliders(changed: 'min' | 'max') {
-    const min = parseInt(this.draft.minPrice) || 50;
-    const max = parseInt(this.draft.maxPrice) || 1000;
+    const min = parseInt(this.draft.minDailyRate) || 0;
+    const max = parseInt(this.draft.maxDailyRate) || PRICE_RANGE_MAX;
 
     if (min > max) {
       if (changed === 'min') {
-        this.draft.minPrice = max.toString();
+        this.draft.minDailyRate = max.toString();
       } else {
-        this.draft.maxPrice = min.toString();
+        this.draft.maxDailyRate = min.toString();
       }
     }
   }
 
+  protected get isMaxBounded() {
+    return (parseInt(this.draft.maxDailyRate) || PRICE_RANGE_MAX) < PRICE_RANGE_MAX;
+  }
+
   protected get priceTrackLeft() {
-    const min = parseInt(this.draft.minPrice) || 50;
-    return ((min - 50) / 950) * 100;
+    return priceTrackLeft(this.draft);
   }
 
   protected get priceTrackWidth() {
-    const min = parseInt(this.draft.minPrice) || 50;
-    const max = parseInt(this.draft.maxPrice) || 1000;
-    return ((max - min) / 950) * 100;
+    return priceTrackWidth(this.draft);
   }
 
   private createDraft(): FilterDraft {
@@ -168,8 +186,8 @@ export class FilterModalComponent implements OnDestroy {
       fuelType: '',
       minEngineCc: '',
       maxEngineCc: '',
-      minPrice: '50',
-      maxPrice: '500',
+      minDailyRate: String(PRICE_MODAL_DEFAULT_MIN),
+      maxDailyRate: String(PRICE_MODAL_DEFAULT_MAX),
       radiusKm: '',
     };
   }

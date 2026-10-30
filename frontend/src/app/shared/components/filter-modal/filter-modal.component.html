@@ -160,12 +160,13 @@
           <h3
             class="text-xs font-bold uppercase tracking-[0.15em] text-outline"
           >
-            Preço Diário
+            Faixa de preço (dia)
           </h3>
-          <div class="text-primary text-lg font-black tracking-tight">
-            R$ {{ draft.minPrice || '50' }} -
-            <span *ngIf="draft.maxPrice">R$ {{ draft.maxPrice }}</span
-            ><span *ngIf="!draft.maxPrice">R$ 1.000+</span>
+          <div class="text-primary text-lg font-black tracking-tight whitespace-nowrap shrink-0">
+            R$ {{ draft.minDailyRate || '0' }} -
+            <span *ngIf="isMaxBounded">R$ {{ draft.maxDailyRate }}</span
+            ><span *ngIf="!isMaxBounded">R$ 300+</span>
+            <span class="text-xs font-bold text-outline">/dia</span>
           </div>
         </div>
         <div class="relative w-full h-8 flex items-center">
@@ -180,21 +181,21 @@
           <input
             aria-label="Preço mínimo"
             class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20"
-            max="1000"
-            min="50"
+            max="300"
+            min="0"
             step="10"
             type="range"
-            [(ngModel)]="draft.minPrice"
+            [(ngModel)]="draft.minDailyRate"
             (ngModelChange)="syncPriceSliders('min')"
           />
           <input
             aria-label="Preço máximo"
             class="absolute w-full h-2.5 appearance-none bg-transparent custom-range-dual z-20"
-            max="1000"
-            min="50"
+            max="300"
+            min="0"
             step="10"
             type="range"
-            [(ngModel)]="draft.maxPrice"
+            [(ngModel)]="draft.maxDailyRate"
             (ngModelChange)="syncPriceSliders('max')"
           />
         </div>
@@ -402,7 +403,7 @@
       </button>
       <button
         class="flex-1 py-4 bg-primary text-on-primary font-black text-base rounded-[1.25rem] shadow-lg shadow-primary/30 active:scale-95 transition-all w-full"
-        (click)="apply.emit(draft)"
+        (click)="applyDraft()"
       >
         Aplicar Filtros
       </button>
