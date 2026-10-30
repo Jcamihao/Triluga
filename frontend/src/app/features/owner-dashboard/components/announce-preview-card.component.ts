@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { minRentalLabel } from '../../../shared/utils/rental-pricing.util';
 
 @Component({
   selector: 'app-announce-preview-card',
@@ -35,10 +36,16 @@ import { Component, Input } from '@angular/core';
           </div>
 
           <div class="text-right">
-            <p class="text-xs uppercase font-bold text-outline">Por semana</p>
+            <p class="text-xs uppercase font-bold text-outline">A partir de</p>
             <p class="text-lg font-extrabold text-primary whitespace-nowrap">
-              R$ {{ owner.vehicleDraft.weeklyRate || 0 | number: '1.0-0' }}
+              R$ {{ owner.vehicleDraft.dailyRate || 0 | number: '1.0-0' }}
+              <span class="text-sm font-medium text-on-surface/50">/ dia</span>
             </p>
+            <span
+              *ngIf="owner.vehicleDraft.minRentalDays"
+              class="inline-block rounded-full bg-surface-container-low px-2 py-0.5 text-[10px] font-bold text-on-surface-variant"
+              >mín. {{ minRentalLabel(owner.vehicleDraft.minRentalDays) }}</span
+            >
           </div>
         </div>
 
@@ -60,4 +67,5 @@ import { Component, Input } from '@angular/core';
 })
 export class AnnouncePreviewCardComponent {
   @Input({ required: true }) owner!: any;
+  protected readonly minRentalLabel = minRentalLabel;
 }

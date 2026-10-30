@@ -224,11 +224,11 @@
                 <p class="text-[10px] text-on-surface-variant mt-0.5">{{ owner.fipePrice.referenceMonth }}</p>
               </div>
               <div class="text-right">
-                <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Sugestão semanal</p>
+                <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Sugestão por dia</p>
                 <p class="text-lg font-black text-on-surface">
-                  {{ owner.fipePrice.suggestedWeeklyRateMin | currency:'BRL':'symbol':'1.2-2' }}
+                  {{ owner.fipeSuggestedDailyMin | currency:'BRL':'symbol':'1.2-2' }}
                   –
-                  {{ owner.fipePrice.suggestedWeeklyRateMax | currency:'BRL':'symbol':'1.2-2' }}
+                  {{ owner.fipeSuggestedDailyMax | currency:'BRL':'symbol':'1.2-2' }}
                 </p>
               </div>
             </div>
@@ -237,7 +237,7 @@
               class="w-full py-3 rounded-full bg-primary text-on-primary text-sm font-black hover:opacity-90 transition-opacity"
               (click)="owner.useFipePrice()"
             >
-              Usar valor mínimo sugerido
+              Usar valor sugerido
             </button>
           </div>
 
@@ -250,28 +250,58 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-on-surface-variant block">
-            Valor Pedido / Semana (R$)
-          </label>
-          <div class="relative flex items-center">
-            <span class="absolute left-4 font-bold text-on-surface-variant"
-              >R$</span
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label
+              class="text-sm font-bold text-on-surface-variant block"
+              for="announce-daily-rate"
             >
-            <input
-              aria-label="Valor pedido por semana (R$)"
-              class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary-container text-lg font-semibold text-on-surface"
-              placeholder="0,00"
-              type="number"
-              min="1"
-              [(ngModel)]="owner.vehicleDraft.weeklyRate"
-            />
+              Valor da diária (R$)
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-4 font-bold text-on-surface-variant"
+                >R$</span
+              >
+              <input
+                id="announce-daily-rate"
+                name="dailyRate"
+                aria-label="Valor da diária (R$)"
+                class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary-container text-lg font-semibold text-on-surface"
+                placeholder="0,00"
+                type="number"
+                min="1"
+                inputmode="decimal"
+                [(ngModel)]="owner.vehicleDraft.dailyRate"
+              />
+            </div>
+            <p
+              class="text-[10px] text-outline uppercase tracking-wider font-bold pt-1"
+            >
+              Valor de referência exibido no anúncio. O acerto é feito diretamente com o interessado.
+            </p>
           </div>
-          <p
-            class="text-[10px] text-outline uppercase tracking-wider font-bold pt-1"
-          >
-            Valor de referência exibido no anúncio. O acerto é feito diretamente com o interessado.
-          </p>
+          <div class="space-y-2">
+            <label
+              class="text-sm font-bold text-on-surface-variant block"
+              for="announce-min-rental"
+            >
+              Tempo mínimo de aluguel
+            </label>
+            <select
+              id="announce-min-rental"
+              name="minRentalDays"
+              aria-label="Tempo mínimo de aluguel"
+              class="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary-container text-base font-semibold leading-normal text-on-surface"
+              [(ngModel)]="owner.vehicleDraft.minRentalDays"
+            >
+              <option
+                *ngFor="let option of owner.minRentalOptions"
+                [ngValue]="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
         </div>
         <div class="space-y-2">
           <label class="text-sm font-bold text-on-surface-variant block">
@@ -310,16 +340,25 @@
           </p>
         </div>
       </div>
+      <div *ngIf="owner.hasValidDailyRate" class="mt-6">
+        <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+          Como o interessado verá
+        </p>
+        <app-rental-estimate
+          [dailyRate]="owner.vehicleDraft.dailyRate"
+          [minRentalDays]="owner.vehicleDraft.minRentalDays"
+        ></app-rental-estimate>
+      </div>
       <div class="mt-8 p-4 bg-primary-container/10 rounded-lg flex gap-4">
         <span class="material-symbols-outlined text-primary">analytics</span>
         <div>
           <p class="text-sm font-bold text-primary">Estimativa de ganhos</p>
           <p class="text-xs text-on-secondary-container">
-            Com base no seu preço, você poderá faturar até
+            Com base na sua diária, uma estimativa (30 dias) de
             <span class="font-bold text-primary">
-              R$ {{ owner.estimatedDraftMonthlyRevenue | number: '1.0-0' }}/mês
+              R$ {{ owner.estimatedDraftMonthlyRevenue | number: '1.0-0' }}
             </span>
-            em 4 semanas.
+            se o veículo ficar alugado o mês inteiro.
           </p>
         </div>
       </div>

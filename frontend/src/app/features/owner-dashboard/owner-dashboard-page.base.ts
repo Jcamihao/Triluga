@@ -10,6 +10,11 @@ import { PlateApiService } from '../../core/services/plate-api.service';
 import { GeocodeApiService } from '../../core/services/geocode-api.service';
 import { FipeApiService, FipeBrand, FipeModel, FipeYear, FipePriceResult } from '../../core/services/fipe-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
+import {
+  MIN_RENTAL_OPTIONS,
+  dailyFromLegacyWeekly,
+  monthlyEstimate,
+} from '../../shared/utils/rental-pricing.util';
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
 import { VehicleWizardComponent } from './components/vehicle-wizard.component';
 import {
@@ -78,6 +83,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
   protected readonly fallbackImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='280' viewBox='0 0 400 280'%3E%3Crect width='400' height='280' fill='%23f1f5f9'/%3E%3Cpath d='M60 180 L80 145 L110 108 L290 108 L320 145 L340 180 L340 196 L60 196Z' fill='%23cbd5e1'/%3E%3Cpath d='M115 108 L135 72 L265 72 L285 108Z' fill='%2394a3b8'/%3E%3Cpath d='M140 74 L154 74 L154 102 L130 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M162 70 L238 70 L248 102 L152 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M246 74 L260 74 L270 102 L246 102Z' fill='%23e2e8f0'/%3E%3Ccircle cx='115' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='115' cy='196' r='16' fill='%2394a3b8'/%3E%3Ccircle cx='285' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='285' cy='196' r='16' fill='%2394a3b8'/%3E%3C/svg%3E";
+  protected readonly minRentalOptions = MIN_RENTAL_OPTIONS;
   protected readonly vehicleTypeOptions: SelectOption<VehicleType>[] = [
     { label: 'Carro', value: 'CAR' },
     { label: 'Moto', value: 'MOTORCYCLE' },
@@ -464,8 +470,31 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
   protected useFipePrice() {
     if (!this.fipePrice) return;
-    this.vehicleDraft.weeklyRate = this.fipePrice.suggestedWeeklyRateMin;
+    this.vehicleDraft.dailyRate = this.fipeSuggestedDailyMin;
     this.fipeOpen = false;
+  }
+
+  // Respostas em cache de antes do deploy trazem só a sugestão semanal legada.
+  protected get fipeSuggestedDailyMin() {
+    const price = this.fipePrice;
+    if (!price) return 0;
+    return (
+      price.suggestedDailyRateMin ??
+      dailyFromLegacyWeekly(price.suggestedWeeklyRateMin)
+    );
+  }
+
+  protected get fipeSuggestedDailyMax() {
+    const price = this.fipePrice;
+    if (!price) return 0;
+    return (
+      price.suggestedDailyRateMax ??
+      dailyFromLegacyWeekly(price.suggestedWeeklyRateMax)
+    );
+  }
+
+  protected get hasValidDailyRate() {
+    return Number(this.vehicleDraft.dailyRate) >= 1;
   }
 
   protected setVehicleType(vehicleType: VehicleType) {
@@ -527,7 +556,9 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   }
 
   protected get estimatedDraftMonthlyRevenue() {
-    return Number(this.vehicleDraft.weeklyRate || 0) * 4;
+    return this.hasValidDailyRate
+      ? monthlyEstimate(Number(this.vehicleDraft.dailyRate))
+      : 0;
   }
 
   protected get generatedVehicleTitle() {
@@ -638,10 +669,10 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       {
         title: 'Preço definido',
         description:
-          Number(this.vehicleDraft.weeklyRate) > 0
-            ? 'O preço semanal já está pronto para publicação.'
-            : 'Informe o preço por semana para publicar.',
-        done: Number(this.vehicleDraft.weeklyRate) > 0,
+          this.hasValidDailyRate
+            ? 'O valor da diária já está pronto para publicação.'
+            : 'Informe o valor da diária para publicar.',
+        done: this.hasValidDailyRate,
       },
     ];
 
@@ -703,7 +734,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
         (this.editingVehicle?.images?.length ?? 0) +
           this.pendingVehicleFiles.length >
           2 &&
-        Number(d.weeklyRate) > 0 &&
+        Number(d.dailyRate) >= 1 &&
         d.city?.trim() &&
         d.state?.trim().length === 2 &&
         d.addressLine?.trim() &&
@@ -904,7 +935,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
-      weeklyRate: vehicle.weeklyRate || vehicle.dailyRate,
+      dailyRate: vehicle.dailyRate,
+      minRentalDays: vehicle.minRentalDays ?? null,
       kmPolicy: vehicle.kmPolicy || 'FREE',
       motorcycleStyle: vehicle.motorcycleStyle || undefined,
       engineCc: vehicle.engineCc || undefined,
@@ -1425,7 +1457,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       transmission: 'AUTOMATIC',
       fuelType: 'FLEX',
       seats: 5,
-      weeklyRate: 1050,
+      dailyRate: 150,
+      minRentalDays: null,
       kmPolicy: 'FREE',
       motorcycleStyle: undefined,
       engineCc: undefined,
@@ -1453,7 +1486,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       addressLine: this.vehicleDraft.addressLine?.trim() || '',
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
-      weeklyRate: Number(this.vehicleDraft.weeklyRate),
+      dailyRate: Number(this.vehicleDraft.dailyRate),
+      minRentalDays: this.vehicleDraft.minRentalDays ?? null,
       kmPolicy: this.vehicleDraft.kmPolicy || 'FREE',
       hasInsurance: !!this.vehicleDraft.hasInsurance,
       mechanicsCondition: this.vehicleDraft.mechanicsCondition || undefined,
@@ -1477,9 +1511,9 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       !payload.description ||
       Number.isNaN(payload.year) ||
       Number.isNaN(payload.seats) ||
-      !payload.weeklyRate ||
-      Number.isNaN(payload.weeklyRate) ||
-      payload.weeklyRate < 1 ||
+      !payload.dailyRate ||
+      Number.isNaN(payload.dailyRate) ||
+      payload.dailyRate < 1 ||
       (payload.trunkSize !== undefined && Number.isNaN(payload.trunkSize)) ||
       (payload.engineCc !== undefined && Number.isNaN(payload.engineCc))
     ) {
@@ -1533,8 +1567,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       missingFields.push('assentos');
     }
 
-    if (Number(this.vehicleDraft.weeklyRate) < 1) {
-      missingFields.push('preço por semana');
+    if (!this.hasValidDailyRate) {
+      missingFields.push('valor da diária');
     }
 
     if (!this.vehicleDraft.description.trim()) {
@@ -1554,7 +1588,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       'cidade',
       'estado',
       'endereço de retirada',
-      'preço por semana',
+      'valor da diária',
       'descrição',
       'mínimo de 3 fotos',
     ]);
@@ -1584,7 +1618,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       estado: 'informe a UF com 2 letras',
       'endereço de retirada': 'informe bairro, avenida ou ponto de encontro',
       assentos: 'informe a quantidade de lugares',
-      'preço por semana': 'informe um valor semanal maior que zero',
+      'valor da diária': 'informe um valor da diária maior que zero (mínimo R$ 1,00)',
       descrição: 'escreva a descrição do anúncio',
       'mínimo de 3 fotos': `adicione pelo menos ${this.minimumVehiclePhotoCount} fotos reais do veículo`,
     };
