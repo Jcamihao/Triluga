@@ -4,6 +4,12 @@ import { RouterLink } from '@angular/router';
 import { VehicleCardItem } from '../../core/models/domain.models';
 import { CompareService } from '../../core/services/compare.service';
 import { UiStateService } from '../../core/services/ui-state.service';
+import {
+  RENTAL_DISCLAIMER,
+  minRentalLabel,
+  monthlyEstimate,
+  weeklyEstimate,
+} from '../../shared/utils/rental-pricing.util';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 export const COMPARE_IMPORTS = [
@@ -81,8 +87,18 @@ export abstract class ComparePageBase {
     }`;
   }
 
-  protected weeklyPrice(vehicle: VehicleCardItem) {
-    return vehicle.weeklyRate ?? vehicle.dailyRate;
+  protected readonly disclaimer = RENTAL_DISCLAIMER;
+
+  protected weekEstimate(vehicle: VehicleCardItem) {
+    return weeklyEstimate(vehicle.dailyRate);
+  }
+
+  protected monthEstimate(vehicle: VehicleCardItem) {
+    return monthlyEstimate(vehicle.dailyRate);
+  }
+
+  protected minRentalText(vehicle: VehicleCardItem) {
+    return minRentalLabel(vehicle.minRentalDays);
   }
 
   protected vehicleTypeLabel(vehicle: VehicleCardItem) {

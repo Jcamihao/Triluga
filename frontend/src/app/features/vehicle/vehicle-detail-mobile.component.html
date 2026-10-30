@@ -144,18 +144,23 @@
           A partir de
         </p>
         <p class="text-3xl font-black text-primary leading-none">
-          {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
-          <span class="text-sm font-medium text-on-surface-variant"
-            >/semana</span
-          >
+          {{ dailyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
+          <span class="text-sm font-medium text-on-surface-variant">/dia</span>
         </p>
         <p
           class="text-[11px] font-bold text-primary-container bg-primary/5 px-2 py-1 mt-1 rounded-lg inline-block"
         >
-          Valor semanal do anúncio
+          Diária do anúncio
         </p>
       </div>
     </div>
+
+    <app-rental-estimate
+      class="mt-4 block"
+      [dailyRate]="dailyRateValue"
+      [minRentalDays]="minRentalDaysValue"
+      [compact]="true"
+    ></app-rental-estimate>
   </section>
 
   <!-- Specs Grid: Clean & Modern -->

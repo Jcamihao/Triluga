@@ -441,3 +441,11 @@
 .compare-web__support a:hover {
   background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
 }
+
+.compare-web__disclaimer {
+  margin: 0;
+  padding: 14px 20px 18px;
+  color: rgba(60, 74, 60, 0.8);
+  font-size: 12px;
+  line-height: 1.45;
+}

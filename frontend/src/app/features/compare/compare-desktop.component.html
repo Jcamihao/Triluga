@@ -71,12 +71,9 @@
                   />
                   <h2>{{ vehicle.title }}</h2>
                   <strong>
-                    {{
-                      weeklyPrice(vehicle)
-                        | currency: 'BRL' : 'symbol' : '1.0-0'
-                    }}
+                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
                   </strong>
-                  <small>por semana</small>
+                  <small>por dia</small>
                 </article>
               </th>
               <th
@@ -102,7 +99,7 @@
               </td>
             </tr>
             <tr>
-              <td>Preço semanal</td>
+              <td>Diária</td>
               <td
                 *ngFor="
                   let vehicle of compareService.items();
@@ -110,10 +107,44 @@
                 "
               >
                 <strong class="compare-web__price">
-                  {{
-                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
-                  }}
+                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }}
                 </strong>
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Estimativa 7 dias</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ weekEstimate(vehicle) | currency: 'BRL' : 'symbol' : '1.2-2' }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Estimativa 30 dias</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ monthEstimate(vehicle) | currency: 'BRL' : 'symbol' : '1.2-2' }}
+              </td>
+              <td *ngIf="compareService.count() < 4"></td>
+            </tr>
+            <tr>
+              <td>Tempo mínimo</td>
+              <td
+                *ngFor="
+                  let vehicle of compareService.items();
+                  trackBy: trackById
+                "
+              >
+                {{ minRentalText(vehicle) }}
               </td>
               <td *ngIf="compareService.count() < 4"></td>
             </tr>
@@ -314,6 +345,7 @@
           </tbody>
         </table>
       </div>
+      <p class="compare-web__disclaimer">{{ disclaimer }}</p>
     </section>
 
     <section class="compare-web__support" *ngIf="compareService.count()">

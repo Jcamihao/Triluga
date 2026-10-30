@@ -16,6 +16,7 @@ import { FavoritesService } from '../../core/services/favorites.service';
 import { ReviewsApiService } from '../../core/services/reviews-api.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { ReportReason, VehicleCardItem, VehicleDetail } from '../../core/models/domain.models';
+import { RentalEstimateComponent } from '../../shared/components/rental-estimate/rental-estimate.component';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
@@ -38,6 +39,7 @@ export const VEHICLE_DETAIL_IMPORTS = [
   CurrencyPipe,
   FormsModule,
   RouterLink,
+  RentalEstimateComponent,
   VehicleCardComponent,
   WebHeaderComponent,
 ];
@@ -495,12 +497,12 @@ export abstract class VehicleDetailPageBase {
     return `${this.totalReviewCount} avaliações`;
   }
 
-  protected get weeklyRateValue() {
-    if (!this.vehicle) {
-      return 0;
-    }
+  protected get dailyRateValue() {
+    return this.vehicle?.dailyRate ?? 0;
+  }
 
-    return this.vehicle.weeklyRate ?? this.vehicle.dailyRate;
+  protected get minRentalDaysValue() {
+    return this.vehicle?.minRentalDays ?? null;
   }
 
   protected get kmPolicyLabel() {

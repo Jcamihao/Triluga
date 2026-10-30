@@ -286,9 +286,9 @@
             <div class="vehicle-detail-web__price-row">
               <div>
                 <strong>
-                  {{ weeklyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
+                  {{ dailyRateValue | currency: 'BRL' : 'symbol' : '1.0-0' }}
                 </strong>
-                <span>/semana</span>
+                <span>/dia</span>
               </div>
 
               <div class="vehicle-detail-web__rating-pill">
@@ -296,6 +296,12 @@
                 {{ displayRating | number: '1.1-1' }}
               </div>
             </div>
+
+            <app-rental-estimate
+              class="mb-4 block"
+              [dailyRate]="dailyRateValue"
+              [minRentalDays]="minRentalDaysValue"
+            ></app-rental-estimate>
 
             <div class="vehicle-detail-web__seller-description">
               <small>Descrição do anunciante</small>
