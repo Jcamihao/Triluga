@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -19,6 +20,7 @@ import { SearchAlertsService } from '../search-alerts/search-alerts.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { ListVehiclesQueryDto } from './dto/list-vehicles-query.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { resolveWriteDailyRate } from './rental-pricing';
 
 @Injectable()
 export class VehiclesService {
@@ -570,6 +572,11 @@ export class VehiclesService {
   }
 
   async create(ownerId: string, dto: CreateVehicleDto) {
+    // weeklyRate (cliente legado) vale ÷ 7 e vence qualquer dailyRate enviado junto.
+    const dailyRate = resolveWriteDailyRate(dto);
+    if (dailyRate === undefined) {
+      throw new BadRequestException('Informe o valor da diária (dailyRate).');
+    }
     try {
       const slug = await this.generateUniqueSlug(
         dto.brand,
@@ -593,8 +600,8 @@ export class VehiclesService {
           transmission: dto.transmission,
           fuelType: dto.fuelType,
           seats: dto.seats,
-          dailyRate: dto.dailyRate ?? dto.weeklyRate,
-          weeklyRate: dto.weeklyRate,
+          dailyRate,
+          minRentalDays: dto.minRentalDays ?? null,
           kmPolicy: dto.kmPolicy,
           motorcycleStyle: dto.motorcycleStyle,
           engineCc: dto.engineCc,
@@ -645,13 +652,19 @@ export class VehiclesService {
 
   async update(ownerId: string, vehicleId: string, dto: UpdateVehicleDto) {
     await this.ensureVehicleOwnership(ownerId, vehicleId);
+    // weeklyRate não existe mais no banco: nunca pode chegar ao Prisma via spread.
+    const { weeklyRate, dailyRate, minRentalDays, ...rest } = dto;
+    const resolvedDailyRate = resolveWriteDailyRate({ weeklyRate, dailyRate });
     try {
       const vehicle = await this.prisma.vehicle.update({
         where: { id: vehicleId },
         data: {
-          ...dto,
-          dailyRate: dto.dailyRate ?? dto.weeklyRate,
-          weeklyRate: dto.weeklyRate,
+          ...rest,
+          ...(resolvedDailyRate !== undefined && {
+            dailyRate: resolvedDailyRate,
+          }),
+          // null remove o tempo mínimo; chave ausente mantém o valor atual.
+          ...(minRentalDays !== undefined && { minRentalDays }),
           plate: dto.plate ? dto.plate.toUpperCase() : undefined,
           state: dto.state ? dto.state.toUpperCase() : undefined,
         },

@@ -11,6 +11,7 @@ import {
 import {
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -21,7 +22,9 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
+import { MIN_RENTAL_DAYS_OPTIONS } from '../rental-pricing';
 
 export class CreateVehicleDto {
   @ApiProperty()
@@ -94,19 +97,32 @@ export class CreateVehicleDto {
   seats: number;
 
   @ApiPropertyOptional({
-    example: 999.9,
+    example: 120,
     description:
-      'Campo legado. Quando enviado, deve representar o valor semanal.',
+      'Valor da diária (R$). Obrigatório, exceto para clientes legados que enviam weeklyRate.',
   })
-  @IsOptional()
+  @ValidateIf((o) => o.weeklyRate === undefined || o.weeklyRate === null)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   dailyRate?: number;
 
-  @ApiProperty({ example: 999.9 })
+  @ApiPropertyOptional({
+    example: 700,
+    description: 'Legado: valor semanal; convertido ÷ 7',
+  })
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
-  weeklyRate: number;
+  weeklyRate?: number;
+
+  @ApiPropertyOptional({
+    enum: MIN_RENTAL_DAYS_OPTIONS,
+    nullable: true,
+    description: 'Tempo mínimo de aluguel em dias; null = sem tempo mínimo.',
+  })
+  @IsOptional()
+  @IsIn([...MIN_RENTAL_DAYS_OPTIONS])
+  minRentalDays?: number | null;
 
   @ApiPropertyOptional({ enum: KmPolicy, default: KmPolicy.FREE })
   @IsOptional()
