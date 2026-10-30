@@ -172,6 +172,10 @@ export interface VehicleCardItem {
   transmission: string;
   fuelType: string;
   dailyRate: number;
+  weeklyEstimate: number;
+  monthlyEstimate: number;
+  minRentalDays: number | null;
+  minPeriodTotal: number | null;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean | null;
@@ -180,7 +184,6 @@ export interface VehicleCardItem {
   mechanicsCondition?: MechanicsCondition | null;
   hasDetranIssues?: boolean | null;
   trunkSize?: number | null;
-  weeklyRate?: number | null;
   kmPolicy?: 'FREE' | 'FIXED' | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -217,6 +220,10 @@ export interface OwnerVehicleItem {
   fuelType: FuelType;
   seats: number;
   dailyRate: number;
+  weeklyEstimate: number;
+  monthlyEstimate: number;
+  minRentalDays: number | null;
+  minPeriodTotal: number | null;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean | null;
@@ -225,7 +232,6 @@ export interface OwnerVehicleItem {
   mechanicsCondition?: MechanicsCondition | null;
   hasDetranIssues?: boolean | null;
   trunkSize?: number | null;
-  weeklyRate?: number | null;
   kmPolicy?: 'FREE' | 'FIXED' | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -301,7 +307,8 @@ export interface CreateVehiclePayload {
   transmission: TransmissionType;
   fuelType: FuelType;
   seats: number;
-  dailyRate?: number;
+  dailyRate: number;
+  minRentalDays?: number | null;
   motorcycleStyle?: MotorcycleStyle | null;
   engineCc?: number | null;
   hasAbs?: boolean;
@@ -310,7 +317,6 @@ export interface CreateVehiclePayload {
   mechanicsCondition?: MechanicsCondition;
   hasDetranIssues?: boolean;
   trunkSize?: number;
-  weeklyRate: number;
   kmPolicy?: 'FREE' | 'FIXED';
   description: string;
   addressLine?: string;
@@ -340,7 +346,10 @@ export interface ChatConversationItem {
     city: string;
     state: string;
     dailyRate: number;
-    weeklyRate?: number | null;
+    weeklyEstimate: number;
+    monthlyEstimate: number;
+    minRentalDays: number | null;
+    minPeriodTotal: number | null;
   };
   otherParticipant: {
     id: string;

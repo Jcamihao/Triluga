@@ -29,6 +29,9 @@ export type FipePriceResult = {
   priceFormatted: string;
   suggestedWeeklyRateMin: number;
   suggestedWeeklyRateMax: number;
+  // Opcionais: respostas em cache de antes do deploy não os trazem.
+  suggestedDailyRateMin?: number;
+  suggestedDailyRateMax?: number;
 };
 
 @Injectable({ providedIn: 'root' })
