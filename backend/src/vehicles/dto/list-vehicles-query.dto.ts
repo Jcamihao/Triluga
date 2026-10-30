@@ -6,7 +6,7 @@ import {
   VehicleCategory,
   VehicleType,
 } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -16,6 +16,19 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
+// `?maxPrice=` (string vazia) viraria 0 pela conversão implícita do pipe e
+// filtraria tudo; o Transform roda depois do @Type, então olha o valor
+// original (`obj`) e devolve undefined. '0' literal continua sendo 0.
+const emptyToUndefined = ({
+  value,
+  obj,
+  key,
+}: {
+  value: unknown;
+  obj: Record<string, unknown>;
+  key: string;
+}) => (obj[key] === '' ? undefined : value);
 
 export class ListVehiclesQueryDto {
   @ApiPropertyOptional()
@@ -80,24 +93,28 @@ export class ListVehiclesQueryDto {
   @ApiPropertyOptional({ description: 'Diária mínima.' })
   @IsOptional()
   @Type(() => Number)
+  @Transform(emptyToUndefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   minDailyRate?: number;
 
   @ApiPropertyOptional({ description: 'Diária máxima.' })
   @IsOptional()
   @Type(() => Number)
+  @Transform(emptyToUndefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   maxDailyRate?: number;
 
   @ApiPropertyOptional({ description: 'Legado: valor semanal (÷ 7).' })
   @IsOptional()
   @Type(() => Number)
+  @Transform(emptyToUndefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   minPrice?: number;
 
   @ApiPropertyOptional({ description: 'Legado: valor semanal (÷ 7).' })
   @IsOptional()
   @Type(() => Number)
+  @Transform(emptyToUndefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   maxPrice?: number;
 

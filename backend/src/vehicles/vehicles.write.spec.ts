@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -80,7 +81,13 @@ async function errorsFor(
 ) {
   const plain: Record<string, unknown> = { ...baseDto, ...overrides };
   for (const key of omit) delete plain[key];
-  const errors = await validate(plainToInstance(CreateVehicleDto, plain));
+  // Mesmas opções do ValidationPipe global (main.ts).
+  const errors = await validate(
+    plainToInstance(CreateVehicleDto, plain, {
+      enableImplicitConversion: true,
+    }),
+    { whitelist: true, forbidNonWhitelisted: true },
+  );
   return errors.map((e) => e.property);
 }
 
@@ -166,6 +173,35 @@ describe('VehiclesService.update (preço por diária)', () => {
     expect(captured.update.minRentalDays).toBe(14);
   });
 
+  it.each([
+    { dailyRate: null },
+    { weeklyRate: null },
+    { dailyRate: null, weeklyRate: null },
+  ])(
+    'preço null sem outro valor válido (%j) lança BadRequestException',
+    async (dto) => {
+      const { service, captured } = buildService();
+
+      await expect(
+        service.update(OWNER_ID, VEHICLE_ID, dto as any),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.update(OWNER_ID, VEHICLE_ID, dto as any),
+      ).rejects.toThrow('Informe um valor de diária válido.');
+      expect(captured.update).toBeUndefined();
+    },
+  );
+
+  it('dailyRate null com weeklyRate válido (legado) é aceito', async () => {
+    const { service, captured } = buildService();
+    await service.update(OWNER_ID, VEHICLE_ID, {
+      dailyRate: null,
+      weeklyRate: 700,
+    } as any);
+
+    expect(captured.update.dailyRate).toBe(100);
+  });
+
   it('update vazio não altera dailyRate nem minRentalDays', async () => {
     const { service, captured } = buildService();
     await service.update(OWNER_ID, VEHICLE_ID, {});
@@ -177,7 +213,8 @@ describe('VehiclesService.update (preço por diária)', () => {
 });
 
 describe('CreateVehicleDto (validação de preço)', () => {
-  it.each([5, 0, -1, '30', 1.5])('minRentalDays %p é inválido', async (v) => {
+  // '30' (string) não entra: com enableImplicitConversion do pipe real vira 30.
+  it.each([5, 0, -1, 1.5])('minRentalDays %p é inválido', async (v) => {
     expect(await errorsFor({ dailyRate: 100, minRentalDays: v })).toContain(
       'minRentalDays',
     );
@@ -210,8 +247,19 @@ describe('CreateVehicleDto (validação de preço)', () => {
     expect(await errorsFor({ weeklyRate: 700 })).toEqual([]);
   });
 
-  it('weeklyRate 0.5 é inválido (mínimo 1)', async () => {
+  it('weeklyRate 0.5 é inválido (mínimo 7)', async () => {
     expect(await errorsFor({ weeklyRate: 0.5 })).toContain('weeklyRate');
+  });
+
+  it.each([2, 6.99])(
+    'weeklyRate %p é inválido (diária ficaria abaixo de 1)',
+    async (v) => {
+      expect(await errorsFor({ weeklyRate: v })).toContain('weeklyRate');
+    },
+  );
+
+  it('weeklyRate 7 é válido (diária 1)', async () => {
+    expect(await errorsFor({ weeklyRate: 7 })).toEqual([]);
   });
 
   it('UpdateVehicleDto vazio é válido', async () => {

@@ -112,7 +112,8 @@ export class CreateVehicleDto {
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(1)
+  // 7 (e não 1): weekly ÷ 7 precisa dar diária >= 1, o mesmo mínimo de dailyRate.
+  @Min(7)
   weeklyRate?: number;
 
   @ApiPropertyOptional({

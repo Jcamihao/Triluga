@@ -8,6 +8,7 @@ import { CacheQueueService } from '../cache-queue/cache-queue.service';
 import { EmailService } from '../email/email.service';
 import { PrivacyService } from '../privacy/privacy.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildPricing } from '../vehicles/rental-pricing';
 
 @Injectable()
 export class AdminService {
@@ -88,7 +89,14 @@ export class AdminService {
       }),
     ]);
 
-    return { total, page, limit: safeLimit, items };
+    return {
+      total,
+      page,
+      limit: safeLimit,
+      // dailyRate vem como Decimal (string) do Prisma: buildPricing normaliza
+      // para number e acrescenta as estimativas, como no restante da API.
+      items: items.map((vehicle) => ({ ...vehicle, ...buildPricing(vehicle) })),
+    };
   }
 
   async blockUser(userId: string) {

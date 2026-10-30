@@ -54,6 +54,33 @@ describe('alertas por diária', () => {
       expect(normalize({ maxDailyRate: 0 })).toEqual({ maxDailyRate: 0 });
     });
 
+    it('string vazia não vira 0: lado legado continua valendo', () => {
+      expect(
+        normalize({ minDailyRate: '', minPrice: 700, maxPrice: 1400 }),
+      ).toEqual({ minDailyRate: 100, maxDailyRate: 200 });
+    });
+
+    it('string vazia sem legado: sem limite', () => {
+      expect(normalize({ maxDailyRate: '', city: 'SP' })).toEqual({
+        city: 'SP',
+      });
+    });
+
+    it('null e só espaços: sem limite', () => {
+      expect(normalize({ maxPrice: null })).toEqual({});
+      expect(normalize({ minPrice: '   ', maxDailyRate: '  ' })).toEqual({});
+    });
+
+    it("preserva '0' string", () => {
+      expect(normalize({ minDailyRate: '0' })).toEqual({ minDailyRate: 0 });
+    });
+
+    it('vazio nos demais numéricos também é descartado (não vira 0)', () => {
+      expect(
+        normalize({ minEngineCc: '', radiusKm: '', latitude: null }),
+      ).toEqual({});
+    });
+
     it('filtro armazenado idempotente (re-normalizar não muda)', () => {
       const once = normalize({ minPrice: 700, city: 'SP' });
       expect(normalize(once)).toEqual(once);

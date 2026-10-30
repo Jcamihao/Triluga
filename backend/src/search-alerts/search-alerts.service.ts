@@ -192,7 +192,15 @@ export class SearchAlertsService {
     const normalized: NormalizedAlertFilters = {};
 
     const readString = (value: unknown) => String(value ?? '').trim();
+    // '', null e só espaços não são número (Number('') seria 0 e viraria um
+    // limite falso); o zero literal (0 ou '0') continua válido.
     const readNumber = (value: unknown) => {
+      if (value === null || value === undefined) {
+        return undefined;
+      }
+      if (typeof value === 'string' && value.trim() === '') {
+        return undefined;
+      }
       const parsed = Number(value);
       return Number.isNaN(parsed) ? undefined : parsed;
     };

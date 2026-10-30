@@ -242,7 +242,8 @@ export class LookupsService {
     modelCode: string,
     yearCode: string,
   ): Promise<FipePriceResult> {
-    const cacheKey = `fipe:${type}:brands:${brandCode}:models:${modelCode}:years:${yearCode}`;
+    // v2: entradas antigas (TTL 24h) não têm suggestedDailyRateMin/Max.
+    const cacheKey = `fipe:v2:${type}:brands:${brandCode}:models:${modelCode}:years:${yearCode}`;
     const cached = await this.cacheQueue.getJson<FipePriceResult>(cacheKey);
 
     if (cached !== null) {
@@ -268,7 +269,11 @@ export class LookupsService {
       1,
       Math.round((priceValue * 0.01) / 7),
     );
-    const suggestedDailyRateMax = Math.round((priceValue * 0.02) / 7);
+    // Nunca abaixo do mínimo (preço baixo: mín 1 e máx arredondado a 0).
+    const suggestedDailyRateMax = Math.max(
+      suggestedDailyRateMin,
+      Math.round((priceValue * 0.02) / 7),
+    );
 
     const result: FipePriceResult = {
       fipeCode: raw.fipeCode ?? '',

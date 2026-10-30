@@ -655,6 +655,14 @@ export class VehiclesService {
     // weeklyRate não existe mais no banco: nunca pode chegar ao Prisma via spread.
     const { weeklyRate, dailyRate, minRentalDays, ...rest } = dto;
     const resolvedDailyRate = resolveWriteDailyRate({ weeklyRate, dailyRate });
+    // null explícito sem outro valor válido manteria o preço antigo em silêncio
+    // (chave ausente continua válida: não altera o preço).
+    if (
+      (dailyRate === null || weeklyRate === null) &&
+      resolvedDailyRate === undefined
+    ) {
+      throw new BadRequestException('Informe um valor de diária válido.');
+    }
     try {
       const vehicle = await this.prisma.vehicle.update({
         where: { id: vehicleId },
