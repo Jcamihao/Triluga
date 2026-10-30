@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildPricing } from '../vehicles/rental-pricing';
 
 @Injectable()
 export class FavoritesService {
@@ -125,8 +126,7 @@ export class FavoritesService {
       seats: vehicle.seats,
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
-      dailyRate: Number(vehicle.dailyRate),
-      weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+      ...buildPricing(vehicle),
       motorcycleStyle: vehicle.motorcycleStyle,
       engineCc: vehicle.engineCc,
       hasAbs: vehicle.hasAbs,

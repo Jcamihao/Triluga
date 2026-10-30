@@ -7,6 +7,7 @@ import {
 import { UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { buildPricing } from '../vehicles/rental-pricing';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
@@ -146,8 +147,7 @@ export class ProfilesService {
         seats: vehicle.seats,
         transmission: vehicle.transmission,
         fuelType: vehicle.fuelType,
-        dailyRate: Number(vehicle.dailyRate),
-        weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+        ...buildPricing(vehicle),
         motorcycleStyle: vehicle.motorcycleStyle,
         engineCc: vehicle.engineCc,
         hasAbs: vehicle.hasAbs,

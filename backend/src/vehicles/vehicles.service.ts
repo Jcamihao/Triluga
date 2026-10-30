@@ -20,7 +20,7 @@ import { SearchAlertsService } from '../search-alerts/search-alerts.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { ListVehiclesQueryDto } from './dto/list-vehicles-query.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { resolveWriteDailyRate } from './rental-pricing';
+import { buildPricing, resolveWriteDailyRate } from './rental-pricing';
 
 @Injectable()
 export class VehiclesService {
@@ -402,8 +402,7 @@ export class VehiclesService {
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
       seats: vehicle.seats,
-      dailyRate: Number(vehicle.dailyRate),
-      weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+      ...buildPricing(vehicle),
       kmPolicy: vehicle.kmPolicy,
       motorcycleStyle: vehicle.motorcycleStyle,
       engineCc: vehicle.engineCc,
@@ -775,8 +774,7 @@ export class VehiclesService {
       seats: vehicle.seats,
       transmission: vehicle.transmission,
       fuelType: vehicle.fuelType,
-      dailyRate: Number(vehicle.dailyRate),
-      weeklyRate: vehicle.weeklyRate ? Number(vehicle.weeklyRate) : null,
+      ...buildPricing(vehicle),
       kmPolicy: vehicle.kmPolicy,
       motorcycleStyle: vehicle.motorcycleStyle,
       engineCc: vehicle.engineCc,

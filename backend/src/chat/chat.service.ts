@@ -8,6 +8,7 @@ import {
 import { NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildPricing } from '../vehicles/rental-pricing';
 import { ChatPresenceService } from './chat-presence.service';
 
 type SendMessageResult = {
@@ -554,10 +555,7 @@ export class ChatService {
         coverImage: conversation.vehicle.images[0]?.url ?? null,
         city: conversation.vehicle.city,
         state: conversation.vehicle.state,
-        dailyRate: Number(conversation.vehicle.dailyRate),
-        weeklyRate: conversation.vehicle.weeklyRate
-          ? Number(conversation.vehicle.weeklyRate)
-          : null,
+        ...buildPricing(conversation.vehicle),
       },
       otherParticipant: {
         id: otherParticipant?.id ?? '',
