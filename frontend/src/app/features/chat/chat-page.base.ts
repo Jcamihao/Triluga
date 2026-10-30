@@ -23,6 +23,7 @@ import { ChatSocketService } from '../../core/services/chat-socket.service';
 import { ProfileApiService } from '../../core/services/profile-api.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
+import { minRentalLabel } from '../../shared/utils/rental-pricing.util';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 export const CHAT_IMPORTS = [
@@ -48,6 +49,7 @@ export abstract class ChatPageBase {
   private readonly destroyRef = inject(DestroyRef);
   private readonly uiStateService = inject(UiStateService);
 
+  protected readonly minRentalLabel = minRentalLabel;
   protected readonly fallbackAvatarImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='40' fill='%23f3eeee'/%3E%3Ccircle cx='80' cy='60' r='24' fill='%23b7aaac'/%3E%3Cpath d='M40 128c7-22 24-34 40-34s33 12 40 34' fill='%23b7aaac'/%3E%3C/svg%3E";
   protected readonly vehicleFallbackImage =

@@ -442,11 +442,17 @@
                 <span class="text-on-surface-variant">Valor anunciado</span>
                 <span class="font-bold">
                   R$
-                  {{
-                    conversation.vehicle.weeklyRate ??
-                      conversation.vehicle.dailyRate | number: '1.0-0'
-                  }}/sem
+                  {{ conversation.vehicle.dailyRate | number: '1.0-0' }}/dia
                 </span>
+              </div>
+              <div
+                *ngIf="conversation.vehicle.minRentalDays"
+                class="flex justify-between text-sm"
+              >
+                <span class="text-on-surface-variant">Tempo mínimo</span>
+                <span class="font-bold">{{
+                  minRentalLabel(conversation.vehicle.minRentalDays)
+                }}</span>
               </div>
             </div>
           </div>

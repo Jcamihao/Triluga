@@ -1,6 +1,7 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { minRentalLabel } from '../../../shared/utils/rental-pricing.util';
 import { WebHeaderComponent } from '../../../shared/components/web-header/web-header.component';
 
 type VehicleFilter = 'all' | 'published' | 'draft';
@@ -13,6 +14,8 @@ type VehicleFilter = 'all' | 'published' | 'draft';
 })
 export class OwnerDashboardListComponent {
   @Input({ required: true }) owner!: any;
+
+  readonly minRentalLabel = minRentalLabel;
 
   activeFilter: VehicleFilter = 'all';
 

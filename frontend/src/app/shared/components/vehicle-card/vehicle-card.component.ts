@@ -5,6 +5,7 @@ import { VehicleCardItem } from '../../../core/models/domain.models';
 import { CompareService } from '../../../core/services/compare.service';
 import { ContactedVehiclesService } from '../../../core/services/contacted-vehicles.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
+import { minRentalLabel } from '../../utils/rental-pricing.util';
 
 @Component({
   selector: 'app-vehicle-card',
@@ -20,6 +21,8 @@ export class VehicleCardComponent {
   private readonly router = inject(Router);
   @Input({ required: true }) vehicle!: VehicleCardItem;
   @Input() hideOwner = false;
+
+  protected readonly minRentalLabel = minRentalLabel;
 
   protected readonly fallbackImage =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='280' viewBox='0 0 400 280'%3E%3Crect width='400' height='280' fill='%23f1f5f9'/%3E%3Cpath d='M60 180 L80 145 L110 108 L290 108 L320 145 L340 180 L340 196 L60 196Z' fill='%23cbd5e1'/%3E%3Cpath d='M115 108 L135 72 L265 72 L285 108Z' fill='%2394a3b8'/%3E%3Cpath d='M140 74 L154 74 L154 102 L130 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M162 70 L238 70 L248 102 L152 102Z' fill='%23e2e8f0'/%3E%3Cpath d='M246 74 L260 74 L270 102 L246 102Z' fill='%23e2e8f0'/%3E%3Ccircle cx='115' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='115' cy='196' r='16' fill='%2394a3b8'/%3E%3Ccircle cx='285' cy='196' r='28' fill='%2364748b'/%3E%3Ccircle cx='285' cy='196' r='16' fill='%2394a3b8'/%3E%3C/svg%3E";
@@ -142,7 +145,7 @@ export class VehicleCardComponent {
     event.preventDefault();
     event.stopPropagation();
     const url = `${globalThis.location?.origin ?? ''}/vehicles/${this.vehicle.slug}`;
-    const text = `${this.vehicle.title} — R$${Math.round(this.vehicle.weeklyRate ?? this.vehicle.dailyRate)}/semana`;
+    const text = `${this.vehicle.title} — R$${Math.round(this.vehicle.dailyRate)}/dia`;
     if (navigator.share) {
       navigator.share({ title: this.vehicle.title, text, url }).catch(() => {});
     } else {

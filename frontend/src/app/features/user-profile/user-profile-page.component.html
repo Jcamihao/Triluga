@@ -253,11 +253,16 @@
                 </div>
                 <div class="flex items-center gap-1">
                   <span class="text-primary font-extrabold text-sm">
-                    R$ {{ vehicle.weeklyRate ?? vehicle.dailyRate }}
+                    R$ {{ vehicle.dailyRate }}
                   </span>
                   <span
                     class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-tighter"
-                    >/ semana</span
+                    >/ dia</span
+                  >
+                  <span
+                    *ngIf="vehicle.minRentalDays"
+                    class="ml-1 rounded-full bg-surface-container-low px-1.5 py-0.5 text-[10px] font-bold text-on-surface-variant"
+                    >mín. {{ minRentalLabel(vehicle.minRentalDays) }}</span
                   >
                 </div>
               </div>
@@ -561,9 +566,8 @@
                   <h3>{{ vehicle.title }}</h3>
                   <strong>
                     {{
-                      vehicle.weeklyRate ?? vehicle.dailyRate
-                        | currency: 'BRL' : 'symbol' : '1.0-0'
-                    }}<small>/semana</small>
+                      vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0'
+                    }}<small>/dia</small>
                   </strong>
                 </div>
 
@@ -577,6 +581,10 @@
                       airline_seat_recline_extra
                     </span>
                     {{ vehicle.seats }} lugares
+                  </span>
+                  <span *ngIf="vehicle.minRentalDays">
+                    <span class="material-symbols-outlined">schedule</span>
+                    mín. {{ minRentalLabel(vehicle.minRentalDays) }}
                   </span>
                 </div>
 

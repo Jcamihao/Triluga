@@ -348,25 +348,34 @@
               <p
                 class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider"
               >
-                Preço Semanal
+                Diária
               </p>
               <p
                 class="text-base font-black"
                 [ngClass]="
                   !vehicle.isActive
                     ? 'text-slate-400'
-                    : vehicle.weeklyRate
+                    : vehicle.dailyRate
                       ? 'text-emerald-800'
                       : 'text-slate-400'
                 "
               >
                 {{
-                  vehicle.weeklyRate
-                    ? (vehicle.weeklyRate
+                  vehicle.dailyRate
+                    ? (vehicle.dailyRate
                       | currency: 'BRL' : 'symbol' : '1.2-2')
                     : 'Pendente'
-                }}
+                }}<span
+                  *ngIf="vehicle.dailyRate"
+                  class="text-[10px] font-bold text-on-surface-variant/60"
+                  >/dia</span
+                >
               </p>
+              <span
+                *ngIf="vehicle.minRentalDays"
+                class="mt-0.5 inline-block rounded-full bg-surface-container-low px-2 py-0.5 text-[10px] font-bold text-on-surface-variant"
+                >mín. {{ minRentalLabel(vehicle.minRentalDays) }}</span
+              >
             </div>
             <div
               class="flex gap-1 bg-surface-container-lowest rounded-full p-1 border border-outline-variant/10 shadow-sm"
@@ -687,24 +696,33 @@
             <p
               class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider"
             >
-              Preço Semanal
+              Diária
             </p>
             <p
               class="text-lg font-black"
               [ngClass]="
                 !vehicle.isActive
                   ? 'text-slate-400'
-                  : vehicle.weeklyRate
+                  : vehicle.dailyRate
                     ? 'text-emerald-800'
                     : 'text-slate-400'
               "
             >
               {{
-                vehicle.weeklyRate
-                  ? (vehicle.weeklyRate | currency: 'BRL' : 'symbol' : '1.2-2')
+                vehicle.dailyRate
+                  ? (vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2')
                   : 'Pendente'
-              }}
+              }}<span
+                *ngIf="vehicle.dailyRate"
+                class="text-xs font-bold text-on-surface-variant/60"
+                >/dia</span
+              >
             </p>
+            <span
+              *ngIf="vehicle.minRentalDays"
+              class="mt-0.5 inline-block rounded-full bg-surface-container-low px-2 py-0.5 text-[10px] font-bold text-on-surface-variant"
+              >mín. {{ minRentalLabel(vehicle.minRentalDays) }}</span
+            >
           </div>
 
           <div class="flex gap-2 justify-end">

@@ -281,10 +281,15 @@
                   <p class="text-primary font-bold text-base">
                     R$
                     {{
-                      selectedConversation.vehicle.weeklyRate ??
-                        selectedConversation.vehicle.dailyRate | number: '1.0-0'
-                    }}
+                      selectedConversation.vehicle.dailyRate | number: '1.0-0'
+                    }}/dia
                   </p>
+                  <span
+                    *ngIf="selectedConversation.vehicle.minRentalDays"
+                    class="mt-0.5 inline-block whitespace-nowrap rounded-full bg-surface-container-low px-2 py-0.5 text-[10px] font-bold text-on-surface-variant"
+                    >mín.
+                    {{ minRentalLabel(selectedConversation.vehicle.minRentalDays) }}</span
+                  >
                 </div>
                 <button
                   class="bg-surface-container-low text-on-background px-3 py-2 rounded-full text-xs font-bold hover:bg-surface-container-high transition-colors"

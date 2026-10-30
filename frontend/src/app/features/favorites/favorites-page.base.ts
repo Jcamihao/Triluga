@@ -5,6 +5,7 @@ import { VehicleCardItem } from '../../core/models/domain.models';
 import { CompareService } from '../../core/services/compare.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { UiStateService } from '../../core/services/ui-state.service';
+import { minRentalLabel } from '../../shared/utils/rental-pricing.util';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
 
@@ -44,11 +45,11 @@ export abstract class FavoritesPageBase {
     const items = [...this.favoriteItems];
 
     if (this.sortMode === 'priceAsc') {
-      return items.sort((a, b) => this.weeklyPrice(a) - this.weeklyPrice(b));
+      return items.sort((a, b) => this.dailyPrice(a) - this.dailyPrice(b));
     }
 
     if (this.sortMode === 'priceDesc') {
-      return items.sort((a, b) => this.weeklyPrice(b) - this.weeklyPrice(a));
+      return items.sort((a, b) => this.dailyPrice(b) - this.dailyPrice(a));
     }
 
     return items;
@@ -188,7 +189,9 @@ export abstract class FavoritesPageBase {
     return vehicle.kmPolicy === 'FREE' ? 'Km livre' : '200 km/dia';
   }
 
-  protected weeklyPrice(vehicle: VehicleCardItem) {
-    return vehicle.weeklyRate ?? vehicle.dailyRate;
+  protected readonly minRentalLabel = minRentalLabel;
+
+  protected dailyPrice(vehicle: VehicleCardItem) {
+    return vehicle.dailyRate;
   }
 }

@@ -53,9 +53,12 @@
                 </div>
 
                 <strong>
-                  {{
-                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
-                  }}/semana
+                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}/dia
+                  <small
+                    *ngIf="vehicle.minRentalDays"
+                    class="favorite-card__min"
+                    >mín. {{ minRentalLabel(vehicle.minRentalDays) }}</small
+                  >
                 </strong>
               </div>
 
@@ -95,9 +98,10 @@
               <div>
                 <h3>{{ vehicle.title }}</h3>
                 <p>
-                  {{
-                    weeklyPrice(vehicle) | currency: 'BRL' : 'symbol' : '1.0-0'
-                  }}/semana
+                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}/dia
+                  <span *ngIf="vehicle.minRentalDays"
+                    >• mín. {{ minRentalLabel(vehicle.minRentalDays) }}</span
+                  >
                 </p>
               </div>
               <button
