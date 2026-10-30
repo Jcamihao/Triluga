@@ -164,7 +164,7 @@ npx prisma studio
   - cidade
   - tipo de veiculo
   - categoria
-  - faixa de preco
+  - faixa de preco **por diaria** (`minDailyRate`/`maxDailyRate`; os parametros antigos `minPrice`/`maxPrice` valem como valor semanal e sao convertidos ÷ 7)
   - geolocalizacao e raio
 
 ### Favoritos
@@ -209,7 +209,7 @@ Execute este roteiro sempre que houver build nova:
 5. Abrir detalhe de um veiculo, iniciar chat e enviar mensagem.
 6. Fazer logout e validar limpeza da sessao no navegador.
 7. Fazer login com `OWNER` e abrir `/owner-dashboard`.
-8. Criar um anúncio navegando por todo o fluxo wizard em 3 etapas (Dados principais, Condições gerais, Fotos e Preços).
+8. Criar um anúncio navegando por todo o fluxo wizard em 3 etapas (Dados principais, Condições gerais, Fotos e Preços). No passo de preço informar a **diária** (ex.: 100) e um tempo mínimo (ex.: 1 mês), conferir a prévia da estimativa (7 dias R$ 700,00; 30 dias R$ 3.000,00) e, depois de publicar, abrir o detalhe e conferir os mesmos valores e o aviso.
 9. Avançar para um passo seguinte deixando dados obrigatórios vazios, para validar a exibição de ícone de (⚠️) "Alerta Laranja" apontando campos incompletos.
 10. Preencher tudo corretamente, testar o limite de 7 imagens da galeria, publicar e checar na busca online.
 11. Fazer login com `ADMIN` e validar dashboard, usuarios, veiculos e privacidade.
@@ -238,7 +238,8 @@ Execute este roteiro sempre que houver build nova:
 ### Proprietario
 
 - login redireciona para area de anuncios
-- criar anuncio com campos minimos
+- criar anuncio com campos minimos (preco = **diaria**, tempo minimo de aluguel opcional: 3 dias, 1 semana, 2 semanas, 1 mes, 3 meses ou sem minimo)
+- detalhe do anuncio mostra diaria, estimativa de 7 e 30 dias e, se houver minimo, o total do periodo minimo, sempre com o aviso de que o pagamento e combinado entre as partes
 - editar anuncio existente
 - alternar entre rascunho/publicado
 - adicionar imagens
@@ -260,6 +261,8 @@ Execute este roteiro sempre que houver build nova:
 - tentar iniciar chat no proprio anuncio
 - tentar criar review duplicada para o mesmo anuncio ou usuario
 - tentar salvar alerta de busca sem filtro
+- tentar criar anuncio com diaria menor que R$ 1,00, ou com tempo minimo fora da lista (ex.: 5 dias)
+- abrir `/search?minPrice=700&maxPrice=1400` (URL antiga) e confirmar que vira `minDailyRate=100&maxDailyRate=200`
 - tentar abrir rota protegida sem login
 
 ## Validacoes tecnicas no navegador

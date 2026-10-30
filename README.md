@@ -8,7 +8,7 @@
 
 <br/>
 
-![versão](https://img.shields.io/badge/Versão-2.8.0-84cc16?style=for-the-badge&labelColor=1e293b)
+![versão](https://img.shields.io/badge/Versão-2.9.0-84cc16?style=for-the-badge&labelColor=1e293b)
 
 <br/>
 
@@ -31,6 +31,7 @@
 - 💬 **Chat em tempo real** via WebSocket entre comprador e anunciante.
 - ⭐ **Avaliações e reputação** pública de anunciantes e veículos.
 - 🔔 **Notificações e alertas de busca** por e-mail e push via BullMQ.
+- 🏷️ **Preço por diária** com tempo mínimo de aluguel opcional e estimativa semanal/mensal (diária x 7 e x 30) com aviso de que o pagamento é combinado diretamente entre as partes.
 - 💰 **Destaque pago** de anúncios via Asaas (PIX no app, ativação automática).
 - 🛡️ **Conformidade LGPD** com exportação de dados e solicitações de exclusão.
 
@@ -315,6 +316,7 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
    - Eventos a assinar no painel: `PAYMENT_RECEIVED` e `PAYMENT_CONFIRMED` (**ativam** o destaque) e, para reconciliação, `PAYMENT_REFUNDED`, `PAYMENT_REVERSED`, `PAYMENT_CHARGEBACK_*` e `PAYMENT_DELETED` (só **logados**; `PAYMENT_DELETED` de pedido não ativo é apenas informativo, pois é o eco dos nossos próprios cancelamentos).
    - Confirmar no painel do Asaas se a conta precisa ter uma chave Pix cadastrada para gerar cobranças PIX (não verificado).
 3. Migrations: o container já roda `prisma migrate deploy` na subida (ver `backend/Dockerfile`); não é preciso rodar à mão. Se o banco não tiver a tabela `_prisma_migrations`, o Dockerfile cai no caminho de baseline (P3005) — leia os avisos em [v2.8.0](./docs/releases/v2.8.0.md) antes de subir.
+4. Preço por diária (v2.9.0): a migration apaga `Vehicle.weeklyRate` e converte os preços (`weeklyRate ÷ 7`); **faça `pg_dump` antes** e siga o [runbook](./docs/runbooks/preco-diaria-deploy.md) (backend e frontend sobem juntos; rollback exige o dump).
 
 ---
 
@@ -337,6 +339,7 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
 
 | Versão | Destaques |
 |--------|-----------|
+| [v2.9.0](./docs/releases/v2.9.0.md) | Preço por diária · tempo mínimo de aluguel · estimativa semanal/mensal com aviso · migration `weeklyRate` ÷ 7 (leia o [runbook](./docs/runbooks/preco-diaria-deploy.md)) |
 | [v2.8.0](./docs/releases/v2.8.0.md) | Destaque via Asaas (PIX no app, ativação automática) · webhook seguro · destaques passam a expirar |
 | [v2.7.0](./docs/releases/v2.7.0.md) | Remoção do KYC · geocoding real no mapa do anúncio · foto da home restaurada |
 | [v2.6.0](./docs/releases/v2.6.0.md) | CI/CD · InsightFace KYC · badge contatado · taxa de resposta |
