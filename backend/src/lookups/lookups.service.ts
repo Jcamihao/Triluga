@@ -65,6 +65,8 @@ export type FipePriceResult = {
   priceFormatted: string;
   suggestedWeeklyRateMin: number;
   suggestedWeeklyRateMax: number;
+  suggestedDailyRateMin: number;
+  suggestedDailyRateMax: number;
 };
 
 @Injectable()
@@ -262,6 +264,11 @@ export class LookupsService {
     const priceValue = this.parseFipePrice(priceFormatted);
     const suggestedWeeklyRateMin = Math.round((priceValue * 0.01) / 10) * 10;
     const suggestedWeeklyRateMax = Math.round((priceValue * 0.02) / 10) * 10;
+    const suggestedDailyRateMin = Math.max(
+      1,
+      Math.round((priceValue * 0.01) / 7),
+    );
+    const suggestedDailyRateMax = Math.round((priceValue * 0.02) / 7);
 
     const result: FipePriceResult = {
       fipeCode: raw.fipeCode ?? '',
@@ -274,6 +281,8 @@ export class LookupsService {
       priceFormatted,
       suggestedWeeklyRateMin,
       suggestedWeeklyRateMax,
+      suggestedDailyRateMin,
+      suggestedDailyRateMax,
     };
 
     await this.cacheQueue.setJson(cacheKey, result, 86400);

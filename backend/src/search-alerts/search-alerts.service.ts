@@ -6,6 +6,7 @@ import {
 import { NotificationType, Prisma } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { resolveDailyRateBounds } from '../vehicles/rental-pricing';
 import { CreateSearchAlertDto } from './dto/create-search-alert.dto';
 
 type NormalizedAlertFilters = {
@@ -16,8 +17,8 @@ type NormalizedAlertFilters = {
   motorcycleStyle?: string;
   minEngineCc?: number;
   maxEngineCc?: number;
-  minPrice?: number;
-  maxPrice?: number;
+  minDailyRate?: number;
+  maxDailyRate?: number;
   latitude?: number;
   longitude?: number;
   radiusKm?: number;
@@ -218,8 +219,16 @@ export class SearchAlertsService {
 
     normalized.minEngineCc = readNumber(filters.minEngineCc);
     normalized.maxEngineCc = readNumber(filters.maxEngineCc);
-    normalized.minPrice = readNumber(filters.minPrice);
-    normalized.maxPrice = readNumber(filters.maxPrice);
+    // Chaves novas vencem as legadas (minPrice/maxPrice = valor semanal ÷ 7);
+    // as legadas nunca são gravadas.
+    const bounds = resolveDailyRateBounds({
+      minDailyRate: readNumber(filters.minDailyRate),
+      maxDailyRate: readNumber(filters.maxDailyRate),
+      minPrice: readNumber(filters.minPrice),
+      maxPrice: readNumber(filters.maxPrice),
+    });
+    normalized.minDailyRate = bounds.min;
+    normalized.maxDailyRate = bounds.max;
     normalized.latitude = readNumber(filters.latitude);
     normalized.longitude = readNumber(filters.longitude);
     normalized.radiusKm = readNumber(filters.radiusKm);
@@ -244,7 +253,6 @@ export class SearchAlertsService {
       motorcycleStyle: string | null;
       engineCc: number | null;
       dailyRate: Prisma.Decimal | number | string;
-      weeklyRate: Prisma.Decimal | number | string | null;
       latitude: Prisma.Decimal | number | null;
       longitude: Prisma.Decimal | number | null;
     },
@@ -299,16 +307,19 @@ export class SearchAlertsService {
       return false;
     }
 
-    const weeklyRate =
-      vehicle.weeklyRate !== null
-        ? Number(vehicle.weeklyRate)
-        : Number(vehicle.dailyRate);
+    const dailyRate = Number(vehicle.dailyRate);
 
-    if (filters.minPrice !== undefined && weeklyRate < filters.minPrice) {
+    if (
+      filters.minDailyRate !== undefined &&
+      dailyRate < filters.minDailyRate
+    ) {
       return false;
     }
 
-    if (filters.maxPrice !== undefined && weeklyRate > filters.maxPrice) {
+    if (
+      filters.maxDailyRate !== undefined &&
+      dailyRate > filters.maxDailyRate
+    ) {
       return false;
     }
 

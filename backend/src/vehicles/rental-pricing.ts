@@ -84,6 +84,44 @@ export function resolveDailyRateBounds(q: {
   return bounds;
 }
 
+/**
+ * Cláusula Prisma de preço da busca (`undefined` = sem filtro de preço).
+ * `!== undefined` em vez de truthy: zero é limite válido.
+ */
+export function buildDailyRateWhere(q: {
+  minDailyRate?: number;
+  maxDailyRate?: number;
+  minPrice?: number;
+  maxPrice?: number;
+}): { dailyRate: { gte?: number; lte?: number } } | undefined {
+  const { min, max } = resolveDailyRateBounds(q);
+  if (min === undefined && max === undefined) {
+    return undefined;
+  }
+
+  const dailyRate: { gte?: number; lte?: number } = {};
+  if (min !== undefined) {
+    dailyRate.gte = min;
+  }
+  if (max !== undefined) {
+    dailyRate.lte = max;
+  }
+  return { dailyRate };
+}
+
+/** Ordenação por preço da busca; `undefined` quando `sort` não é de preço. */
+export function buildDailyRateOrderBy(
+  sort: string | undefined,
+): { dailyRate: 'asc' | 'desc' } | undefined {
+  if (sort === 'price_asc') {
+    return { dailyRate: 'asc' };
+  }
+  if (sort === 'price_desc') {
+    return { dailyRate: 'desc' };
+  }
+  return undefined;
+}
+
 export interface VehiclePricing {
   dailyRate: number;
   /** Compatibilidade por uma versão: igual a `weeklyEstimate`, nunca null. */

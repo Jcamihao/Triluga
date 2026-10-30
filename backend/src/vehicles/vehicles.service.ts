@@ -20,7 +20,12 @@ import { SearchAlertsService } from '../search-alerts/search-alerts.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { ListVehiclesQueryDto } from './dto/list-vehicles-query.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { buildPricing, resolveWriteDailyRate } from './rental-pricing';
+import {
+  buildDailyRateOrderBy,
+  buildDailyRateWhere,
+  buildPricing,
+  resolveWriteDailyRate,
+} from './rental-pricing';
 
 @Injectable()
 export class VehiclesService {
@@ -177,13 +182,9 @@ export class VehiclesService {
       });
     }
 
-    if (query.minPrice || query.maxPrice) {
-      andFilters.push({
-        weeklyRate: {
-          gte: query.minPrice,
-          lte: query.maxPrice,
-        },
-      });
+    const dailyRateWhere = buildDailyRateWhere(query);
+    if (dailyRateWhere) {
+      andFilters.push(dailyRateWhere);
     }
 
     if (query.latitude !== undefined && query.longitude !== undefined) {
@@ -267,10 +268,10 @@ export class VehiclesService {
       createdAt: 'desc',
     };
 
-    if (query.sort === 'price_asc') {
-      orderBy = { weeklyRate: 'asc' };
-    } else if (query.sort === 'price_desc') {
-      orderBy = { weeklyRate: 'desc' };
+    const priceOrderBy = buildDailyRateOrderBy(query.sort);
+
+    if (priceOrderBy) {
+      orderBy = priceOrderBy;
     } else if (query.sort === 'oldest') {
       orderBy = { createdAt: 'asc' };
     } else if (query.sort === 'relevance') {

@@ -77,13 +77,25 @@ export class ListVehiclesQueryDto {
   @IsNumber({ maxDecimalPlaces: 0 })
   maxEngineCc?: number;
 
-  @ApiPropertyOptional({ description: 'Preço semanal mínimo.' })
+  @ApiPropertyOptional({ description: 'Diária mínima.' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  minDailyRate?: number;
+
+  @ApiPropertyOptional({ description: 'Diária máxima.' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  maxDailyRate?: number;
+
+  @ApiPropertyOptional({ description: 'Legado: valor semanal (÷ 7).' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   minPrice?: number;
 
-  @ApiPropertyOptional({ description: 'Preço semanal máximo.' })
+  @ApiPropertyOptional({ description: 'Legado: valor semanal (÷ 7).' })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })

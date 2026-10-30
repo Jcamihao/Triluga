@@ -12,8 +12,8 @@ export class CreateSearchAlertDto {
     example: {
       city: 'São Paulo',
       vehicleType: 'MOTORCYCLE',
-      minPrice: '800',
-      maxPrice: '1800',
+      minDailyRate: '120',
+      maxDailyRate: '260',
     },
   })
   @IsObject()
