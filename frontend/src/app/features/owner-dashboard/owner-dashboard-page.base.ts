@@ -14,6 +14,7 @@ import {
   MIN_RENTAL_OPTIONS,
   dailyFromLegacyWeekly,
   monthlyEstimate,
+  round2,
 } from '../../shared/utils/rental-pricing.util';
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
 import { VehicleWizardComponent } from './components/vehicle-wizard.component';
@@ -470,27 +471,30 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
   protected useFipePrice() {
     if (!this.fipePrice) return;
-    this.vehicleDraft.dailyRate = this.fipeSuggestedDailyMin;
+    const suggested = this.fipeSuggestedDailyMin;
+    if (suggested === null) return;
+    this.vehicleDraft.dailyRate = suggested;
     this.fipeOpen = false;
   }
 
   // Respostas em cache de antes do deploy trazem só a sugestão semanal legada.
-  protected get fipeSuggestedDailyMin() {
-    const price = this.fipePrice;
-    if (!price) return 0;
-    return (
-      price.suggestedDailyRateMin ??
-      dailyFromLegacyWeekly(price.suggestedWeeklyRateMin)
-    );
+  protected get fipeSuggestedDailyMin(): number | null {
+    return this.fipeSuggestedDaily('Min');
   }
 
-  protected get fipeSuggestedDailyMax() {
+  protected get fipeSuggestedDailyMax(): number | null {
+    return this.fipeSuggestedDaily('Max');
+  }
+
+  // Null quando a resposta não traz sugestão utilizável (esconde o bloco).
+  private fipeSuggestedDaily(edge: 'Min' | 'Max'): number | null {
     const price = this.fipePrice;
-    if (!price) return 0;
-    return (
-      price.suggestedDailyRateMax ??
-      dailyFromLegacyWeekly(price.suggestedWeeklyRateMax)
-    );
+    if (!price) return null;
+    const daily = price[`suggestedDailyRate${edge}`];
+    const weekly = price[`suggestedWeeklyRate${edge}`];
+    const value =
+      daily ?? (weekly == null ? null : dailyFromLegacyWeekly(weekly));
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
   }
 
   protected get hasValidDailyRate() {
@@ -1486,7 +1490,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       addressLine: this.vehicleDraft.addressLine?.trim() || '',
       year: Number(this.vehicleDraft.year),
       seats: Number(this.vehicleDraft.seats),
-      dailyRate: Number(this.vehicleDraft.dailyRate),
+      dailyRate: round2(Number(this.vehicleDraft.dailyRate)),
       minRentalDays: this.vehicleDraft.minRentalDays ?? null,
       kmPolicy: this.vehicleDraft.kmPolicy || 'FREE',
       hasInsurance: !!this.vehicleDraft.hasInsurance,

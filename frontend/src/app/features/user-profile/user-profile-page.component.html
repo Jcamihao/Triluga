@@ -253,7 +253,7 @@
                 </div>
                 <div class="flex items-center gap-1">
                   <span class="text-primary font-extrabold text-sm">
-                    R$ {{ vehicle.dailyRate }}
+                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-2' }}
                   </span>
                   <span
                     class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-tighter"

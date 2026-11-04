@@ -71,7 +71,7 @@
                   />
                   <h2>{{ vehicle.title }}</h2>
                   <strong>
-                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-0' }}
+                    {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-2' }}
                   </strong>
                   <small>por dia</small>
                 </article>
@@ -107,7 +107,7 @@
                 "
               >
                 <strong class="compare-web__price">
-                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.2-2' }}
+                  {{ vehicle.dailyRate | currency: 'BRL' : 'symbol' : '1.0-2' }}
                 </strong>
               </td>
               <td *ngIf="compareService.count() < 4"></td>

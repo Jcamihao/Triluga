@@ -14,7 +14,7 @@ export const MIN_RENTAL_OPTIONS: { value: number | null; label: string }[] = [
 export const RENTAL_DISCLAIMER =
   'Valores estimados a partir da diária. O pagamento e as condições são combinados e feitos diretamente entre você e o anunciante; o Triluga não participa nem intermedeia.';
 
-function round2(n: number): number {
+export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 

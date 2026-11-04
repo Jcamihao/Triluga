@@ -8,7 +8,9 @@ type CompareToggleResult =
 
 @Injectable({ providedIn: 'root' })
 export class CompareService {
-  private readonly storageKey = 'triluga.compare.vehicles';
+  // v2: snapshots antigos não têm minRentalDays/estimativas nem a diária atual.
+  private readonly storageKey = 'triluga.compare.vehicles.v2';
+  private readonly legacyStorageKey = 'triluga.compare.vehicles';
   private readonly maxItems = 4;
   private readonly itemsState = signal<VehicleCardItem[]>(this.restoreItems());
 
@@ -53,6 +55,7 @@ export class CompareService {
 
   private restoreItems() {
     try {
+      globalThis.localStorage?.removeItem(this.legacyStorageKey);
       const serialized = globalThis.localStorage?.getItem(this.storageKey);
 
       if (!serialized) {

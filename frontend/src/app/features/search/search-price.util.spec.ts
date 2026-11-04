@@ -26,8 +26,24 @@ describe('search-price.util', () => {
       });
     });
 
-    it('arredonda 699/semana (99,86) para 100', () => {
-      expect(read('minPrice=699').minDailyRate).toBe('100');
+    it('699/semana vira 99.86/dia, sem arredondar para inteiro', () => {
+      expect(read('minPrice=699').minDailyRate).toBe('99.86');
+      expect(read('maxPrice=699').maxDailyRate).toBe('99.86');
+    });
+
+    it('parâmetros novos inválidos (negativo, NaN, mais de 2 casas) viram vazio', () => {
+      expect(read('minDailyRate=-5&maxDailyRate=abc')).toEqual({
+        minDailyRate: '',
+        maxDailyRate: '',
+      });
+      expect(read('minDailyRate=10.999&maxDailyRate=Infinity')).toEqual({
+        minDailyRate: '',
+        maxDailyRate: '',
+      });
+      expect(read('minDailyRate=10.5&maxDailyRate=99.86')).toEqual({
+        minDailyRate: '10.5',
+        maxDailyRate: '99.86',
+      });
     });
 
     it('zero legado é valor válido', () => {
@@ -69,6 +85,12 @@ describe('search-price.util', () => {
       expect(applyPriceChange(unset, 'min', '40').minDailyRate).toBe('40');
     });
 
+    it('teto 0 é mantido ao mexer no mínimo', () => {
+      expect(
+        applyPriceChange({ minDailyRate: '', maxDailyRate: '0' }, 'min', '5'),
+      ).toEqual({ minDailyRate: '', maxDailyRate: '0' });
+    });
+
     it('um controle não passa o outro e valores são limitados a 0..300', () => {
       const range = { minDailyRate: '', maxDailyRate: '100' };
       expect(applyPriceChange(range, 'min', '200').minDailyRate).toBe('100');
@@ -84,6 +106,18 @@ describe('search-price.util', () => {
     it('R$ 0 a R$ 300+ vira sem limites', () => {
       expect(
         toPriceFilters({ minDailyRate: '0', maxDailyRate: '300' }),
+      ).toEqual({ minDailyRate: '', maxDailyRate: '' });
+    });
+
+    it('teto zero é válido e não vira "300+"', () => {
+      expect(
+        toPriceFilters({ minDailyRate: '0', maxDailyRate: '0' }),
+      ).toEqual({ minDailyRate: '', maxDailyRate: '0' });
+    });
+
+    it('vazio nos dois = sem filtro de preço', () => {
+      expect(
+        toPriceFilters({ minDailyRate: '', maxDailyRate: '' }),
       ).toEqual({ minDailyRate: '', maxDailyRate: '' });
     });
 

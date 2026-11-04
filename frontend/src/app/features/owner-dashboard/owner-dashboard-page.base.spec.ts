@@ -30,6 +30,15 @@ class TestOwnerPage extends OwnerDashboardPageBase {
     this.fipePrice = price as FipePriceResult;
     this.useFipePrice();
   }
+  setFipe(price: Partial<FipePriceResult>) {
+    this.fipePrice = price as FipePriceResult;
+  }
+  get fipeMin() {
+    return this.fipeSuggestedDailyMin;
+  }
+  get fipeMax() {
+    return this.fipeSuggestedDailyMax;
+  }
   get monthlyRevenue() {
     return this.estimatedDraftMonthlyRevenue;
   }
@@ -112,5 +121,23 @@ describe('OwnerDashboardPageBase (preço por diária)', () => {
   it('"Usar valor sugerido" deriva da sugestão semanal legada em respostas antigas', () => {
     page.useFipe({ suggestedWeeklyRateMin: 699 });
     expect(page.draft.dailyRate).toBe(99.86);
+  });
+
+  it('payload arredonda a diária para 2 casas (backend rejeita mais)', () => {
+    page.draft.dailyRate = 99.999;
+    expect(page.payload().dailyRate).toBe(100);
+    page.draft.dailyRate = '99.866';
+    expect(page.payload().dailyRate).toBe(99.87);
+  });
+
+  it('FIPE sem sugestão diária nem semanal não vira NaN: retorna null', () => {
+    page.setFipe({});
+    expect(page.fipeMin).toBeNull();
+    expect(page.fipeMax).toBeNull();
+  });
+
+  it('"Usar valor sugerido" sem sugestão não altera a diária', () => {
+    page.useFipe({});
+    expect(page.draft.dailyRate).toBe(100);
   });
 });

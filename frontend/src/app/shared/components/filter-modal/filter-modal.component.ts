@@ -11,11 +11,9 @@ import {
   PRICE_RANGE_MAX,
   priceTrackLeft,
   priceTrackWidth,
+  rateOr,
   toPriceFilters,
 } from '../../../features/search/search-price.util';
-
-const PRICE_MODAL_DEFAULT_MIN = 10;
-const PRICE_MODAL_DEFAULT_MAX = 80;
 
 export type FilterDraft = {
   vehicleType: string;
@@ -69,14 +67,12 @@ export class FilterModalComponent implements OnDestroy {
     if (!this.draft.vehicleType) {
       this.draft.vehicleType = 'CAR';
     }
-    if (!this.draft.minDailyRate && !this.draft.maxDailyRate) {
-      this.draft.minDailyRate = String(PRICE_MODAL_DEFAULT_MIN);
-      this.draft.maxDailyRate = String(PRICE_MODAL_DEFAULT_MAX);
-    } else {
-      // Máximo vazio = sem teto: o controle fica no topo ("R$ 300+").
-      this.draft.minDailyRate = this.draft.minDailyRate || '0';
-      this.draft.maxDailyRate = this.draft.maxDailyRate || String(PRICE_RANGE_MAX);
-    }
+    // Sem filtro de preço, os controles ficam nas pontas (R$ 0 a R$ 300+) e
+    // toPriceFilters devolve '' ao aplicar. Zero é um teto válido.
+    this.draft.minDailyRate = String(rateOr(this.draft.minDailyRate, 0));
+    this.draft.maxDailyRate = String(
+      rateOr(this.draft.maxDailyRate, PRICE_RANGE_MAX),
+    );
   }
 
   @Output() close = new EventEmitter<void>();
@@ -153,8 +149,8 @@ export class FilterModalComponent implements OnDestroy {
   }
 
   protected syncPriceSliders(changed: 'min' | 'max') {
-    const min = parseInt(this.draft.minDailyRate) || 0;
-    const max = parseInt(this.draft.maxDailyRate) || PRICE_RANGE_MAX;
+    const min = rateOr(this.draft.minDailyRate, 0);
+    const max = rateOr(this.draft.maxDailyRate, PRICE_RANGE_MAX);
 
     if (min > max) {
       if (changed === 'min') {
@@ -166,7 +162,7 @@ export class FilterModalComponent implements OnDestroy {
   }
 
   protected get isMaxBounded() {
-    return (parseInt(this.draft.maxDailyRate) || PRICE_RANGE_MAX) < PRICE_RANGE_MAX;
+    return rateOr(this.draft.maxDailyRate, PRICE_RANGE_MAX) < PRICE_RANGE_MAX;
   }
 
   protected get priceTrackLeft() {
@@ -186,8 +182,8 @@ export class FilterModalComponent implements OnDestroy {
       fuelType: '',
       minEngineCc: '',
       maxEngineCc: '',
-      minDailyRate: String(PRICE_MODAL_DEFAULT_MIN),
-      maxDailyRate: String(PRICE_MODAL_DEFAULT_MAX),
+      minDailyRate: '0',
+      maxDailyRate: String(PRICE_RANGE_MAX),
       radiusKm: '',
     };
   }

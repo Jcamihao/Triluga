@@ -12,13 +12,29 @@ function filled(value: string | null | undefined): value is string {
   return value !== null && value !== undefined && value.trim() !== '';
 }
 
+// Número do filtro, ou o padrão quando vazio/inválido. Zero é um valor válido.
+export function rateOr(value: string | null | undefined, fallback: number): number {
+  if (!filled(value)) return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+// Valor de preço aceito pelo backend: finito, >= 0 e no máximo 2 casas decimais.
+function validRate(value: string | null): string {
+  if (!filled(value)) return '';
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return '';
+  if (Math.abs(n * 100 - Math.round(n * 100)) > 1e-6) return '';
+  return String(n);
+}
+
 // URLs antigas (favoritos, e-mails e push de alertas) trazem minPrice/maxPrice
-// com valor SEMANAL. Convertemos para diária inteira; zero é um valor válido.
+// com valor SEMANAL. Convertemos para diária com 2 casas (como o backend).
 function legacyWeeklyToDaily(value: string | null): string {
   if (!filled(value)) return '';
   const weekly = Number(value);
   if (!Number.isFinite(weekly) || weekly < 0) return '';
-  return String(Math.round(dailyFromLegacyWeekly(weekly)));
+  return validRate(String(dailyFromLegacyWeekly(weekly)));
 }
 
 // Os parâmetros novos vencem os legados quando os dois pares vêm na URL.
@@ -27,10 +43,10 @@ export function readDailyRateParams(params: ParamReader): DailyRateRange {
   const maxNew = params.get('maxDailyRate');
   return {
     minDailyRate: filled(minNew)
-      ? minNew
+      ? validRate(minNew)
       : legacyWeeklyToDaily(params.get('minPrice')),
     maxDailyRate: filled(maxNew)
-      ? maxNew
+      ? validRate(maxNew)
       : legacyWeeklyToDaily(params.get('maxPrice')),
   };
 }
@@ -109,8 +125,8 @@ export function buildAlertFilters(query: {
 // Traduz a posição dos controles do modal para o filtro: piso 0 e teto no topo
 // ("R$ 300+") viram '' (sem limite), nunca '0' nem '300'.
 export function toPriceFilters<T extends DailyRateRange>(draft: T): T {
-  const min = Number(draft.minDailyRate) || 0;
-  const max = Number(draft.maxDailyRate) || PRICE_RANGE_MAX;
+  const min = rateOr(draft.minDailyRate, 0);
+  const max = rateOr(draft.maxDailyRate, PRICE_RANGE_MAX);
   return {
     ...draft,
     minDailyRate: min > 0 ? String(min) : '',

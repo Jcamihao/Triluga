@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { VehicleCardItem } from '../models/domain.models';
 
-const KEY = 'triluga.recentlyViewed';
+// v2: snapshots antigos não têm minRentalDays/estimativas nem a diária atual.
+const KEY = 'triluga.recentlyViewed.v2';
+const LEGACY_KEY = 'triluga.recentlyViewed';
 const MAX = 10;
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +23,7 @@ export class RecentlyViewedService {
 
   private load(): VehicleCardItem[] {
     try {
+      localStorage.removeItem(LEGACY_KEY);
       const raw = localStorage.getItem(KEY);
       return raw ? (JSON.parse(raw) as VehicleCardItem[]) : [];
     } catch {
