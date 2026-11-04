@@ -1,0 +1,29 @@
+# Local assessment overlay. The launcher supplies the cloned database URL.
+services:
+  postgres:
+    ports: !override
+      - '127.0.0.1:5436:5432'
+  redis:
+    ports: !override
+      - '127.0.0.1:6383:6379'
+  minio:
+    ports: !override
+      - '127.0.0.1:9004:9000'
+      - '127.0.0.1:9005:9001'
+  backend:
+    command: ['node', 'dist/main']
+    environment:
+      DATABASE_URL: ${ASSESSMENT_DATABASE_URL:?Use backend/scripts/assessment/runtime.cjs}
+      REDIS_URL: redis://redis:6379/1
+      SMTP_USER: ''
+      SMTP_PASS: ''
+      ASAAS_API_KEY: ''
+      ASAAS_WEBHOOK_TOKEN: ''
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: '9000'
+      FRONTEND_URL: http://localhost:4202
+    ports: !override
+      - '127.0.0.1:3002:3000'
+  frontend:
+    ports: !override
+      - '127.0.0.1:4202:80'
