@@ -1,0 +1,111 @@
+# Passada ponta a ponta: assinaturas (Asaas falso)
+início: 2026-11-14T19:05:31.700Z  fim: 2026-11-14T19:05:43.493Z
+backend: dist/main (build) | Postgres: embedded 18 (porta 54399) | Asaas falso: porta 3398 | API: 3099
+retries por 429 do throttler global: 0
+
+OK 1 Postgres descartável e schema (migrate deploy + contorno do Dockerfile)
+    ok  initdb rc=0
+    ok  postgres 18 ouvindo em 127.0.0.1:54399
+    ok  CREATE DATABASE triluga: ok
+    ok  prisma migrate deploy rc=0
+    ok  DRIFT antes do db push: 32 comandos SQL no diff migrations x schema.prisma (Report, AuditLog, FeaturedOrder e colunas como User.emailVerified)
+    ok  prisma db push (contorno Dockerfile) rc=0
+    ok  diff após db push: 0 linhas (0 = schema completo)
+    ok  tabelas-chave presentes: 7/7
+OK 2 Asaas falso em HTTP local (User-Agent obrigatório, log de requisições)
+    ok  GET sem User-Agent -> 403 (esperado 403)
+    ok  GET com User-Agent -> 200
+OK 3 Backend real (dist/main) com BILLING_ENABLED=true e Asaas falso
+    ok  GET /api/v1/billing/plans 200 (log: /tmp/triluga-e2e-neyx5W/backend.log)
+OK 4a Registro real do usuário comum e de um ADMIN (via Prisma); sem verificação de e-mail
+    ok  POST /auth/register usuário -> HTTP 201 {"accessToken":"[redigido]","user":{"id":"d4d5f1e1-4016-48b1-b13e-7cdf9923f3e5","email":"e2e.usuario@example.com","role":"USER","status":"ACTIVE","emailVerified":false,"lastLoginAt":null,"createdAt":"2026-11-14T19:05:38.
+    ok  POST /auth/register admin -> 201
+    ok  POST /auth/login usuário -> 201 (token presente: true)
+    ok  POST /auth/login admin -> 201
+    ok  usuário sem e-mail verificado e login mesmo assim: emailVerified=false
+OK 4b Anúncios: 3 publicados OK; 4º publicado = 403 PLAN_LIMIT; rascunho passa; republicar = 403
+    ok  anúncio AAA1B01 publicado -> 201
+    ok  anúncio AAA1B02 publicado -> 201
+    ok  anúncio AAA1B03 publicado -> 201
+    ok  4º publicado -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:38.834Z","path":"/api/v1/vehicles","requestId":"77637590-8450-4752-9ac5-9937a0963172","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":3,"plan":"FREE","message":"Vo
+    ok  rascunho (isPublished=false) -> 201 id=285db5dc-fd5f-4b70-965f-646959990db2
+    ok  republicar rascunho -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:38.854Z","path":"/api/v1/vehicles/285db5dc-fd5f-4b70-965f-646959990db2","requestId":"8197dd28-a5d5-49f2-90b9-1a74697fde6e","error":"Forbidden","code":"PLAN_LIMIT","limit":3
+    ok  publicados no banco: 3 (esperado 3)
+OK 4c GET /billing/plans (público) e GET /billing/me
+    ok  GET /billing/plans sem token -> 200 enabled=true
+    ok  limites FREE=3 PRO=10 FROTA=null
+    ok  preços PRO=29.9 FROTA=79.9
+    ok  GET /billing/me -> 200 {"enforced":true,"plan":"FREE","ads":{"used":3,"limit":3}} plan=FREE
+OK 4d POST /billing/checkout PROFESSIONAL MONTHLY: corpo enviado ao Asaas e linha PENDING
+    ok  POST /billing/checkout -> HTTP 201 {"link":"https://sandbox.asaas.fake/checkout/chk_fake_1"}
+    ok  POST /checkouts recebido pelo fake: 1
+    ok  billingTypes=["CREDIT_CARD"] chargeTypes=["RECURRENT"]
+    ok  items[0].value=29.9
+    ok  sem customerData no corpo: true
+    ok  3 callbacks: {"successUrl":"https://triluga.example.com/plano?checkout=sucesso","cancelUrl":"https://triluga.example.com/plano?checkout=cancelado","expiredUrl":"https://triluga.example.com/plano?checkout=expirado"}
+    ok  externalReference=017ffbad-27b2-41a2-8d67-6572e8457029 == Subscription.id=017ffbad-27b2-41a2-8d67-6572e8457029
+    ok  header access_token presente=true, User-Agent=Triluga/2.28.0 (Node.js)
+    ok  Subscription status=PENDING source=ASAAS link gravado=true
+OK 4e Webhook CHECKOUT_PAID: sem/errado token = 403 e nada gravado; certo = ACTIVE; reenvio idempotente
+    ok  sem header asaas-access-token -> 403
+    ok  token errado -> 403
+    ok  BillingEvent após 2 recusas: 0 (antes 0, esperado igual)
+    ok  token certo, CHECKOUT_PAID -> HTTP 200 {"ok":true}
+    ok  fake recebeu GET /subscriptions/sub_e2e_1 x1 (reconcile)
+    ok  reenvio do MESMO evento -> HTTP 200 {"ok":true}
+    ok  reenvio não chamou o Asaas de novo: 0 req
+    ok  BillingEvent evt_e2e_checkout_1: linhas=1 processedAt=true
+    ok  Subscription: status=ACTIVE asaasSubscriptionId=sub_e2e_1 fim=2026-12-14T00:00:00.000Z
+    ok  GET /billing/me -> plan=PROFESSIONAL source=ASAAS status=ACTIVE
+OK 4e2 BillingEvent.payload sem dado pessoal (cpfCnpj, email, phone, postalCode, creditCard*)
+    ok  chaves sensíveis no payload: nenhuma
+    ok  valores pessoais no payload: nenhum
+    ok  campos úteis mantidos (checkout, subscription): true
+    ok  type=CHECKOUT_PAID provider=ASAAS
+OK 4f Com PROFESSIONAL, publicar o rascunho (4º) = 200
+    ok  PATCH rascunho isPublished=true -> 200 
+    ok  publicados no banco: 4 (esperado 4)
+OK 4g Upgrade: checkout FROTA; CHECKOUT_PAID cancela PRO no Asaas (DELETE) e deixa FROTA ACTIVE
+    ok  POST /billing/checkout FLEET -> 201
+    ok  checkout FROTA enviado: valor=79.9 extRef ok=true
+    ok  CHECKOUT_PAID FROTA -> HTTP 200 {"ok":true}
+    ok  fake recebeu DELETE /subscriptions/sub_e2e_1 (PRO antiga): índice 1
+    ok  GET da nova (0) antes do DELETE da antiga (1)
+    ok  PRO antiga: status=CANCELED cancelAtPeriodEnd=true
+    ok  FROTA nova: status=ACTIVE
+    ok  GET /billing/me plan=FLEET
+OK 4h POST /billing/cancel (DELETE no Asaas) + PAYMENT_REFUNDED volta ao FREE sem apagar anúncios
+    ok  POST /billing/cancel -> 201
+    ok  DELETE recebido pelo fake: /subscriptions/sub_e2e_2
+    ok  FROTA após cancel: status=CANCELED fim mantido=true
+    ok  PAYMENT_REFUNDED -> HTTP 200 {"ok":true}
+    ok  FROTA após reembolso: status=EXPIRED
+    OBS após refund do FROTA, /billing/me plan=PROFESSIONAL. PRO antiga (CANCELED pelo upgrade) fim=2026-12-14T00:00:00.000Z ainda concede acesso (regra CANCELED até o fim do período)
+    ok  com o período da PRO antiga encerrado (simulado no banco): /billing/me plan=FREE
+    ok  anúncios: publicados=4 (esperado 4) total=4 (esperado 4, nenhum apagado)
+    ok  novo publicado no FREE -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:39.012Z","path":"/api/v1/vehicles","requestId":"c9e78156-610a-4958-bbea-f258b0f29728","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":4,"plan":"FREE","message":"Vo
+OK 4i Admin: concessão FROTA com endsAt -03:00 (source GRANT) e revogação volta ao FREE
+    ok  usuário comum em /admin/grants -> 403
+    ok  POST /billing/admin/grants -> HTTP 201 {"id":"b017c044-d99e-4853-8115-557b4a7d319d","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:05:39.016Z","status":"ACTIVE","createdAt":"2026-11-14T19:05:39.021Z"}
+    ok  GET /billing/me plan=FLEET source=GRANT
+    ok  DELETE grant -> HTTP 200 {"id":"b017c044-d99e-4853-8115-557b4a7d319d","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:05:39.016Z","status":"EXPIRED","createdAt":"2026-11-14T19:05:39.021Z"}
+    ok  após revogar plan=FREE
+OK 4j POST /billing/sync: sem assinatura = no-op; PENDING sem remoto = consulta por externalReference e segue PENDING
+    ok  sync sem assinatura aberta -> 201; chamadas ao Asaas: 0 (esperado 0)
+    ok  novo checkout PRO (PENDING) -> 201
+    ok  sync -> 201; GET por externalReference: sim
+    ok  PENDING continua: status=PENDING
+OK 4k Falha: fake 500 no GET durante webhook = 5xx, BillingEvent com error e sem processedAt; reenvio processa
+    ok  webhook com Asaas 500 -> HTTP 500 (esperado 5xx)
+    ok  GET /subscriptions/sub_e2e_3 tentativas no fake: 3 (3 = retry do GET)
+    ok  BillingEvent: processedAt=null error="Asaas respondeu 500 para GET /subscriptions/sub_e2e_3: {"errors":[{"code":"FAKE_FAILURE"}]}"
+    ok  log do backend: AsaasClientError: Asaas respondeu 500 para GET /subscriptions/sub_e2e_3: {"errors":[{"code":"FAKE_FAILURE"}]}
+    ok  reenvio com Asaas normal -> HTTP 200 {"ok":true}
+    ok  BillingEvent após reenvio: processedAt preenchido=true
+    OBS error após reenvio bem-sucedido = mantido (não é limpo no sucesso)
+    ok  Subscription após reenvio: status=ACTIVE
+
+RESUMO: 15/15 passos OK
+
+linhas de ERROR/Falha do log do backend (trecho):
+    [31m[Nest] 68144  - [39m11/14/2026, 4:05:39 PM [31m  ERROR[39m [38;5;3m[Bootstrap] [39m[31mrequest_completed requestId=cd5d3088-4395-406b-b5b4-07273e1aa999 method=POST path=/api/v1/billing/webhooks/asaas status=50
