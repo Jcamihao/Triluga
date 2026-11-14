@@ -180,6 +180,7 @@ model User {
   reportsResolved           Report[]              @relation("ReportResolver")
   auditLogs                 AuditLog[]
   featuredOrders            FeaturedOrder[]
+  subscriptions             Subscription[]
 
   @@index([role, status])
 }
@@ -556,3 +557,61 @@ model FeaturedOrder {
   @@index([status, expiresAt])
 }
 
+enum BillingPlan {
+  PROFESSIONAL
+  FLEET
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum SubscriptionSource {
+  ASAAS
+  GRANT
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+model Subscription {
+  id                  String             @id @default(uuid())
+  ownerUserId         String
+  plan                BillingPlan
+  status              SubscriptionStatus @default(PENDING)
+  source              SubscriptionSource
+  interval            BillingInterval?
+  currentPeriodEnd    DateTime?          // null + GRANT = sem fim
+  pastDueSince        DateTime?
+  cancelAtPeriodEnd   Boolean            @default(false)
+  asaasCheckoutId     String?            @unique
+  asaasCheckoutLink   String?
+  asaasSubscriptionId String?            @unique
+  asaasCustomerId     String?
+  latestInvoiceUrl    String?
+  grantedByUserId     String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  owner               User               @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId, status])
+}
+
+model BillingEvent {
+  id              String    @id @default(uuid())
+  provider        String    @default("ASAAS")
+  externalEventId String    @unique        // idempotência
+  type            String
+  payload         Json                     // já SANITIZADO (sem CPF nem cartão)
+  processedAt     DateTime?
+  error           String?
+  createdAt       DateTime  @default(now())
+
+  @@index([type, createdAt])
+}

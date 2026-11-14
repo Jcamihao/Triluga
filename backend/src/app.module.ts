@@ -33,6 +33,7 @@ import { LookupsModule } from './lookups/lookups.module';
 import { EmailModule } from './email/email.module';
 import { emailConfig } from './config/email.config';
 import { asaasConfig } from './config/asaas.config';
+import { billingConfig } from './config/billing.config';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { ReportsModule } from './reports/reports.module';
@@ -55,6 +56,7 @@ import { FeaturedModule } from './featured/featured.module';
         storageConfig,
         emailConfig,
         asaasConfig,
+        billingConfig,
       ],
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
