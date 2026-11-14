@@ -291,3 +291,221 @@ describe('AsaasClient HTTP headers', () => {
     }
   });
 });
+
+describe('AsaasClient assinaturas', () => {
+  const checkoutParams = {
+    value: 19.9,
+    cycle: 'MONTHLY' as const,
+    itemName: 'Plano Individual',
+    itemDescription: 'Assinatura mensal',
+    externalReference: 'user-1',
+    successUrl: 'https://app.example/ok',
+    cancelUrl: 'https://app.example/cancel',
+    expiredUrl: 'https://app.example/expired',
+    minutesToExpire: 30,
+  };
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('createCheckout sends POST /checkouts with exact body, no customerData and no subscription.value', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-14T01:30:00Z'));
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue(ok({ id: 'chk_1', link: 'https://pay/x' }));
+
+    await client.createCheckout(checkoutParams);
+
+    expect(perform).toHaveBeenCalledTimes(1);
+    const [method, path, body] = perform.mock.calls[0] as unknown[];
+    expect(method).toBe('POST');
+    expect(path).toBe('/checkouts');
+    expect(body).toEqual({
+      billingTypes: ['CREDIT_CARD'],
+      chargeTypes: ['RECURRENT'],
+      minutesToExpire: 30,
+      externalReference: 'user-1',
+      callback: {
+        successUrl: 'https://app.example/ok',
+        cancelUrl: 'https://app.example/cancel',
+        expiredUrl: 'https://app.example/expired',
+      },
+      items: [
+        {
+          name: 'Plano Individual',
+          description: 'Assinatura mensal',
+          quantity: 1,
+          value: 19.9,
+        },
+      ],
+      subscription: { cycle: 'MONTHLY', nextDueDate: '2026-11-13' },
+    });
+    const sent = body as Record<string, unknown>;
+    expect(sent).not.toHaveProperty('customerData');
+    expect(sent.subscription as Record<string, unknown>).not.toHaveProperty(
+      'value',
+    );
+    expect(sent.billingTypes).toEqual(['CREDIT_CARD']);
+    expect(sent.chargeTypes).toEqual(['RECURRENT']);
+  });
+
+  it('createCheckout computes nextDueDate in America/Sao_Paulo', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue(ok({ id: 'chk_1', link: 'l' }));
+
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-14T01:30:00Z'));
+    await client.createCheckout(checkoutParams);
+    expect((perform.mock.calls[0] as unknown[])[2]).toMatchObject({
+      subscription: { nextDueDate: '2026-11-13' },
+    });
+
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-13T12:00:00Z'));
+    await client.createCheckout(checkoutParams);
+    expect((perform.mock.calls[1] as unknown[])[2]).toMatchObject({
+      subscription: { nextDueDate: '2026-11-13' },
+    });
+  });
+
+  it('createCheckout returns { id, link }', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue(
+      ok({ id: 'chk_1', link: 'https://pay/x', extra: 'y' }),
+    );
+
+    expect(await client.createCheckout(checkoutParams)).toEqual({
+      id: 'chk_1',
+      link: 'https://pay/x',
+    });
+  });
+
+  it('getSubscription maps deleted absent to false, true to true, externalReference absent to null', async () => {
+    const { client, perform } = makeClient();
+
+    perform.mockResolvedValueOnce(
+      ok({ id: 'sub_1', nextDueDate: '2026-11-13', externalReference: 'u1' }),
+    );
+    expect(await client.getSubscription('sub_1')).toEqual({
+      id: 'sub_1',
+      deleted: false,
+      nextDueDate: '2026-11-13',
+      externalReference: 'u1',
+    });
+    expect(perform).toHaveBeenLastCalledWith(
+      'GET',
+      '/subscriptions/sub_1',
+      undefined,
+    );
+
+    perform.mockResolvedValueOnce(
+      ok({ id: 'sub_1', deleted: true, nextDueDate: '2026-11-13' }),
+    );
+    expect(await client.getSubscription('sub_1')).toEqual({
+      id: 'sub_1',
+      deleted: true,
+      nextDueDate: '2026-11-13',
+      externalReference: null,
+    });
+  });
+
+  it('findSubscriptionByExternalReference returns null for empty or absent data', async () => {
+    const { client, perform } = makeClient();
+
+    perform.mockResolvedValueOnce(ok({ data: [] }));
+    expect(await client.findSubscriptionByExternalReference('u1')).toBeNull();
+
+    perform.mockResolvedValueOnce(ok({}));
+    expect(await client.findSubscriptionByExternalReference('u1')).toBeNull();
+  });
+
+  it('findSubscriptionByExternalReference maps the first item and urlencodes the reference', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValueOnce(
+      ok({
+        data: [
+          {
+            id: 'sub_1',
+            nextDueDate: '2026-11-13',
+            externalReference: 'a&b=c',
+          },
+          { id: 'sub_2', nextDueDate: '2026-12-13' },
+        ],
+      }),
+    );
+
+    expect(await client.findSubscriptionByExternalReference('a&b=c d')).toEqual(
+      {
+        id: 'sub_1',
+        deleted: false,
+        nextDueDate: '2026-11-13',
+        externalReference: 'a&b=c',
+      },
+    );
+    expect(perform).toHaveBeenCalledWith(
+      'GET',
+      '/subscriptions?externalReference=a%26b%3Dc+d',
+      undefined,
+    );
+  });
+
+  it('deleteSubscription calls DELETE /subscriptions/{id}', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue(ok({ deleted: true, id: 'sub_1' }));
+
+    await client.deleteSubscription('sub_1');
+
+    expect(perform).toHaveBeenCalledWith(
+      'DELETE',
+      '/subscriptions/sub_1',
+      undefined,
+    );
+  });
+
+  it('POST /checkouts does not retry on 500', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue({ statusCode: 500, body: 'boom' });
+
+    const error = await client
+      .createCheckout(checkoutParams)
+      .catch((e: unknown) => e);
+
+    expect(perform).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(AsaasClientError);
+    expect((error as AsaasClientError).statusCode).toBe(500);
+  });
+
+  it('GET /subscriptions/{id} retries on 500', async () => {
+    const { client, perform } = makeClient();
+    perform
+      .mockResolvedValueOnce({ statusCode: 500, body: '' })
+      .mockResolvedValueOnce(ok({ id: 'x', nextDueDate: '2026-11-13' }));
+
+    expect((await client.getSubscription('x')).id).toBe('x');
+    expect(perform).toHaveBeenCalledTimes(2);
+  });
+
+  it('DELETE /subscriptions/{id} retries on 500', async () => {
+    const { client, perform } = makeClient();
+    perform
+      .mockResolvedValueOnce({ statusCode: 500, body: '' })
+      .mockResolvedValueOnce(ok({ deleted: true }));
+
+    await client.deleteSubscription('sub_1');
+    expect(perform).toHaveBeenCalledTimes(2);
+  });
+
+  it('4xx on subscription calls is never retried', async () => {
+    const { client, perform } = makeClient();
+    perform.mockResolvedValue({ statusCode: 400, body: '{"errors":[]}' });
+
+    const e1 = await client
+      .deleteSubscription('sub_1')
+      .catch((e: unknown) => e);
+    expect(perform).toHaveBeenCalledTimes(1);
+    expect((e1 as AsaasClientError).statusCode).toBe(400);
+
+    perform.mockClear();
+    const e2 = await client.getSubscription('sub_1').catch((e: unknown) => e);
+    expect(perform).toHaveBeenCalledTimes(1);
+    expect((e2 as AsaasClientError).statusCode).toBe(400);
+  });
+});

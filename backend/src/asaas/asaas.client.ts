@@ -17,6 +17,37 @@ export interface AsaasPixQrCode {
   expirationDate: string;
 }
 
+export interface AsaasSubscription {
+  id: string;
+  deleted: boolean;
+  nextDueDate: string; // ISO date (YYYY-MM-DD), vem cru do Asaas
+  externalReference: string | null;
+}
+
+export interface AsaasCheckout {
+  id: string;
+  link: string;
+}
+
+export interface CreateCheckoutParams {
+  value: number;
+  cycle: 'MONTHLY' | 'YEARLY';
+  itemName: string;
+  itemDescription: string;
+  externalReference: string;
+  successUrl: string;
+  cancelUrl: string;
+  expiredUrl: string;
+  minutesToExpire: number;
+}
+
+interface RawAsaasSubscription {
+  id: string;
+  deleted?: boolean;
+  nextDueDate: string;
+  externalReference?: string | null;
+}
+
 interface RawResponse {
   statusCode: number;
   body: string;
@@ -132,6 +163,84 @@ export class AsaasClient {
 
   async deletePayment(paymentId: string): Promise<void> {
     await this.request<unknown>('DELETE', `/payments/${paymentId}`);
+  }
+
+  async createCheckout(params: CreateCheckoutParams): Promise<AsaasCheckout> {
+    const result = await this.request<{ id: string; link: string }>(
+      'POST',
+      '/checkouts',
+      {
+        billingTypes: ['CREDIT_CARD'],
+        chargeTypes: ['RECURRENT'],
+        minutesToExpire: params.minutesToExpire,
+        externalReference: params.externalReference,
+        callback: {
+          successUrl: params.successUrl,
+          cancelUrl: params.cancelUrl,
+          expiredUrl: params.expiredUrl,
+        },
+        // Validado no sandbox: o valor cobrado e exibido vem de `items`
+        // (`subscription.value` e ignorado) e `subscription.nextDueDate` e exigido.
+        items: [
+          {
+            name: params.itemName,
+            description: params.itemDescription,
+            quantity: 1,
+            value: params.value,
+          },
+        ],
+        subscription: {
+          cycle: params.cycle,
+          nextDueDate: this.todayInSaoPaulo(),
+        },
+      },
+    );
+
+    return { id: result.id, link: result.link };
+  }
+
+  /** Data de hoje (YYYY-MM-DD) no fuso de São Paulo, o que o Asaas espera. */
+  private todayInSaoPaulo(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+    }).format(new Date());
+  }
+
+  async getSubscription(id: string): Promise<AsaasSubscription> {
+    const result = await this.request<RawAsaasSubscription>(
+      'GET',
+      `/subscriptions/${id}`,
+    );
+    return this.mapSubscription(result);
+  }
+
+  async findSubscriptionByExternalReference(
+    ref: string,
+  ): Promise<AsaasSubscription | null> {
+    const query = new URLSearchParams({ externalReference: ref }).toString();
+    const result = await this.request<{ data?: RawAsaasSubscription[] }>(
+      'GET',
+      `/subscriptions?${query}`,
+    );
+
+    if (!result.data || result.data.length === 0) {
+      return null;
+    }
+
+    return this.mapSubscription(result.data[0]);
+  }
+
+  async deleteSubscription(id: string): Promise<void> {
+    await this.request<unknown>('DELETE', `/subscriptions/${id}`);
+  }
+
+  private mapSubscription(raw: RawAsaasSubscription): AsaasSubscription {
+    return {
+      id: raw.id,
+      deleted: Boolean(raw.deleted),
+      nextDueDate: raw.nextDueDate,
+      externalReference: raw.externalReference ?? null,
+    };
   }
 
   /**
