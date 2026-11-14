@@ -59,6 +59,16 @@ services:
         sync: false
       - key: ASAAS_TIMEOUT_MS
         value: '10000'
+      - key: BILLING_ENABLED
+        value: 'false'
+      - key: BILLING_PRICE_PROFESSIONAL_MONTHLY
+        sync: false
+      - key: BILLING_PRICE_PROFESSIONAL_YEARLY
+        sync: false
+      - key: BILLING_PRICE_FLEET_MONTHLY
+        sync: false
+      - key: BILLING_PRICE_FLEET_YEARLY
+        sync: false
   - type: web
     name: triluga-web
     runtime: static

@@ -39,6 +39,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 import { ReportsModule } from './reports/reports.module';
 import { AuditModule } from './audit/audit.module';
 import { FeaturedModule } from './featured/featured.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { FeaturedModule } from './featured/featured.module';
     ReportsModule,
     AuditModule,
     FeaturedModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [

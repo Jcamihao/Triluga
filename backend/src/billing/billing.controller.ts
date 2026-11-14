@@ -1,0 +1,55 @@
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
+import { BillingService } from './billing.service';
+import { CreateGrantDto } from './dto/create-grant.dto';
+
+@ApiTags('billing')
+@ApiBearerAuth()
+@Controller('billing')
+export class BillingController {
+  constructor(private readonly billingService: BillingService) {}
+
+  @Public()
+  @Get('plans')
+  @ApiOperation({ summary: 'Lista os planos, limites e preços' })
+  plans() {
+    return this.billingService.getPlans();
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Plano efetivo e uso do usuário logado' })
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return this.billingService.getMe(user.sub);
+  }
+
+  @Get('admin/grants')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '[Admin] Lista concessões de plano' })
+  listGrants() {
+    return this.billingService.listGrants();
+  }
+
+  @Post('admin/grants')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: '[Admin] Concede um plano a um usuário pelo e-mail',
+  })
+  createGrant(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateGrantDto,
+  ) {
+    return this.billingService.createGrant(user.sub, dto);
+  }
+
+  @Delete('admin/grants/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: '[Admin] Revoga uma concessão' })
+  revokeGrant(@Param('id') id: string) {
+    return this.billingService.revokeGrant(id);
+  }
+}
