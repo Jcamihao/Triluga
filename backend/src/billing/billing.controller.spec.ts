@@ -1,3 +1,6 @@
+import { RequestMethod } from '@nestjs/common';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
+import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
 import { Role } from '@prisma/client';
 import { IS_PUBLIC_KEY } from '../common/decorators/public.decorator';
 import { ROLES_KEY } from '../common/decorators/roles.decorator';
@@ -156,6 +159,27 @@ describe('BillingController', () => {
 
     it('responde 200 (HttpCode), não 201', () => {
       expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    });
+
+    it('é POST em webhooks/asaas', () => {
+      expect(Reflect.getMetadata('path', handler)).toBe('webhooks/asaas');
+      expect(Reflect.getMetadata('method', handler)).toBe(RequestMethod.POST);
+    });
+
+    it('lê o token do header asaas-access-token e o body do request', () => {
+      const args = Reflect.getMetadata(
+        ROUTE_ARGS_METADATA,
+        BillingController,
+        'asaasWebhook',
+      ) as Record<string, { index: number; data?: string }>;
+      const byType = (type: RouteParamtypes) =>
+        Object.entries(args).find(([key]) => key.startsWith(`${type}:`))?.[1];
+
+      expect(byType(RouteParamtypes.HEADERS)).toMatchObject({
+        index: 0,
+        data: 'asaas-access-token',
+      });
+      expect(byType(RouteParamtypes.BODY)).toMatchObject({ index: 1 });
     });
 
     it('delega ao serviço com o header asaas-access-token e o body', async () => {

@@ -1352,6 +1352,33 @@ describe('FeaturedService', () => {
         expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
       });
 
+      it.each([
+        ['CHECKOUT_PAID', { checkout: { id: 'chk_1', subscription: 'sub_1' } }],
+        ['SUBSCRIPTION_DELETED', { subscription: { id: 'sub_1' } }],
+        ['SUBSCRIPTION_INACTIVATED', { subscription: { id: 'sub_1' } }],
+        [
+          'PAYMENT_CREATED',
+          { payment: { id: 'pay_1', subscription: 'sub_1' } },
+        ],
+        [
+          'PAYMENT_UPDATED',
+          { payment: { id: 'pay_1', subscription: 'sub_1' } },
+        ],
+      ])(
+        'evento %s do billing (sem payment ou fora da lista do destaque) cai no noop sem warn/error',
+        async (evt, body) => {
+          const result = await service.handleAsaasWebhook(TOKEN, {
+            event: evt,
+            ...body,
+          } as any);
+
+          expect(result).toEqual({ ok: true, activated: 0 });
+          expectNothingTouched();
+          expect(warnSpy).not.toHaveBeenCalled();
+          expect(errorSpy).not.toHaveBeenCalled();
+        },
+      );
+
       it('regressão: pagamento avulso sem subscription continua ativando o pedido', async () => {
         const result = await service.handleAsaasWebhook(
           TOKEN,

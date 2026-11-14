@@ -5,7 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AsaasClient } from '../asaas/asaas.client';
+import * as nodeCrypto from 'crypto';
+import { AsaasClient, AsaasClientError } from '../asaas/asaas.client';
 import { BillingPaymentsService } from './billing-payments.service';
 import { getCatalog } from './plans.catalog';
 
@@ -1106,6 +1107,53 @@ describe('BillingPaymentsService#cancel', () => {
     expect(prisma.subscription.update).not.toHaveBeenCalled();
   });
 
+  it('Asaas responde 404 ao deletar (já removida): trata como sucesso e grava CANCELED', async () => {
+    const end = new Date(NOW.getTime() + 10 * DAY);
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-sub-1',
+          currentPeriodEnd: end,
+        }),
+      ],
+    });
+    asaas.deleteSubscription.mockRejectedValueOnce(
+      new AsaasClientError('Asaas respondeu 404', 404),
+    );
+
+    await expect(service.cancel('user-1')).resolves.toBeUndefined();
+
+    expect(rows[0]).toMatchObject({
+      status: 'CANCELED',
+      cancelAtPeriodEnd: true,
+      currentPeriodEnd: end,
+    });
+  });
+
+  it.each([
+    ['AsaasClientError 500', new AsaasClientError('Asaas respondeu 500', 500)],
+    ['AsaasClientError sem status (rede)', new AsaasClientError('rede')],
+    [
+      'Error comum com statusCode 404',
+      Object.assign(new Error('x'), { statusCode: 404 }),
+    ],
+  ])('delete com %s propaga e não grava CANCELED', async (_l, error) => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-sub-1',
+          currentPeriodEnd: new Date(NOW.getTime() + 10 * DAY),
+        }),
+      ],
+    });
+    asaas.deleteSubscription.mockRejectedValueOnce(error);
+
+    await expect(service.cancel('user-1')).rejects.toBe(error);
+    expect(rows[0].status).toBe('ACTIVE');
+  });
+
   it.each(['ACTIVE', 'PAST_DUE'] as const)(
     'cancela %s no Asaas e marca CANCELED sem mexer em currentPeriodEnd',
     async (status) => {
@@ -1543,8 +1591,13 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       ]) {
         expect(stored).not.toContain(`"${key}"`);
       }
+      expect(events[0]).toMatchObject({
+        externalEventId: 'evt_san',
+        type: 'PAYMENT_OVERDUE',
+      });
       expect(events[0].payload).toMatchObject({
         id: 'evt_san',
+        event: 'PAYMENT_OVERDUE',
         payment: {
           value: 49.9,
           invoiceUrl: 'https://asaas.test/i/1',
@@ -1761,6 +1814,23 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       expect(rows[0].asaasSubscriptionId).toBeNull();
       expect(asaas.getSubscription).not.toHaveBeenCalled();
     });
+
+    it('sem checkout.id nem consulta o banco (where com undefined no Prisma casaria qualquer linha)', async () => {
+      const { service, prisma } = setup({
+        rows: [row({ id: 'local-5', asaasCheckoutId: 'chk-5' })],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        checkoutEvent({
+          subscription: 'asaas-z',
+          externalReference: 'local-5',
+        }),
+      );
+
+      expect(prisma.subscription.findFirst).not.toHaveBeenCalled();
+      expect(prisma.subscription.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('PAYMENT_CONFIRMED / PAYMENT_RECEIVED / PAYMENT_OVERDUE', () => {
@@ -1956,11 +2026,12 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
   });
 
   describe('evento desconhecido', () => {
-    it('e registrado, marcado como processado, avisado e nao altera assinatura', async () => {
+    it('e registrado, marcado como processado, so em debug (sem warn) e nao altera assinatura', async () => {
       const { service, prisma, events, rows, asaas } = setup({
         rows: [row({ asaasSubscriptionId: 'asaas-sub-1', status: 'ACTIVE' })],
       });
       const warnSpy = Logger.prototype.warn as unknown as jest.SpyInstance;
+      const debugSpy = Logger.prototype.debug as unknown as jest.SpyInstance;
 
       await expect(
         service.processWebhookEvent(TOKEN, {
@@ -1971,10 +2042,32 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
 
       expect(prisma.billingEvent.create).toHaveBeenCalledTimes(1);
       expect(events[0].processedAt).toBeInstanceOf(Date);
-      expect(warnSpy).toHaveBeenCalled();
+      expect(debugSpy).toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
       expect(rows[0].status).toBe('ACTIVE');
       expect(asaas.getSubscription).not.toHaveBeenCalled();
     });
+
+    it.each(['PAYMENT_CREATED', 'PAYMENT_UPDATED'])(
+      '%s com payment.subscription (chega todo ciclo): registra, processa, sem warn e sem tocar a assinatura',
+      async (event) => {
+        const { service, events, rows, asaas } = setup({
+          rows: [row({ asaasSubscriptionId: 'asaas-sub-1', status: 'ACTIVE' })],
+        });
+        const warnSpy = Logger.prototype.warn as unknown as jest.SpyInstance;
+
+        await expect(
+          service.processWebhookEvent(TOKEN, paymentEvent(event)),
+        ).resolves.toEqual({ ok: true });
+
+        expect(events).toHaveLength(1);
+        expect(events[0].type).toBe(event);
+        expect(events[0].processedAt).toBeInstanceOf(Date);
+        expect(warnSpy).not.toHaveBeenCalled();
+        expect(rows[0].status).toBe('ACTIVE');
+        expect(asaas.getSubscription).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('falha no dispatch', () => {
@@ -2056,6 +2149,511 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       expect(events).toHaveLength(1);
       expect(events[0].processedAt).toBeInstanceOf(Date);
       expect(rows[0].status).toBe('ACTIVE');
+    });
+  });
+
+  describe('token: comparação em tempo constante', () => {
+    it('usa crypto.timingSafeEqual quando os tamanhos batem', async () => {
+      const { service } = setup();
+      const spy = jest.spyOn(nodeCrypto, 'timingSafeEqual');
+
+      await service.processWebhookEvent(TOKEN, {
+        id: 'evt_t1',
+        event: 'PLAN_UPDATED',
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      const [a, b] = spy.mock.calls[0] as unknown as [Buffer, Buffer];
+      expect(a.toString()).toBe(TOKEN);
+      expect(b.toString()).toBe(TOKEN);
+    });
+
+    it('token de tamanho diferente recusa sem chamar timingSafeEqual (que lançaria RangeError)', async () => {
+      const { service } = setup();
+      const spy = jest.spyOn(nodeCrypto, 'timingSafeEqual');
+
+      await expect(
+        service.processWebhookEvent(`${TOKEN}-x`, {
+          id: 'evt_t2',
+          event: 'PLAN_UPDATED',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('idempotência: bordas', () => {
+    it('P2002 sem registro achado relança o erro original (não engole)', async () => {
+      const { service, prisma, asaas } = setup({
+        rows: [row({ asaasSubscriptionId: 'asaas-sub-1' })],
+      });
+      const p2002 = Object.assign(new Error('Unique constraint failed'), {
+        code: 'P2002',
+      });
+      prisma.billingEvent.create.mockRejectedValueOnce(p2002);
+
+      await expect(
+        service.processWebhookEvent(TOKEN, paymentEvent('PAYMENT_CONFIRMED')),
+      ).rejects.toBe(p2002);
+      expect(prisma.billingEvent.findUnique).toHaveBeenCalledTimes(1);
+      expect(prisma.billingEvent.update).not.toHaveBeenCalled();
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+    });
+
+    it('retry reaproveita o mesmo registro: não cria outro e grava processedAt nele', async () => {
+      const { service, prisma, events } = setup({
+        rows: [row({ asaasSubscriptionId: 'asaas-sub-1', status: 'ACTIVE' })],
+        events: [
+          {
+            id: 'evt-old',
+            externalEventId: 'evt_PLAN_UPDATED_1',
+            type: 'PLAN_UPDATED',
+            payload: {},
+            processedAt: null,
+            error: 'antigo',
+          },
+        ],
+      });
+
+      await service.processWebhookEvent(TOKEN, {
+        id: 'evt_PLAN_UPDATED_1',
+        event: 'PLAN_UPDATED',
+      });
+
+      expect(events).toHaveLength(1);
+      expect(prisma.billingEvent.update).toHaveBeenCalledWith({
+        where: { id: 'evt-old' },
+        data: { processedAt: expect.any(Date) },
+      });
+    });
+
+    it('processedAt só é gravado depois do dispatch', async () => {
+      const { service, prisma, asaas } = setup({
+        rows: [
+          row({
+            status: 'PENDING',
+            asaasSubscriptionId: 'asaas-sub-1',
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-1',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED'),
+      );
+
+      const processedCall = prisma.billingEvent.update.mock.calls.findIndex(
+        (c: any[]) => c[0].data.processedAt instanceof Date,
+      );
+      expect(asaas.getSubscription.mock.invocationCallOrder[0]).toBeLessThan(
+        prisma.billingEvent.update.mock.invocationCallOrder[processedCall],
+      );
+    });
+
+    it('erro não-Error no dispatch é gravado como texto e relançado', async () => {
+      const { service, prisma, events } = setup({
+        rows: [row({ asaasSubscriptionId: 'asaas-sub-1' })],
+      });
+      prisma.subscription.findFirst.mockRejectedValueOnce('texto puro');
+
+      await expect(
+        service.processWebhookEvent(TOKEN, paymentEvent('PAYMENT_CONFIRMED')),
+      ).rejects.toBe('texto puro');
+      expect(events[0].error).toBe('texto puro');
+    });
+  });
+
+  describe('CHECKOUT_PAID: ids já ligados (P1)', () => {
+    const checkoutEvent = (checkout: Record<string, unknown>) => ({
+      id: 'evt_checkout_p1',
+      event: 'CHECKOUT_PAID',
+      checkout,
+    });
+
+    it('linha já ligada a OUTRA assinatura do Asaas: não sobrescreve, avisa e não reconcilia', async () => {
+      const { service, rows, asaas, prisma, events } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'ACTIVE',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: 'asaas-original',
+            asaasCustomerId: 'cus-original',
+            currentPeriodEnd: PERIOD_END,
+          }),
+        ],
+      });
+      const warnSpy = Logger.prototype.warn as unknown as jest.SpyInstance;
+
+      await expect(
+        service.processWebhookEvent(
+          TOKEN,
+          checkoutEvent({
+            id: 'chk-1',
+            subscription: 'asaas-estranha',
+            customer: 'cus-estranho',
+          }),
+        ),
+      ).resolves.toEqual({ ok: true });
+
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-original',
+        asaasCustomerId: 'cus-original',
+        status: 'ACTIVE',
+      });
+      expect(prisma.subscription.update).not.toHaveBeenCalled();
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(events[0].processedAt).toBeInstanceOf(Date);
+    });
+
+    it('mesmo id de assinatura já gravado (reentrega): segue e reconcilia', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: 'asaas-sub-9',
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-9',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        checkoutEvent({ id: 'chk-1', subscription: 'asaas-sub-9' }),
+      );
+
+      expect(asaas.getSubscription).toHaveBeenCalledWith('asaas-sub-9');
+      expect(rows[0].status).toBe('ACTIVE');
+    });
+
+    it('P2002 no update (outra linha já tem o id): avisa, não relança e marca processado', async () => {
+      const { service, prisma, events, asaas } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      prisma.subscription.update.mockRejectedValueOnce(
+        Object.assign(new Error('Unique constraint failed'), { code: 'P2002' }),
+      );
+      const warnSpy = Logger.prototype.warn as unknown as jest.SpyInstance;
+
+      await expect(
+        service.processWebhookEvent(
+          TOKEN,
+          checkoutEvent({ id: 'chk-1', subscription: 'asaas-duplicada' }),
+        ),
+      ).resolves.toEqual({ ok: true });
+
+      expect(warnSpy).toHaveBeenCalled();
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(events[0].processedAt).toBeInstanceOf(Date);
+      expect(events[0].error).toBeNull();
+    });
+
+    it('erro do update que não é P2002 continua relançando (5xx para o Asaas reenviar)', async () => {
+      const { service, prisma, events } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      prisma.subscription.update.mockRejectedValueOnce(new Error('banco caiu'));
+
+      await expect(
+        service.processWebhookEvent(
+          TOKEN,
+          checkoutEvent({ id: 'chk-1', subscription: 'asaas-sub-1' }),
+        ),
+      ).rejects.toThrow('banco caiu');
+      expect(events[0].processedAt).toBeNull();
+    });
+
+    it('reconcilia a linha ATUALIZADA (com o asaasSubscriptionId recém-gravado)', async () => {
+      const { service, asaas } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      const reconcileSpy = jest.spyOn(service, 'reconcileSubscription');
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-5',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        checkoutEvent({
+          id: 'chk-1',
+          subscription: 'asaas-sub-5',
+          customer: 'cus-5',
+        }),
+      );
+
+      expect(reconcileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'local-1',
+          asaasSubscriptionId: 'asaas-sub-5',
+          asaasCustomerId: 'cus-5',
+        }),
+      );
+    });
+  });
+
+  describe('PAYMENT_*: latestInvoiceUrl e ordem real (P4, P5)', () => {
+    const remote = (nextDueDate: string) => ({
+      id: 'asaas-sub-1',
+      deleted: false,
+      nextDueDate,
+      externalReference: null,
+    });
+
+    it('invoiceUrl ausente ou não string: não grava latestInvoiceUrl', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            status: 'PENDING',
+            asaasSubscriptionId: 'asaas-sub-1',
+            latestInvoiceUrl: 'https://asaas.test/i/antiga',
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue(remote(FUTURE_DUE));
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', { invoiceUrl: 123 }),
+      );
+
+      expect(rows[0].latestInvoiceUrl).toBe('https://asaas.test/i/antiga');
+    });
+
+    it('com invoiceUrl: grava e reconcilia a linha devolvida pelo update', async () => {
+      const { service, rows, asaas, prisma } = setup({
+        rows: [row({ status: 'PENDING', asaasSubscriptionId: 'asaas-sub-1' })],
+      });
+      const reconcileSpy = jest.spyOn(service, 'reconcileSubscription');
+      asaas.getSubscription.mockResolvedValue(remote(FUTURE_DUE));
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', {
+          invoiceUrl: 'https://asaas.test/i/9',
+        }),
+      );
+
+      expect(prisma.subscription.update).toHaveBeenCalledWith({
+        where: { id: 'sub-x' },
+        data: { latestInvoiceUrl: 'https://asaas.test/i/9' },
+      });
+      expect(reconcileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ latestInvoiceUrl: 'https://asaas.test/i/9' }),
+      );
+      expect(rows[0]).toMatchObject({
+        status: 'ACTIVE',
+        latestInvoiceUrl: 'https://asaas.test/i/9',
+      });
+    });
+
+    it('PAYMENT_OVERDUE com período futuro não rebaixa (decisão do dono) mas grava latestInvoiceUrl', async () => {
+      const future = new Date(NOW.getTime() + 10 * DAY);
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            status: 'ACTIVE',
+            asaasSubscriptionId: 'asaas-sub-1',
+            currentPeriodEnd: future,
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue(
+        remote(future.toISOString().slice(0, 10)),
+      );
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_OVERDUE', {
+          invoiceUrl: 'https://asaas.test/i/10',
+        }),
+      );
+
+      expect(rows[0]).toMatchObject({
+        status: 'ACTIVE',
+        currentPeriodEnd: future,
+        latestInvoiceUrl: 'https://asaas.test/i/10',
+      });
+    });
+
+    // RISCO CONHECIDO (Task 12, sandbox real): documenta o comportamento atual, NÃO é regra desejada.
+    // Se o Asaas ainda devolver nextDueDate = hoje no CHECKOUT_PAID, o período fica "hoje 00:00 UTC"
+    // (já passado); o PAYMENT_CONFIRMED seguinte, com o mesmo nextDueDate, cai em "não avançou"
+    // com período vencido e rebaixa para PAST_DUE. Só o Asaas real confirma se isso acontece.
+    it('RISCO documentado: CHECKOUT_PAID com nextDueDate = hoje e depois PAYMENT_CONFIRMED igual rebaixa para PAST_DUE', async () => {
+      const today = NOW.toISOString().slice(0, 10);
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue(remote(today));
+
+      await service.processWebhookEvent(TOKEN, {
+        id: 'evt_checkout_risk',
+        event: 'CHECKOUT_PAID',
+        checkout: { id: 'chk-1', subscription: 'asaas-sub-1' },
+      });
+      expect(rows[0]).toMatchObject({
+        status: 'ACTIVE',
+        currentPeriodEnd: new Date(`${today}T00:00:00.000Z`),
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED'),
+      );
+      expect(rows[0].status).toBe('PAST_DUE');
+    });
+  });
+
+  describe('SUBSCRIPTION_*: casa só por subscription.id', () => {
+    it('com duas linhas, cancela só a do id recebido', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-A',
+            status: 'ACTIVE',
+            asaasSubscriptionId: 'asaas-A',
+            currentPeriodEnd: PERIOD_END,
+          }),
+          row({
+            id: 'local-B',
+            status: 'ACTIVE',
+            asaasSubscriptionId: 'asaas-B',
+            currentPeriodEnd: PERIOD_END,
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-B',
+        deleted: true,
+        nextDueDate: FUTURE_DUE,
+        externalReference: 'local-A',
+      });
+
+      await service.processWebhookEvent(TOKEN, {
+        id: 'evt_sd',
+        event: 'SUBSCRIPTION_DELETED',
+        subscription: { id: 'asaas-B', externalReference: 'local-A' },
+      });
+
+      expect(asaas.getSubscription).toHaveBeenCalledWith('asaas-B');
+      expect(rows.find((r) => r.id === 'local-A')?.status).toBe('ACTIVE');
+      expect(rows.find((r) => r.id === 'local-B')?.status).toBe('CANCELED');
+    });
+
+    it.each([
+      ['sem subscription.id', { id: 'evt_s1', event: 'SUBSCRIPTION_DELETED' }],
+      [
+        'sem linha local',
+        {
+          id: 'evt_s2',
+          event: 'SUBSCRIPTION_INACTIVATED',
+          subscription: { id: 'asaas-nao-existe' },
+        },
+      ],
+    ])(
+      '%s: ok, evento processado e Asaas não consultado',
+      async (_l, payload) => {
+        const { service, asaas, events } = setup({
+          rows: [row({ status: 'ACTIVE', asaasSubscriptionId: 'asaas-sub-1' })],
+        });
+
+        await expect(
+          service.processWebhookEvent(TOKEN, payload),
+        ).resolves.toEqual({ ok: true });
+        expect(asaas.getSubscription).not.toHaveBeenCalled();
+        expect(events[0].processedAt).toBeInstanceOf(Date);
+      },
+    );
+  });
+
+  describe('reconcile: bordas de período e superseded em PAST_DUE', () => {
+    it('período termina exatamente agora e nextDueDate igual: vence (PAST_DUE), não é "futuro"', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            status: 'ACTIVE',
+            asaasSubscriptionId: 'asaas-sub-1',
+            currentPeriodEnd: new Date(NOW),
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-1',
+        deleted: false,
+        nextDueDate: NOW.toISOString(),
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED'),
+      );
+
+      expect(rows[0].status).toBe('PAST_DUE');
+    });
+
+    it('PAST_DUE com período futuro e nextDueDate igual NÃO cancela assinaturas menores (só ACTIVE dispara)', async () => {
+      const future = new Date(NOW.getTime() + 10 * DAY);
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'new-fleet',
+            plan: 'FLEET',
+            status: 'PAST_DUE',
+            asaasSubscriptionId: 'asaas-sub-1',
+            currentPeriodEnd: future,
+            pastDueSince: new Date('2026-11-05T00:00:00.000Z'),
+          }),
+          row({
+            id: 'old-prof',
+            plan: 'PROFESSIONAL',
+            status: 'ACTIVE',
+            asaasSubscriptionId: 'asaas-old',
+            currentPeriodEnd: future,
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-1',
+        deleted: false,
+        nextDueDate: future.toISOString().slice(0, 10),
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(TOKEN, paymentEvent('PAYMENT_OVERDUE'));
+
+      expect(asaas.deleteSubscription).not.toHaveBeenCalled();
+      expect(rows.find((r) => r.id === 'old-prof')?.status).toBe('ACTIVE');
+      expect(rows.find((r) => r.id === 'new-fleet')?.status).toBe('PAST_DUE');
     });
   });
 });
@@ -2272,6 +2870,40 @@ describe('BillingPaymentsService#cancelSupersededSubscriptions (via reconcile, o
 
     expect(rows.find((r) => r.id === 'new-fleet')?.status).toBe('PAST_DUE');
     expect(asaas.deleteSubscription).not.toHaveBeenCalled();
+    expect(rows.find((r) => r.id === 'old-prof')?.status).toBe('ACTIVE');
+  });
+
+  it('Asaas responde 404 ao deletar a antiga (já removida): trata como sucesso e grava CANCELED', async () => {
+    const { service, asaas, rows, local } = newActive([old()]);
+    asaas.deleteSubscription.mockRejectedValueOnce(
+      new AsaasClientError('Asaas respondeu 404', 404),
+    );
+
+    await service.reconcileSubscription(local as any);
+
+    expect(asaas.deleteSubscription).toHaveBeenCalledWith('asaas-old-prof');
+    expect(rows.find((r) => r.id === 'old-prof')).toMatchObject({
+      status: 'CANCELED',
+      cancelAtPeriodEnd: true,
+    });
+    expect(rows.find((r) => r.id === 'new-fleet')?.status).toBe('ACTIVE');
+  });
+
+  it.each([
+    ['AsaasClientError 500', new AsaasClientError('Asaas respondeu 500', 500)],
+    ['AsaasClientError 403', new AsaasClientError('Asaas respondeu 403', 403)],
+    ['AsaasClientError sem status (rede)', new AsaasClientError('rede')],
+    [
+      'Error comum com statusCode 404',
+      Object.assign(new Error('x'), { statusCode: 404 }),
+    ],
+  ])('delete com %s propaga e não grava a antiga', async (_l, error) => {
+    const { service, asaas, rows, local } = newActive([old()]);
+    asaas.deleteSubscription.mockRejectedValueOnce(error);
+
+    await expect(service.reconcileSubscription(local as any)).rejects.toBe(
+      error,
+    );
     expect(rows.find((r) => r.id === 'old-prof')?.status).toBe('ACTIVE');
   });
 });

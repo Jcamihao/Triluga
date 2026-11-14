@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Subscription } from '@prisma/client';
 import { timingSafeEqual } from 'crypto';
-import { AsaasClient } from '../asaas/asaas.client';
+import { AsaasClient, AsaasClientError } from '../asaas/asaas.client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { getCatalog, PLAN_RANK } from './plans.catalog';
@@ -28,12 +28,10 @@ const SENSITIVE_PAYLOAD_KEYS = new Set([
   'postalCode',
   'address',
   'addressNumber',
-  'creditCard',
-  'creditCardHolderInfo',
-  'creditCardToken',
-  'creditCardNumber',
 ]);
 
+// Tudo que começa com `creditCard` (creditCard, creditCardHolderInfo, creditCardToken,
+// creditCardNumber, creditCardBrand...) também fica de fora.
 const SENSITIVE_PAYLOAD_PREFIX = 'creditCard';
 const MAX_ERROR_LENGTH = 500;
 
@@ -252,7 +250,7 @@ export class BillingPaymentsService {
     for (const local of open) {
       // Remove no Asaas antes de gravar: se falhar, nada muda e o usuário pode tentar de novo.
       if (local.asaasSubscriptionId) {
-        await this.asaasClient.deleteSubscription(local.asaasSubscriptionId);
+        await this.deleteAsaasSubscription(local.asaasSubscriptionId);
       }
 
       // currentPeriodEnd não muda: o acesso segue até o fim do período já pago.
@@ -397,7 +395,8 @@ export class BillingPaymentsService {
         await this.handleSubscriptionRemoved(payload);
         return;
       default:
-        this.logger.warn(
+        // PAYMENT_CREATED/UPDATED e afins chegam a cada ciclo: não é anomalia, só registro.
+        this.logger.debug(
           `Evento de webhook do Asaas não tratado: ${eventType}`,
         );
     }
@@ -429,6 +428,19 @@ export class BillingPaymentsService {
       return;
     }
 
+    // Linha já ligada a OUTRA assinatura do Asaas: não sobrescreve (evento estranho ou
+    // fallback por externalReference casando linha errada). Segue sem reconciliar.
+    if (
+      isNonEmptyString(checkout?.subscription) &&
+      local.asaasSubscriptionId !== null &&
+      local.asaasSubscriptionId !== checkout.subscription
+    ) {
+      this.logger.warn(
+        `Webhook CHECKOUT_PAID: a Subscription local ${local.id} já está ligada a outra assinatura do Asaas; nada alterado.`,
+      );
+      return;
+    }
+
     const asaasSubscriptionId = isNonEmptyString(checkout?.subscription)
       ? checkout.subscription
       : local.asaasSubscriptionId;
@@ -436,12 +448,40 @@ export class BillingPaymentsService {
       ? checkout.customer
       : local.asaasCustomerId;
 
-    const updated = await this.prisma.subscription.update({
-      where: { id: local.id },
-      data: { asaasSubscriptionId, asaasCustomerId },
-    });
+    let updated: Subscription;
+    try {
+      updated = await this.prisma.subscription.update({
+        where: { id: local.id },
+        data: { asaasSubscriptionId, asaasCustomerId },
+      });
+    } catch (error) {
+      // asaasSubscriptionId é único: outra linha já tem esse id. Repetir não resolve,
+      // então não relança (evitaria 5xx eterno); fica registrado para análise.
+      if (isUniqueViolation(error)) {
+        this.logger.warn(
+          `Webhook CHECKOUT_PAID: a assinatura do Asaas já pertence a outra Subscription local; ${local.id} não foi alterada.`,
+        );
+        return;
+      }
+      throw error;
+    }
 
     await this.reconcileSubscription(updated);
+  }
+
+  /**
+   * Remove a assinatura no Asaas. 404 = já removida (ex.: retry depois de falha ao gravar
+   * o status local): conta como sucesso para o cancelamento local poder terminar.
+   */
+  private async deleteAsaasSubscription(asaasSubscriptionId: string) {
+    try {
+      await this.asaasClient.deleteSubscription(asaasSubscriptionId);
+    } catch (error) {
+      if (error instanceof AsaasClientError && error.statusCode === 404) {
+        return;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -610,7 +650,7 @@ export class BillingPaymentsService {
       }
       // Remove no Asaas antes de gravar: se falhar, nada muda e o retry tenta de novo.
       if (other.asaasSubscriptionId) {
-        await this.asaasClient.deleteSubscription(other.asaasSubscriptionId);
+        await this.deleteAsaasSubscription(other.asaasSubscriptionId);
       }
       await this.prisma.subscription.update({
         where: { id: other.id },
