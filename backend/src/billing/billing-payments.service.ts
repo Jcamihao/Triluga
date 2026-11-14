@@ -194,10 +194,19 @@ export class BillingPaymentsService {
     }
 
     if (!local.asaasSubscriptionId) {
-      // Webhook CHECKOUT_PAID pode ter se perdido: procura a assinatura pelo externalReference.
-      const remote = await this.asaasClient.findSubscriptionByExternalReference(
-        local.id,
-      );
+      // Webhook CHECKOUT_PAID pode ter se perdido. A assinatura criada pelo checkout
+      // hospedado NÃO herda o externalReference (validado no sandbox): o vínculo real é o
+      // checkoutSession. O externalReference fica como primeira tentativa (assinatura criada
+      // direto pela API, que o suporte pode usar para recuperar um caso).
+      const remote =
+        (await this.asaasClient.findSubscriptionByExternalReference(
+          local.id,
+        )) ??
+        (local.asaasCheckoutId
+          ? await this.asaasClient.findSubscriptionByCheckoutSession(
+              local.asaasCheckoutId,
+            )
+          : null);
       if (!remote) {
         return;
       }
@@ -466,7 +475,45 @@ export class BillingPaymentsService {
       throw error;
     }
 
+    // O payload real do CHECKOUT_PAID pode não trazer `checkout.subscription` (formato não
+    // confirmado): sem o id, procura a assinatura pelo checkoutSession.
+    if (updated.asaasSubscriptionId === null) {
+      const remote =
+        await this.asaasClient.findSubscriptionByCheckoutSession(checkoutId);
+      if (remote) {
+        const linked = await this.linkAsaasSubscription(updated, remote.id);
+        if (!linked) {
+          return;
+        }
+        updated = linked;
+      }
+    }
+
     await this.reconcileSubscription(updated);
+  }
+
+  /**
+   * Grava o id da assinatura do Asaas na linha local. `asaasSubscriptionId` é único: se outra
+   * linha já o tem, não relança (evitaria 5xx eterno), registra e devolve null.
+   */
+  private async linkAsaasSubscription(
+    local: Subscription,
+    asaasSubscriptionId: string,
+  ): Promise<Subscription | null> {
+    try {
+      return await this.prisma.subscription.update({
+        where: { id: local.id },
+        data: { asaasSubscriptionId },
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        this.logger.warn(
+          `A assinatura do Asaas ${asaasSubscriptionId} já pertence a outra Subscription local; ${local.id} não foi alterada.`,
+        );
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -557,13 +604,26 @@ export class BillingPaymentsService {
     const local = await this.prisma.subscription.findFirst({
       where: { asaasSubscriptionId },
     });
-    if (!local) {
-      this.logger.warn(
-        `Webhook de pagamento sem Subscription local para ${asaasSubscriptionId}.`,
-      );
-      return null;
+    if (local) {
+      return local;
     }
-    return local;
+
+    // Checkout hospedado: o pagamento traz `checkoutSession` (= asaasCheckoutId local). Se o
+    // CHECKOUT_PAID não ligou a linha, liga aqui, mas só quando ela ainda não tem assinatura.
+    const checkoutSession = asRecord(payload.payment)?.checkoutSession;
+    if (isNonEmptyString(checkoutSession)) {
+      const byCheckout = await this.prisma.subscription.findFirst({
+        where: { asaasCheckoutId: checkoutSession, source: 'ASAAS' },
+      });
+      if (byCheckout && byCheckout.asaasSubscriptionId === null) {
+        return this.linkAsaasSubscription(byCheckout, asaasSubscriptionId);
+      }
+    }
+
+    this.logger.warn(
+      `Webhook de pagamento sem Subscription local para ${asaasSubscriptionId}.`,
+    );
+    return null;
   }
 
   /**

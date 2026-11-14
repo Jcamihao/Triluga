@@ -46,6 +46,8 @@ interface RawAsaasSubscription {
   deleted?: boolean;
   nextDueDate: string;
   externalReference?: string | null;
+  // Preenchido nas assinaturas criadas pelo checkout hospedado (= id do checkout).
+  checkoutSession?: string | null;
 }
 
 interface RawResponse {
@@ -55,6 +57,9 @@ interface RawResponse {
 
 const MAX_ATTEMPTS = 3; // 1 tentativa inicial + 2 retentativas (só GET/DELETE)
 const RETRY_BACKOFF_MS = 250;
+// Busca por checkoutSession varre as assinaturas mais recentes: até 3 páginas de 100.
+const CHECKOUT_SCAN_PAGE_SIZE = 100;
+const CHECKOUT_SCAN_MAX_PAGES = 3;
 // Só métodos idempotentes repetem: repetir um POST pode duplicar a cobrança.
 const RETRYABLE_METHODS = new Set(['GET', 'DELETE']);
 
@@ -228,6 +233,36 @@ export class AsaasClient {
     }
 
     return this.mapSubscription(result.data[0]);
+  }
+
+  /**
+   * Validado no sandbox em 2026-11-14: a assinatura criada pelo checkout hospedado vem com
+   * `externalReference` nulo e `checkoutSession` = id do checkout, e o filtro
+   * `?checkoutSession=` da listagem é ignorado pelo Asaas. Por isso varre as mais recentes
+   * e compara aqui.
+   */
+  async findSubscriptionByCheckoutSession(
+    checkoutId: string,
+  ): Promise<AsaasSubscription | null> {
+    for (let page = 0; page < CHECKOUT_SCAN_MAX_PAGES; page += 1) {
+      const query = new URLSearchParams({
+        limit: String(CHECKOUT_SCAN_PAGE_SIZE),
+        offset: String(page * CHECKOUT_SCAN_PAGE_SIZE),
+      }).toString();
+      const result = await this.request<{
+        data?: RawAsaasSubscription[];
+        hasMore?: boolean;
+      }>('GET', `/subscriptions?${query}`);
+
+      const match = result.data?.find((s) => s.checkoutSession === checkoutId);
+      if (match) {
+        return this.mapSubscription(match);
+      }
+      if (!result.hasMore) {
+        return null;
+      }
+    }
+    return null;
   }
 
   async deleteSubscription(id: string): Promise<void> {

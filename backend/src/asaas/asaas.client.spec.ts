@@ -447,6 +447,92 @@ describe('AsaasClient assinaturas', () => {
     );
   });
 
+  describe('findSubscriptionByCheckoutSession', () => {
+    const sub = (id: string, checkoutSession: string | null) => ({
+      id,
+      nextDueDate: '2026-12-14',
+      externalReference: null,
+      checkoutSession,
+    });
+
+    it('acha na primeira página comparando checkoutSession e mapeia', async () => {
+      const { client, perform } = makeClient();
+      perform.mockResolvedValueOnce(
+        ok({
+          data: [sub('sub_a', 'chk_other'), sub('sub_b', 'chk_1')],
+          hasMore: true,
+        }),
+      );
+
+      expect(await client.findSubscriptionByCheckoutSession('chk_1')).toEqual({
+        id: 'sub_b',
+        deleted: false,
+        nextDueDate: '2026-12-14',
+        externalReference: null,
+      });
+      expect(perform).toHaveBeenCalledTimes(1);
+      expect(perform).toHaveBeenCalledWith(
+        'GET',
+        '/subscriptions?limit=100&offset=0',
+        undefined,
+      );
+    });
+
+    it('segue para a próxima página enquanto hasMore for verdadeiro', async () => {
+      const { client, perform } = makeClient();
+      perform
+        .mockResolvedValueOnce(
+          ok({ data: [sub('sub_a', 'chk_other')], hasMore: true }),
+        )
+        .mockResolvedValueOnce(
+          ok({ data: [sub('sub_b', 'chk_1')], hasMore: false }),
+        );
+
+      expect(
+        (await client.findSubscriptionByCheckoutSession('chk_1'))?.id,
+      ).toBe('sub_b');
+      expect(perform).toHaveBeenNthCalledWith(
+        2,
+        'GET',
+        '/subscriptions?limit=100&offset=100',
+        undefined,
+      );
+    });
+
+    it('devolve null quando não há mais páginas e nada casa', async () => {
+      const { client, perform } = makeClient();
+      perform.mockResolvedValueOnce(
+        ok({ data: [sub('sub_a', null)], hasMore: false }),
+      );
+
+      expect(
+        await client.findSubscriptionByCheckoutSession('chk_1'),
+      ).toBeNull();
+      expect(perform).toHaveBeenCalledTimes(1);
+    });
+
+    it('para depois de 3 páginas mesmo com hasMore', async () => {
+      const { client, perform } = makeClient();
+      perform.mockResolvedValue(
+        ok({ data: [sub('sub_a', 'chk_other')], hasMore: true }),
+      );
+
+      expect(
+        await client.findSubscriptionByCheckoutSession('chk_1'),
+      ).toBeNull();
+      expect(perform).toHaveBeenCalledTimes(3);
+    });
+
+    it('resposta sem data devolve null', async () => {
+      const { client, perform } = makeClient();
+      perform.mockResolvedValueOnce(ok({}));
+
+      expect(
+        await client.findSubscriptionByCheckoutSession('chk_1'),
+      ).toBeNull();
+    });
+  });
+
   it('deleteSubscription calls DELETE /subscriptions/{id}', async () => {
     const { client, perform } = makeClient();
     perform.mockResolvedValue(ok({ deleted: true, id: 'sub_1' }));

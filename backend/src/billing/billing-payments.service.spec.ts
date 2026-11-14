@@ -151,6 +151,7 @@ function fakeAsaas() {
     }),
     getSubscription: jest.fn(),
     findSubscriptionByExternalReference: jest.fn(),
+    findSubscriptionByCheckoutSession: jest.fn(),
     deleteSubscription: jest.fn(),
   };
 }
@@ -1011,6 +1012,83 @@ describe('BillingPaymentsService#sync', () => {
     expect(rows[0].status).toBe('ACTIVE');
   });
 
+  it('sem achado por externalReference, acha pelo checkoutSession (checkout hospedado nao herda o externalReference)', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          id: 'sub-1',
+          status: 'PENDING',
+          asaasSubscriptionId: null,
+          asaasCheckoutId: 'chk-1',
+        }),
+      ],
+    });
+    asaas.findSubscriptionByExternalReference.mockResolvedValue(null);
+    asaas.findSubscriptionByCheckoutSession.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: null,
+    });
+    asaas.getSubscription.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: null,
+    });
+
+    await service.sync('user-1');
+
+    expect(asaas.findSubscriptionByCheckoutSession).toHaveBeenCalledWith(
+      'chk-1',
+    );
+    expect(rows[0].asaasSubscriptionId).toBe('asaas-sub-9');
+    expect(rows[0].status).toBe('ACTIVE');
+  });
+
+  it('achado por externalReference nao consulta o checkoutSession', async () => {
+    const { service, asaas } = build({
+      rows: [
+        row({
+          id: 'sub-1',
+          status: 'PENDING',
+          asaasSubscriptionId: null,
+          asaasCheckoutId: 'chk-1',
+        }),
+      ],
+    });
+    asaas.findSubscriptionByExternalReference.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: 'sub-1',
+    });
+    asaas.getSubscription.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: 'sub-1',
+    });
+
+    await service.sync('user-1');
+
+    expect(asaas.findSubscriptionByCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it('sem asaasCheckoutId nao consulta o checkoutSession', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({ id: 'sub-1', status: 'PENDING', asaasSubscriptionId: null }),
+      ],
+    });
+    asaas.findSubscriptionByExternalReference.mockResolvedValue(null);
+
+    await service.sync('user-1');
+
+    expect(asaas.findSubscriptionByCheckoutSession).not.toHaveBeenCalled();
+    expect(rows[0].asaasSubscriptionId).toBeNull();
+  });
+
   it('sem asaasSubscriptionId e sem achado no Asaas nao altera a linha', async () => {
     const { service, asaas, prisma, rows } = build({
       rows: [
@@ -1722,6 +1800,107 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       });
     });
 
+    it('CHECKOUT_PAID sem checkout.subscription liga pela busca por checkoutSession e reconcilia', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      asaas.findSubscriptionByCheckoutSession.mockResolvedValue({
+        id: 'asaas-sub-9',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-9',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(TOKEN, checkoutEvent({ id: 'chk-1' }));
+
+      expect(asaas.findSubscriptionByCheckoutSession).toHaveBeenCalledWith(
+        'chk-1',
+      );
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-sub-9',
+        status: 'ACTIVE',
+      });
+    });
+
+    it('CHECKOUT_PAID sem checkout.subscription e sem achado remoto nao altera nada', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      asaas.findSubscriptionByCheckoutSession.mockResolvedValue(null);
+
+      await service.processWebhookEvent(TOKEN, checkoutEvent({ id: 'chk-1' }));
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: null,
+        status: 'PENDING',
+      });
+    });
+
+    it('CHECKOUT_PAID com checkout.subscription nao varre o Asaas', async () => {
+      const { service, asaas } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-9',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        checkoutEvent({ id: 'chk-1', subscription: 'asaas-sub-9' }),
+      );
+
+      expect(asaas.findSubscriptionByCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('CHECKOUT_PAID: assinatura remota que ja pertence a outra linha (P2002) nao relanca nem altera', async () => {
+      const { service, rows, asaas, prisma } = setup({
+        rows: [
+          row({ id: 'local-1', status: 'PENDING', asaasCheckoutId: 'chk-1' }),
+        ],
+      });
+      asaas.findSubscriptionByCheckoutSession.mockResolvedValue({
+        id: 'asaas-sub-9',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+      // A 1ª gravação (customer) passa; a ligação por checkoutSession bate na unicidade.
+      prisma.subscription.update.mockImplementationOnce(
+        async ({ where, data }: any) => {
+          Object.assign(rows.find((r) => r.id === where.id)!, data);
+          return { ...rows.find((r) => r.id === where.id)! };
+        },
+      );
+      prisma.subscription.update.mockImplementationOnce(async () => {
+        throw Object.assign(new Error('Unique constraint failed'), {
+          code: 'P2002',
+        });
+      });
+
+      await expect(
+        service.processWebhookEvent(TOKEN, checkoutEvent({ id: 'chk-1' })),
+      ).resolves.toEqual({ ok: true });
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0].asaasSubscriptionId).toBeNull();
+    });
+
     it('sem achar pelo checkout, acha por externalReference (source ASAAS)', async () => {
       const { service, rows, asaas } = setup({
         rows: [
@@ -1916,6 +2095,78 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
         ),
       ).resolves.toEqual({ ok: true });
       expect(asaas.getSubscription).not.toHaveBeenCalled();
+    });
+
+    it('payment.checkoutSession liga a linha do checkout que ainda nao tinha assinatura e reconcilia', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-1',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', { checkoutSession: 'chk-1' }),
+      );
+
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-sub-1',
+        status: 'ACTIVE',
+      });
+    });
+
+    it('payment.checkoutSession nao religa linha que ja aponta para outra assinatura', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'ACTIVE',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: 'asaas-outra',
+          }),
+        ],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', { checkoutSession: 'chk-1' }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0].asaasSubscriptionId).toBe('asaas-outra');
+    });
+
+    it('payment.checkoutSession so liga linha ASAAS (nunca GRANT)', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            source: 'GRANT',
+            status: 'ACTIVE',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', { checkoutSession: 'chk-1' }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0].asaasSubscriptionId).toBeNull();
     });
 
     it('PAYMENT_OVERDUE com periodo vencido vira PAST_DUE e grava latestInvoiceUrl', async () => {
