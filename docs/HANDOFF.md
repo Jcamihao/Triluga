@@ -11,7 +11,7 @@ Triluga é um marketplace de aluguel de veículos entre pessoas e locadoras (an�
 - Caminho local: `/home/caminhao/coding/codeStage/Triluga`
 - Remoto: `git@github.com:Jcamihao/Triluga.git` (origin). Branch: `master`.
 - Convenção de commit: Conventional Commits em português (`feat(billing): ...`, `fix(preco): ...`, `docs/chore: ...`), com o trailer `Co-Authored-By` do agente. Caminhos explícitos no `git add`; nunca `--amend`, `reset`, `rebase` nem `add -A`. `index.lock` = esperar e repetir.
-- Estado do git em 2026-11-13: único item pendente é `docs/superpowers/plans/2026-11-13-assinaturas.md` (não rastreado) e este handoff. Task 1 do billing já commitada (ver seção 6).
+- Estado do git em 2026-11-13: único item pendente é `docs/superpowers/plans/2026-11-13-assinaturas.md` (não rastreado) e este handoff. Tasks 1 e 2 do billing commitadas (ver seção 6).
 - Último commit: `a4755c2 docs(preco): release v2.9.0 alinhada ao frontend corrigido`. Os anteriores são a entrega do preço por diária (v2.9.0).
 
 ## 3. Stack
@@ -26,7 +26,7 @@ Triluga é um marketplace de aluguel de veículos entre pessoas e locadoras (an�
 - Variáveis de ambiente do Asaas (só nomes): `ASAAS_API_KEY`, `ASAAS_BASE_URL` (padrão sandbox `https://api-sandbox.asaas.com/v3`), `ASAAS_WEBHOOK_TOKEN`, `ASAAS_TIMEOUT_MS`, `FRONTEND_URL`. Novas previstas: `BILLING_ENABLED` e `BILLING_PRICE_{PROFESSIONAL,FLEET}_{MONTHLY,YEARLY}`. O `docker-compose.yml` só repassa o que está na lista `environment`; `render.yaml`, `.env.example` e `backend/.env.example` também precisam listar.
 - Backend (em `backend/`): `npx jest`, `npx tsc --noEmit -p tsconfig.json`, `npm run lint:ci`, `npm run build`.
 - Frontend (em `frontend/`): `CHROME_BIN=$(ls ~/.cache/puppeteer/chrome/*/chrome-linux64/chrome | head -1) npx ng test --watch=false --browsers=ChromeHeadless` e `npx ng build`. Há 3 falhas conhecidas e antigas em `RegisterPageComponent` (`formatPhone is not a function`); não são do billing.
-- Linha de base verificada em 2026-11-13: backend `jest` = 14 suítes, 275 testes, todos verdes; `tsc` limpo (antes da Task 1; com ela são 16 suítes e 309 testes, presumido: só `src/billing` foi rodado de novo). `lint:ci` verde após a Task 1. Build e frontend **não foram rodados** nesta sessão.
+- Linha de base verificada em 2026-11-13: backend `jest` = 14 suítes, 275 testes (antes do billing). Após a Task 2: 18 suítes, 333 testes, todos verdes; `tsc` e `lint:ci` limpos. Build e frontend **não foram rodados** nesta sessão.
 - Grafo de código: `graphify query "<pergunta>"` antes de explorar; `graphify update .` depois de mexer em código (uma vez, nunca em paralelo).
 
 ## 5. Planos
@@ -38,13 +38,14 @@ Triluga é um marketplace de aluguel de veículos entre pessoas e locadoras (an�
 
 ## 6. Onde parou
 
-- Billing/assinaturas: spec e plano escritos e revisados. **Task 1 feita** (commit `0c17d88`: `backend/src/billing/plans.catalog.ts` e `access.util.ts` com specs; 34 testes verdes, tsc e lint limpos, conferido pelo agente principal). Próxima: Task 2. Ainda não existem `backend/src/asaas/` nem modelos `Subscription`/`BillingEvent` no Prisma. Última migration: `20261015120000_vehicle_daily_rate_min_rental`.
+- Billing/assinaturas: spec e plano escritos e revisados. **Task 1 feita** (commit `0c17d88`: `backend/src/billing/plans.catalog.ts` e `access.util.ts` com specs; 34 testes verdes, tsc e lint limpos, conferido pelo agente principal). **Task 2 feita** (dev `1ac58af`; revisão sonnet `21c7562`, 15+ mutantes mortos): enums e modelos `Subscription`/`BillingEvent` no Prisma, migration `20261113120000_billing_subscriptions` (só cria objetos), `PlanLimitException`, `EntitlementsService`, `billingConfig`. Conferido pelo agente principal: jest completo 18 suítes / 333 testes verdes, tsc e lint:ci limpos. Próxima: Task 3 (limite em `VehiclesService`). Ainda não existe `backend/src/asaas/`. **Não verificado:** a migration não foi aplicada num Postgres que tenha as migrations anteriores mais o drift abaixo; só em banco descartável.
+- **Drift pré-existente de migrations (decisão do dono, fora do plano):** `Report`, `AuditLog`, `FeaturedOrder` e algumas colunas existem no `schema.prisma` mas nenhuma migration as cria (a produção nasceu parcialmente de `db push`; o `backend/Dockerfile` contorna no start). Um `migrate deploy` em banco zerado não cria essas tabelas. A migration de billing intencionalmente não inclui esse drift. Última migration: `20261015120000_vehicle_daily_rate_min_rental`.
 - O `AsaasClient` atual está em `backend/src/featured/asaas.client.ts` (só destaque PIX); a Task 5 o move para `backend/src/asaas/`.
 - Ambiente: nenhum servidor, container ou banco de assinatura foi subido nesta sessão. Não verificado: webhook real do Asaas (payload e header reais nunca vistos), checkout recorrente na conta de produção do Asaas do Triluga.
 
 ## 7. O que falta (ordem do plano)
 
-1. Fase 1 (sem cobrar): ~~T1 catálogo e acesso~~ (feita); T2 schema, migration e `EntitlementsService`; T3 limite ao criar/republicar; T4 `BillingService`, rotas de leitura e concessões.
+1. Fase 1 (sem cobrar): ~~T1 catálogo e acesso~~ (feita); ~~T2 schema, migration e `EntitlementsService`~~ (feita); T3 limite ao criar/republicar; T4 `BillingService`, rotas de leitura e concessões.
 2. Fase 2 (cobrança): T5 mover `AsaasClient`; T6 checkout recorrente e assinatura no cliente; T7 assinar, sincronizar, cancelar; T8 webhook e convivência com o do destaque.
 3. Fase 3: T9 serviço e aviso de limite no frontend; T10 página `/plano`; T11 admin e preços na landing; T12 ponta a ponta, sandbox real, docs, versões (v2.10.0).
 - Dependências do dono para ligar em produção: preços finais, Termos de uso, Política de Privacidade e política de reembolso publicados, ativação do checkout recorrente na conta Asaas de produção, registro de **dois** webhooks no painel do Asaas com o mesmo `ASAAS_WEBHOOK_TOKEN`.
