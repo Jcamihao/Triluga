@@ -16,12 +16,24 @@ Data: 2026-11-14. Backend real do Triluga (`dist/main`, `BILLING_ENABLED=true`),
 | `GET /subscriptions/:id` depois do DELETE | 200 com `status: INACTIVE` e `deleted: true`, que o `reconcile` lê como cancelada. |
 | `GET /subscriptions?externalReference=` depois do DELETE | Lista **vazia**. Assinatura apagada some da busca por `externalReference`; só a leitura por id a mostra. Efeito: uma linha local ainda sem `asaasSubscriptionId` cuja assinatura foi apagada fica `PENDING` no `sync`. |
 
+## Pagamento pela página hospedada (feito por uma pessoa) e bug achado
+
+Depois, o dono pagou um checkout criado pelo backend, na página hospedada do sandbox, com o cartão de teste. Resultado real:
+
+- A assinatura foi criada (`ACTIVE`, R$ 29,90, mensal, cobrança `CONFIRMED`), mas com **`externalReference: null`**. O `externalReference` do checkout **não** é copiado para a assinatura nem para o cliente.
+- O vínculo real é o campo **`checkoutSession`**, presente na assinatura e em cada pagamento, igual ao id do checkout (`asaasCheckoutId` local).
+- O filtro `GET /subscriptions?checkoutSession=` é **ignorado** pelo Asaas (um id falso devolve a assinatura mesmo assim). `GET /checkouts/{id}` responde 404.
+
+Consequência: o `sync` antigo (só por `externalReference`) nunca recuperaria um pagamento cujo webhook se perdeu. Correção feita no código (varredura das 3 páginas mais recentes por `checkoutSession` no `sync` e no `CHECKOUT_PAID` sem `checkout.subscription`; ligação por `payment.checkoutSession` nos eventos `PAYMENT_*`), com testes e mutantes. O método novo foi conferido contra o sandbox real: achou a assinatura pelo `checkoutSession` e devolveu `null` para um id inexistente.
+
 ## O que NÃO foi verificado
 
-- **Pagamento pela página hospedada.** O reCAPTCHA recusou o navegador automatizado ("Tente novamente e verifique o recaptcha"). Não contornei a proteção. Por isso não se sabe se o `externalReference` do checkout é copiado para a assinatura criada por ele, nem a ordem real de `CHECKOUT_PAID` e `PAYMENT_CONFIRMED`. O risco do `nextDueDate` igual a hoje não se repetiu no caminho por API; no caminho hospedado segue sem observação.
+- **Ordem real de `CHECKOUT_PAID` e `PAYMENT_CONFIRMED`**: sem webhook real não foi observada. No caminho hospedado, a primeira leitura da assinatura já veio com `nextDueDate` avançado um mês (2026-12-14), então o risco de vir igual a hoje não apareceu, mas isso não prova a ordem dos eventos.
+- **Navegador automatizado**: o reCAPTCHA da página recusa (não contornado); o pagamento foi feito por uma pessoa.
+- **Cancelamento pelo backend de uma assinatura criada pelo checkout**: o DELETE foi testado em assinaturas criadas por API; o fluxo `POST /billing/cancel` sobre uma assinatura do checkout não foi rodado.
 - **Webhook real.** Não há URL pública nesta máquina, então o Asaas nunca chamou o backend. O formato do payload e do header, e os nomes dos eventos no painel, continuam sem confirmação.
 - **Conta de produção.** Não se sabe se ela precisa de ativação do checkout recorrente.
 
 ## Como completar
 
-Uma pessoa abre o link de um checkout recém-criado no navegador, paga com o cartão de teste do sandbox e então roda `POST /billing/sync`; para o webhook, expor o backend por um túnel público e cadastrar a URL no painel do sandbox.
+Para o webhook, expor o backend por um túnel público e cadastrar a URL no painel do sandbox, e repetir um pagamento humano conferindo `BillingEvent` e `/billing/me`.

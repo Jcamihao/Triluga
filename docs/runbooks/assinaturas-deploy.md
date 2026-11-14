@@ -202,7 +202,7 @@ Sem o token certo no painel, o Asaas recebe 403 e não entrega nada. Veja o log 
 
 1. Termos de Uso, Política de Privacidade e política de reembolso **publicados** (dono confirma).
 2. Preços finais definidos pelo dono (ou os provisórios aceitos por escrito).
-3. Checkout validado no **sandbox** do Asaas (num ambiente com `ASAAS_BASE_URL` de sandbox, **não** na produção): um checkout criado pelo backend, a página hospedada aberta, o pagamento com o cartão de teste feito **por uma pessoa** (a página tem reCAPTCHA e não aceita automação), o retorno para `/plano` conferido e o webhook real recebido. **Hoje foi feito só o que não exige pessoa**: criar o checkout e abrir a página (relatório `sandbox-asaas.md`). Enquanto não for feito, a cobrança **não** é ligada.
+3. Checkout validado no **sandbox** do Asaas (num ambiente com `ASAAS_BASE_URL` de sandbox, **não** na produção): um checkout criado pelo backend, a página hospedada aberta, o pagamento com o cartão de teste feito **por uma pessoa** (a página tem reCAPTCHA e não aceita automação), o retorno para `/plano` conferido e o webhook real recebido. **Hoje foi feito**: criar o checkout, abrir a página e um pagamento humano (que revelou que o vínculo é o `checkoutSession`, já corrigido). **Falta**: o webhook real (relatório `sandbox-asaas.md`). Enquanto não for feito, a cobrança **não** é ligada.
 4. Os dois webhooks registrados (seção 7).
 
 Ligar:
