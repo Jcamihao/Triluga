@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { PlanLimitException } from '../billing/plan-limit.exception';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { MIN_RENTAL_DAYS_OPTIONS } from './rental-pricing';
@@ -26,15 +27,20 @@ const baseDto = {
 };
 
 /** Prisma falso: guarda o `data` recebido por vehicle.create/update. */
-function buildService() {
+function buildService(
+  current: Record<string, unknown> = {
+    id: VEHICLE_ID,
+    ownerId: OWNER_ID,
+    isPublished: true,
+    isActive: true,
+  },
+) {
   const captured: { create?: any; update?: any } = {};
 
   const prisma = {
     vehicle: {
       findUnique: jest.fn().mockResolvedValue(null),
-      findFirst: jest
-        .fn()
-        .mockResolvedValue({ id: VEHICLE_ID, ownerId: OWNER_ID }),
+      findFirst: jest.fn().mockResolvedValue(current),
       create: jest.fn(async ({ data }: any) => {
         captured.create = data;
         return fakeVehicle(data);
@@ -53,12 +59,17 @@ function buildService() {
     notifyMatchingUsers: jest.fn().mockResolvedValue(undefined),
   };
 
+  const entitlements = {
+    assertCanPublish: jest.fn().mockResolvedValue(undefined),
+  };
+
   const service = new VehiclesService(
     prisma as any,
     cache as any,
     alerts as any,
+    entitlements as any,
   );
-  return { service, captured };
+  return { service, captured, prisma, entitlements };
 }
 
 function fakeVehicle(data: any) {
@@ -209,6 +220,117 @@ describe('VehiclesService.update (preço por diária)', () => {
     expect(captured.update).not.toHaveProperty('dailyRate');
     expect(captured.update).not.toHaveProperty('minRentalDays');
     expect(captured.update).not.toHaveProperty('weeklyRate');
+  });
+});
+
+describe('VehiclesService (limite de anúncios do plano)', () => {
+  const limitError = () =>
+    new PlanLimitException({ limit: 3, used: 3, plan: 'FREE' });
+  const createDto = () => ({ ...baseDto, dailyRate: 100 }) as any;
+
+  describe('create', () => {
+    it('isPublished omitido chama assertCanPublish antes de prisma.vehicle.create', async () => {
+      const { service, prisma, entitlements } = buildService();
+      await service.create(OWNER_ID, createDto());
+
+      expect(entitlements.assertCanPublish).toHaveBeenCalledWith(OWNER_ID);
+      expect(
+        entitlements.assertCanPublish.mock.invocationCallOrder[0],
+      ).toBeLessThan(prisma.vehicle.create.mock.invocationCallOrder[0]);
+    });
+
+    it('isPublished false (rascunho) não chama assertCanPublish', async () => {
+      const { service, prisma, entitlements } = buildService();
+      await service.create(OWNER_ID, { ...createDto(), isPublished: false });
+
+      expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+      expect(prisma.vehicle.create).toHaveBeenCalled();
+    });
+
+    it('rejeição de assertCanPublish impede prisma.vehicle.create', async () => {
+      const { service, prisma, entitlements } = buildService();
+      entitlements.assertCanPublish.mockRejectedValueOnce(limitError());
+
+      await expect(service.create(OWNER_ID, createDto())).rejects.toThrow(
+        PlanLimitException,
+      );
+      expect(prisma.vehicle.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    const unpublishedActive = {
+      id: VEHICLE_ID,
+      ownerId: OWNER_ID,
+      isPublished: false,
+      isActive: true,
+    };
+
+    it('isPublished true em anúncio despublicado e ativo chama assertCanPublish antes de prisma.vehicle.update', async () => {
+      const { service, prisma, entitlements } = buildService(unpublishedActive);
+      await service.update(OWNER_ID, VEHICLE_ID, { isPublished: true } as any);
+
+      expect(entitlements.assertCanPublish).toHaveBeenCalledWith(OWNER_ID);
+      expect(
+        entitlements.assertCanPublish.mock.invocationCallOrder[0],
+      ).toBeLessThan(prisma.vehicle.update.mock.invocationCallOrder[0]);
+    });
+
+    it('editar anúncio já publicado não chama assertCanPublish', async () => {
+      const { service, entitlements } = buildService({
+        id: VEHICLE_ID,
+        ownerId: OWNER_ID,
+        isPublished: true,
+        isActive: true,
+      });
+      await service.update(OWNER_ID, VEHICLE_ID, {
+        isPublished: true,
+        title: 'Novo título',
+      } as any);
+
+      expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+    });
+
+    it('isPublished true em anúncio despublicado e inativo não chama assertCanPublish', async () => {
+      const { service, entitlements } = buildService({
+        ...unpublishedActive,
+        isActive: false,
+      });
+      await service.update(OWNER_ID, VEHICLE_ID, { isPublished: true } as any);
+
+      expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+    });
+
+    it('update sem isPublished não chama assertCanPublish', async () => {
+      const { service, entitlements } = buildService(unpublishedActive);
+      await service.update(OWNER_ID, VEHICLE_ID, { title: 'X' } as any);
+
+      expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+    });
+
+    it('isPublished false (despublicar) não chama assertCanPublish', async () => {
+      const { service, entitlements } = buildService({
+        id: VEHICLE_ID,
+        ownerId: OWNER_ID,
+        isPublished: true,
+        isActive: true,
+      });
+      await service.update(OWNER_ID, VEHICLE_ID, {
+        isPublished: false,
+      } as any);
+
+      expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+    });
+
+    it('rejeição de assertCanPublish impede prisma.vehicle.update', async () => {
+      const { service, prisma, entitlements } = buildService(unpublishedActive);
+      entitlements.assertCanPublish.mockRejectedValueOnce(limitError());
+
+      await expect(
+        service.update(OWNER_ID, VEHICLE_ID, { isPublished: true } as any),
+      ).rejects.toThrow(PlanLimitException);
+      expect(prisma.vehicle.update).not.toHaveBeenCalled();
+    });
   });
 });
 

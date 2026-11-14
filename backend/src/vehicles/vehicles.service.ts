@@ -15,6 +15,7 @@ import {
   VehicleType,
 } from '@prisma/client';
 import { CacheQueueService } from '../cache-queue/cache-queue.service';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchAlertsService } from '../search-alerts/search-alerts.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -35,6 +36,7 @@ export class VehiclesService {
     private readonly prisma: PrismaService,
     private readonly cacheQueueService: CacheQueueService,
     private readonly searchAlertsService: SearchAlertsService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   private slugify(text: string): string {
@@ -577,6 +579,10 @@ export class VehiclesService {
     if (dailyRate === undefined) {
       throw new BadRequestException('Informe o valor da diária (dailyRate).');
     }
+    // Anúncio novo publicado passa a contar no limite do plano.
+    if (dto.isPublished ?? true) {
+      await this.entitlements.assertCanPublish(ownerId);
+    }
     try {
       const slug = await this.generateUniqueSlug(
         dto.brand,
@@ -651,7 +657,7 @@ export class VehiclesService {
   }
 
   async update(ownerId: string, vehicleId: string, dto: UpdateVehicleDto) {
-    await this.ensureVehicleOwnership(ownerId, vehicleId);
+    const current = await this.ensureVehicleOwnership(ownerId, vehicleId);
     // weeklyRate não existe mais no banco: nunca pode chegar ao Prisma via spread.
     const { weeklyRate, dailyRate, minRentalDays, ...rest } = dto;
     const resolvedDailyRate = resolveWriteDailyRate({ weeklyRate, dailyRate });
@@ -662,6 +668,11 @@ export class VehiclesService {
       resolvedDailyRate === undefined
     ) {
       throw new BadRequestException('Informe um valor de diária válido.');
+    }
+    // Só republicar anúncio despublicado e ativo passa a contar no limite.
+    // Editar anúncio já contado nunca é bloqueado.
+    if (dto.isPublished === true && !current.isPublished && current.isActive) {
+      await this.entitlements.assertCanPublish(ownerId);
     }
     try {
       const vehicle = await this.prisma.vehicle.update({

@@ -91,7 +91,12 @@ describe.each(CASES)('preço nas respostas (%s)', (_label, min, expected) => {
         getJson: jest.fn().mockResolvedValue(null),
         setJson: jest.fn().mockResolvedValue(undefined),
       };
-      return new VehiclesService(prisma as any, cache as any, {} as any);
+      return new VehiclesService(
+        prisma as any,
+        cache as any,
+        {} as any,
+        { assertCanPublish: jest.fn().mockResolvedValue(undefined) } as any,
+      );
     }
 
     it('findAll (resumo)', async () => {
