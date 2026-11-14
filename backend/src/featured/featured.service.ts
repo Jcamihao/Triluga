@@ -10,7 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { AsaasClient, AsaasClientError } from './asaas.client';
+import { AsaasClient, AsaasClientError } from '../asaas/asaas.client';
 import { CreateFeaturedOrderDto } from './dto/create-featured-order.dto';
 import { FEATURED_PLANS } from './featured.constants';
 

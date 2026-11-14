@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { AsaasClient, AsaasClientError } from './asaas.client';
+import { AsaasClient, AsaasClientError } from '../asaas/asaas.client';
 import { FeaturedService } from './featured.service';
 
 const USER_ID = 'user-1';
