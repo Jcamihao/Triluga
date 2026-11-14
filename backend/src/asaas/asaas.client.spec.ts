@@ -523,6 +523,43 @@ describe('AsaasClient assinaturas', () => {
       expect(perform).toHaveBeenCalledTimes(3);
     });
 
+    it.each([
+      ['string vazia', ''],
+      ['undefined', undefined],
+      ['null', null],
+      ['não-string', 123],
+    ])(
+      'id %s devolve null sem listar (não casa assinatura criada por API, sem checkoutSession)',
+      async (_label, id) => {
+        const { client, perform } = makeClient();
+        perform.mockResolvedValue(
+          ok({
+            data: [
+              {
+                id: 'sub_api',
+                nextDueDate: '2026-12-14',
+                checkoutSession: null,
+              },
+              { id: 'sub_sem_campo', nextDueDate: '2026-12-14' },
+              {
+                id: 'sub_vazio',
+                nextDueDate: '2026-12-14',
+                checkoutSession: '',
+              },
+            ],
+            hasMore: false,
+          }),
+        );
+
+        expect(
+          await client.findSubscriptionByCheckoutSession(
+            id as unknown as string,
+          ),
+        ).toBeNull();
+        expect(perform).not.toHaveBeenCalled();
+      },
+    );
+
     it('resposta sem data devolve null', async () => {
       const { client, perform } = makeClient();
       perform.mockResolvedValueOnce(ok({}));

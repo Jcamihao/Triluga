@@ -2169,6 +2169,147 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       expect(rows[0].asaasSubscriptionId).toBeNull();
     });
 
+    it.each([
+      ['ausente', undefined],
+      ['objeto (filtro do Prisma)', { not: null }],
+      ['numero', 123],
+      ['string vazia', ''],
+    ])(
+      'payment.checkoutSession %s nao liga nem consulta linha alguma',
+      async (_label, checkoutSession) => {
+        const { service, rows, asaas, prisma } = setup({
+          rows: [
+            row({
+              id: 'local-1',
+              status: 'PENDING',
+              asaasCheckoutId: 'chk-1',
+              asaasSubscriptionId: null,
+            }),
+          ],
+        });
+
+        await service.processWebhookEvent(
+          TOKEN,
+          paymentEvent('PAYMENT_CONFIRMED', { checkoutSession }),
+        );
+
+        // So a busca por asaasSubscriptionId; nenhuma por asaasCheckoutId.
+        expect(prisma.subscription.findFirst).toHaveBeenCalledTimes(1);
+        expect(asaas.getSubscription).not.toHaveBeenCalled();
+        expect(rows[0]).toMatchObject({
+          asaasSubscriptionId: null,
+          status: 'PENDING',
+        });
+      },
+    );
+
+    it('falha do Asaas depois de ligar por checkoutSession: 5xx, linha fica ligada e PENDING, reenvio conclui', async () => {
+      const { service, rows, asaas, events } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+      asaas.getSubscription.mockRejectedValueOnce(new Error('asaas fora'));
+      asaas.getSubscription.mockResolvedValue({
+        id: 'asaas-sub-1',
+        deleted: false,
+        nextDueDate: FUTURE_DUE,
+        externalReference: null,
+      });
+      const event = paymentEvent('PAYMENT_CONFIRMED', {
+        checkoutSession: 'chk-1',
+      });
+
+      await expect(service.processWebhookEvent(TOKEN, event)).rejects.toThrow(
+        'asaas fora',
+      );
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-sub-1',
+        status: 'PENDING',
+      });
+      expect(events[0].processedAt).toBeNull();
+
+      await service.processWebhookEvent(TOKEN, event);
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-sub-1',
+        status: 'ACTIVE',
+      });
+      expect(events[0].processedAt).not.toBeNull();
+    });
+
+    it('PAYMENT_REFUNDED por checkoutSession liga a linha ainda sem assinatura e expira, sem dar acesso', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_REFUNDED', { checkoutSession: 'chk-1' }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0]).toMatchObject({
+        asaasSubscriptionId: 'asaas-sub-1',
+        status: 'EXPIRED',
+        currentPeriodEnd: new Date(NOW),
+      });
+    });
+
+    it('linha EXPIRED ligada nao volta a ACTIVE por PAYMENT_CONFIRMED nem por checkoutSession', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'EXPIRED',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: 'asaas-sub-1',
+            currentPeriodEnd: new Date(NOW),
+          }),
+        ],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_CONFIRMED', { checkoutSession: 'chk-1' }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0].status).toBe('EXPIRED');
+    });
+
+    it('PAYMENT_OVERDUE com checkoutSession de outro cliente nao liga a linha do usuario', async () => {
+      const { service, rows, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_OVERDUE', { checkoutSession: 'chk-de-outro' }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(rows[0].asaasSubscriptionId).toBeNull();
+    });
+
     it('PAYMENT_OVERDUE com periodo vencido vira PAST_DUE e grava latestInvoiceUrl', async () => {
       const { service, rows, asaas } = setup({
         rows: [

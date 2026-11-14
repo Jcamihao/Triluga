@@ -244,6 +244,10 @@ export class AsaasClient {
   async findSubscriptionByCheckoutSession(
     checkoutId: string,
   ): Promise<AsaasSubscription | null> {
+    // Id vazio ou ausente casaria assinaturas criadas por API (checkoutSession nulo/ausente).
+    if (typeof checkoutId !== 'string' || checkoutId.length === 0) {
+      return null;
+    }
     for (let page = 0; page < CHECKOUT_SCAN_MAX_PAGES; page += 1) {
       const query = new URLSearchParams({
         limit: String(CHECKOUT_SCAN_PAGE_SIZE),
