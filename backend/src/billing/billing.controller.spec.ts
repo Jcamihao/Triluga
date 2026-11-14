@@ -141,4 +141,58 @@ describe('BillingController', () => {
       expect(payments.cancel).toHaveBeenCalledWith('user-token');
     });
   });
+
+  describe('webhook do Asaas (POST webhooks/asaas)', () => {
+    const handler = BillingController.prototype.asaasWebhook;
+
+    it('é pública (o token do header é a autenticação)', () => {
+      expect(Reflect.getMetadata(IS_PUBLIC_KEY, handler)).toBe(true);
+    });
+
+    it('não sofre throttle (SkipThrottle)', () => {
+      // Chave do @nestjs/throttler: THROTTLER:SKIP + nome do throttler ('default').
+      expect(Reflect.getMetadata('THROTTLER:SKIPdefault', handler)).toBe(true);
+    });
+
+    it('responde 200 (HttpCode), não 201', () => {
+      expect(Reflect.getMetadata('__httpCode__', handler)).toBe(200);
+    });
+
+    it('delega ao serviço com o header asaas-access-token e o body', async () => {
+      const payments = {
+        processWebhookEvent: jest.fn().mockResolvedValue({ ok: true }),
+      };
+      const controller = new BillingController(
+        {} as unknown as BillingService,
+        payments as unknown as BillingPaymentsService,
+      );
+      const body = { id: 'evt_1', event: 'PAYMENT_CONFIRMED' };
+
+      await expect(controller.asaasWebhook('token-123', body)).resolves.toEqual(
+        { ok: true },
+      );
+      expect(payments.processWebhookEvent).toHaveBeenCalledWith(
+        'token-123',
+        body,
+      );
+    });
+
+    it('sem header passa undefined ao serviço (ele recusa)', async () => {
+      const payments = {
+        processWebhookEvent: jest.fn().mockResolvedValue({ ok: true }),
+      };
+      const controller = new BillingController(
+        {} as unknown as BillingService,
+        payments as unknown as BillingPaymentsService,
+      );
+      const body = { id: 'evt_2', event: 'SUBSCRIPTION_DELETED' };
+
+      await controller.asaasWebhook(undefined, body);
+
+      expect(payments.processWebhookEvent).toHaveBeenCalledWith(
+        undefined,
+        body,
+      );
+    });
+  });
 });

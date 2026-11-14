@@ -1320,6 +1320,50 @@ describe('FeaturedService', () => {
       });
     });
 
+    describe('convivência com o webhook da assinatura (billing)', () => {
+      it.each([
+        ['PAYMENT_CONFIRMED', 'PAYMENT_CONFIRMED'],
+        ['PAYMENT_RECEIVED', 'PAYMENT_RECEIVED'],
+        ['PAYMENT_OVERDUE', 'PAYMENT_OVERDUE'],
+        ['PAYMENT_REFUNDED', 'PAYMENT_REFUNDED'],
+        ['PAYMENT_DELETED', 'PAYMENT_DELETED'],
+      ])(
+        '%s com payment.subscription é ignorado sem buscar pedido e sem logar',
+        async (_label, evt) => {
+          const result = await service.handleAsaasWebhook(
+            TOKEN,
+            event({ subscription: 'sub_asaas_1' }, evt),
+          );
+
+          expect(result).toEqual({ ok: true, activated: 0 });
+          expectNothingTouched();
+          expect(warnSpy).not.toHaveBeenCalled();
+          expect(errorSpy).not.toHaveBeenCalled();
+        },
+      );
+
+      it('payment.subscription vazio não conta como assinatura: segue e ativa o pedido', async () => {
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({ subscription: '' }, 'PAYMENT_CONFIRMED'),
+        );
+
+        expect(result).toEqual({ ok: true, activated: 1 });
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+      });
+
+      it('regressão: pagamento avulso sem subscription continua ativando o pedido', async () => {
+        const result = await service.handleAsaasWebhook(
+          TOKEN,
+          event({}, 'PAYMENT_CONFIRMED'),
+        );
+
+        expect(result).toEqual({ ok: true, activated: 1 });
+        expect(prisma.featuredOrder.findUnique).toHaveBeenCalled();
+        expect(prisma.featuredOrder.updateMany).toHaveBeenCalledTimes(1);
+      });
+    });
+
     describe('log hygiene', () => {
       it('truncates and strips control characters from untrusted strings in logs', async () => {
         prisma.featuredOrder.findUnique.mockResolvedValue(null);

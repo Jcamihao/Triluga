@@ -1,10 +1,13 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Subscription } from '@prisma/client';
+import { Prisma, Subscription } from '@prisma/client';
+import { timingSafeEqual } from 'crypto';
 import { AsaasClient } from '../asaas/asaas.client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
@@ -14,8 +17,63 @@ import { getCatalog, PLAN_RANK } from './plans.catalog';
 // e nao pode mais ser reaproveitado.
 const CHECKOUT_MINUTES_TO_EXPIRE = 60;
 
+// Chaves que nunca podem ir para o banco (CPF, contato, endereço e dado de cartão).
+// O Asaas pode enriquecer o payload no futuro; a sanitização protege.
+const SENSITIVE_PAYLOAD_KEYS = new Set([
+  'cpfCnpj',
+  'email',
+  'phone',
+  'mobilePhone',
+  'phoneNumber',
+  'postalCode',
+  'address',
+  'addressNumber',
+  'creditCard',
+  'creditCardHolderInfo',
+  'creditCardToken',
+  'creditCardNumber',
+]);
+
+const SENSITIVE_PAYLOAD_PREFIX = 'creditCard';
+const MAX_ERROR_LENGTH = 500;
+
+function sanitizeWebhookPayload(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeWebhookPayload(item));
+  }
+  if (value !== null && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (
+        SENSITIVE_PAYLOAD_KEYS.has(key) ||
+        key.startsWith(SENSITIVE_PAYLOAD_PREFIX)
+      ) {
+        continue;
+      }
+      result[key] = sanitizeWebhookPayload(val);
+    }
+    return result;
+  }
+  return value;
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.length > 0;
+
+const asRecord = (value: unknown): Record<string, unknown> | undefined =>
+  value !== null && typeof value === 'object'
+    ? (value as Record<string, unknown>)
+    : undefined;
+
+/** Violação do índice único (`BillingEvent.externalEventId`): evento já gravado antes. */
+function isUniqueViolation(error: unknown): boolean {
+  return (error as { code?: string } | null)?.code === 'P2002';
+}
+
 @Injectable()
 export class BillingPaymentsService {
+  private readonly logger = new Logger(BillingPaymentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly asaasClient: AsaasClient,
@@ -206,10 +264,277 @@ export class BillingPaymentsService {
   }
 
   /**
+   * Recebe um evento de webhook do Asaas: token, sanitização, idempotência e dispatch.
+   * Token inválido (ou servidor sem token configurado) recusa antes de tocar no banco.
+   * Pagamento avulso (sem `payment.subscription`, como o PIX do destaque) é ignorado.
+   * Falha no dispatch relança o erro (5xx) para o Asaas reenviar; sem `processedAt`.
+   */
+  async processWebhookEvent(
+    token: string | undefined,
+    payload: Record<string, unknown>,
+  ): Promise<{ ok: true }> {
+    if (!this.isValidWebhookToken(token)) {
+      throw new ForbiddenException('Token de webhook inválido.');
+    }
+
+    const externalEventId = payload.id;
+    const eventType = payload.event;
+    if (!isNonEmptyString(externalEventId) || !isNonEmptyString(eventType)) {
+      throw new BadRequestException('Payload de webhook inválido.');
+    }
+
+    // Pagamento sem assinatura é de outro fluxo (destaque): não grava nem avisa.
+    const payment = asRecord(payload.payment);
+    if (
+      eventType.startsWith('PAYMENT_') &&
+      !isNonEmptyString(payment?.subscription)
+    ) {
+      this.logger.debug(
+        `Webhook ${eventType} sem assinatura: pagamento avulso, ignorado.`,
+      );
+      return { ok: true };
+    }
+
+    const sanitized = sanitizeWebhookPayload(payload) as Record<
+      string,
+      unknown
+    >;
+
+    let eventId: string;
+    try {
+      const created = await this.prisma.billingEvent.create({
+        data: {
+          externalEventId,
+          type: eventType,
+          payload: sanitized as Prisma.InputJsonValue,
+        },
+      });
+      eventId = created.id;
+    } catch (error) {
+      if (!isUniqueViolation(error)) {
+        throw error;
+      }
+      const existing = await this.prisma.billingEvent.findUnique({
+        where: { externalEventId },
+      });
+      if (!existing) {
+        throw error;
+      }
+      if (existing.processedAt) {
+        return { ok: true };
+      }
+      // Retry do Asaas após falha anterior: reprocessa o mesmo registro.
+      eventId = existing.id;
+    }
+
+    try {
+      await this.dispatchWebhookEvent(eventType, sanitized);
+    } catch (error) {
+      await this.recordWebhookError(eventId, error);
+      throw error;
+    }
+
+    await this.prisma.billingEvent.update({
+      where: { id: eventId },
+      data: { processedAt: new Date() },
+    });
+    return { ok: true };
+  }
+
+  /** Grava o erro do dispatch; se a própria gravação falhar, loga e segue para relançar o original. */
+  private async recordWebhookError(
+    eventId: string,
+    error: unknown,
+  ): Promise<void> {
+    const message = error instanceof Error ? error.message : String(error);
+    try {
+      await this.prisma.billingEvent.update({
+        where: { id: eventId },
+        data: { error: message.slice(0, MAX_ERROR_LENGTH) },
+      });
+    } catch (recordError) {
+      this.logger.error(
+        `Falha ao gravar o erro do evento de webhook ${eventId}: ${
+          recordError instanceof Error
+            ? recordError.message
+            : String(recordError)
+        }`,
+      );
+    }
+  }
+
+  /** Comparação em tempo constante; servidor sem token configurado recusa tudo (fail closed). */
+  private isValidWebhookToken(token: string | undefined): boolean {
+    const configured = this.configService.get<string>('asaas.webhookToken');
+    if (!isNonEmptyString(configured) || !isNonEmptyString(token)) {
+      return false;
+    }
+    const expected = Buffer.from(configured);
+    const received = Buffer.from(token);
+    return (
+      expected.length === received.length && timingSafeEqual(expected, received)
+    );
+  }
+
+  private async dispatchWebhookEvent(
+    eventType: string,
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    switch (eventType) {
+      case 'CHECKOUT_PAID':
+        await this.handleCheckoutPaid(payload);
+        return;
+      case 'PAYMENT_CONFIRMED':
+      case 'PAYMENT_RECEIVED':
+      case 'PAYMENT_OVERDUE':
+        await this.handlePaymentStatusEvent(payload);
+        return;
+      case 'PAYMENT_REFUNDED':
+        await this.handlePaymentRefunded(payload);
+        return;
+      case 'SUBSCRIPTION_DELETED':
+      case 'SUBSCRIPTION_INACTIVATED':
+        await this.handleSubscriptionRemoved(payload);
+        return;
+      default:
+        this.logger.warn(
+          `Evento de webhook do Asaas não tratado: ${eventType}`,
+        );
+    }
+  }
+
+  private async handleCheckoutPaid(
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    const checkout = asRecord(payload.checkout);
+    const checkoutId = isNonEmptyString(checkout?.id) ? checkout.id : undefined;
+    if (!checkoutId) {
+      this.logger.warn('Webhook CHECKOUT_PAID sem checkout.id.');
+      return;
+    }
+
+    // Primeiro pelo id do checkout; sem achar, pelo externalReference (id local, só ASAAS).
+    let local = await this.prisma.subscription.findFirst({
+      where: { asaasCheckoutId: checkoutId },
+    });
+    if (!local && isNonEmptyString(checkout?.externalReference)) {
+      local = await this.prisma.subscription.findFirst({
+        where: { id: checkout.externalReference, source: 'ASAAS' },
+      });
+    }
+    if (!local) {
+      this.logger.warn(
+        `Webhook CHECKOUT_PAID sem Subscription local para o checkout ${checkoutId}.`,
+      );
+      return;
+    }
+
+    const asaasSubscriptionId = isNonEmptyString(checkout?.subscription)
+      ? checkout.subscription
+      : local.asaasSubscriptionId;
+    const asaasCustomerId = isNonEmptyString(checkout?.customer)
+      ? checkout.customer
+      : local.asaasCustomerId;
+
+    const updated = await this.prisma.subscription.update({
+      where: { id: local.id },
+      data: { asaasSubscriptionId, asaasCustomerId },
+    });
+
+    await this.reconcileSubscription(updated);
+  }
+
+  /**
+   * PAYMENT_CONFIRMED/RECEIVED/OVERDUE: casa a linha por `payment.subscription`
+   * (nunca por externalReference), grava `latestInvoiceUrl` quando houver e reconcilia.
+   */
+  private async handlePaymentStatusEvent(
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    let local = await this.findLocalByPaymentSubscription(payload);
+    if (!local) {
+      return;
+    }
+
+    const invoiceUrl = asRecord(payload.payment)?.invoiceUrl;
+    if (typeof invoiceUrl === 'string') {
+      local = await this.prisma.subscription.update({
+        where: { id: local.id },
+        data: { latestInvoiceUrl: invoiceUrl },
+      });
+    }
+
+    await this.reconcileSubscription(local);
+  }
+
+  /** PAYMENT_REFUNDED: encerra na hora como EXPIRED, sem consultar o Asaas (é terminal). */
+  private async handlePaymentRefunded(
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    const local = await this.findLocalByPaymentSubscription(payload);
+    if (!local) {
+      return;
+    }
+
+    await this.prisma.subscription.update({
+      where: { id: local.id },
+      data: { status: 'EXPIRED', currentPeriodEnd: new Date() },
+    });
+  }
+
+  /** SUBSCRIPTION_DELETED/INACTIVATED: acha por `subscription.id` e reconcilia (deleted vira CANCELED). */
+  private async handleSubscriptionRemoved(
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    const asaasSubscriptionId = asRecord(payload.subscription)?.id;
+    if (!isNonEmptyString(asaasSubscriptionId)) {
+      this.logger.warn('Webhook de assinatura removida sem subscription.id.');
+      return;
+    }
+
+    const local = await this.prisma.subscription.findFirst({
+      where: { asaasSubscriptionId },
+    });
+    if (!local) {
+      this.logger.warn(
+        `Webhook de assinatura removida sem Subscription local para ${asaasSubscriptionId}.`,
+      );
+      return;
+    }
+
+    await this.reconcileSubscription(local);
+  }
+
+  private async findLocalByPaymentSubscription(
+    payload: Record<string, unknown>,
+  ): Promise<Subscription | null> {
+    const asaasSubscriptionId = asRecord(payload.payment)?.subscription;
+    if (!isNonEmptyString(asaasSubscriptionId)) {
+      this.logger.warn('Webhook de pagamento sem payment.subscription.');
+      return null;
+    }
+
+    const local = await this.prisma.subscription.findFirst({
+      where: { asaasSubscriptionId },
+    });
+    if (!local) {
+      this.logger.warn(
+        `Webhook de pagamento sem Subscription local para ${asaasSubscriptionId}.`,
+      );
+      return null;
+    }
+    return local;
+  }
+
+  /**
    * Deriva o estado local apenas de `deleted` e `nextDueDate`. Webhook e `sync` usam esta
    * mesma função, então os dois caminhos não podem divergir.
    */
   async reconcileSubscription(local: Subscription): Promise<void> {
+    // EXPIRED (reembolso) é terminal: evento tardio não pode ressuscitar a assinatura.
+    if (local.status === 'EXPIRED') {
+      return;
+    }
     if (!local.asaasSubscriptionId) {
       return;
     }
@@ -231,7 +556,7 @@ export class BillingPaymentsService {
       local.currentPeriodEnd === null || nextDueDate > local.currentPeriodEnd;
 
     if (advanced) {
-      await this.prisma.subscription.update({
+      const updated = await this.prisma.subscription.update({
         where: { id: local.id },
         data: {
           status: 'ACTIVE',
@@ -239,6 +564,16 @@ export class BillingPaymentsService {
           pastDueSince: null,
         },
       });
+      await this.cancelSupersededSubscriptions(updated);
+      return;
+    }
+
+    // Não avançou: período ainda pago não é rebaixado (ex.: 2º webhook com o mesmo nextDueDate).
+    const now = new Date();
+    if (local.currentPeriodEnd !== null && local.currentPeriodEnd > now) {
+      if (local.status === 'ACTIVE') {
+        await this.cancelSupersededSubscriptions(local);
+      }
       return;
     }
 
@@ -246,8 +581,41 @@ export class BillingPaymentsService {
       where: { id: local.id },
       data: {
         status: 'PAST_DUE',
-        pastDueSince: local.pastDueSince ?? new Date(),
+        pastDueSince: local.pastDueSince ?? now,
       },
     });
+  }
+
+  /**
+   * Upgrade cancela a assinatura anterior do mesmo usuário (opção A do dono).
+   * Só ASAAS em cobrança de plano estritamente menor. GRANT, outro usuário, plano igual ou
+   * maior e linhas PENDING/CANCELED/EXPIRED nunca são tocadas. Roda também no ramo "em dia"
+   * para que um retry do webhook complete o que falhou. Falha no Asaas propaga (5xx).
+   */
+  private async cancelSupersededSubscriptions(
+    active: Subscription,
+  ): Promise<void> {
+    const others = await this.prisma.subscription.findMany({
+      where: {
+        ownerUserId: active.ownerUserId,
+        source: 'ASAAS',
+        status: { in: ['ACTIVE', 'PAST_DUE'] },
+        id: { not: active.id },
+      },
+    });
+
+    for (const other of others) {
+      if (PLAN_RANK[other.plan] >= PLAN_RANK[active.plan]) {
+        continue;
+      }
+      // Remove no Asaas antes de gravar: se falhar, nada muda e o retry tenta de novo.
+      if (other.asaasSubscriptionId) {
+        await this.asaasClient.deleteSubscription(other.asaasSubscriptionId);
+      }
+      await this.prisma.subscription.update({
+        where: { id: other.id },
+        data: { status: 'CANCELED', cancelAtPeriodEnd: true },
+      });
+    }
   }
 }

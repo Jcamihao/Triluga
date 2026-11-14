@@ -1,6 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
@@ -54,6 +63,18 @@ export class BillingController {
   @ApiOperation({ summary: 'Cancela a assinatura paga do usuário' })
   cancel(@CurrentUser() user: AuthenticatedUser) {
     return this.billingPaymentsService.cancel(user.sub);
+  }
+
+  @Public()
+  @SkipThrottle() // o token é a autenticação; rajada do Asaas não pode receber 429
+  @HttpCode(200) // o Asaas documenta 200; sem isso o @Post responde 201
+  @Post('webhooks/asaas')
+  @ApiOperation({ summary: 'Webhook Asaas — eventos de assinatura' })
+  asaasWebhook(
+    @Headers('asaas-access-token') token: string | undefined,
+    @Body() payload: Record<string, unknown>,
+  ) {
+    return this.billingPaymentsService.processWebhookEvent(token, payload);
   }
 
   @Get('admin/grants')

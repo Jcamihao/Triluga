@@ -52,6 +52,7 @@ export interface AsaasWebhookPayload {
     id?: string;
     value?: number;
     externalReference?: string | null;
+    subscription?: string | null;
   } | null;
 }
 
@@ -306,6 +307,8 @@ export class FeaturedService implements OnModuleInit {
     if (!isActivation && !isReversal) return noop;
     const payment = payload.payment;
     if (!payment || typeof payment !== 'object') return noop;
+    // Pagamento de assinatura é do billing (BillingPaymentsService): não é destaque.
+    if (nonEmptyString(payment.subscription)) return noop;
 
     const externalReference = nonEmptyString(payment.externalReference)
       ? payment.externalReference
