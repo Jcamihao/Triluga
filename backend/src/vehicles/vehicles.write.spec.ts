@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { EntitlementsService } from '../billing/entitlements.service';
 import { PlanLimitException } from '../billing/plan-limit.exception';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -308,6 +309,16 @@ describe('VehiclesService (limite de anúncios do plano)', () => {
       expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
     });
 
+    it('isPublished não booleano (string, null) não conta como republicar', async () => {
+      for (const value of ['false', null]) {
+        const { service, entitlements } = buildService(unpublishedActive);
+        await service
+          .update(OWNER_ID, VEHICLE_ID, { isPublished: value } as any)
+          .catch(() => undefined);
+        expect(entitlements.assertCanPublish).not.toHaveBeenCalled();
+      }
+    });
+
     it('isPublished false (despublicar) não chama assertCanPublish', async () => {
       const { service, entitlements } = buildService({
         id: VEHICLE_ID,
@@ -387,5 +398,86 @@ describe('CreateVehicleDto (validação de preço)', () => {
   it('UpdateVehicleDto vazio é válido', async () => {
     const errors = await validate(plainToInstance(UpdateVehicleDto, {}));
     expect(errors).toEqual([]);
+  });
+});
+
+describe('VehiclesService com EntitlementsService real (plano FREE, limite 3)', () => {
+  /** Dono FREE com `used` anúncios contados; flag de cobrança ligada. */
+  function buildReal(used: number, current: Record<string, unknown>) {
+    const prisma = {
+      subscription: { findMany: jest.fn().mockResolvedValue([]) },
+      vehicle: {
+        count: jest.fn().mockResolvedValue(used),
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn().mockResolvedValue(current),
+        create: jest.fn(async ({ data }: any) => fakeVehicle(data)),
+        update: jest.fn(async ({ data }: any) => fakeVehicle(data)),
+      },
+    };
+    const config = { get: jest.fn().mockReturnValue(true) };
+    const entitlements = new EntitlementsService(prisma as any, config as any);
+    const service = new VehiclesService(
+      prisma as any,
+      {
+        del: jest.fn().mockResolvedValue(undefined),
+        invalidateByPrefix: jest.fn().mockResolvedValue(undefined),
+      } as any,
+      { notifyMatchingUsers: jest.fn() } as any,
+      entitlements,
+    );
+    return { service, prisma };
+  }
+
+  const unpublished = {
+    id: VEHICLE_ID,
+    ownerId: OWNER_ID,
+    isPublished: false,
+    isActive: true,
+  };
+  const published = { ...unpublished, isPublished: true };
+
+  it('despublicar e republicar com used >= limite dá PLAN_LIMIT e não grava', async () => {
+    const { service, prisma } = buildReal(3, unpublished);
+    const promise = service.update(OWNER_ID, VEHICLE_ID, {
+      isPublished: true,
+    } as any);
+    await expect(promise).rejects.toBeInstanceOf(PlanLimitException);
+    await expect(promise).rejects.toMatchObject({
+      response: { code: 'PLAN_LIMIT' },
+    });
+    expect(prisma.vehicle.update).not.toHaveBeenCalled();
+  });
+
+  it('republicar com used abaixo do limite grava', async () => {
+    const { service, prisma } = buildReal(2, unpublished);
+    await service.update(OWNER_ID, VEHICLE_ID, { isPublished: true } as any);
+    expect(prisma.vehicle.update).toHaveBeenCalled();
+  });
+
+  it('criar anúncio publicado com used >= limite dá PLAN_LIMIT; rascunho passa', async () => {
+    const { service, prisma } = buildReal(3, published);
+    const dto = { ...baseDto, dailyRate: 100 } as any;
+    await expect(service.create(OWNER_ID, dto)).rejects.toBeInstanceOf(
+      PlanLimitException,
+    );
+    expect(prisma.vehicle.create).not.toHaveBeenCalled();
+
+    await service.create(OWNER_ID, { ...dto, isPublished: false });
+    expect(prisma.vehicle.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('dono acima do limite (40 anúncios) edita e despublica sem bloqueio; só novo publicado é barrado', async () => {
+    const { service, prisma } = buildReal(40, published);
+    await service.update(OWNER_ID, VEHICLE_ID, {
+      isPublished: true,
+      title: 'Editado',
+    } as any);
+    await service.update(OWNER_ID, VEHICLE_ID, { isPublished: false } as any);
+    expect(prisma.vehicle.update).toHaveBeenCalledTimes(2);
+    expect(prisma.vehicle.count).not.toHaveBeenCalled();
+
+    await expect(
+      service.create(OWNER_ID, { ...baseDto, dailyRate: 100 } as any),
+    ).rejects.toBeInstanceOf(PlanLimitException);
   });
 });
