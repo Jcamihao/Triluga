@@ -6,13 +6,21 @@ import { AppComponent } from './app.component';
 import { AnalyticsTrackingService } from './core/services/analytics-tracking.service';
 import { AppLoggerService } from './core/services/app-logger.service';
 import { AuthService } from './core/services/auth.service';
+import { BillingFlagService } from './core/services/billing-flag.service';
+import { UiStateService } from './core/services/ui-state.service';
+import { signal } from '@angular/core';
 import { PrivacyApiService } from './core/services/privacy-api.service';
 import { PrivacyPreferencesService } from './core/services/privacy-preferences.service';
 import { PwaInstallService } from './core/services/pwa-install.service';
 import { RouteTraceService } from './core/services/route-trace.service';
 
 describe('AppComponent', () => {
+  const sessionFlag = signal(false);
+  const billingEnabled = signal(false);
+
   beforeEach(async () => {
+    sessionFlag.set(false);
+    billingEnabled.set(false);
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
@@ -24,7 +32,8 @@ describe('AppComponent', () => {
             currentUser: () => null,
             getAccessToken: () => null,
             getSessionRole: () => null,
-            hasSession: () => false,
+            hasRole: () => false,
+            hasSession: sessionFlag,
             isAuthenticated: () => false,
             loadMe: () => of(null),
             logout: () => undefined,
@@ -68,6 +77,13 @@ describe('AppComponent', () => {
           },
         },
         {
+          provide: BillingFlagService,
+          useValue: {
+            enabled: billingEnabled,
+            ensureLoaded: () => undefined,
+          },
+        },
+        {
           provide: RouteTraceService,
           useValue: {
             start: () => undefined,
@@ -81,5 +97,31 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
 
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  function planoItemInDrawer(): HTMLElement | undefined {
+    TestBed.inject(UiStateService).menuOpen.set(true);
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    return (Array.from(fixture.nativeElement.querySelectorAll('.menu-link')) as HTMLElement[])
+      .find((el) => el.textContent?.includes('Plano'));
+  }
+
+  it('mostra "Plano" no menu com sessão e enabled', () => {
+    sessionFlag.set(true);
+    billingEnabled.set(true);
+    expect(planoItemInDrawer()).toBeDefined();
+  });
+
+  it('não mostra "Plano" no menu sem enabled', () => {
+    sessionFlag.set(true);
+    billingEnabled.set(false);
+    expect(planoItemInDrawer()).toBeUndefined();
+  });
+
+  it('não mostra "Plano" no menu sem sessão', () => {
+    sessionFlag.set(false);
+    billingEnabled.set(true);
+    expect(planoItemInDrawer()).toBeUndefined();
   });
 });

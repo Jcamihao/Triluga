@@ -1,8 +1,12 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { VehicleCardItem } from '../../core/models/domain.models';
+import {
+  BillingPlanView,
+  VehicleCardItem,
+} from '../../core/models/domain.models';
 import { AuthService } from '../../core/services/auth.service';
+import { BillingFlagService } from '../../core/services/billing-flag.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { RecentlyViewedService } from '../../core/services/recently-viewed.service';
 import { UiStateService } from '../../core/services/ui-state.service';
@@ -125,6 +129,11 @@ const TRUST_CARDS: TrustCard[] = [
   },
 ];
 
+const BRL = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
 export const HOME_IMPORTS = [
   CommonModule,
   RouterLink,
@@ -141,6 +150,7 @@ export abstract class HomePageBase {
   protected readonly favoritesService = inject(FavoritesService);
   protected readonly uiStateService = inject(UiStateService);
   private readonly recentlyViewedService = inject(RecentlyViewedService);
+  protected readonly billingFlag = inject(BillingFlagService);
 
   protected readonly quickShortcuts = QUICK_SHORTCUTS;
   protected readonly featuredCategoryCards = FEATURED_CATEGORY_CARDS;
@@ -168,6 +178,32 @@ export abstract class HomePageBase {
     this.loadFeaturedVehicles();
     this.loadMoreCars();
     this.loadCollectionStats();
+    this.billingFlag.ensureLoaded();
+  }
+
+  /** Planos vendáveis para a faixa de preços; vazio com a cobrança desligada. */
+  protected get pricingPlans(): BillingPlanView[] {
+    if (!this.billingFlag.enabled()) {
+      return [];
+    }
+
+    return (this.billingFlag.plans()?.plans ?? []).filter(
+      (plan) => plan.sellable && plan.id !== 'FREE',
+    );
+  }
+
+  protected monthlyPriceLabel(plan: BillingPlanView): string {
+    if (!plan.prices) {
+      return '';
+    }
+
+    return `${BRL.format(plan.prices.MONTHLY)}/mês`;
+  }
+
+  protected adLimitLabel(plan: BillingPlanView): string {
+    return plan.adLimit === null
+      ? 'Anúncios ilimitados'
+      : `Até ${plan.adLimit} anúncios`;
   }
 
   protected goToSearch(params: Record<string, string | undefined>) {

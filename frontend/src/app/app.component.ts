@@ -16,6 +16,7 @@ import { CompareTrayComponent } from './shared/components/compare-tray/compare-t
 import { UiStateService } from './core/services/ui-state.service';
 import { WebFooterComponent } from './shared/components/web-footer/web-footer.component';
 import { LocationService } from './core/services/location.service';
+import { BillingFlagService } from './core/services/billing-flag.service';
 
 @Component({
   selector: 'app-root',
@@ -43,6 +44,7 @@ export class AppComponent {
   protected readonly authService = inject(AuthService);
   protected readonly uiStateService = inject(UiStateService);
   protected readonly notificationsService = inject(NotificationsCenterService);
+  protected readonly billingFlag = inject(BillingFlagService);
 
   protected get menuOpen() {
     return this.uiStateService.menuOpen();
@@ -58,6 +60,7 @@ export class AppComponent {
 
   constructor(public locationService: LocationService) {
     this.routeTraceService.start();
+    this.billingFlag.ensureLoaded();
     this.analyticsTrackingService.trackCurrentSession(
       globalThis.location?.pathname
         ? `${globalThis.location.pathname}${globalThis.location.search}`
@@ -137,6 +140,10 @@ export class AppComponent {
 
     this.closeMenu();
     this.router.navigate(['/anunciar-carro']);
+  }
+
+  protected openPlan() {
+    this.navigateProtected('/plano');
   }
 
   protected openAdmin() {

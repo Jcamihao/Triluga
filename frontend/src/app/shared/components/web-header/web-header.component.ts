@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AppLoggerService } from '../../../core/services/app-logger.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { BillingFlagService } from '../../../core/services/billing-flag.service';
 import { ChatInboxService } from '../../../core/services/chat-inbox.service';
 import { NotificationsCenterService } from '../../../core/services/notifications-center.service';
 
@@ -19,6 +20,7 @@ export class WebHeaderComponent {
   protected readonly authService = inject(AuthService);
   protected readonly chatInboxService = inject(ChatInboxService);
   protected readonly notificationsService = inject(NotificationsCenterService);
+  protected readonly billingFlag = inject(BillingFlagService);
   private readonly logger = inject(AppLoggerService);
   private inboxWarmupScheduled = false;
   protected notificationsOpen = false;
@@ -31,6 +33,8 @@ export class WebHeaderComponent {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='60' fill='%23edf4ff'/%3E%3Ccircle cx='60' cy='48' r='20' fill='%23bbcbbb'/%3E%3Cpath d='M27 100c6-24 24-37 33-37s27 13 33 37' fill='%23bbcbbb'/%3E%3C/svg%3E";
 
   constructor() {
+    this.billingFlag.ensureLoaded();
+
     effect(() => {
       if (!this.authService.hasSession()) {
         this.inboxWarmupScheduled = false;
@@ -86,6 +90,10 @@ export class WebHeaderComponent {
     const currentPath = this.router.url.split('?')[0].split('#')[0];
     const userId = this.authService.currentUser()?.id;
     return !!userId && currentPath === `/users/${userId}`;
+  }
+
+  protected get showPlanLink() {
+    return this.authService.hasSession() && this.billingFlag.enabled();
   }
 
   protected get unreadChatCount() {

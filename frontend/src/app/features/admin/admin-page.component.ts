@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/services/admin-api.service';
+import { BillingApiService } from '../../core/services/billing-api.service';
+import { BillingGrant, BillingSellablePlanId } from '../../core/models/domain.models';
+import { formatDateOnly } from '../../core/utils/date-only.util';
 import { WebHeaderComponent } from '../../shared/components/web-header/web-header.component';
 
 @Component({
@@ -13,6 +16,7 @@ import { WebHeaderComponent } from '../../shared/components/web-header/web-heade
 })
 export class AdminPageComponent {
   private readonly adminApiService = inject(AdminApiService);
+  private readonly billingApi = inject(BillingApiService);
 
   protected activeTab: 'overview' | 'manage' | 'audit' = 'overview';
 
@@ -72,6 +76,17 @@ export class AdminPageComponent {
   protected resolvingReportId: string | null = null;
   protected reportNotesMap: Record<string, string> = {};
 
+  protected grants: BillingGrant[] = [];
+  protected grantsLoadFailed = false;
+  protected grantEmail = '';
+  protected grantPlan: BillingSellablePlanId = 'PROFESSIONAL';
+  protected grantEndsAt = '';
+  protected grantSubmitting = false;
+  protected grantError = '';
+  protected grantFeedback = '';
+  protected revokeConfirmId: string | null = null;
+  protected revokingGrantId: string | null = null;
+
   protected auditLogs: any[] = [];
   protected auditLogsTotal = 0;
   protected auditLogsPage = 1;
@@ -79,6 +94,89 @@ export class AdminPageComponent {
 
   constructor() {
     this.loadData();
+  }
+
+  protected createGrant() {
+    const email = this.grantEmail.trim();
+    if (!email || this.grantSubmitting) return;
+
+    const body: { email: string; plan: BillingSellablePlanId; endsAt?: string } = {
+      email,
+      plan: this.grantPlan,
+    };
+    if (this.grantEndsAt) {
+      // Fim do dia no Brasil (UTC-3), ISO 8601 estrito.
+      body.endsAt = `${this.grantEndsAt}T23:59:59-03:00`;
+    }
+
+    this.grantSubmitting = true;
+    this.grantError = '';
+    this.grantFeedback = '';
+    this.billingApi.createGrant(body).subscribe({
+      next: () => {
+        this.grantSubmitting = false;
+        this.grantEmail = '';
+        this.grantEndsAt = '';
+        this.grantFeedback = `Plano concedido a ${email}.`;
+        this.loadGrants();
+      },
+      error: (err) => {
+        this.grantSubmitting = false;
+        this.grantError =
+          err?.error?.message || 'Não foi possível conceder o plano agora.';
+      },
+    });
+  }
+
+  protected confirmRevokeGrant(grantId: string) {
+    this.revokeConfirmId = grantId;
+  }
+
+  protected cancelRevokeGrant() {
+    this.revokeConfirmId = null;
+  }
+
+  protected revokeGrant(grantId: string) {
+    if (this.revokingGrantId) return;
+    this.revokingGrantId = grantId;
+    this.revokeConfirmId = null;
+    this.grantError = '';
+    this.billingApi.revokeGrant(grantId).subscribe({
+      next: () => {
+        this.revokingGrantId = null;
+        this.grantFeedback = '';
+        this.loadGrants();
+      },
+      error: (err) => {
+        this.revokingGrantId = null;
+        this.grantError =
+          err?.error?.message || 'Não foi possível revogar o plano agora.';
+      },
+    });
+  }
+
+  protected grantPlanLabel(plan: string) {
+    const labels: Record<string, string> = {
+      PROFESSIONAL: 'Profissional',
+      FLEET: 'Frota',
+    };
+    return labels[plan] ?? plan;
+  }
+
+  protected grantStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      ACTIVE: 'Ativo',
+      PENDING: 'Pendente',
+      PAST_DUE: 'Em atraso',
+      CANCELED: 'Cancelado',
+      EXPIRED: 'Expirado',
+    };
+    return labels[status] ?? status;
+  }
+
+  protected grantEndLabel(grant: BillingGrant) {
+    const date = formatDateOnly(grant.currentPeriodEnd);
+    return date ? `até ${date}` : 'sem fim';
   }
 
   protected blockUser(userId: string) {
@@ -331,7 +429,20 @@ export class AdminPageComponent {
     return [];
   }
 
+  private loadGrants() {
+    this.billingApi.listGrants().subscribe({
+      next: (grants) => {
+        this.grants = grants;
+        this.grantsLoadFailed = false;
+      },
+      error: () => {
+        this.grantsLoadFailed = true;
+      },
+    });
+  }
+
   private loadData() {
+    this.loadGrants();
     this.adminApiService.getDashboard().subscribe({
       next: (d) => { this.dashboard = d; },
       error: () => {},

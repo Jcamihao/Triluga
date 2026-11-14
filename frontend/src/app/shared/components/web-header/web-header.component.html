@@ -46,6 +46,15 @@
           Meu Perfil
         </button>
         <button
+          *ngIf="showPlanLink"
+          type="button"
+          class="web-header__link"
+          [class.web-header__link--active]="isRouteActive('/plano')"
+          routerLink="/plano"
+        >
+          Plano
+        </button>
+        <button
           *ngIf="authService.hasRole(['ADMIN'])"
           type="button"
           class="web-header__link"

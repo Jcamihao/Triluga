@@ -100,6 +100,33 @@
     </div>
   </section>
 
+  <!-- Planos para quem anuncia (só com a cobrança ligada) -->
+  <section
+    *ngIf="pricingPlans.length > 0"
+    class="home-web__section home-web__pricing"
+    aria-labelledby="home-pricing-title"
+  >
+    <div class="home-web__container">
+      <div class="home-web__section-head">
+        <h2 id="home-pricing-title">Planos para quem anuncia</h2>
+        <p>Comece grátis com até 3 anúncios. Assine quando precisar de mais.</p>
+      </div>
+
+      <div class="home-web__pricing-grid">
+        <article *ngFor="let plan of pricingPlans" class="home-web__plan-card">
+          <h3>{{ plan.label }}</h3>
+          <p class="home-web__plan-limit">{{ adLimitLabel(plan) }}</p>
+          <p class="home-web__plan-price">{{ monthlyPriceLabel(plan) }}</p>
+        </article>
+      </div>
+
+      <a routerLink="/plano" class="home-web__plan-cta">
+        Ver planos
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+    </div>
+  </section>
+
   <section class="home-web__section home-web__section--surface">
     <div class="home-web__container">
       <div class="home-web__section-head">

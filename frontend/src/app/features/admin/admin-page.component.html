@@ -259,6 +259,74 @@
         </div>
       </section>
 
+      <!-- Planos concedidos -->
+      <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-4">
+        <h2 class="text-base font-black text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-primary">workspace_premium</span>
+          Planos concedidos
+        </h2>
+
+        <form class="flex flex-col sm:flex-row sm:items-end gap-3" (ngSubmit)="createGrant()">
+          <label class="flex flex-col gap-1 flex-1 min-w-0">
+            <span class="text-xs font-bold text-on-surface-variant">E-mail</span>
+            <input type="email" name="grantEmail" required [(ngModel)]="grantEmail"
+              class="bg-surface-container rounded-xl px-3.5 py-2.5 text-sm text-on-surface outline-none" placeholder="usuario@exemplo.com">
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-bold text-on-surface-variant">Plano</span>
+            <select name="grantPlan" [(ngModel)]="grantPlan"
+              class="bg-surface-container rounded-xl pl-3.5 pr-9 py-2.5 min-w-[11rem] text-sm text-on-surface outline-none">
+              <option value="PROFESSIONAL">Profissional</option>
+              <option value="FLEET">Frota</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-bold text-on-surface-variant">Válido até (opcional)</span>
+            <input type="date" name="grantEndsAt" [(ngModel)]="grantEndsAt"
+              class="bg-surface-container rounded-xl px-3.5 py-2.5 text-sm text-on-surface outline-none">
+          </label>
+          <button type="submit" [disabled]="!grantEmail.trim() || grantSubmitting"
+            class="px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-50 transition-opacity">
+            {{ grantSubmitting ? 'Concedendo…' : 'Conceder plano' }}
+          </button>
+        </form>
+
+        <p *ngIf="grantFeedback" class="text-sm font-semibold text-emerald-700">{{ grantFeedback }}</p>
+        <p *ngIf="grantError" class="text-sm font-semibold text-error">{{ grantError }}</p>
+        <p *ngIf="grantsLoadFailed" class="text-sm font-semibold text-error">Não foi possível carregar as concessões.</p>
+
+        <p *ngIf="!grantsLoadFailed && grants.length === 0" class="text-sm text-on-surface-variant text-center py-4">Nenhum plano concedido.</p>
+
+        <div *ngFor="let grant of grants"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 py-4 border-t border-outline-variant/20 first:border-t-0 first:pt-0">
+          <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+            <span class="text-sm font-bold text-on-surface truncate">{{ grant.email }}</span>
+            <span class="text-xs text-on-surface-variant">
+              {{ grantPlanLabel(grant.plan) }} · {{ grantEndLabel(grant) }} · {{ grantStatusLabel(grant.status) }}
+            </span>
+          </div>
+
+          <div class="flex flex-wrap gap-2 shrink-0">
+            <ng-container *ngIf="revokeConfirmId !== grant.id; else grantRevokeConfirm">
+              <button type="button"
+                class="px-3 py-1.5 rounded-full border border-error/40 text-xs font-bold text-error hover:bg-error/5 transition-colors"
+                (click)="confirmRevokeGrant(grant.id)">Revogar</button>
+            </ng-container>
+            <ng-template #grantRevokeConfirm>
+              <button type="button"
+                class="px-3 py-1.5 rounded-full bg-error text-white text-xs font-bold disabled:opacity-50 hover:bg-error/90 transition-colors"
+                [disabled]="revokingGrantId === grant.id"
+                (click)="revokeGrant(grant.id)">
+                {{ revokingGrantId === grant.id ? 'Revogando…' : 'Confirmar revogação' }}
+              </button>
+              <button type="button"
+                class="px-3 py-1.5 rounded-full border border-outline-variant text-xs font-bold text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
+                (click)="cancelRevokeGrant()">Cancelar</button>
+            </ng-template>
+          </div>
+        </div>
+      </section>
+
       <!-- Veículos -->
       <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 flex flex-col gap-4">
         <div class="flex flex-col gap-3">

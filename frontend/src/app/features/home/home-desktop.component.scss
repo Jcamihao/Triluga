@@ -964,3 +964,60 @@
     gap: 12px;
   }
 }
+
+.home-web__pricing {
+  padding: 96px 0;
+  background: var(--md-surface);
+}
+
+.home-web__pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  max-width: 880px;
+  margin: 0 auto 40px;
+}
+
+.home-web__plan-card {
+  padding: 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(187, 203, 187, 0.3);
+  background: var(--md-surface-container-lowest);
+}
+
+.home-web__plan-card h3 {
+  margin: 0 0 8px;
+  color: var(--md-on-surface);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.home-web__plan-limit {
+  margin: 0 0 20px;
+  color: var(--md-on-surface-variant);
+  font-size: 15px;
+}
+
+.home-web__plan-price {
+  margin: 0;
+  color: var(--md-primary);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.home-web__plan-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-weight: 700;
+  text-decoration: none;
+}

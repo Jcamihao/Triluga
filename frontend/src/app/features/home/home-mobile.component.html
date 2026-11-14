@@ -139,6 +139,33 @@
       </div>
     </section>
 
+    <!-- Planos para quem anuncia (só com a cobrança ligada) -->
+    <section class="px-6 space-y-4" *ngIf="pricingPlans.length > 0">
+      <div class="space-y-1">
+        <h3 class="!text-xl !font-bold tracking-tight">Planos para quem anuncia</h3>
+        <p class="text-sm text-on-surface-variant">Comece grátis com até 3 anúncios. Assine quando precisar de mais.</p>
+      </div>
+
+      <article
+        *ngFor="let plan of pricingPlans"
+        class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 flex items-center justify-between gap-3"
+      >
+        <div class="min-w-0">
+          <h4 class="font-bold text-on-surface">{{ plan.label }}</h4>
+          <p class="text-sm text-on-surface-variant">{{ adLimitLabel(plan) }}</p>
+        </div>
+        <p class="font-bold text-primary whitespace-nowrap">{{ monthlyPriceLabel(plan) }}</p>
+      </article>
+
+      <a
+        routerLink="/plano"
+        class="w-full py-4 rounded-xl bg-surface-container-high text-on-surface font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+      >
+        Ver planos
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+    </section>
+
     <section class="px-6 space-y-4">
       <h3 class="!text-xl !font-bold tracking-tight">Categorias em Destaque</h3>
       <div class="grid grid-cols-2 gap-4">

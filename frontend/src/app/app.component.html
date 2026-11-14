@@ -101,6 +101,17 @@
       <button
         type="button"
         class="menu-link"
+        *ngIf="authService.hasSession() && billingFlag.enabled()"
+        [class.menu-link--active]="currentUrl().startsWith('/plano')"
+        (click)="openPlan()"
+      >
+        <span class="material-symbols-outlined">workspace_premium</span>
+        <span>Plano</span>
+      </button>
+
+      <button
+        type="button"
+        class="menu-link"
         [class.menu-link--active]="currentUrl().startsWith('/privacy-center')"
         *ngIf="authService.currentUser()"
         (click)="openPrivacyCenter()"
