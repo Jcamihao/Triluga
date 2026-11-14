@@ -1666,6 +1666,7 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       expect(rows[0].status).toBe('ACTIVE');
       expect(events).toHaveLength(1);
       expect(events[0].processedAt).toBeInstanceOf(Date);
+      expect(events[0].error).toBeNull();
     });
 
     it('erro de banco que nao e unicidade relanca e nao dispara o dispatch', async () => {
@@ -2223,7 +2224,7 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
       expect(events).toHaveLength(1);
       expect(prisma.billingEvent.update).toHaveBeenCalledWith({
         where: { id: 'evt-old' },
-        data: { processedAt: expect.any(Date) },
+        data: { processedAt: expect.any(Date), error: null },
       });
     });
 

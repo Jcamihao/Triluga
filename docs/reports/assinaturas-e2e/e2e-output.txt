@@ -1,5 +1,5 @@
 # Passada ponta a ponta: assinaturas (Asaas falso)
-início: 2026-11-14T19:05:31.700Z  fim: 2026-11-14T19:05:43.493Z
+início: 2026-11-14T19:06:26.406Z  fim: 2026-11-14T19:06:44.095Z
 backend: dist/main (build) | Postgres: embedded 18 (porta 54399) | Asaas falso: porta 3398 | API: 3099
 retries por 429 do throttler global: 0
 
@@ -16,9 +16,9 @@ OK 2 Asaas falso em HTTP local (User-Agent obrigatório, log de requisições)
     ok  GET sem User-Agent -> 403 (esperado 403)
     ok  GET com User-Agent -> 200
 OK 3 Backend real (dist/main) com BILLING_ENABLED=true e Asaas falso
-    ok  GET /api/v1/billing/plans 200 (log: /tmp/triluga-e2e-neyx5W/backend.log)
+    ok  GET /api/v1/billing/plans 200 (log: /tmp/triluga-e2e-iUgBe0/backend.log)
 OK 4a Registro real do usuário comum e de um ADMIN (via Prisma); sem verificação de e-mail
-    ok  POST /auth/register usuário -> HTTP 201 {"accessToken":"[redigido]","user":{"id":"d4d5f1e1-4016-48b1-b13e-7cdf9923f3e5","email":"e2e.usuario@example.com","role":"USER","status":"ACTIVE","emailVerified":false,"lastLoginAt":null,"createdAt":"2026-11-14T19:05:38.
+    ok  POST /auth/register usuário -> HTTP 201 {"accessToken":"[redigido]","user":{"id":"b9bc371d-2bc3-47be-bf46-cea038b78682","email":"e2e.usuario@example.com","role":"USER","status":"ACTIVE","emailVerified":false,"lastLoginAt":null,"createdAt":"2026-11-14T19:06:38.
     ok  POST /auth/register admin -> 201
     ok  POST /auth/login usuário -> 201 (token presente: true)
     ok  POST /auth/login admin -> 201
@@ -27,9 +27,9 @@ OK 4b Anúncios: 3 publicados OK; 4º publicado = 403 PLAN_LIMIT; rascunho passa
     ok  anúncio AAA1B01 publicado -> 201
     ok  anúncio AAA1B02 publicado -> 201
     ok  anúncio AAA1B03 publicado -> 201
-    ok  4º publicado -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:38.834Z","path":"/api/v1/vehicles","requestId":"77637590-8450-4752-9ac5-9937a0963172","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":3,"plan":"FREE","message":"Vo
-    ok  rascunho (isPublished=false) -> 201 id=285db5dc-fd5f-4b70-965f-646959990db2
-    ok  republicar rascunho -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:38.854Z","path":"/api/v1/vehicles/285db5dc-fd5f-4b70-965f-646959990db2","requestId":"8197dd28-a5d5-49f2-90b9-1a74697fde6e","error":"Forbidden","code":"PLAN_LIMIT","limit":3
+    ok  4º publicado -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:06:39.237Z","path":"/api/v1/vehicles","requestId":"87d861a0-5bfe-4688-86d5-1977e6f24b9f","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":3,"plan":"FREE","message":"Vo
+    ok  rascunho (isPublished=false) -> 201 id=41bb89a8-4162-47d5-9f5d-d1402ec7e121
+    ok  republicar rascunho -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:06:39.287Z","path":"/api/v1/vehicles/41bb89a8-4162-47d5-9f5d-d1402ec7e121","requestId":"7bbbebbb-5946-40e9-95d1-8ee068a8c1f9","error":"Forbidden","code":"PLAN_LIMIT","limit":3
     ok  publicados no banco: 3 (esperado 3)
 OK 4c GET /billing/plans (público) e GET /billing/me
     ok  GET /billing/plans sem token -> 200 enabled=true
@@ -43,7 +43,7 @@ OK 4d POST /billing/checkout PROFESSIONAL MONTHLY: corpo enviado ao Asaas e linh
     ok  items[0].value=29.9
     ok  sem customerData no corpo: true
     ok  3 callbacks: {"successUrl":"https://triluga.example.com/plano?checkout=sucesso","cancelUrl":"https://triluga.example.com/plano?checkout=cancelado","expiredUrl":"https://triluga.example.com/plano?checkout=expirado"}
-    ok  externalReference=017ffbad-27b2-41a2-8d67-6572e8457029 == Subscription.id=017ffbad-27b2-41a2-8d67-6572e8457029
+    ok  externalReference=509f5855-f369-490b-aede-3db5020bbb7f == Subscription.id=509f5855-f369-490b-aede-3db5020bbb7f
     ok  header access_token presente=true, User-Agent=Triluga/2.28.0 (Node.js)
     ok  Subscription status=PENDING source=ASAAS link gravado=true
 OK 4e Webhook CHECKOUT_PAID: sem/errado token = 403 e nada gravado; certo = ACTIVE; reenvio idempotente
@@ -83,12 +83,12 @@ OK 4h POST /billing/cancel (DELETE no Asaas) + PAYMENT_REFUNDED volta ao FREE se
     OBS após refund do FROTA, /billing/me plan=PROFESSIONAL. PRO antiga (CANCELED pelo upgrade) fim=2026-12-14T00:00:00.000Z ainda concede acesso (regra CANCELED até o fim do período)
     ok  com o período da PRO antiga encerrado (simulado no banco): /billing/me plan=FREE
     ok  anúncios: publicados=4 (esperado 4) total=4 (esperado 4, nenhum apagado)
-    ok  novo publicado no FREE -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:05:39.012Z","path":"/api/v1/vehicles","requestId":"c9e78156-610a-4958-bbea-f258b0f29728","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":4,"plan":"FREE","message":"Vo
+    ok  novo publicado no FREE -> HTTP 403 {"statusCode":403,"timestamp":"2026-11-14T19:06:39.574Z","path":"/api/v1/vehicles","requestId":"125af600-fead-4dc8-a4dc-53ddf3af7269","error":"Forbidden","code":"PLAN_LIMIT","limit":3,"used":4,"plan":"FREE","message":"Vo
 OK 4i Admin: concessão FROTA com endsAt -03:00 (source GRANT) e revogação volta ao FREE
     ok  usuário comum em /admin/grants -> 403
-    ok  POST /billing/admin/grants -> HTTP 201 {"id":"b017c044-d99e-4853-8115-557b4a7d319d","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:05:39.016Z","status":"ACTIVE","createdAt":"2026-11-14T19:05:39.021Z"}
+    ok  POST /billing/admin/grants -> HTTP 201 {"id":"1df0e14d-d6ba-4fe8-b0c4-da0b054c4401","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:06:39.582Z","status":"ACTIVE","createdAt":"2026-11-14T19:06:39.591Z"}
     ok  GET /billing/me plan=FLEET source=GRANT
-    ok  DELETE grant -> HTTP 200 {"id":"b017c044-d99e-4853-8115-557b4a7d319d","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:05:39.016Z","status":"EXPIRED","createdAt":"2026-11-14T19:05:39.021Z"}
+    ok  DELETE grant -> HTTP 200 {"id":"1df0e14d-d6ba-4fe8-b0c4-da0b054c4401","email":"e2e.usuario@example.com","plan":"FLEET","currentPeriodEnd":"2026-12-14T19:06:39.582Z","status":"EXPIRED","createdAt":"2026-11-14T19:06:39.591Z"}
     ok  após revogar plan=FREE
 OK 4j POST /billing/sync: sem assinatura = no-op; PENDING sem remoto = consulta por externalReference e segue PENDING
     ok  sync sem assinatura aberta -> 201; chamadas ao Asaas: 0 (esperado 0)
@@ -108,4 +108,6 @@ OK 4k Falha: fake 500 no GET durante webhook = 5xx, BillingEvent com error e sem
 RESUMO: 15/15 passos OK
 
 linhas de ERROR/Falha do log do backend (trecho):
-    [31m[Nest] 68144  - [39m11/14/2026, 4:05:39 PM [31m  ERROR[39m [38;5;3m[Bootstrap] [39m[31mrequest_completed requestId=cd5d3088-4395-406b-b5b4-07273e1aa999 method=POST path=/api/v1/billing/webhooks/asaas status=50
+    [31m[Nest] 76046  - [39m11/14/2026, 4:06:40 PM [31m  ERROR[39m [38;5;3m[HttpExceptionLoggingFilter] [39m[31mrequest_failed requestId=f5c7bd1a-c19e-4290-8ef3-f6180de1e611 method=POST path=/api/v1/billing/webhooks/a
+    AsaasClientError: Asaas respondeu 500 para GET /subscriptions/sub_e2e_3: {"errors":[{"code":"FAKE_FAILURE"}]}
+    [31m[Nest] 76046  - [39m11/14/2026, 4:06:40 PM [31m  ERROR[39m [38;5;3m[Bootstrap] [39m[31mrequest_completed requestId=f5c7bd1a-c19e-4290-8ef3-f6180de1e611 method=POST path=/api/v1/billing/webhooks/asaas status=50

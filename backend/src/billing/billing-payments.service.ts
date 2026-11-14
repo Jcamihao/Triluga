@@ -334,7 +334,7 @@ export class BillingPaymentsService {
 
     await this.prisma.billingEvent.update({
       where: { id: eventId },
-      data: { processedAt: new Date() },
+      data: { processedAt: new Date(), error: null },
     });
     return { ok: true };
   }
