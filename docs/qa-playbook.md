@@ -332,6 +332,81 @@ Classifique com este raciocinio:
 - `P2`: problema funcional secundario
 - `P3`: copy, layout, polish ou inconsistencias nao bloqueantes
 
+## Assinaturas (billing, v2.10.0)
+
+Pré-requisito: o ambiente de teste precisa de `BILLING_ENABLED=true` para estes casos, exceto o caso "flag desligada". Use um usuário `OWNER` sem assinatura e um `ADMIN`.
+
+> **Checkout real só no sandbox do Asaas.** Nunca teste pagamento com a conta de produção. Os casos de checkout abaixo valem apenas num ambiente com `ASAAS_BASE_URL` de sandbox. Sem sandbox disponível, marque como "não executado" e não como aprovado.
+
+### Limite do plano grátis
+
+1. Com conta grátis, publique 3 anúncios. Esperado: os 3 publicam.
+2. Tente publicar o 4º. Esperado: aviso de limite com link "Ver planos" para `/plano`. A API responde 403 com `code: PLAN_LIMIT`, `limit: 3`, `used: 3`, `plan: FREE`.
+3. Salve um 4º anúncio como rascunho. Esperado: salva sem aviso.
+4. Com 3 ativos publicados, despublique um. Depois republique um anúncio despublicado: esperado, passa e a conta volta a 3. Em seguida, tente publicar um quarto anúncio (rascunho ou despublicado): esperado, 403 `PLAN_LIMIT`. Despublicar e republicar não burla o limite.
+5. Edite um anúncio que já está publicado. Esperado: a edição nunca é bloqueada pelo limite.
+6. Confirme que os anúncios acima do limite (se a conta tiver mais de 3 por ter sido criada antes) continuam no ar. Nenhum deve sumir.
+
+### Página `/plano`
+
+Teste cada estado do dono (use dados de teste; o estado vem do banco, não da tela):
+
+1. **Grátis**: mostra "2 de 3 anúncios" (ou o número atual), os planos com preço e o botão "Assinar" em cada um.
+2. **Ativo** (assinatura paga em dia): mostra o plano, a data de renovação e o botão "Cancelar".
+3. **Pendente** (checkout aberto, sem pagamento confirmado): mostra estado pendente. Não concede acesso: o limite continua de 3.
+4. **Atrasado** (`PAST_DUE`): mostra "Regularizar pagamento" e mantém o acesso dentro da tolerância de 7 dias. Depois da tolerância, o acesso volta ao grátis.
+5. **Cancelado** (ainda dentro do período pago): mostra "acesso até DD/MM". Depois do fim do período, volta ao grátis.
+6. **Concedido pelo admin** (`GRANT`): mostra o plano e a data de fim, se houver. Não mostra botão de cancelar.
+
+### Retorno do checkout
+
+Ao voltar do Asaas, a URL traz um parâmetro. Verifique cada um:
+
+1. `/plano?checkout=sucesso`: mostra "Confirmando pagamento…" e consulta o plano por até 60 segundos. **Não libera acesso só por causa da URL.** Se o pagamento não foi confirmado pelo Asaas, o plano continua grátis.
+2. `/plano?checkout=cancelado`: mensagem de checkout cancelado. Plano não muda.
+3. `/plano?checkout=expirado`: mensagem de link expirado. Plano não muda.
+
+### Cancelamento em duas etapas
+
+1. Clique em "Cancelar". Esperado: não cancela ainda; aparece a pergunta de confirmação ("Tem certeza?").
+2. Clique em "Voltar" ou feche a confirmação. Esperado: assinatura continua ativa.
+3. Confirme. Esperado: mensagem com a data até quando o acesso fica; status vira cancelado; anúncios continuam no ar.
+
+### Upgrade
+
+1. Com plano Profissional ativo, assine a Frota. Esperado: após a confirmação, a Frota fica ativa e o Profissional é cancelado (sem cobrança dobrada).
+2. Com a Frota ativa, o limite de anúncios deixa de existir ("ilimitado" no contador).
+
+### Flag desligada (`BILLING_ENABLED=false`)
+
+1. Abra a home. Esperado: **nenhuma** faixa "Planos para quem anuncia" e nenhum preço.
+2. Abra o menu logado. Esperado: **não** existe o link "Plano".
+3. Abra `/plano` direto pela URL. Esperado: página "Planos ainda não disponíveis", sem preço e sem botão de assinar.
+4. Publique um 4º anúncio. Esperado: não há limite (a regra só vale com a flag ligada).
+
+### Admin: conceder e revogar
+
+1. Em `/admin`, bloco "Planos concedidos", conceda Profissional a um e-mail de teste, sem data de fim. Esperado: aparece na lista e o usuário passa a ter o plano em `/plano`.
+2. Conceda Frota com data de fim no futuro. Esperado: aparece com a data.
+3. Revogue (confirmação em duas etapas). Esperado: some da lista e o usuário volta ao grátis no próximo carregamento.
+4. Com usuário comum, tente acessar a rota de concessão. Esperado: 403 (sem acesso).
+
+### Webhook
+
+1. Envie `POST /api/v1/billing/webhooks/asaas` sem o header `asaas-access-token`. Esperado: **403**, nada gravado.
+2. Envie com token errado. Esperado: **403**, nada gravado.
+3. Envie com o token certo e um evento que não é de assinatura. Esperado: 200 e o evento ignorado sem efeito.
+4. Reenvie o mesmo evento duas vezes. Esperado: 200 nas duas e um único registro de evento (sem efeito duplicado).
+5. Checkout com webhook real (sandbox): **não verificado**. Depende de URL pública do ambiente de teste.
+
+### Validações técnicas
+
+- Ao publicar acima do limite, a resposta tem o código `PLAN_LIMIT` e não grava o anúncio.
+- `GET /api/v1/billing/plans` responde 200 sem login e com `enabled` igual à flag.
+- Nenhum dado de cartão ou CPF aparece na tela, no console do navegador nem no corpo das respostas.
+
+---
+
 ## Checklist final de aceite
 
 Antes de encerrar a rodada, confirme:

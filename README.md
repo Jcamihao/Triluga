@@ -8,7 +8,7 @@
 
 <br/>
 
-![versão](https://img.shields.io/badge/Versão-2.9.0-84cc16?style=for-the-badge&labelColor=1e293b)
+![versão](https://img.shields.io/badge/Versão-2.10.0-84cc16?style=for-the-badge&labelColor=1e293b)
 
 <br/>
 
@@ -102,6 +102,7 @@
 | `/profile` | Perfil do usuário | `auth` |
 | `/privacy-center` | Central LGPD | `auth` |
 | `/anunciar-carro` | Painel do anunciante | `auth` |
+| `/plano` | Planos e assinatura (aparece só com `BILLING_ENABLED=true`) | `auth` |
 | `/users/:id` | Perfil público do anunciante | — |
 | `/admin` | Painel administrativo | `auth + ADMIN` |
 | `/auth/login` | Login | — |
@@ -212,6 +213,19 @@ DELETE /featured/orders/:id             Cancela pedido pendente
 POST   /featured/webhook/asaas          Webhook do Asaas (header asaas-access-token)
 ```
 
+### 💳 Billing (assinaturas)
+```
+GET    /billing/plans                   Planos, limites e preços (público)
+GET    /billing/me                      Plano efetivo e uso do usuário
+POST   /billing/checkout                Abre checkout recorrente (Asaas, 5/hora)
+POST   /billing/sync                    Reconcilia com o Asaas (10/hora)
+POST   /billing/cancel                  Cancela ao fim do período
+POST   /billing/webhooks/asaas          Webhook do Asaas (header asaas-access-token)
+GET    /billing/admin/grants            [ADMIN] Lista concessões
+POST   /billing/admin/grants            [ADMIN] Concede plano por e-mail
+DELETE /billing/admin/grants/:id        [ADMIN] Revoga concessão
+```
+
 ### 📊 Analytics & Lookups
 ```
 POST   /analytics/visits                Rastreia visita
@@ -320,6 +334,20 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
 
 ---
 
+### 💳 Assinaturas (billing)
+
+Conta grátis: 3 anúncios ativos e publicados. Planos pagos (cartão, recorrente, via Asaas): Profissional até 10 anúncios e Frota ilimitado. Anúncio acima do limite continua no ar; o limite só bloqueia criar e republicar. Preços provisórios: Profissional R$ 29,90/mês ou R$ 299,00/ano; Frota R$ 79,90/mês ou R$ 799,00/ano.
+
+| Variável | Padrão | Função |
+|----------|--------|--------|
+| `BILLING_ENABLED` | `false` | Liga cobrança e limite. Desligada: nenhum preço aparece e nenhum limite é aplicado |
+| `BILLING_PRICE_PROFESSIONAL_MONTHLY` / `_YEARLY` | 29,90 / 299,00 | Sobrescreve o preço do Profissional |
+| `BILLING_PRICE_FLEET_MONTHLY` / `_YEARLY` | 79,90 / 799,00 | Sobrescreve o preço da Frota |
+
+As variáveis `ASAAS_*` são as mesmas do destaque. Registre **dois** webhooks no painel do Asaas, ambos com o mesmo `ASAAS_WEBHOOK_TOKEN`: `/featured/webhook/asaas` e `/billing/webhooks/asaas`. Não ligue `BILLING_ENABLED` antes de publicar Termos, Política de Privacidade e reembolso e de validar um checkout no sandbox. Guia completo: [runbook de assinaturas](./docs/runbooks/assinaturas-deploy.md). Detalhes: [v2.10.0](./docs/releases/v2.10.0.md).
+
+---
+
 ## 📚 Documentação adicional
 
 | Documento | Descrição |
@@ -339,6 +367,7 @@ Antes de subir, rode localmente `npm run build` (front e back) e `npm run lint:c
 
 | Versão | Destaques |
 |--------|-----------|
+| [v2.10.0](./docs/releases/v2.10.0.md) | Assinaturas (planos Profissional e Frota, cobrança recorrente via Asaas, limite de 3 anúncios no grátis) · flag `BILLING_ENABLED` desligada por padrão · runbook em `docs/runbooks/assinaturas-deploy.md` |
 | [v2.9.0](./docs/releases/v2.9.0.md) | Preço por diária · tempo mínimo de aluguel · estimativa semanal/mensal com aviso · migration `weeklyRate` ÷ 7 (leia o [runbook](./docs/runbooks/preco-diaria-deploy.md)) |
 | [v2.8.0](./docs/releases/v2.8.0.md) | Destaque via Asaas (PIX no app, ativação automática) · webhook seguro · destaques passam a expirar |
 | [v2.7.0](./docs/releases/v2.7.0.md) | Remoção do KYC · geocoding real no mapa do anúncio · foto da home restaurada |
