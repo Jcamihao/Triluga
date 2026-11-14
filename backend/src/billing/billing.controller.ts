@@ -1,18 +1,24 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
+import { BillingPaymentsService } from './billing-payments.service';
 import { BillingService } from './billing.service';
+import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateGrantDto } from './dto/create-grant.dto';
 
 @ApiTags('billing')
 @ApiBearerAuth()
 @Controller('billing')
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly billingPaymentsService: BillingPaymentsService,
+  ) {}
 
   @Public()
   @Get('plans')
@@ -25,6 +31,29 @@ export class BillingController {
   @ApiOperation({ summary: 'Plano efetivo e uso do usuário logado' })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.billingService.getMe(user.sub);
+  }
+
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
+  @Post('checkout')
+  @ApiOperation({ summary: 'Gera o link de checkout de um plano pago' })
+  checkout(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateCheckoutDto,
+  ) {
+    return this.billingPaymentsService.checkout(user.sub, dto);
+  }
+
+  @Throttle({ default: { ttl: 3600000, limit: 10 } })
+  @Post('sync')
+  @ApiOperation({ summary: 'Reconcilia a assinatura do usuário com o Asaas' })
+  sync(@CurrentUser() user: AuthenticatedUser) {
+    return this.billingPaymentsService.sync(user.sub);
+  }
+
+  @Post('cancel')
+  @ApiOperation({ summary: 'Cancela a assinatura paga do usuário' })
+  cancel(@CurrentUser() user: AuthenticatedUser) {
+    return this.billingPaymentsService.cancel(user.sub);
   }
 
   @Get('admin/grants')
