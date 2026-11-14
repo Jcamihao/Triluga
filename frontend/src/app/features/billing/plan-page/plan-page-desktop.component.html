@@ -1,0 +1,126 @@
+<div class="plan-web">
+  <app-web-header [fixed]="true"></app-web-header>
+
+  <main class="plan-web__main">
+    <header class="plan-web__hero">
+      <h1>Seu plano</h1>
+      <p>Escolha o plano que cabe no seu volume de anúncios.</p>
+    </header>
+
+    <div class="plan-web__banners">
+      <p *ngIf="confirming" class="plan-web__banner plan-web__banner--info" role="status">
+        Confirmando seu pagamento…
+      </p>
+      <p *ngIf="notice && !confirming" class="plan-web__banner plan-web__banner--info" role="status">
+        {{ notice }}
+      </p>
+      <p *ngIf="error" class="plan-web__banner plan-web__banner--error" role="alert">
+        {{ error }}
+      </p>
+    </div>
+
+    <section class="plan-web__status" *ngIf="me; else loadingTpl">
+      <div class="plan-web__status-main">
+        <span class="plan-web__eyebrow">Plano atual</span>
+        <h2>{{ currentPlanLabel }}</h2>
+        <p *ngIf="usageLabel" class="plan-web__usage">{{ usageLabel }}</p>
+        <p *ngIf="statusLine" class="plan-web__detail">{{ statusLine }}</p>
+        <p *ngIf="isPastDue" class="plan-web__banner plan-web__banner--error">
+          Pagamento em atraso: regularize para manter seus anúncios
+        </p>
+      </div>
+
+      <div class="plan-web__status-actions">
+        <a
+          *ngIf="invoiceUrl"
+          class="plan-web__btn plan-web__btn--primary"
+          [href]="invoiceUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Regularizar pagamento</a>
+
+        <button
+          *ngIf="isPending"
+          type="button"
+          class="plan-web__btn plan-web__btn--secondary"
+          [disabled]="busy"
+          (click)="sync()"
+        >Verificar pagamento agora</button>
+
+        <button
+          *ngIf="canCancel && !cancelPrompt"
+          type="button"
+          class="plan-web__btn plan-web__btn--ghost"
+          (click)="requestCancel()"
+        >Cancelar assinatura</button>
+
+        <div *ngIf="cancelPrompt" class="plan-web__confirm">
+          <p>Tem certeza? Você mantém o acesso até {{ periodEndLabel }}.</p>
+          <div class="plan-web__confirm-actions">
+            <button
+              type="button"
+              class="plan-web__btn plan-web__btn--danger"
+              [disabled]="busy"
+              (click)="cancel()"
+            >Confirmar cancelamento</button>
+            <button
+              type="button"
+              class="plan-web__btn plan-web__btn--ghost"
+              [disabled]="busy"
+              (click)="dismissCancel()"
+            >Voltar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <ng-template #loadingTpl>
+      <p class="plan-web__loading" *ngIf="loading">Carregando seus planos…</p>
+    </ng-template>
+
+    <section class="plan-web__unavailable" *ngIf="plans && !enabled">
+      <h2>Planos ainda não disponíveis</h2>
+      <p>Estamos preparando as assinaturas. Volte em breve.</p>
+    </section>
+
+    <ng-container *ngIf="enabled">
+      <div class="plan-web__interval" role="group" aria-label="Período de cobrança">
+        <button
+          type="button"
+          [attr.aria-pressed]="interval === 'MONTHLY'"
+          [class.plan-web__seg--active]="interval === 'MONTHLY'"
+          (click)="selectInterval('MONTHLY')"
+        >Mensal</button>
+        <button
+          type="button"
+          [attr.aria-pressed]="interval === 'YEARLY'"
+          [class.plan-web__seg--active]="interval === 'YEARLY'"
+          (click)="selectInterval('YEARLY')"
+        >Anual</button>
+      </div>
+
+      <section class="plan-web__cards">
+        <article class="plan-web__card" *ngFor="let plan of sellablePlans">
+          <h3>{{ plan.label }}</h3>
+          <p class="plan-web__limit">{{ limitLabel(plan) }}</p>
+          <p class="plan-web__price">{{ priceLabel(plan) }}</p>
+
+          <span *ngIf="isCurrentPlan(plan.id)" class="plan-web__current">Plano atual</span>
+          <button
+            *ngIf="!isCurrentPlan(plan.id) && canSubscribe(plan.id)"
+            type="button"
+            class="plan-web__btn plan-web__btn--primary"
+            [disabled]="busy"
+            (click)="subscribePlan(plan)"
+          >Assinar</button>
+        </article>
+      </section>
+
+      <p class="plan-web__free" *ngIf="freeLimitLabel">{{ freeLimitLabel }}</p>
+      <p class="plan-web__note">
+        Se você passar do limite, seus anúncios continuam no ar; só não dá para publicar novos.
+      </p>
+      <p class="plan-web__note">Pagamento seguro pelo Asaas, só cartão de crédito.</p>
+    </ng-container>
+  </main>
+</div>

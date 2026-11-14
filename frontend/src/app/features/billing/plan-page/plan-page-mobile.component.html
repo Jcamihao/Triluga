@@ -1,0 +1,180 @@
+<main class="pb-24 max-w-3xl mx-auto flex-grow w-full">
+  <!-- TopAppBar -->
+  <header
+    class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center w-full px-6 py-4"
+  >
+    <div class="flex items-center gap-3">
+      <span
+        class="material-symbols-outlined text-primary scale-110 active:scale-95 transition-transform cursor-pointer"
+        (click)="toggleMenu()"
+        role="button"
+        tabindex="0"
+        aria-label="Abrir menu"
+        (keydown.enter)="toggleMenu()"
+        (keydown.space)="$event.preventDefault(); toggleMenu()"
+        >menu</span
+      >
+      <img src="assets/logo/logo-full.svg" alt="Triluga" class="h-9 w-auto" />
+    </div>
+    <div class="flex items-center gap-4">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center"
+        aria-label="Abrir notificações"
+        (click)="toggleNotifications()"
+      >
+        <span
+          class="material-symbols-outlined text-on-surface-variant scale-110 active:scale-95 transition-transform cursor-pointer"
+          >notifications</span
+        >
+      </button>
+    </div>
+  </header>
+
+  <section class="px-6 mb-6">
+    <h1 class="text-3xl font-extrabold tracking-[-0.04em] text-on-surface mb-2">Seu plano</h1>
+    <p class="text-on-surface-variant/70 text-[15px]">
+      Escolha o plano que cabe no seu volume de anúncios.
+    </p>
+  </section>
+
+  <div class="px-6 flex flex-col gap-3 mb-6">
+    <p
+      *ngIf="confirming"
+      role="status"
+      class="rounded-xl bg-surface-container-high px-4 py-3 text-sm font-semibold text-on-surface-variant"
+    >Confirmando seu pagamento…</p>
+    <p
+      *ngIf="notice && !confirming"
+      role="status"
+      class="rounded-xl bg-surface-container-high px-4 py-3 text-sm font-semibold text-on-surface-variant"
+    >{{ notice }}</p>
+    <p
+      *ngIf="error"
+      role="alert"
+      class="rounded-xl bg-error-container px-4 py-3 text-sm font-semibold text-on-error-container"
+    >{{ error }}</p>
+  </div>
+
+  <section *ngIf="me; else mobileLoading" class="mx-6 mb-6 rounded-xl bg-surface-container-low p-5 flex flex-col gap-2">
+    <span class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Plano atual</span>
+    <h2 class="text-2xl font-extrabold text-on-surface">{{ currentPlanLabel }}</h2>
+    <p *ngIf="usageLabel" class="text-sm text-on-surface">{{ usageLabel }}</p>
+    <p *ngIf="statusLine" class="text-sm text-on-surface-variant">{{ statusLine }}</p>
+    <p
+      *ngIf="isPastDue"
+      class="rounded-lg bg-error-container px-3 py-2 text-sm font-semibold text-on-error-container"
+    >Pagamento em atraso: regularize para manter seus anúncios</p>
+
+    <div class="flex flex-col gap-2 mt-2">
+      <a
+        *ngIf="invoiceUrl"
+        class="bg-primary text-on-primary rounded-full px-6 py-3 font-bold text-center text-sm"
+        [href]="invoiceUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Regularizar pagamento</a>
+
+      <button
+        *ngIf="isPending"
+        type="button"
+        class="bg-surface-container-high text-on-surface rounded-full px-6 py-3 font-bold text-sm disabled:opacity-50"
+        [disabled]="busy"
+        (click)="sync()"
+      >Verificar pagamento agora</button>
+
+      <button
+        *ngIf="canCancel && !cancelPrompt"
+        type="button"
+        class="border border-outline-variant rounded-full px-6 py-3 font-bold text-sm text-primary"
+        (click)="requestCancel()"
+      >Cancelar assinatura</button>
+
+      <div *ngIf="cancelPrompt" class="rounded-lg bg-surface p-4 flex flex-col gap-3">
+        <p class="text-sm font-semibold text-on-surface">
+          Tem certeza? Você mantém o acesso até {{ periodEndLabel }}.
+        </p>
+        <button
+          type="button"
+          class="bg-error text-on-error rounded-full px-6 py-3 font-bold text-sm disabled:opacity-50"
+          [disabled]="busy"
+          (click)="cancel()"
+        >Confirmar cancelamento</button>
+        <button
+          type="button"
+          class="text-primary rounded-full px-6 py-3 font-bold text-sm"
+          [disabled]="busy"
+          (click)="dismissCancel()"
+        >Voltar</button>
+      </div>
+    </div>
+  </section>
+
+  <ng-template #mobileLoading>
+    <p *ngIf="loading" class="px-6 text-sm text-on-surface-variant">Carregando seus planos…</p>
+  </ng-template>
+
+  <section
+    *ngIf="plans && !enabled"
+    class="mx-6 mb-6 rounded-xl bg-surface-container p-6 text-center"
+  >
+    <h2 class="text-xl font-extrabold text-on-surface mb-1">Planos ainda não disponíveis</h2>
+    <p class="text-sm text-on-surface-variant">Estamos preparando as assinaturas. Volte em breve.</p>
+  </section>
+
+  <ng-container *ngIf="enabled">
+    <div class="px-6 mb-4">
+      <div
+        class="inline-flex p-1 rounded-full bg-surface-container"
+        role="group"
+        aria-label="Período de cobrança"
+      >
+        <button
+          type="button"
+          class="min-h-10 px-5 rounded-full text-sm font-bold"
+          [class.bg-surface-container-lowest]="interval === 'MONTHLY'"
+          [class.text-primary]="interval === 'MONTHLY'"
+          [attr.aria-pressed]="interval === 'MONTHLY'"
+          (click)="selectInterval('MONTHLY')"
+        >Mensal</button>
+        <button
+          type="button"
+          class="min-h-10 px-5 rounded-full text-sm font-bold"
+          [class.bg-surface-container-lowest]="interval === 'YEARLY'"
+          [class.text-primary]="interval === 'YEARLY'"
+          [attr.aria-pressed]="interval === 'YEARLY'"
+          (click)="selectInterval('YEARLY')"
+        >Anual</button>
+      </div>
+    </div>
+
+    <section class="px-6 flex flex-col gap-4">
+      <article
+        *ngFor="let plan of sellablePlans"
+        class="rounded-xl bg-surface-container-lowest border border-outline-variant/30 p-5 flex flex-col gap-1"
+      >
+        <h3 class="text-xl font-extrabold text-on-surface">{{ plan.label }}</h3>
+        <p class="text-sm text-on-surface-variant">{{ limitLabel(plan) }}</p>
+        <p class="text-2xl font-extrabold text-on-surface my-2">{{ priceLabel(plan) }}</p>
+
+        <span
+          *ngIf="isCurrentPlan(plan.id)"
+          class="self-start rounded-full bg-secondary-container text-on-secondary-container px-3 py-1 text-xs font-extrabold"
+        >Plano atual</span>
+        <button
+          *ngIf="!isCurrentPlan(plan.id) && canSubscribe(plan.id)"
+          type="button"
+          class="bg-primary text-on-primary rounded-full px-6 py-3 font-bold text-sm mt-1 disabled:opacity-50"
+          [disabled]="busy"
+          (click)="subscribePlan(plan)"
+        >Assinar</button>
+      </article>
+    </section>
+
+    <div class="px-6 mt-6 flex flex-col gap-2 text-sm text-on-surface-variant">
+      <p *ngIf="freeLimitLabel">{{ freeLimitLabel }}</p>
+      <p>Se você passar do limite, seus anúncios continuam no ar; só não dá para publicar novos.</p>
+      <p>Pagamento seguro pelo Asaas, só cartão de crédito.</p>
+    </div>
+  </ng-container>
+</main>

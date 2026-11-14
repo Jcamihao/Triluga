@@ -150,6 +150,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'plano',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/billing/plan-page/plan-page.component').then(
+        (m) => m.PlanPageComponent,
+      ),
+  },
+  {
     path: '**',
     redirectTo: '',
   },
