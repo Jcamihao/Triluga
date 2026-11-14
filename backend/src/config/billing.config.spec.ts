@@ -1,3 +1,5 @@
+import { Test } from '@nestjs/testing';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { billingConfig } from './billing.config';
 
 describe('billingConfig', () => {
@@ -33,5 +35,16 @@ describe('billingConfig', () => {
     expect(billingConfig().enabled).toBe(false);
     process.env.BILLING_ENABLED = 'yes';
     expect(billingConfig().enabled).toBe(false);
+  });
+
+  it('o ConfigService lê a flag pela chave "billing.enabled"', async () => {
+    process.env.BILLING_ENABLED = 'true';
+    const moduleRef = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({ ignoreEnvFile: true, load: [billingConfig] }),
+      ],
+    }).compile();
+    expect(moduleRef.get(ConfigService).get('billing.enabled')).toBe(true);
+    await moduleRef.close();
   });
 });
