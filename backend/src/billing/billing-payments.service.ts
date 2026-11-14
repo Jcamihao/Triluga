@@ -165,34 +165,44 @@ export class BillingPaymentsService {
   }
 
   /**
-   * Cancela a assinatura ASAAS em cobrança. Já cancelada: não faz nada (idempotente).
+   * Cancela toda assinatura ASAAS em cobrança (ACTIVE/PAST_DUE). Upgrade deixa a antiga
+   * ACTIVE ao lado da nova; cancelar só a mais recente deixaria a outra cobrando sem como
+   * cancelar. Sem nenhuma em cobrança mas com alguma já CANCELED: não faz nada (idempotente).
    * Concessão (GRANT) nunca é tocada.
    */
   async cancel(userId: string): Promise<void> {
-    const local = await this.prisma.subscription.findFirst({
+    const open = await this.prisma.subscription.findMany({
       where: {
         ownerUserId: userId,
         source: 'ASAAS',
-        status: { in: ['ACTIVE', 'PAST_DUE', 'CANCELED'] },
+        status: { in: ['ACTIVE', 'PAST_DUE'] },
       },
-      orderBy: { createdAt: 'desc' },
     });
-    if (!local) {
-      throw new NotFoundException('Você não tem uma assinatura para cancelar.');
-    }
-    if (local.status === 'CANCELED') {
+
+    if (open.length === 0) {
+      const alreadyCanceled = await this.prisma.subscription.findFirst({
+        where: { ownerUserId: userId, source: 'ASAAS', status: 'CANCELED' },
+      });
+      if (!alreadyCanceled) {
+        throw new NotFoundException(
+          'Você não tem uma assinatura para cancelar.',
+        );
+      }
       return;
     }
 
-    if (local.asaasSubscriptionId) {
-      await this.asaasClient.deleteSubscription(local.asaasSubscriptionId);
-    }
+    for (const local of open) {
+      // Remove no Asaas antes de gravar: se falhar, nada muda e o usuário pode tentar de novo.
+      if (local.asaasSubscriptionId) {
+        await this.asaasClient.deleteSubscription(local.asaasSubscriptionId);
+      }
 
-    // currentPeriodEnd não muda: o acesso segue até o fim do período já pago.
-    await this.prisma.subscription.update({
-      where: { id: local.id },
-      data: { status: 'CANCELED', cancelAtPeriodEnd: true },
-    });
+      // currentPeriodEnd não muda: o acesso segue até o fim do período já pago.
+      await this.prisma.subscription.update({
+        where: { id: local.id },
+        data: { status: 'CANCELED', cancelAtPeriodEnd: true },
+      });
+    }
   }
 
   /**

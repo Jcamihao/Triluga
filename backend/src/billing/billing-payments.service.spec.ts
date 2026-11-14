@@ -193,6 +193,16 @@ describe('BillingPaymentsService#checkout', () => {
       { plan: 'PROFESSIONAL', status: 'ACTIVE', source: 'GRANT' },
       'PROFESSIONAL',
     ],
+    [
+      'ACTIVE FLEET pedindo FLEET',
+      { plan: 'FLEET', status: 'ACTIVE', source: 'ASAAS' },
+      'FLEET',
+    ],
+    [
+      'GRANT PAST_DUE FLEET pedindo PROFESSIONAL',
+      { plan: 'FLEET', status: 'PAST_DUE', source: 'GRANT' },
+      'PROFESSIONAL',
+    ],
   ])(
     'bloqueia quando ja existe assinatura de rank igual ou maior: %s',
     async (_label, existing, requested) => {
@@ -231,6 +241,23 @@ describe('BillingPaymentsService#checkout', () => {
     [
       'PENDING PROFESSIONAL sem link ao pedir PROFESSIONAL',
       { plan: 'PROFESSIONAL', status: 'PENDING', source: 'ASAAS' },
+      'PROFESSIONAL',
+    ],
+    [
+      'GRANT ACTIVE PROFESSIONAL ao pedir FLEET (upgrade)',
+      { plan: 'PROFESSIONAL', status: 'ACTIVE', source: 'GRANT' },
+      'FLEET',
+    ],
+    // Intencional (spec: "Cancelar e assinar de novo"): so ACTIVE/PAST_DUE bloqueiam. CANCELED
+    // com periodo futuro deixa reassinar o mesmo plano.
+    [
+      'CANCELED PROFESSIONAL com periodo futuro ao pedir PROFESSIONAL',
+      {
+        plan: 'PROFESSIONAL',
+        status: 'CANCELED',
+        source: 'ASAAS',
+        currentPeriodEnd: new Date(NOW.getTime() + 10 * DAY),
+      },
       'PROFESSIONAL',
     ],
   ])(
@@ -272,6 +299,100 @@ describe('BillingPaymentsService#checkout', () => {
     expect(asaas.createCheckout).not.toHaveBeenCalled();
     expect(prisma.subscription.create).not.toHaveBeenCalled();
     expect(rows).toHaveLength(1);
+  });
+
+  it('com dois checkouts validos devolve o mais recente', async () => {
+    const { service, asaas } = build({
+      rows: [
+        row({
+          id: 'sub-old',
+          asaasCheckoutLink: 'https://asaas.test/c/old',
+          createdAt: new Date(NOW.getTime() - 30 * MIN),
+        }),
+        row({
+          id: 'sub-newer',
+          asaasCheckoutLink: 'https://asaas.test/c/newer',
+          createdAt: new Date(NOW.getTime() - 5 * MIN),
+        }),
+      ],
+    });
+
+    const result = await service.checkout('user-1', {
+      plan: 'PROFESSIONAL',
+      interval: 'MONTHLY',
+    });
+
+    expect(result).toEqual({ link: 'https://asaas.test/c/newer' });
+    expect(asaas.createCheckout).not.toHaveBeenCalled();
+  });
+
+  it('linha orfa mais nova (sem link) nao esconde o link valido mais antigo', async () => {
+    const { service, asaas } = build({
+      rows: [
+        row({
+          id: 'sub-valid',
+          asaasCheckoutLink: 'https://asaas.test/c/valid',
+          createdAt: new Date(NOW.getTime() - 30 * MIN),
+        }),
+        row({
+          id: 'sub-orphan',
+          asaasCheckoutLink: null,
+          createdAt: new Date(NOW.getTime() - 5 * MIN),
+        }),
+      ],
+    });
+
+    const result = await service.checkout('user-1', {
+      plan: 'PROFESSIONAL',
+      interval: 'MONTHLY',
+    });
+
+    expect(result).toEqual({ link: 'https://asaas.test/c/valid' });
+    expect(asaas.createCheckout).not.toHaveBeenCalled();
+  });
+
+  it('nao reaproveita checkout nem sofre bloqueio de outro usuario', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          id: 'sub-other-pending',
+          ownerUserId: 'user-2',
+          asaasCheckoutLink: 'https://asaas.test/c/other',
+          createdAt: new Date(NOW.getTime() - 5 * MIN),
+        }),
+        row({
+          id: 'sub-other-active',
+          ownerUserId: 'user-2',
+          plan: 'FLEET',
+          status: 'ACTIVE',
+        }),
+      ],
+    });
+
+    const result = await service.checkout('user-1', {
+      plan: 'PROFESSIONAL',
+      interval: 'MONTHLY',
+    });
+
+    expect(result).toEqual({ link: 'https://asaas.test/c/1' });
+    expect(rows).toHaveLength(3);
+    expect(asaas.createCheckout).toHaveBeenCalledTimes(1);
+  });
+
+  it('apos falha do Asaas, nova tentativa cria nova linha (a orfa nao tem link para reaproveitar)', async () => {
+    const { service, asaas, rows } = build();
+    asaas.createCheckout.mockRejectedValueOnce(new Error('Asaas indisponivel'));
+
+    await expect(
+      service.checkout('user-1', { plan: 'PROFESSIONAL', interval: 'MONTHLY' }),
+    ).rejects.toThrow('Asaas indisponivel');
+    const result = await service.checkout('user-1', {
+      plan: 'PROFESSIONAL',
+      interval: 'MONTHLY',
+    });
+
+    expect(result).toEqual({ link: 'https://asaas.test/c/1' });
+    expect(rows).toHaveLength(2);
   });
 
   it('o filtro de reaproveitamento usa plan, interval, source, status, link e janela de 60 min', async () => {
@@ -610,6 +731,40 @@ describe('BillingPaymentsService#sync', () => {
     expect(rows[0].status).toBe('ACTIVE');
   });
 
+  it('ACTIVE com currentPeriodEnd exatamente agora (borda) ainda esta em dia: nao consulta o Asaas', async () => {
+    const { service, asaas, prisma } = build({
+      rows: [
+        row({
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-sub-1',
+          currentPeriodEnd: new Date(NOW),
+        }),
+      ],
+    });
+
+    await service.sync('user-1');
+
+    expect(asaas.getSubscription).not.toHaveBeenCalled();
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+  });
+
+  it('nao sincroniza assinatura de outro usuario', async () => {
+    const { service, asaas, prisma } = build({
+      rows: [
+        row({
+          ownerUserId: 'user-2',
+          status: 'PAST_DUE',
+          asaasSubscriptionId: 'asaas-sub-2',
+        }),
+      ],
+    });
+
+    await service.sync('user-1');
+
+    expect(asaas.getSubscription).not.toHaveBeenCalled();
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+  });
+
   it('ACTIVE com currentPeriodEnd vencido reconcilia', async () => {
     const { service, asaas, rows } = build({
       rows: [
@@ -895,5 +1050,145 @@ describe('BillingPaymentsService#cancel', () => {
 
     expect(rows.find((r) => r.id === 'grant-1')?.status).toBe('ACTIVE');
     expect(rows.find((r) => r.id === 'asaas-1')?.status).toBe('CANCELED');
+  });
+
+  // Upgrade permitido (PROFESSIONAL ACTIVE -> FLEET): as duas ficam ACTIVE e cobrando.
+  // Cancelar so a mais recente deixaria a outra cobrando sem como cancelar.
+  it('apos upgrade cancela TODAS as ASAAS em cobranca (ACTIVE ou PAST_DUE)', async () => {
+    const end = new Date(NOW.getTime() + 10 * DAY);
+    const { service, asaas, prisma, rows } = build({
+      rows: [
+        row({
+          id: 'prof',
+          plan: 'PROFESSIONAL',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-prof',
+          currentPeriodEnd: end,
+          createdAt: new Date(NOW.getTime() - 20 * DAY),
+        }),
+        row({
+          id: 'fleet',
+          plan: 'FLEET',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-fleet',
+          currentPeriodEnd: end,
+          createdAt: new Date(NOW.getTime() - 1 * DAY),
+        }),
+      ],
+    });
+
+    await service.cancel('user-1');
+
+    expect(asaas.deleteSubscription).toHaveBeenCalledWith('asaas-prof');
+    expect(asaas.deleteSubscription).toHaveBeenCalledWith('asaas-fleet');
+    expect(rows.map((r) => r.status)).toEqual(['CANCELED', 'CANCELED']);
+    expect(rows.every((r) => r.cancelAtPeriodEnd === true)).toBe(true);
+    expect(rows.every((r) => r.currentPeriodEnd === end)).toBe(true);
+    expect(prisma.subscription.update).toHaveBeenCalledTimes(2);
+  });
+
+  it('ACTIVE mais antiga com CANCELED mais nova: cancela a ACTIVE (nao para na CANCELED)', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          id: 'old-active',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-old',
+          createdAt: new Date(NOW.getTime() - 20 * DAY),
+        }),
+        row({
+          id: 'new-canceled',
+          plan: 'FLEET',
+          status: 'CANCELED',
+          asaasSubscriptionId: 'asaas-new',
+          createdAt: new Date(NOW.getTime() - 1 * DAY),
+        }),
+      ],
+    });
+
+    await service.cancel('user-1');
+
+    expect(asaas.deleteSubscription).toHaveBeenCalledTimes(1);
+    expect(asaas.deleteSubscription).toHaveBeenCalledWith('asaas-old');
+    expect(rows.find((r) => r.id === 'old-active')?.status).toBe('CANCELED');
+  });
+
+  it('falha no Asaas da segunda nao desfaz a primeira e nova chamada cancela so o que restou', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          id: 'a',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-a',
+          createdAt: new Date(NOW.getTime() - 2 * DAY),
+        }),
+        row({
+          id: 'b',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-b',
+          createdAt: new Date(NOW.getTime() - 1 * DAY),
+        }),
+      ],
+    });
+    asaas.deleteSubscription
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('Asaas 500'));
+
+    await expect(service.cancel('user-1')).rejects.toThrow('Asaas 500');
+    expect(rows.map((r) => r.status)).toEqual(['CANCELED', 'ACTIVE']);
+
+    asaas.deleteSubscription.mockClear();
+    asaas.deleteSubscription.mockResolvedValue(undefined);
+    await service.cancel('user-1');
+
+    expect(asaas.deleteSubscription).toHaveBeenCalledTimes(1);
+    expect(asaas.deleteSubscription).toHaveBeenCalledWith('asaas-b');
+    expect(rows.map((r) => r.status)).toEqual(['CANCELED', 'CANCELED']);
+  });
+
+  it('nao cancela assinatura de outro usuario', async () => {
+    const { service, asaas, rows } = build({
+      rows: [
+        row({
+          ownerUserId: 'user-2',
+          status: 'ACTIVE',
+          asaasSubscriptionId: 'asaas-other',
+        }),
+      ],
+    });
+
+    await expect(service.cancel('user-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(asaas.deleteSubscription).not.toHaveBeenCalled();
+    expect(rows[0].status).toBe('ACTIVE');
+  });
+
+  it('CANCELED de outro usuario nao torna o cancelamento idempotente: NotFound', async () => {
+    const { service, asaas } = build({
+      rows: [
+        row({
+          ownerUserId: 'user-2',
+          status: 'CANCELED',
+          asaasSubscriptionId: 'asaas-other',
+        }),
+      ],
+    });
+
+    await expect(service.cancel('user-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(asaas.deleteSubscription).not.toHaveBeenCalled();
+  });
+
+  it('PENDING sozinha nao e assinatura para cancelar', async () => {
+    const { service, asaas } = build({
+      rows: [row({ status: 'PENDING', asaasSubscriptionId: null })],
+    });
+
+    await expect(service.cancel('user-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(asaas.deleteSubscription).not.toHaveBeenCalled();
   });
 });
