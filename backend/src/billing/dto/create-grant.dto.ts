@@ -14,6 +14,6 @@ export class CreateGrantDto {
     description: 'Fim da concessão (ISO 8601). Omitido = sem fim.',
   })
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   endsAt?: string;
 }

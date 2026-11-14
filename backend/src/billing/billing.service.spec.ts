@@ -248,6 +248,60 @@ describe('BillingService', () => {
       });
     });
 
+    it('assinatura vencida do mesmo plano nunca é a exibida (mesmo com fim mais distante)', async () => {
+      const grantEnd = new Date(NOW.getTime() + 3 * DAY);
+      const { service } = build({
+        subs: [
+          sub({
+            id: 'sub-expirada',
+            status: 'EXPIRED',
+            interval: 'YEARLY',
+            currentPeriodEnd: new Date(NOW.getTime() + 300 * DAY),
+          }),
+          sub({
+            id: 'sub-grant',
+            source: 'GRANT',
+            interval: null,
+            currentPeriodEnd: grantEnd,
+          }),
+        ],
+      });
+
+      const me = await service.getMe('user-1');
+
+      expect(me).toMatchObject({
+        plan: 'PROFESSIONAL',
+        status: 'ACTIVE',
+        source: 'GRANT',
+        interval: null,
+        currentPeriodEnd: grantEnd.toISOString(),
+      });
+    });
+
+    it('duas ativas do mesmo plano: exibe a de maior fim; sem fim vale como a maior', async () => {
+      const far = new Date(NOW.getTime() + 90 * DAY);
+      const near = new Date(NOW.getTime() + 5 * DAY);
+      const a = build({
+        subs: [
+          sub({ id: 'perto', currentPeriodEnd: near }),
+          sub({ id: 'longe', currentPeriodEnd: far }),
+        ],
+      });
+      expect((await a.service.getMe('user-1')).currentPeriodEnd).toBe(
+        far.toISOString(),
+      );
+
+      const b = build({
+        subs: [
+          sub({ id: 'longe', currentPeriodEnd: far }),
+          sub({ id: 'sem-fim', source: 'GRANT', currentPeriodEnd: null }),
+        ],
+      });
+      const me = await b.service.getMe('user-1');
+      expect(me.source).toBe('GRANT');
+      expect(me.currentPeriodEnd).toBeNull();
+    });
+
     it('repassa interval da assinatura ASAAS que dá o plano', async () => {
       const { service } = build({
         subs: [sub({ interval: 'YEARLY' })],
@@ -422,14 +476,27 @@ describe('BillingService', () => {
       expect(prisma.subscription.create).not.toHaveBeenCalled();
     });
 
-    it('já tem concessão ativa do mesmo plano: BadRequestException', async () => {
+    it('endsAt inválido (Invalid Date): BadRequestException e nada gravado', async () => {
       const { service, prisma } = build({ user: USER });
-      prisma.subscription.findFirst.mockResolvedValue(sub({ source: 'GRANT' }));
 
       await expect(
-        service.createGrant(ADMIN_ID, { email: USER.email, plan: 'FLEET' }),
+        service.createGrant(ADMIN_ID, {
+          email: USER.email,
+          plan: 'FLEET',
+          endsAt: 'lixo',
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(prisma.subscription.create).not.toHaveBeenCalled();
+    });
+
+    it('permite nova concessão do mesmo plano (renovar/estender) sem consultar duplicata', async () => {
+      const { service, prisma } = build({ user: USER });
+      prisma.subscription.create.mockResolvedValue(sub({ source: 'GRANT' }));
+
+      await service.createGrant(ADMIN_ID, { email: USER.email, plan: 'FLEET' });
+
+      expect(prisma.subscription.findFirst).not.toHaveBeenCalled();
+      expect(prisma.subscription.create).toHaveBeenCalledTimes(1);
     });
   });
 

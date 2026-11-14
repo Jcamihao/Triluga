@@ -138,24 +138,12 @@ export class BillingService {
 
     const now = new Date();
     const endsAt = dto.endsAt ? new Date(dto.endsAt) : null;
+    if (endsAt && Number.isNaN(endsAt.getTime())) {
+      throw new BadRequestException('Data de fim da concessão inválida.');
+    }
     if (endsAt && endsAt.getTime() <= now.getTime()) {
       throw new BadRequestException(
         'A data de fim da concessão deve estar no futuro.',
-      );
-    }
-
-    const existing = await this.prisma.subscription.findFirst({
-      where: {
-        ownerUserId: user.id,
-        source: 'GRANT',
-        plan: dto.plan,
-        status: 'ACTIVE',
-        OR: [{ currentPeriodEnd: null }, { currentPeriodEnd: { gt: now } }],
-      },
-    });
-    if (existing) {
-      throw new BadRequestException(
-        'Esse usuário já tem uma concessão ativa desse plano.',
       );
     }
 
