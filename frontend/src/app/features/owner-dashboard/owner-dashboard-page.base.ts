@@ -7,6 +7,8 @@ import { UiStateService } from '../../core/services/ui-state.service';
 import { VehiclesApiService } from '../../core/services/vehicles-api.service';
 import { FeaturedApiService } from '../../core/services/featured-api.service';
 import { PlateApiService } from '../../core/services/plate-api.service';
+import { BillingApiService } from '../../core/services/billing-api.service';
+import { isPlanLimitError } from '../../core/utils/plan-limit.utils';
 import { GeocodeApiService } from '../../core/services/geocode-api.service';
 import { FipeApiService, FipeBrand, FipeModel, FipeYear, FipePriceResult } from '../../core/services/fipe-api.service';
 import { VehicleCardComponent } from '../../shared/components/vehicle-card/vehicle-card.component';
@@ -19,6 +21,7 @@ import {
 import { OwnerDashboardListComponent } from './components/owner-dashboard-list.component';
 import { VehicleWizardComponent } from './components/vehicle-wizard.component';
 import {
+  BillingMe,
   CreateVehiclePayload,
   FeaturedOrder,
   FeaturedOrderResult,
@@ -67,6 +70,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   private readonly plateApi = inject(PlateApiService);
   private readonly geocodeApi = inject(GeocodeApiService);
   private readonly fipeApi = inject(FipeApiService);
+  private readonly billingApiService = inject(BillingApiService);
   private editingVehicleCacheSource: OwnerVehicleItem[] | null = null;
   private editingVehicleCacheId: string | null = null;
   private editingVehicleCache: OwnerVehicleItem | null = null;
@@ -130,6 +134,8 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
   protected loading = true;
   protected vehicleFeedback = '';
   protected vehicleError = '';
+  protected planLimitReached = false;
+  protected billingMe: BillingMe | null = null;
   protected mediaFeedback = '';
   protected mediaError = '';
   protected submittingVehicle = false;
@@ -196,10 +202,20 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     }
 
     this.loadData();
+    this.loadBillingMe();
   }
 
   ngOnDestroy() {
     this.revokePendingPreviewUrls();
+  }
+
+  protected get adUsageLabel(): string | null {
+    const me = this.billingMe;
+    if (!me || !me.usage.enforced) return null;
+    const { used, limit } = me.usage.ads;
+    return limit == null
+      ? `${used} anúncios (ilimitado)`
+      : `${used} de ${limit} anúncios`;
   }
 
   protected get ownerAvatarUrl() {
@@ -777,6 +793,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     if (!this.hasMinimumVehiclePhotos) {
       this.vehicleFeedback = '';
       this.vehicleError = `O anúncio precisa ter no mínimo ${this.minimumVehiclePhotoCount} fotos.`;
+      this.planLimitReached = false;
       this.mediaError = `Adicione pelo menos ${this.minimumVehiclePhotoCount} fotos reais do veículo.`;
       this.goToStep(2);
       return;
@@ -787,6 +804,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     if (!payload) {
       const missingFields = this.collectMissingVehicleFields();
       this.vehicleError = this.formatMissingVehicleFieldsError(missingFields);
+      this.planLimitReached = false;
       this.vehicleFeedback = '';
       this.goToStep(this.resolveMissingVehicleFieldsStep(missingFields));
       return;
@@ -799,6 +817,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
     this.submittingVehicle = true;
     this.vehicleError = '';
+    this.planLimitReached = false;
     this.vehicleFeedback = '';
     this.mediaFeedback = '';
     this.mediaError = '';
@@ -812,6 +831,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       next: (vehicle) => {
         const vehicleId = vehicle.id;
         const shouldRedirectToList = isNewAd && payload.isPublished;
+        this.loadBillingMe();
 
         this.submittingVehicle = false;
         this.createMode = false;
@@ -846,6 +866,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
         this.vehicleFeedback = '';
         this.vehicleError =
           error?.error?.message || 'Não foi possível publicar o anúncio agora.';
+        this.planLimitReached = isPlanLimitError(error);
       },
     });
   }
@@ -855,6 +876,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
     if (!this.hasMinimumVehiclePhotos) {
       this.vehicleError = `O anúncio precisa ter no mínimo ${this.minimumVehiclePhotoCount} fotos.`;
+      this.planLimitReached = false;
       this.goToStep(2);
       return;
     }
@@ -863,6 +885,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     if (!payload) {
       const missingFields = this.collectMissingVehicleFields();
       this.vehicleError = this.formatMissingVehicleFieldsError(missingFields);
+      this.planLimitReached = false;
       this.goToStep(this.resolveMissingVehicleFieldsStep(missingFields));
       return;
     }
@@ -870,10 +893,12 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     const planId = this.wizardSelectedPlanId;
     this.wizardFeaturedSubmitting = true;
     this.vehicleError = '';
+    this.planLimitReached = false;
 
     this.vehiclesApiService.create(payload).subscribe({
       next: (vehicle) => {
         const vehicleId = vehicle.id;
+        this.loadBillingMe();
         const createFeaturedOrder = () => {
           this.featuredApiService.createOrder(vehicleId, planId).subscribe({
             next: (result) => {
@@ -913,6 +938,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       error: (error) => {
         this.wizardFeaturedSubmitting = false;
         this.vehicleError = error?.error?.message || 'Não foi possível publicar o anúncio agora.';
+        this.planLimitReached = isPlanLimitError(error);
       },
     });
   }
@@ -961,6 +987,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     this.clearPendingVehicleFiles();
     this.vehicleFeedback = '';
     this.vehicleError = '';
+    this.planLimitReached = false;
     this.mediaFeedback = '';
     this.mediaError = '';
   }
@@ -973,6 +1000,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
     this.clearPendingVehicleFiles();
     this.vehicleFeedback = '';
     this.vehicleError = '';
+    this.planLimitReached = false;
     this.mediaFeedback = '';
     this.mediaError = '';
     this.clearCreateIntent();
@@ -987,6 +1015,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       this.clearPendingVehicleFiles();
       this.vehicleFeedback = '';
       this.vehicleError = '';
+      this.planLimitReached = false;
       this.mediaFeedback = '';
       this.mediaError = '';
     }
@@ -1156,12 +1185,14 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
     this.vehicleActionId = vehicle.id;
     this.vehicleError = '';
+    this.planLimitReached = false;
 
     this.vehiclesApiService
       .update(vehicle.id, { isPublished: nextPublishedState })
       .subscribe({
         next: () => {
           this.vehicleActionId = null;
+          this.loadBillingMe();
           this.vehicleFeedback = nextPublishedState
             ? 'Anúncio publicado com sucesso.'
             : 'Anúncio movido para rascunho.';
@@ -1178,6 +1209,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
           this.vehicleError =
             error?.error?.message ||
             'Não foi possível alterar a publicação do anúncio.';
+          this.planLimitReached = isPlanLimitError(error);
         },
       });
   }
@@ -1193,6 +1225,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
 
     this.vehicleActionId = vehicle.id;
     this.vehicleError = '';
+    this.planLimitReached = false;
 
     this.vehiclesApiService.remove(vehicle.id).subscribe({
       next: () => {
@@ -1203,6 +1236,7 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
         }
 
         this.vehicleFeedback = 'Anúncio excluído com sucesso.';
+        this.loadBillingMe();
         this.loadData();
       },
       error: (error) => {
@@ -1393,6 +1427,17 @@ export abstract class OwnerDashboardPageBase implements OnDestroy {
       CANCELLED: 'Cancelado',
     };
     return map[status] ?? status;
+  }
+
+  private loadBillingMe() {
+    this.billingApiService.getMe().subscribe({
+      next: (me) => {
+        this.billingMe = me;
+      },
+      error: () => {
+        this.billingMe = null;
+      },
+    });
   }
 
   private loadData(focusVehicleId?: string) {

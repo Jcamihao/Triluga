@@ -8,6 +8,7 @@
     </div>
 
     <main class="flex-grow pt-8 md:pt-24 pb-36 md:pb-20 px-6 max-w-5xl mx-auto w-full">
+      <p *ngIf="owner.adUsageLabel" class="text-xs text-on-surface-variant font-medium mb-4 px-2">{{ owner.adUsageLabel }}</p>
       <div class="mb-12">
         <div class="flex justify-between items-center mb-4 px-2">
           <button
@@ -240,6 +241,7 @@
 
               <p class="text-xs text-on-surface-variant font-medium" *ngIf="owner.vehicleError">
                 <span class="text-error">{{ owner.vehicleError }}</span>
+                <a *ngIf="owner.planLimitReached" routerLink="/plano" class="ml-1 font-bold text-primary underline">Ver planos</a>
               </p>
             </div>
 

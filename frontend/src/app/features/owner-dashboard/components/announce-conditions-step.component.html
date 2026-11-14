@@ -226,6 +226,7 @@
       </p>
       <p class="feedback feedback--error" *ngIf="owner.vehicleError">
         {{ owner.vehicleError }}
+        <a *ngIf="owner.planLimitReached" routerLink="/plano" class="ml-1 font-bold text-primary underline">Ver planos</a>
       </p>
     </div>
   </div>

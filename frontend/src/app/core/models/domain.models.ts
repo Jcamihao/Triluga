@@ -416,3 +416,53 @@ export interface ChatMessage {
     avatarUrl?: string | null;
   };
 }
+
+export type BillingPlanId = 'FREE' | 'PROFESSIONAL' | 'FLEET';
+export type BillingSellablePlanId = 'PROFESSIONAL' | 'FLEET';
+export type BillingIntervalId = 'MONTHLY' | 'YEARLY';
+export type BillingSubscriptionStatus =
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'PAST_DUE'
+  | 'CANCELED'
+  | 'EXPIRED';
+
+export interface BillingPlanView {
+  id: BillingPlanId;
+  label: string;
+  adLimit: number | null;
+  sellable: boolean;
+  prices: { MONTHLY: number; YEARLY: number } | null;
+}
+
+export interface BillingPlansResponse {
+  enabled: boolean;
+  plans: BillingPlanView[];
+}
+
+export interface BillingUsage {
+  enforced: boolean;
+  plan: BillingPlanId;
+  ads: { used: number; limit: number | null };
+}
+
+export interface BillingMe {
+  enabled: boolean;
+  plan: BillingPlanId;
+  status: BillingSubscriptionStatus | null;
+  source: 'ASAAS' | 'GRANT' | null;
+  interval: BillingIntervalId | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  latestInvoiceUrl: string | null;
+  usage: BillingUsage;
+}
+
+export interface BillingGrant {
+  id: string;
+  email: string;
+  plan: BillingPlanId;
+  currentPeriodEnd: string | null;
+  status: string;
+  createdAt: string;
+}
