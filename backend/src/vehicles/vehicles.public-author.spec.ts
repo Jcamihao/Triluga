@@ -27,6 +27,9 @@ const FULL_AUTHOR = {
 /** Simula o Prisma: devolve só os campos pedidos no `select` (aninhados incluídos). */
 function pickSelect(source: any, select: any): any {
   if (source == null) return null;
+  if (Array.isArray(source)) {
+    return source.map((item) => pickSelect(item, select));
+  }
   const out: any = {};
   for (const key of Object.keys(select)) {
     const rule = select[key];
@@ -73,8 +76,24 @@ function fakeVehicle() {
     _count: { views: 0 },
     owner: {
       id: 'owner-1',
-      profile: null,
-      userReviewsReceived: [],
+      email: 'dono-secreto@exemplo.com',
+      passwordHash: 'PWHASH-DONO-SECRETO',
+      refreshTokenHash: 'RT-DONO-SECRETO',
+      emailVerificationToken: 'EVT-DONO-SECRETO',
+      tokenVersion: 3,
+      profile: {
+        id: 'profile-owner-1',
+        userId: 'owner-1',
+        fullName: 'João Dono',
+        phone: '62988880000',
+        addressLine: 'Rua do Dono 2',
+        city: 'Goiânia',
+        state: 'GO',
+        avatarUrl: 'https://cdn.exemplo.com/joao.png',
+        documentNumber: '987.654.321-00',
+        driverLicenseNumber: 'CNH-DONO-SECRETA',
+      },
+      userReviewsReceived: [{ rating: 4 }],
     },
   };
 }
@@ -89,7 +108,9 @@ function buildService() {
           ...review,
           author: pickSelect(review.author, reviewsArg.include.author.select),
         }));
-        return { ...vehicle, reviews };
+        const ownerArg = args.include.owner;
+        const owner = pickSelect(vehicle.owner, ownerArg.select);
+        return { ...vehicle, reviews, owner };
       }),
       update: jest.fn().mockResolvedValue(vehicle),
       findMany: jest.fn().mockResolvedValue([]),
@@ -139,6 +160,29 @@ const SENSITIVE_VALUES = [
   'CNH-SECRETA',
 ];
 
+// Dados sensíveis do DONO (owner) do anúncio. `phone` fica de fora desta lista:
+// é exposição intencional (contato do dono), não é vazamento.
+const OWNER_SENSITIVE_KEYS = [
+  'passwordHash',
+  'refreshTokenHash',
+  'emailVerificationToken',
+  'tokenVersion',
+  'documentNumber',
+  'addressLine',
+  'email',
+  'driverLicenseNumber',
+];
+
+const OWNER_SENSITIVE_VALUES = [
+  'PWHASH-DONO-SECRETO',
+  'RT-DONO-SECRETO',
+  'EVT-DONO-SECRETO',
+  '987.654.321-00',
+  'Rua do Dono 2',
+  'dono-secreto@exemplo.com',
+  'CNH-DONO-SECRETA',
+];
+
 describe('VehiclesService.findOne (detalhe público)', () => {
   it('não pede o profile inteiro do autor da avaliação ao Prisma', async () => {
     const { service, prisma } = buildService();
@@ -174,6 +218,50 @@ describe('VehiclesService.findOne (detalhe público)', () => {
     expect(result.reviews[0].author).toEqual({
       id: 'user-author-1',
       fullName: 'Maria Autora',
+    });
+  });
+
+  it('não pede o profile inteiro do dono do anúncio (owner) ao Prisma', async () => {
+    const { service, prisma } = buildService();
+    await service.findOne('gol-1');
+
+    const args = prisma.vehicle.findFirst.mock.calls[0][0] as any;
+    const ownerArg = args.include.owner;
+    expect(ownerArg.include).toBeUndefined();
+    expect(ownerArg.select.profile.select.documentNumber).toBeUndefined();
+    expect(ownerArg.select.profile.select.addressLine).toBeUndefined();
+    expect(ownerArg.select.passwordHash).toBeUndefined();
+    expect(ownerArg.select.email).toBeUndefined();
+  });
+
+  it('a resposta não contém nenhum dado sensível do dono do anúncio', async () => {
+    const { service } = buildService();
+    const result: any = await service.findOne('gol-1');
+    const json = JSON.stringify(result);
+
+    for (const key of OWNER_SENSITIVE_KEYS) {
+      expect(json).not.toContain(`"${key}"`);
+    }
+    for (const value of OWNER_SENSITIVE_VALUES) {
+      expect(json).not.toContain(value);
+    }
+  });
+
+  it('mantém nome, avatar e telefone do dono na resposta (telefone é exposição intencional)', async () => {
+    const { service } = buildService();
+    const result: any = await service.findOne('gol-1');
+
+    expect(result.owner).toMatchObject({
+      id: 'owner-1',
+      fullName: 'João Dono',
+      avatarUrl: 'https://cdn.exemplo.com/joao.png',
+      city: 'Goiânia',
+      state: 'GO',
+      // userReviewsReceived também precisa estar no select do owner:
+      // sem ele, ratingAverage/reviewsCount silenciosamente voltam a 0.
+      ratingAverage: 4,
+      reviewsCount: 1,
+      phone: '62988880000',
     });
   });
 });
