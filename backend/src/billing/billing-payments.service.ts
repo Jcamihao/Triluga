@@ -210,10 +210,11 @@ export class BillingPaymentsService {
       if (!remote) {
         return;
       }
-      const updated = await this.prisma.subscription.update({
-        where: { id: local.id },
-        data: { asaasSubscriptionId: remote.id },
-      });
+      // P2002 (assinatura do Asaas já ligada a outra linha) não pode virar 500 a cada clique.
+      const updated = await this.linkAsaasSubscription(local, remote.id);
+      if (!updated) {
+        return;
+      }
       await this.reconcileSubscription(updated);
       return;
     }

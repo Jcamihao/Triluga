@@ -1046,6 +1046,69 @@ describe('BillingPaymentsService#sync', () => {
     expect(rows[0].status).toBe('ACTIVE');
   });
 
+  it('sync: assinatura achada pelo checkoutSession que ja pertence a outra linha (P2002) nao relanca nem altera', async () => {
+    const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    const { service, asaas, prisma, rows } = build({
+      rows: [
+        row({
+          id: 'sub-1',
+          status: 'PENDING',
+          asaasSubscriptionId: null,
+          asaasCheckoutId: 'chk-1',
+        }),
+      ],
+    });
+    asaas.findSubscriptionByExternalReference.mockResolvedValue(null);
+    asaas.findSubscriptionByCheckoutSession.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: null,
+    });
+    prisma.subscription.update.mockImplementationOnce(async () => {
+      throw Object.assign(new Error('Unique constraint failed'), {
+        code: 'P2002',
+      });
+    });
+
+    await expect(service.sync('user-1')).resolves.toBeUndefined();
+
+    expect(asaas.getSubscription).not.toHaveBeenCalled();
+    expect(rows[0]).toMatchObject({
+      status: 'PENDING',
+      asaasSubscriptionId: null,
+    });
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('asaas-sub-9'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('sync: erro de banco que nao e P2002 ao ligar a assinatura continua relancando', async () => {
+    const { service, asaas, prisma } = build({
+      rows: [
+        row({
+          id: 'sub-1',
+          status: 'PENDING',
+          asaasSubscriptionId: null,
+          asaasCheckoutId: 'chk-1',
+        }),
+      ],
+    });
+    asaas.findSubscriptionByExternalReference.mockResolvedValue(null);
+    asaas.findSubscriptionByCheckoutSession.mockResolvedValue({
+      id: 'asaas-sub-9',
+      deleted: false,
+      nextDueDate: '2026-12-01',
+      externalReference: null,
+    });
+    prisma.subscription.update.mockImplementationOnce(async () => {
+      throw new Error('banco fora');
+    });
+
+    await expect(service.sync('user-1')).rejects.toThrow('banco fora');
+  });
+
   it('achado por externalReference nao consulta o checkoutSession', async () => {
     const { service, asaas } = build({
       rows: [
@@ -2095,6 +2158,34 @@ describe('BillingPaymentsService#processWebhookEvent', () => {
         ),
       ).resolves.toEqual({ ok: true });
       expect(asaas.getSubscription).not.toHaveBeenCalled();
+    });
+
+    it('payment.subscription sem linha local (nem por checkoutSession) registra warn com o id e nao consulta o Asaas', async () => {
+      const { service, asaas } = setup({
+        rows: [
+          row({
+            id: 'local-1',
+            status: 'PENDING',
+            asaasCheckoutId: 'chk-1',
+            asaasSubscriptionId: null,
+          }),
+        ],
+      });
+      const warnSpy = Logger.prototype.warn as unknown as jest.SpyInstance;
+      warnSpy.mockClear();
+
+      await service.processWebhookEvent(
+        TOKEN,
+        paymentEvent('PAYMENT_OVERDUE', {
+          subscription: 'asaas-desconhecida',
+          checkoutSession: 'chk-de-outro',
+        }),
+      );
+
+      expect(asaas.getSubscription).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('asaas-desconhecida'),
+      );
     });
 
     it('payment.checkoutSession liga a linha do checkout que ainda nao tinha assinatura e reconcilia', async () => {
