@@ -64,7 +64,7 @@ Preços e limites finais; textos de Termos/Privacidade/reembolso; quando ligar `
 
 ## 10. Regras do dono e convenções
 
-- Nunca fazer push, deploy, nem pôr segredo (chave do Asaas) em arquivo, commit ou chat. Chave só por variável de ambiente.
+- Regra do dono (2026-11-16, vale em todos os projetos, registrada em `~/.claude/CLAUDE.md`): ao terminar cada item, atualizar as docs, subir a versão e criar a tag quando houver mudança de produto, commitar e fazer push (branch e tags). Nunca force push. Deploy e ligar flag de produção continuam só com pedido explícito. Antes do primeiro push deste projeto, confirmar com o dono se o `render.yaml` está ligado a um serviço do Render com auto deploy (nesse caso o push publicaria). As tags do repositório pararam em `v2.7.0` enquanto o backend está em 2.29.0 e o frontend em 2.28.0: confirmar com o dono a convenção antes de criar a próxima tag. Nunca pôr segredo (chave do Asaas) em arquivo, commit ou chat. Chave só por variável de ambiente.
 - Commit só quando o fluxo do projeto já está em commits por task (o plano manda commitar a cada task, com caminhos explícitos).
 - Subagentes: quem desenvolve = `haiku`; revisão e correção = `sonnet`, obrigatória nas Tasks 2, 3, 7 e 8 (limite, token, webhook). Um subagente por vez, com brief e contrato completos. O agente principal confere tudo (diff, testes, build, lint, integração real e `ponytail-review`) antes de dar como pronto.
 - Backend e frontend só se encontram no "Contrato HTTP" do plano.
