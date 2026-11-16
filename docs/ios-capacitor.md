@@ -70,6 +70,17 @@ npm run ios:prepare
 
 Troque `192.168.0.10` pelo IP real da sua maquina.
 
+Atenção: o `docker-compose.yml` publica o backend só em `127.0.0.1` (`127.0.0.1:3002`), então o iPhone não o alcança pela LAN por padrão. Para esse teste, crie um `docker-compose.override.yml` local (não commitar, e apague ao terminar) que abre só a porta do backend:
+
+```yaml
+services:
+  backend:
+    ports: !override
+      - '3002:3000'
+```
+
+Suba com `docker compose up -d backend` e use só em rede confiável. Aberto na LAN, o backend é alcançável sem o nginx, e um `X-Forwarded-For` forjado burla o limite por IP quando `TRUST_PROXY_HOPS=1`. Nunca faça isso em servidor.
+
 ## Observacoes importantes
 
 - `NSAllowsArbitraryLoadsInWebContent` foi ativado no `Info.plist` para facilitar desenvolvimento com backend HTTP na rede local.
