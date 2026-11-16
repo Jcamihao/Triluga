@@ -395,8 +395,6 @@ As variáveis `ASAAS_*` são as mesmas do destaque. Registre **dois** webhooks n
 | [Relatórios de assinaturas](./docs/reports/assinaturas-e2e/README.md) | e2e, validação no sandbox do Asaas e revisão do vínculo por `checkoutSession` |
 | [Relatório de carga e pentest](./docs/reports/2026-11-02-carga-pentest-triluga.md) | Resultado dos testes locais de 2026-11-02 |
 | [Handoff](./docs/HANDOFF.md) | Estado atual do trabalho, pendências e decisões abertas |
-| [Deploy no Render (alternativa)](./docs/deploy-render.md) | Alternativa de hospedagem; **não é o deploy atual** (produção roda na VPS com Docker Compose e nginx) |
-| [Deploy Vercel/Railway (alternativa)](./docs/deploy-vercel-railway.md) | Alternativa de hospedagem; **não é o deploy atual** |
 | [Specs e planos](./docs/superpowers) | Specs de design e planos de implementação (destaque, preço por diária, assinaturas) |
 | [iOS com Capacitor](./docs/ios-capacitor.md) | Build e teste no Xcode |
 
