@@ -14,6 +14,7 @@ import { Server, Socket } from 'socket.io';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { sanitizeForLog } from '../common/utils/log-safe.util';
+import { ChatSendLimiter } from './chat-send-limiter';
 import { ChatPresenceService } from './chat-presence.service';
 import { ChatService } from './chat.service';
 
@@ -38,6 +39,7 @@ export class ChatGateway
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
     private readonly chatPresenceService: ChatPresenceService,
+    private readonly chatSendLimiter: ChatSendLimiter,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -169,6 +171,15 @@ export class ChatGateway
     };
   }
 
+  /*
+   * Limite de chat:send. Conclusão da investigação (código do Nest 10.4.22):
+   * os guards globais (APP_GUARD: JwtAuthGuard, RolesGuard, UserAwareThrottlerGuard,
+   * CsrfGuard) NÃO rodam nos handlers de gateway. O motivo: o GuardsContextCreator
+   * criado em websockets/socket-module.js não recebe a config da aplicação, então
+   * getGlobalMetadata devolve []. Por isso o limite de mensagens por usuário é
+   * feito aqui, com ChatSendLimiter (30/min, CHAT_MESSAGE_THROTTLE).
+   * Consequência: a autenticação WS é só o handleConnection (token no handshake).
+   */
   @SubscribeMessage('chat:send')
   async handleSend(
     @ConnectedSocket() client: Socket,
@@ -180,6 +191,10 @@ export class ChatGateway
 
     if (!conversationId) {
       throw new WsException('Conversa invalida.');
+    }
+
+    if (!this.chatSendLimiter.consume(user.sub)) {
+      throw new WsException('Muitas mensagens. Aguarde um instante.');
     }
 
     try {

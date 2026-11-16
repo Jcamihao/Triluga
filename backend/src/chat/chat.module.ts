@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ChatController } from './chat.controller';
+import { ChatSendLimiter } from './chat-send-limiter';
 import { ChatGateway } from './chat.gateway';
 import { ChatPresenceService } from './chat-presence.service';
 import { ChatService } from './chat.service';
@@ -9,6 +10,11 @@ import { ChatService } from './chat.service';
 @Module({
   imports: [AuthModule, NotificationsModule],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway, ChatPresenceService],
+  providers: [
+    ChatService,
+    ChatGateway,
+    ChatPresenceService,
+    { provide: ChatSendLimiter, useFactory: () => new ChatSendLimiter() },
+  ],
 })
 export class ChatModule {}
