@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { parseTrustProxyHops } from '../common/utils/trust-proxy.util';
 
 function resolveAppUrl(port: number) {
   const explicitAppUrl = process.env.APP_URL?.trim();
@@ -27,4 +28,5 @@ export const appConfig = registerAs('app', () => ({
   appUrl: resolveAppUrl(parseInt(process.env.PORT ?? '3000', 10)),
   platformFeeRate: parseFloat(process.env.PLATFORM_FEE_RATE ?? '0.12'),
   adminEmail: process.env.ADMIN_ACCOUNT_EMAIL ?? 'admin.triluga@triluga.com',
+  trustProxyHops: parseTrustProxyHops(process.env.TRUST_PROXY_HOPS),
 }));

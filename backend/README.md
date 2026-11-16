@@ -54,3 +54,5 @@ npm run verify            # gera o client, confere o status das migrations, comp
 ## Variáveis de ambiente
 
 Os nomes estão em `.env.example`. Os grupos principais: banco (`DATABASE_URL`), JWT, Redis, MinIO, `ASAAS_*` (chave, URL base, token do webhook e timeout) e `BILLING_*` (flag e preços). Valores de segredo nunca vão para o repositório.
+
+`TRUST_PROXY_HOPS` define quantos proxies à frente da API são confiáveis (0 a 5; `0` = exposto direto, `1` = atrás de um proxy como o nginx; inválido derruba o boot). Sem isso, o throttler conta todos os visitantes atrás do proxy num balde só.

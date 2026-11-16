@@ -1,5 +1,6 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
@@ -12,10 +13,13 @@ import { RequestWithContext } from './common/interfaces/request-with-context.int
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
   const configService = app.get(ConfigService);
+  const trustProxyHops = configService.get<number>('app.trustProxyHops', 0);
+  app.set('trust proxy', trustProxyHops);
+  logger.log(`trust proxy hops=${trustProxyHops}`);
   const port = configService.get<number>('app.port', 3000);
   const appUrl =
     configService.get<string>('app.appUrl') ?? `http://localhost:${port}`;
