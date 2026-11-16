@@ -19,7 +19,7 @@ Já existe:
 - nginx com TLS 1.2 e 1.3, redirecionamento de HTTP para HTTPS, `client_max_body_size 20m` e timeout longo só no WebSocket.
 
 Lacunas:
-1. **Portas expostas no host.** `docker-compose.yml` publica postgres (5435), redis (6382), minio, backend (3002) e frontend (4202) sem prefixo `127.0.0.1`. O Docker publica essas portas em todas as interfaces e passa por cima do `ufw`. Se o firewall do provedor não bloquear, banco e Redis estão acessíveis da internet e o atacante ignora o nginx e a Cloudflare. **Presumido; precisa ser conferido no VPS (`ss -tlnp` e um scan de fora).**
+1. **Portas expostas no host (REFUTADA no VPS atual, ainda vale no repositório).** `docker-compose.yml` publica postgres (5435), redis (6382), minio, backend (3002) e frontend (4202) sem prefixo `127.0.0.1`. O Docker publica essas portas em todas as interfaces e passa por cima do `ufw`. Se o firewall do provedor não bloquear, banco e Redis estão acessíveis da internet e o atacante ignora o nginx e a Cloudflare. **Conferido em 2026-11-16: no VPS as portas estão fechadas por um override não versionado; o repositório continua inseguro por si só.**
 2. **Sem `trust proxy` no Nest.** Atrás do nginx, `req.ip` é o IP do proxy (loopback ou gateway do Docker), então o throttler enxerga todos os visitantes como um só. Consequência provável: o limite de 20 req/min e o de 5 req/min do login são compartilhados por todo mundo (um atacante trava o login de todos, e o limite não protege contra ninguém). **Presumido; conferir contando `status=429` nos logs de produção.**
 3. **nginx sem `limit_req`, `limit_conn`, timeouts de cabeçalho e corpo, `server_tokens off` e HSTS.** Aberto a slowloris e a flood de conexões.
 4. **Swagger público** em `/api/docs`, inclusive em produção.
@@ -43,11 +43,11 @@ Modelos: dev haiku, revisão e correção sonnet (obrigatória: é segurança), 
 
 ### Fase 0: fechar a exposição direta (urgente, barata)
 
-**Tarefa 0.1: conferir o que está aberto.** No VPS (com autorização do dono): `ss -tlnp`, `docker ps --format '{{.Ports}}'`, `ufw status verbose`, e um scan de fora das portas 3002, 4202, 5435, 6382 e as do MinIO. Resultado vai para `docs/reports/seguranca/exposicao-2026-11-16.md`. Sem alteração ainda.
+**Tarefa 0.1: conferir o que está aberto. FEITA em 2026-11-16** (relatório em `docs/reports/seguranca/exposicao-2026-11-16.md`). Resultado: no VPS só 22, 80 e 443 escutam em todas as interfaces; as demais portas estão em `127.0.0.1` por causa de um `docker-compose.override.yml` **não versionado** que só existe no servidor, e o `ufw` está em deny. A suspeita de banco exposto não se confirmou.
 
-**Tarefa 0.2: publicar portas só em loopback.** Em `docker-compose.yml`, trocar para `127.0.0.1:${...}:...` nas portas de postgres, redis, minio (API e console), backend e frontend. O nginx do host fala com `127.0.0.1:3002` e `127.0.0.1:4202`, então continua funcionando. Teste: `docker compose config` mostra os binds; depois do deploy, o scan de fora não vê as portas. O deploy é do dono.
+**Tarefa 0.2: tirar a dependência do arquivo que só existe no VPS.** Em `docker-compose.yml`, trocar para `127.0.0.1:${...}:...` as portas de postgres, redis, minio (API e console), backend e frontend, e incluir `restart: unless-stopped`. O nginx do host fala com `127.0.0.1:3002` e `127.0.0.1:4202`, então continua funcionando; o override do VPS fica redundante e pode ser removido pelo dono depois do deploy. Teste: `docker compose config` mostra só binds em loopback. O deploy é do dono.
 
-**Tarefa 0.3: firewall do host.** `ufw` liberando só 22 (idealmente só do IP do dono), 80 e 443. Na Fase C, 80 e 443 passam a aceitar só IPs da Cloudflare.
+**Tarefa 0.3: firewall do host. JÁ ATENDIDA** (`ufw` com deny de entrada e só 22, 80 e 443). Na Fase C, 80 e 443 passam a aceitar só IPs da Cloudflare. Item novo, a decidir pelo dono: instalar `fail2ban` para o SSH (hoje inativo; a senha já está desligada, só chave).
 
 ### Fase A: backend (haiku + sonnet)
 
