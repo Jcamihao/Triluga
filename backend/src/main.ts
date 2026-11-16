@@ -3,13 +3,11 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { randomUUID } from 'crypto';
 import * as compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { REQUEST_ID_HEADER } from './common/constants/request-trace.constants';
 import { HttpExceptionLoggingFilter } from './common/filters/http-exception-logging.filter';
-import { RequestWithContext } from './common/interfaces/request-with-context.interface';
+import { requestContextMiddleware } from './common/middleware/request-context.middleware';
 import { applyTrustProxy } from './common/utils/trust-proxy.util';
 
 async function bootstrap() {
@@ -25,44 +23,7 @@ async function bootstrap() {
     configService.get<string>('app.appUrl') ?? `http://localhost:${port}`;
 
   app.setGlobalPrefix('api/v1');
-  app.use((req: RequestWithContext, res, next) => {
-    const requestIdHeader = req.header(REQUEST_ID_HEADER);
-    const requestId = requestIdHeader?.trim() || randomUUID();
-    const startedAt = Date.now();
-
-    req.requestId = requestId;
-    req.startedAt = startedAt;
-    res.setHeader(REQUEST_ID_HEADER, requestId);
-
-    logger.log(
-      `request_started requestId=${requestId} method=${req.method} path=${req.originalUrl ?? req.url}`,
-    );
-
-    res.on('finish', () => {
-      const durationMs = Date.now() - startedAt;
-      const userId = req.user?.sub ?? 'anonymous';
-      const statusCode = res.statusCode;
-      const level =
-        statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'log';
-      const logMessage =
-        `request_completed requestId=${requestId} method=${req.method} ` +
-        `path=${req.originalUrl ?? req.url} status=${statusCode} durationMs=${durationMs} userId=${userId}`;
-
-      if (level === 'error') {
-        logger.error(logMessage);
-        return;
-      }
-
-      if (level === 'warn') {
-        logger.warn(logMessage);
-        return;
-      }
-
-      logger.log(logMessage);
-    });
-
-    next();
-  });
+  app.use(requestContextMiddleware(logger));
   const frontendUrls = (
     configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200'
   )

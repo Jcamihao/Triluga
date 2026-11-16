@@ -108,6 +108,14 @@ describe('main.ts: trust proxy', () => {
     ]);
   });
 
+  it('o middleware de request é o primeiro app.use, logo após setGlobalPrefix', async () => {
+    const calls = await runMain(1);
+    const prefixIndex = calls.indexOf('setGlobalPrefix');
+    expect(prefixIndex).toBeGreaterThanOrEqual(0);
+    expect(calls[prefixIndex + 1]).toBe('use');
+    expect(calls.indexOf('use')).toBe(prefixIndex + 1);
+  });
+
   it('sem trustProxyHops na config, aplica 0', async () => {
     const calls = await runMain(undefined);
     expect(calls).toContain('set:trust proxy=0');
