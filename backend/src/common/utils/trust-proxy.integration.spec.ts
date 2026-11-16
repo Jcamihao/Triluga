@@ -1,9 +1,11 @@
 import { Controller, Get, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import * as request from 'supertest';
+import { applyTrustProxy } from './trust-proxy.util';
 
 // Módulo mínimo: não importa o AppModule (ele exige banco).
 // Limite 2 por minuto para o 3º request estourar sem precisar de muitas chamadas.
@@ -22,13 +24,13 @@ class PingController {
 })
 class TrustProxyTestModule {}
 
-// Mesma sequência do main.ts: app.set('trust proxy', hops) antes do init.
+// Mesma sequência do main.ts: applyTrustProxy antes do init.
 async function createApp(hops: number): Promise<NestExpressApplication> {
   const moduleRef = await Test.createTestingModule({
     imports: [TrustProxyTestModule],
   }).compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>();
-  app.set('trust proxy', hops);
+  applyTrustProxy(app, new ConfigService({ app: { trustProxyHops: hops } }));
   await app.init();
   return app;
 }
