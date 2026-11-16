@@ -13,6 +13,7 @@ import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { sanitizeForLog } from '../common/utils/log-safe.util';
 import { UsersService } from '../users/users.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
@@ -34,7 +35,7 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     this.logger.log(
-      `register_attempt email=${dto.email.toLowerCase()} role=${Role.USER}`,
+      `register_attempt email=${sanitizeForLog(dto.email.toLowerCase())} role=${Role.USER}`,
     );
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -55,7 +56,7 @@ export class AuthService {
     });
 
     this.logger.log(
-      `register_success userId=${user.id} email=${user.email} role=${user.role}`,
+      `register_success userId=${user.id} email=${sanitizeForLog(user.email)} role=${user.role}`,
     );
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -84,16 +85,22 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    this.logger.log(`login_attempt email=${dto.email.toLowerCase()}`);
+    this.logger.log(
+      `login_attempt email=${sanitizeForLog(dto.email.toLowerCase())}`,
+    );
     const user = await this.usersService.findByEmail(dto.email);
 
     if (!user) {
-      this.logger.warn(`login_user_not_found email=${dto.email.toLowerCase()}`);
+      this.logger.warn(
+        `login_user_not_found email=${sanitizeForLog(dto.email.toLowerCase())}`,
+      );
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
     if (user.status === UserStatus.BLOCKED) {
-      this.logger.warn(`login_blocked userId=${user.id} email=${user.email}`);
+      this.logger.warn(
+        `login_blocked userId=${user.id} email=${sanitizeForLog(user.email)}`,
+      );
       throw new ForbiddenException('Sua conta está bloqueada.');
     }
 
@@ -104,14 +111,14 @@ export class AuthService {
 
     if (!passwordMatches) {
       this.logger.warn(
-        `login_invalid_password userId=${user.id} email=${user.email}`,
+        `login_invalid_password userId=${user.id} email=${sanitizeForLog(user.email)}`,
       );
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
     await this.usersService.updateLastLogin(user.id);
     this.logger.log(
-      `login_success userId=${user.id} email=${user.email} role=${user.role}`,
+      `login_success userId=${user.id} email=${sanitizeForLog(user.email)} role=${user.role}`,
     );
 
     return this.issueTokens(user.id, user.email, user.role, user, {
@@ -157,7 +164,9 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token inválido.');
     }
 
-    this.logger.log(`refresh_success userId=${user.id} email=${user.email}`);
+    this.logger.log(
+      `refresh_success userId=${user.id} email=${sanitizeForLog(user.email)}`,
+    );
     return this.issueTokens(user.id, user.email, user.role, user, {
       rememberMe: payload.rememberMe === true,
     });
@@ -202,7 +211,9 @@ export class AuthService {
 
     // Resposta genérica para não revelar se o email existe
     if (!user) {
-      this.logger.debug(`forgot_password_email_not_found email=${dto.email}`);
+      this.logger.debug(
+        `forgot_password_email_not_found email=${sanitizeForLog(dto.email)}`,
+      );
       return { success: true };
     }
 

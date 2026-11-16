@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { Client as MinioClient } from 'minio';
 import { extname } from 'path';
 import sharp from 'sharp';
+import { sanitizeForLog } from '../common/utils/log-safe.util';
 
 type UploadFile = Pick<
   Express.Multer.File,
@@ -182,7 +183,7 @@ export class StorageService {
       };
     } catch (error) {
       this.logger.warn(
-        `Nao foi possivel otimizar imagem ${file.originalname}: ${
+        `Nao foi possivel otimizar imagem ${sanitizeForLog(file.originalname)}: ${
           error instanceof Error ? error.message : 'Erro desconhecido'
         }`,
       );
@@ -232,7 +233,7 @@ export class StorageService {
       );
     } catch {
       this.logger.warn(
-        `Nao foi possivel extrair a chave do arquivo publico: ${url}`,
+        `Nao foi possivel extrair a chave do arquivo publico: ${sanitizeForLog(url)}`,
       );
       return null;
     }

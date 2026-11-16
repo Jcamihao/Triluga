@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { sanitizeForLog } from '../common/utils/log-safe.util';
 
 @Injectable()
 export class EmailService {
@@ -229,7 +230,7 @@ export class EmailService {
   private async send(options: { to: string; subject: string; html: string }) {
     if (!this.isConfigured || !this.transporter) {
       this.logger.debug(
-        `[EMAIL degradado] Para: ${options.to} | Assunto: ${options.subject}`,
+        `[EMAIL degradado] Para: ${sanitizeForLog(options.to)} | Assunto: ${sanitizeForLog(options.subject)}`,
       );
       return;
     }
@@ -237,11 +238,11 @@ export class EmailService {
     try {
       await this.transporter.sendMail({ from: this.from, ...options });
       this.logger.debug(
-        `email_sent to=${options.to} subject="${options.subject}"`,
+        `email_sent to=${sanitizeForLog(options.to)} subject="${sanitizeForLog(options.subject)}"`,
       );
     } catch (error) {
       this.logger.error(
-        `email_failed to=${options.to} error=${(error as Error).message}`,
+        `email_failed to=${sanitizeForLog(options.to)} error=${sanitizeForLog((error as Error).message)}`,
       );
     }
   }

@@ -13,6 +13,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { sanitizeForLog } from '../common/utils/log-safe.util';
 import { ChatPresenceService } from './chat-presence.service';
 import { ChatService } from './chat.service';
 
@@ -183,7 +184,7 @@ export class ChatGateway
 
     try {
       this.logger.debug(
-        `socket_send_attempt socketId=${client.id} userId=${user.sub} conversationId=${conversationId}`,
+        `socket_send_attempt socketId=${client.id} userId=${user.sub} conversationId=${sanitizeForLog(conversationId)}`,
       );
       const result = await this.chatService.sendMessage(
         user.sub,
