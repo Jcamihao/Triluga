@@ -1,5 +1,7 @@
 # Deploy em produção com Vercel + Railway
 
+> **Alternativa de hospedagem, não é o deploy atual.** Hoje o Triluga roda numa VPS com Docker Compose e nginx (veja o README da raiz e os runbooks em `docs/runbooks/`). Este guia descreve o caminho por Vercel e Railway caso a hospedagem mude. Não foi testado em contas reais.
+
 ## Arquitetura recomendada
 
 - Frontend Angular no Vercel

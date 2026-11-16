@@ -33,6 +33,9 @@
 - 🔔 **Notificações e alertas de busca** por e-mail e push via BullMQ.
 - 🏷️ **Preço por diária** com tempo mínimo de aluguel opcional e estimativa semanal/mensal (diária x 7 e x 30) com aviso de que o pagamento é combinado diretamente entre as partes.
 - 💰 **Destaque pago** de anúncios via Asaas (PIX no app, ativação automática).
+- 💳 **Assinaturas** para quem anuncia: conta grátis com 3 anúncios, planos Profissional e Frota por cartão recorrente via Asaas (atrás da flag `BILLING_ENABLED`, desligada por padrão).
+- 🚩 **Denúncias e auditoria**: usuários denunciam anúncios, o admin resolve e as ações administrativas ficam registradas.
+- 🔎 **SEO**: `sitemap.xml` gerado pelo backend com os anúncios ativos.
 - 🛡️ **Conformidade LGPD** com exportação de dados e solicitações de exclusão.
 
 ---
@@ -60,22 +63,32 @@
 ├── backend/                  NestJS API
 │   ├── prisma/               Schema + migrations + seed
 │   └── src/
-│       ├── auth/             JWT, refresh, e-mail verification
+│       ├── auth/             JWT, refresh, verificação de e-mail, reset de senha
 │       ├── users/
 │       ├── profiles/         Perfil, avatar e dados de contato
-│       ├── vehicles/         CRUD de anúncios
+│       ├── vehicles/         CRUD de anúncios (aplica o limite do plano ao publicar)
 │       ├── vehicle-images/   Upload de fotos
 │       ├── chat/             WebSocket + mensagens
 │       ├── notifications/    Push + e-mail via BullMQ
 │       ├── search-alerts/    Alertas de busca
 │       ├── favorites/
 │       ├── reviews/
+│       ├── reports/          Denúncias de anúncios
 │       ├── analytics/
-│       ├── admin/            Painel administrativo
+│       ├── admin/            Painel administrativo (visão geral, gestão, auditoria)
+│       ├── audit/            Registro das ações administrativas
+│       ├── asaas/            Cliente HTTP do Asaas (compartilhado por destaque e assinaturas)
 │       ├── featured/         Destaque pago (Asaas/PIX)
+│       ├── billing/          Assinaturas, planos, limites e webhook (Asaas)
+│       ├── lookups/          CEP, geocoding e FIPE
 │       ├── privacy/          LGPD
+│       ├── email/            Envio de e-mails transacionais
+│       ├── scheduler/        Tarefas agendadas (ex.: expiração de anúncios)
+│       ├── sitemap/          sitemap.xml
 │       ├── storage/          MinIO abstraction
-│       └── cache-queue/      Redis + BullMQ abstraction
+│       ├── cache-queue/      Redis + BullMQ abstraction
+│       ├── config/           Configuração por área (app, auth, asaas, billing...)
+│       └── common/           Guards, filtros, decorators e utilitários
 ├── frontend/                 Angular PWA
 │   └── src/app/
 │       ├── core/             Guards, interceptors, services, models
@@ -94,20 +107,21 @@
 |------|--------|-------|
 | `/` | Home com busca rápida e atalhos | — |
 | `/search` | Lista de veículos com filtros | — |
-| `/vehicles/:id` | Detalhe · galeria · mapa · reviews | — |
+| `/vehicles/:slug` | Detalhe · galeria · mapa · reviews | — |
 | `/compare` | Comparação lado a lado | — |
-| `/chat` | Lista de conversas | `auth` |
-| `/chat/:id` | Conversa individual | `auth` |
+| `/chat` | Lista de conversas | — (a tela exige sessão para carregar dados) |
+| `/chat/:conversationId` | Conversa individual | — (idem) |
 | `/favorites` | Favoritos | `auth` |
 | `/profile` | Perfil do usuário | `auth` |
 | `/privacy-center` | Central LGPD | `auth` |
-| `/anunciar-carro` | Painel do anunciante | `auth` |
-| `/plano` | Planos e assinatura (aparece só com `BILLING_ENABLED=true`) | `auth` |
+| `/anunciar-carro` | Painel do anunciante e wizard de anúncio (`/owner-dashboard` redireciona para cá) | `auth` + e-mail verificado |
+| `/plano` | Planos e assinatura (o link só aparece com `BILLING_ENABLED=true`) | `auth` |
 | `/users/:id` | Perfil público do anunciante | — |
-| `/admin` | Painel administrativo | `auth + ADMIN` |
+| `/admin` | Painel administrativo | `auth` + papel ADMIN |
 | `/auth/login` | Login | — |
 | `/auth/register` | Cadastro | — |
-| `/privacy` | Política de privacidade | — |
+| `/auth/forgot-password` · `/auth/reset-password` · `/auth/verify-email` | Recuperação de senha e confirmação de e-mail | — |
+| `/privacy` · `/terms` | Política de privacidade e Termos de uso | — |
 
 ---
 
@@ -130,13 +144,16 @@ POST   /auth/resend-verification   Reenvia confirmação
 ```
 GET    /vehicles                   Lista com filtros (público)
 GET    /vehicles/stats             Contagens para a home (público)
+GET    /vehicles/cities            Cidades com anúncios (público)
 GET    /vehicles/me                Anúncios do usuário
 GET    /vehicles/:id               Detalhe (público)
-POST   /vehicles                   Cria anúncio
+GET    /vehicles/:id/similar       Anúncios semelhantes (público)
+GET    /vehicles/:id/metrics       Métricas do anúncio (só o proprietário)
+POST   /vehicles                   Cria anúncio (403 PLAN_LIMIT acima do limite do plano)
 PATCH  /vehicles/:id               Atualiza anúncio
 DELETE /vehicles/:id               Desativa anúncio
 POST   /vehicles/:id/images        Upload de imagens (até 8)
-DELETE /vehicles/:id/images/:imgId Remove imagem
+DELETE /vehicles/:id/images/:imageId Remove imagem
 ```
 
 ### ❤️ Favorites
@@ -159,7 +176,14 @@ POST   /chats/:id/messages              Envia mensagem
 ```
 POST   /reviews                    Avalia anúncio
 POST   /reviews/user               Avalia anunciante
-GET    /reviews/vehicle/:id        Reviews de um veículo (público)
+GET    /reviews/vehicle/:vehicleId Reviews de um veículo (público)
+
+### 🚩 Reports (denúncias)
+```
+POST   /reports                    Denuncia um anúncio
+GET    /reports/admin              [ADMIN] Lista denúncias
+PATCH  /reports/admin/:id/resolve  [ADMIN] Resolve denúncia
+```
 ```
 
 ### 🔔 Notifications & Alerts
@@ -185,12 +209,14 @@ GET    /privacy/policy             Política pública (público)
 GET    /privacy/me                 Preferências e solicitações
 PATCH  /privacy/me/preferences     Atualiza preferências
 GET    /privacy/me/export          Exporta dados da conta
+GET    /privacy/me/requests        Lista solicitações do usuário
 POST   /privacy/me/requests        Cria solicitação LGPD
 ```
 
 ### ⚙️ Admin
 ```
 GET    /admin/dashboard                          Resumo administrativo
+GET    /admin/overview                           Visão geral: analytics + últimos registros de auditoria
 GET    /admin/users                              Lista usuários
 GET    /admin/vehicles                           Lista veículos
 PATCH  /admin/users/:id/block                   Bloqueia usuário
@@ -199,7 +225,11 @@ PATCH  /admin/vehicles/:id/deactivate           Desativa veículo
 DELETE /admin/vehicles/:id                      Exclui veículo
 PATCH  /admin/vehicles/:id/feature             Configura destaque
 GET    /admin/reports                           Lista denúncias
-PATCH  /admin/reports/:id                       Resolve denúncia
+GET    /admin/reports/count                     Quantidade de denúncias abertas
+PATCH  /admin/reports/:id/resolve               Resolve denúncia
+GET    /admin/audit-logs                        Auditoria das ações administrativas
+GET    /admin/featured-orders                   Pedidos de destaque
+PATCH  /admin/featured-orders/:id/activate      Ativa um pedido de destaque manualmente
 GET    /admin/privacy/requests                  Solicitações LGPD
 PATCH  /admin/privacy/requests/:id              Atualiza solicitação
 ```
@@ -233,10 +263,12 @@ POST   /analytics/vehicle-views         Rastreia visualização
 GET    /analytics/vehicles/most-viewed  Mais vistos (público)
 GET    /analytics/summary               Resumo (admin)
 GET    /lookups/cep/:zipCode            Consulta CEP (público)
-GET    /lookups/fipe/brands             Marcas FIPE
-GET    /lookups/fipe/models             Modelos FIPE
-GET    /lookups/fipe/years              Anos FIPE
-GET    /lookups/fipe/price              Preço FIPE
+GET    /lookups/geocode                 Latitude/longitude a partir de um endereço
+GET    /lookups/fipe/:type/brands                                         Marcas FIPE
+GET    /lookups/fipe/:type/brands/:brandCode/models                       Modelos FIPE
+GET    /lookups/fipe/:type/brands/:brandCode/models/:modelCode/years      Anos FIPE
+GET    /lookups/fipe/:type/brands/:brandCode/models/:modelCode/years/:yearCode  Preço FIPE
+GET    /sitemap/sitemap.xml             Sitemap (público)
 GET    /                                Healthcheck
 ```
 
@@ -357,8 +389,15 @@ As variáveis `ASAAS_*` são as mesmas do destaque. Registre **dois** webhooks n
 | [Operações LGPD](./docs/lgpd-operations.md) | Procedimentos operacionais |
 | [Retenção de Dados](./docs/data-retention.md) | Política de retenção |
 | [QA Playbook](./docs/qa-playbook.md) | Roteiro de testes manuais |
-| [Deploy VPS](./docs/deploy-render.md) | Guia de deploy na VPS |
-| [Deploy Vercel/Railway](./docs/deploy-vercel-railway.md) | Deploy em cloud gerenciada |
+| [Runbook de deploy das assinaturas](./docs/runbooks/assinaturas-deploy.md) | Roteiro do deploy da v2.10.0 (billing desligado na primeira subida) |
+| [Runbook do preço por diária](./docs/runbooks/preco-diaria-deploy.md) | Deploy da v2.9.0 e backup antes da migration |
+| [Runbook do destaque (Asaas)](./docs/runbooks/triluga-deploy-v2.8.0.md) | Deploy da v2.8.0 |
+| [Relatórios de assinaturas](./docs/reports/assinaturas-e2e/README.md) | e2e, validação no sandbox do Asaas e revisão do vínculo por `checkoutSession` |
+| [Relatório de carga e pentest](./docs/reports/2026-11-02-carga-pentest-triluga.md) | Resultado dos testes locais de 2026-11-02 |
+| [Handoff](./docs/HANDOFF.md) | Estado atual do trabalho, pendências e decisões abertas |
+| [Deploy no Render (alternativa)](./docs/deploy-render.md) | Alternativa de hospedagem; **não é o deploy atual** (produção roda na VPS com Docker Compose e nginx) |
+| [Deploy Vercel/Railway (alternativa)](./docs/deploy-vercel-railway.md) | Alternativa de hospedagem; **não é o deploy atual** |
+| [Specs e planos](./docs/superpowers) | Specs de design e planos de implementação (destaque, preço por diária, assinaturas) |
 | [iOS com Capacitor](./docs/ios-capacitor.md) | Build e teste no Xcode |
 
 ---

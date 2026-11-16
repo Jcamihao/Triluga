@@ -1,5 +1,7 @@
 # Deploy no Render
 
+> **Alternativa de hospedagem, não é o deploy atual.** Hoje o Triluga roda numa VPS com Docker Compose e nginx (veja o README da raiz e os runbooks em `docs/runbooks/`). Este guia descreve o caminho pelo Render caso a hospedagem mude. O corpo deste guia não foi revisado nem testado em um serviço real do Render.
+
 ## Arquitetura recomendada
 
 - frontend Angular como `Static Site`
