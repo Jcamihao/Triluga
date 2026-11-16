@@ -57,6 +57,49 @@ describe('swagger + app Nest (integração)', () => {
     }
   });
 
+  it('desligado: nenhuma rota de documentação ou de esquema responde (tudo 404)', async () => {
+    const app = await createApp(undefined);
+    try {
+      for (const path of [
+        '/api/docs',
+        '/api/docs/',
+        '/api/docs-json',
+        '/api/docs-yaml',
+        '/api/docs/swagger-ui-init.js',
+        '/api/docs/swagger-ui-bundle.js',
+        '/api/v1/docs',
+        '/api/v1/docs/',
+        '/api/v1/docs-json',
+        '/api/v1/api/docs',
+        '/api-json',
+        '/api/v1/api-json',
+      ]) {
+        const res = await request(app.getHttpServer()).get(path);
+        expect({ path, status: res.status }).toEqual({ path, status: 404 });
+      }
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('ligado: serve a UI (com e sem barra final), o JSON e o YAML do esquema', async () => {
+    const app = await createApp('true');
+    try {
+      const withSlash = await request(app.getHttpServer()).get('/api/docs/');
+      expect(withSlash.status).toBe(200);
+      expect(withSlash.text).toContain('swagger');
+
+      const json = await request(app.getHttpServer()).get('/api/docs-json');
+      expect(json.status).toBe(200);
+      expect(json.body.info.title).toBe('Triluga API teste');
+
+      const yaml = await request(app.getHttpServer()).get('/api/docs-yaml');
+      expect(yaml.status).toBe(200);
+    } finally {
+      await app.close();
+    }
+  });
+
   it('com Swagger desligado, a API continua respondendo normalmente', async () => {
     const app = await createApp(undefined);
     try {
