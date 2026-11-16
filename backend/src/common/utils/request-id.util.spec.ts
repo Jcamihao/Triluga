@@ -40,6 +40,35 @@ describe('resolveRequestId', () => {
     }
   });
 
+  it('rejeita qualquer caractere fora da lista permitida, um a um (0 a 255 e separadores Unicode)', () => {
+    const allowed = /[A-Za-z0-9._-]/;
+    const rejected: string[] = [];
+    const candidates = [
+      ...Array.from({ length: 256 }, (_, code) => String.fromCharCode(code)),
+      '\u2028',
+      '\u2029',
+      '\u202e',
+      '\uff21',
+    ];
+
+    for (const ch of candidates) {
+      if (allowed.test(ch)) continue;
+      for (const value of [`abc${ch}12345`, `${ch}abc12345`, `abc12345${ch}`]) {
+        if (resolveRequestId(value, () => GENERATED) !== GENERATED) {
+          rejected.push(JSON.stringify(value));
+        }
+      }
+    }
+
+    expect(rejected).toEqual([]);
+  });
+
+  it('rejeita o que o Node entrega quando o header vem duplicado (valores unidos por vírgula e espaço)', () => {
+    expect(resolveRequestId('abc12345, def67890', () => GENERATED)).toBe(
+      GENERATED,
+    );
+  });
+
   it('usa randomUUID quando não recebe gerador e o valor é inválido', () => {
     const result = resolveRequestId('abc\n12345');
     expect(result).toMatch(
