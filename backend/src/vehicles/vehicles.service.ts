@@ -16,6 +16,7 @@ import {
 } from '@prisma/client';
 import { CacheQueueService } from '../cache-queue/cache-queue.service';
 import { EntitlementsService } from '../billing/entitlements.service';
+import { PUBLIC_AUTHOR_SELECT } from '../common/constants/public-author.constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchAlertsService } from '../search-alerts/search-alerts.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -517,9 +518,7 @@ export class VehiclesService {
           take: 10,
           include: {
             author: {
-              include: {
-                profile: true,
-              },
+              select: PUBLIC_AUTHOR_SELECT,
             },
           },
         },

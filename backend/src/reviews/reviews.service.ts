@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PUBLIC_AUTHOR_SELECT } from '../common/constants/public-author.constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { CreateUserReviewDto } from './dto/create-user-review.dto';
@@ -133,9 +134,7 @@ export class ReviewsService {
       where: { vehicleId },
       include: {
         author: {
-          include: {
-            profile: true,
-          },
+          select: PUBLIC_AUTHOR_SELECT,
         },
       },
       orderBy: {
