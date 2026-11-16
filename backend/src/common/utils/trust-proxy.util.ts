@@ -1,3 +1,5 @@
+import type { ConfigService } from '@nestjs/config';
+
 const TRUST_PROXY_HOPS_PATTERN = /^[0-5]$/;
 
 /**
@@ -27,4 +29,19 @@ export function parseTrustProxyHops(raw: string | undefined): number {
   }
 
   return Number(value);
+}
+
+/**
+ * Aplica "trust proxy" no app Express. Deve rodar antes de qualquer middleware
+ * ou guard que leia req.ip (log de request, ThrottlerGuard): o Express decide
+ * req.ip no momento da leitura, mas a config precisa existir antes do primeiro request.
+ * Retorna o valor aplicado.
+ */
+export function applyTrustProxy(
+  app: { set(setting: string, value: unknown): unknown },
+  configService: Pick<ConfigService, 'get'>,
+): number {
+  const hops = configService.get<number>('app.trustProxyHops', 0);
+  app.set('trust proxy', hops);
+  return hops;
 }

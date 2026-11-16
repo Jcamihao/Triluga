@@ -10,6 +10,7 @@ import { AppModule } from './app.module';
 import { REQUEST_ID_HEADER } from './common/constants/request-trace.constants';
 import { HttpExceptionLoggingFilter } from './common/filters/http-exception-logging.filter';
 import { RequestWithContext } from './common/interfaces/request-with-context.interface';
+import { applyTrustProxy } from './common/utils/trust-proxy.util';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -17,8 +18,7 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
   const configService = app.get(ConfigService);
-  const trustProxyHops = configService.get<number>('app.trustProxyHops', 0);
-  app.set('trust proxy', trustProxyHops);
+  const trustProxyHops = applyTrustProxy(app, configService);
   logger.log(`trust proxy hops=${trustProxyHops}`);
   const port = configService.get<number>('app.port', 3000);
   const appUrl =
