@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Headers, Post, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { ANALYTICS_THROTTLE } from '../common/constants/throttle-limits.constants';
 import { AnalyticsPeriod, AnalyticsService } from './analytics.service';
 import { GetMostViewedVehiclesQueryDto } from './dto/get-most-viewed-vehicles-query.dto';
 import { TrackSiteVisitDto } from './dto/track-site-visit.dto';
@@ -13,6 +15,7 @@ export class AnalyticsController {
 
   @Public()
   @Post('visits')
+  @Throttle(ANALYTICS_THROTTLE)
   trackVisit(
     @Body() dto: TrackSiteVisitDto,
     @Headers('user-agent') userAgent?: string,
@@ -22,6 +25,7 @@ export class AnalyticsController {
 
   @Public()
   @Post('vehicle-views')
+  @Throttle(ANALYTICS_THROTTLE)
   trackVehicleView(
     @Body() dto: TrackVehicleViewDto,
     @Headers('user-agent') userAgent?: string,

@@ -6,10 +6,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../common/decorators/public.decorator';
+import { LOOKUPS_THROTTLE } from '../common/constants/throttle-limits.constants';
 import { LookupsService } from './lookups.service';
 
 @ApiTags('lookups')
+@Throttle(LOOKUPS_THROTTLE)
 @Controller('lookups')
 export class LookupsController {
   constructor(private readonly lookupsService: LookupsService) {}

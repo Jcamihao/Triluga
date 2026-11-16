@@ -1,5 +1,7 @@
 import { Controller, Get, Param, Patch, Post, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { CHAT_MESSAGE_THROTTLE } from '../common/constants/throttle-limits.constants';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { ChatGateway } from './chat.gateway';
@@ -77,6 +79,7 @@ export class ChatController {
   }
 
   @Post(':id/messages')
+  @Throttle(CHAT_MESSAGE_THROTTLE)
   @ApiOperation({ summary: 'Envia uma mensagem para a conversa' })
   async sendMessage(
     @CurrentUser() user: AuthenticatedUser,

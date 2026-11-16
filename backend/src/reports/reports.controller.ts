@@ -7,7 +7,9 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../common/decorators/roles.decorator';
+import { REPORT_CREATE_THROTTLE } from '../common/constants/throttle-limits.constants';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { Role } from '@prisma/client';
@@ -19,6 +21,7 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post()
+  @Throttle(REPORT_CREATE_THROTTLE)
   createReport(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateReportDto,
