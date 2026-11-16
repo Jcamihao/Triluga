@@ -1,4 +1,5 @@
 import { Controller, Get, INestApplication } from '@nestjs/common';
+import { EventEmitter } from 'events';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { requestContextMiddleware } from './request-context.middleware';
@@ -125,5 +126,85 @@ describe('requestContextMiddleware (integração com supertest)', () => {
     expect(allLogText(logger)).not.toContain('userId=admin');
     expect(allLogText(logger)).not.toContain('\u001b');
     expect(allLogText(logger)).not.toContain('\r');
+  });
+});
+
+describe('requestContextMiddleware (contexto e logs)', () => {
+  function run(options: {
+    status?: number;
+    user?: { sub: string };
+    originalUrl?: string;
+    url?: string;
+    header?: string;
+  }) {
+    const logger = fakeLogger();
+    const middleware = requestContextMiddleware(logger);
+    const res = Object.assign(new EventEmitter(), {
+      setHeader: jest.fn(),
+      statusCode: options.status ?? 200,
+    });
+    const req: Record<string, unknown> = {
+      header: () => options.header,
+      method: 'GET',
+      originalUrl: options.originalUrl ?? '/api/v1/ping?x=1',
+      url: options.url ?? '/ping?x=1',
+      user: options.user,
+    };
+    const next = jest.fn();
+
+    middleware(req as never, res as never, next);
+    res.emit('finish');
+
+    return { logger, req, res, next };
+  }
+
+  it('guarda requestId e startedAt no request, devolve o header e segue a cadeia', () => {
+    const { req, res, next } = run({ header: 'abc12345-ok' });
+
+    expect(req.requestId).toBe('abc12345-ok');
+    expect(typeof req.startedAt).toBe('number');
+    expect(res.setHeader).toHaveBeenCalledWith('x-request-id', 'abc12345-ok');
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('loga o início com requestId, método e a URL original (não a url cortada do roteador)', () => {
+    const { logger } = run({ header: 'abc12345-ok' });
+
+    expect(logger.log.mock.calls[0][0]).toBe(
+      'request_started requestId=abc12345-ok method=GET path=/api/v1/ping?x=1',
+    );
+  });
+
+  it('loga o fim com status, duração, usuário anônimo e a URL original', () => {
+    const { logger } = run({ header: 'abc12345-ok', status: 200 });
+
+    const line = logger.log.mock.calls[1][0] as string;
+    expect(line).toMatch(
+      /^request_completed requestId=abc12345-ok method=GET path=\/api\/v1\/ping\?x=1 status=200 durationMs=\d+ userId=anonymous$/,
+    );
+  });
+
+  it('usa o id do usuário autenticado no log de fim', () => {
+    const { logger } = run({ user: { sub: 'user-42' } });
+
+    expect(logger.log.mock.calls[1][0]).toContain('userId=user-42');
+  });
+
+  it.each([
+    [200, 'log'],
+    [399, 'log'],
+    [400, 'warn'],
+    [499, 'warn'],
+    [500, 'error'],
+    [503, 'error'],
+  ] as const)('status %d usa logger.%s no fim', (status, level) => {
+    const { logger } = run({ status });
+
+    const completed = (['log', 'warn', 'error'] as const).filter((name) =>
+      logger[name].mock.calls.some((args) =>
+        String(args[0]).startsWith('request_completed'),
+      ),
+    );
+    expect(completed).toEqual([level]);
   });
 });
