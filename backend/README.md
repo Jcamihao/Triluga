@@ -13,7 +13,7 @@ API NestJS 10 (monólito modular, Prisma 5 e PostgreSQL 16) do classificado de v
 - LGPD (exportação e solicitações), analytics, auditoria das ações do admin, sitemap
 - storage de imagens em MinIO (compatível com S3), consultas de CEP, geocoding e FIPE
 
-O mapa dos módulos está no [README da raiz](../README.md#-estrutura) e a lista completa de rotas no Swagger (`/api/docs`).
+O mapa dos módulos está no [README da raiz](../README.md#-estrutura) e a lista completa de rotas no Swagger (`/api/docs`, só com `SWAGGER_ENABLED=true`; padrão desligado, e produção deve manter desligado).
 
 ## Setup
 
@@ -54,5 +54,7 @@ npm run verify            # gera o client, confere o status das migrations, comp
 ## Variáveis de ambiente
 
 Os nomes estão em `.env.example`. Os grupos principais: banco (`DATABASE_URL`), JWT, Redis, MinIO, `ASAAS_*` (chave, URL base, token do webhook e timeout) e `BILLING_*` (flag e preços). Valores de segredo nunca vão para o repositório.
+
+`SWAGGER_ENABLED` liga o Swagger em `/api/docs` só quando vale `true` (sem diferenciar maiúsculas). Qualquer outro valor ou ausência deixa desligado; produção deve manter desligado.
 
 `TRUST_PROXY_HOPS` define quantos proxies à frente da API são confiáveis (0 a 5; `0` = exposto direto, `1` = atrás de um proxy como o nginx; inválido derruba o boot). Sem isso, o throttler conta todos os visitantes atrás do proxy num balde só.

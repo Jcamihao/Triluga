@@ -272,7 +272,7 @@ GET    /sitemap/sitemap.xml             Sitemap (público)
 GET    /                                Healthcheck
 ```
 
-> Swagger completo em `http://localhost:3002/api/docs`
+> Swagger completo em `http://localhost:3002/api/docs`, só com `SWAGGER_ENABLED=true` (padrão desligado: sem a variável, a rota responde 404). Em produção, mantenha desligado: a documentação não deve ficar pública.
 
 ---
 
@@ -289,7 +289,7 @@ docker compose up --build
 |---------|-----|
 | **Frontend** | http://localhost:4202 |
 | **Backend API** | http://localhost:3002/api/v1 |
-| **Swagger** | http://localhost:3002/api/docs |
+| **Swagger** | http://localhost:3002/api/docs (exige `SWAGGER_ENABLED=true`; produção deve manter desligado) |
 | **MinIO Console** | http://localhost:9005 |
 
 > Se alguma porta já estiver em uso, ajuste no `.env` antes de subir.

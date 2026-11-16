@@ -46,3 +46,54 @@ describe('appConfig.trustProxyHops', () => {
     },
   );
 });
+
+describe('appConfig.swaggerEnabled', () => {
+  const original = process.env.SWAGGER_ENABLED;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.SWAGGER_ENABLED;
+    } else {
+      process.env.SWAGGER_ENABLED = original;
+    }
+    jest.resetModules();
+  });
+
+  function load() {
+    let appConfig: typeof import('./app.config').appConfig;
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      appConfig = require('./app.config').appConfig;
+    });
+    return appConfig!;
+  }
+
+  it('sem a variável, fica desligado (fail closed)', () => {
+    delete process.env.SWAGGER_ENABLED;
+    expect(load()().swaggerEnabled).toBe(false);
+  });
+
+  it('NODE_ENV=development sozinho não liga o Swagger', () => {
+    delete process.env.SWAGGER_ENABLED;
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    try {
+      expect(load()().swaggerEnabled).toBe(false);
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
+  it.each([
+    ['true', true],
+    ['TRUE', true],
+    [' true ', true],
+    ['false', false],
+    ['1', false],
+    ['yes', false],
+    ['', false],
+  ])('SWAGGER_ENABLED=%j vira %s', (raw, expected) => {
+    process.env.SWAGGER_ENABLED = raw;
+    expect(load()().swaggerEnabled).toBe(expected);
+  });
+});

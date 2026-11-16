@@ -97,7 +97,7 @@ PRIVACY_POLICY_VERSION=2026-03-27
 
 - frontend: `http://localhost:4202`
 - backend API: `http://localhost:3002/api/v1`
-- swagger: `http://localhost:3002/api/docs`
+- swagger: `http://localhost:3002/api/docs` (só existe com `SWAGGER_ENABLED=true`; produção deve manter desligado)
 - MinIO console: `http://localhost:9005`
 
 ### Ferramentas de apoio para QA

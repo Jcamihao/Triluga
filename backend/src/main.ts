@@ -88,19 +88,25 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionLoggingFilter());
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Triluga API')
-    .setDescription('API do classificado de veículos entre pessoas.')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .build();
+  // Só monta o Swagger com SWAGGER_ENABLED=true. Desligado, /api/docs é rota inexistente (404).
+  if (configService.get<boolean>('app.swaggerEnabled', false) === true) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Triluga API')
+      .setDescription('API do classificado de veículos entre pessoas.')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
+    logger.log('swagger enabled at /api/docs');
+  } else {
+    logger.log('swagger disabled');
+  }
 
   await app.listen(port);
   logger.log(`Triluga API running at ${appUrl}/api/v1`);
