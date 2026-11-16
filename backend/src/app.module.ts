@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,6 +11,8 @@ import { ChatModule } from './chat/chat.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { UserAwareThrottlerGuard } from './common/guards/user-aware-throttler.guard';
+import { GLOBAL_THROTTLE } from './common/constants/throttle-limits.constants';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { appConfig } from './config/app.config';
 import { authConfig } from './config/auth.config';
@@ -60,7 +62,7 @@ import { BillingModule } from './billing/billing.module';
         billingConfig,
       ],
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
+    ThrottlerModule.forRoot([GLOBAL_THROTTLE]),
     PrismaModule,
     CacheQueueModule,
     StorageModule,
@@ -99,7 +101,7 @@ import { BillingModule } from './billing/billing.module';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: UserAwareThrottlerGuard,
     },
     {
       provide: APP_GUARD,
